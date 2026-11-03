@@ -94,6 +94,8 @@ nav button.on b{animation:bounce .45s}
 h2{font-size:12.5px;color:var(--mut);margin:16px 4px 8px;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
 .req{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:12.5px}
 .cv h2{margin:14px 0 6px}
+.ph{position:relative;margin:-12px -14px 12px;height:170px;background:#0b170f;overflow:hidden}.ph img{width:100%;height:100%;object-fit:cover;display:block}.ph0{background:linear-gradient(90deg,#132619,#1d3526,#132619);background-size:200% 100%;animation:shim 1.2s linear infinite}@keyframes shim{to{background-position:-200% 0}}
+.phc{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;padding:2px 6px;border-radius:6px;text-decoration:none;max-width:90%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .goal{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#3b2a0a,#2a1f0b);border:1px solid #7a5418;border-radius:var(--r);padding:10px 12px;margin-bottom:12px}
 .goal b{color:var(--ye)}
 .goal .gi{font-size:26px}
@@ -1045,7 +1047,7 @@ function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew
   return h}
 function rMt(){let h=goalCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
   for(const t in EQ){const e=EQ[t],n=st.eq[t]||0,f=freeEq(t);const jobs=Object.values(JOBS).filter(J=>J.need.includes(t));
-    h+=`<div class="card ${n?'acc':''}" style="--ac:var(--gr)"><div class="hd"><div class="ic" style="--ac2:${n?'#1d5232':'#24402e'}">${e.ic}</div><div style="flex:1;min-width:0"><h3>${e.n}</h3><div class="mut sm">${eur(e.p)} HTVA · usage ${eur(e.u)}/jour${e.veh?' · assurance + taxe '+(e.veh==='h'?'310':e.veh==='a'?'70':'160')+' €/mois':''}</div></div>${n?`<span class="tag g">×${n}</span>`:''}</div>
+    h+=`<div class="card ${n?'acc':''}" style="--ac:var(--gr)">${photo('eq_'+t)}<div class="hd"><div class="ic" style="--ac2:${n?'#1d5232':'#24402e'}">${e.ic}</div><div style="flex:1;min-width:0"><h3>${e.n}</h3><div class="mut sm">${eur(e.p)} HTVA · usage ${eur(e.u)}/jour${e.veh?' · assurance + taxe '+(e.veh==='h'?'310':e.veh==='a'?'70':'160')+' €/mois':''}</div></div>${n?`<span class="tag g">×${n}</span>`:''}</div>
     <div class="tags">${jobs.map(J=>`<span class="tag ${J.p?'':'b'}">${J.ic} ${J.n.split(' ').slice(0,3).join(' ')}</span>`).join('')}</div>
     <div class="row" style="margin-top:10px"><button class="btn" ${st.cash<e.p?'disabled':''} onclick="buy('${t}')">Acheter</button>${n?`<button class="btn s" onclick="sell('${t}')">Revendre ${eur(e.p*.55)}</button><span class="mut sm">${f} libre(s)</span>`:''}</div></div>`}
   return h}
@@ -1054,6 +1056,32 @@ function bilanCard(){const B=st.lastMon;if(!B)return'';const rows=Object.keys(CA
 function monNow(){const M=st.mon||{};const rows=Object.keys(CATN).filter(k=>M[k]).map(k=>`<tr><td>${CATN[k]}</td><td class="${M[k]>=0?'money':'neg'}">${M[k]>=0?'+':''}${eur(M[k])}</td></tr>`).join('');
   const sal=st.salAcc,fx=fixedM();return`<h2>Ce mois-ci (${MOIS[date(st.day).getMonth()]})</h2><div class="card"><table>${rows||'<tr><td class="mut">Pas encore de mouvement</td><td></td></tr>'}</table><div class="mut sm" style="margin-top:8px">Le 1er du mois, il faudra encore payer : salaires ${eur(sal)} + frais fixes ${eur(fx)} + impôts et cotisations.</div></div>`}
 function releve(){return`<h2>Relevé de compte</h2><div class="card">${(st.mv||[]).slice(0,40).map(m=>`<div class="row sm" style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="mut" style="width:62px">${dstr(m.d)}</span><span style="flex:1;min-width:0">${esc(m.t)}</span><b class="${m.a>=0?'money':'neg'}">${m.a>=0?'+':''}${eur(m.a)}</b></div>`).join('')||'<span class="mut">Aucun mouvement.</span>'}</div>`}
+
+/* ---------- Vraies photos (Wikipédia / Wikimedia Commons, licences libres), chargées par le téléphone ---------- */
+const IMG={sandero:['fr:Dacia Sandero','en:Dacia Sandero'],golf:['fr:Volkswagen Golf VIII','en:Volkswagen Golf Mk8'],modely:['fr:Tesla Model Y','en:Tesla Model Y'],x5:['fr:BMW X5','en:BMW X5'],
+  rangerover:['en:Range Rover (L460)','fr:Range Rover'],p911:['fr:Porsche 911 (992)','en:Porsche 992'],classeg:['fr:Mercedes-Benz Classe G','en:Mercedes-Benz G-Class'],urus:['fr:Lamborghini Urus','en:Lamborghini Urus'],
+  ferrari:['en:Ferrari 296','fr:Ferrari 296 GTB'],cullinan:['fr:Rolls-Royce Cullinan','en:Rolls-Royce Cullinan'],o_golf:['fr:Volkswagen Golf VII','en:Volkswagen Golf Mk7'],o_m3:['fr:Tesla Model 3','en:Tesla Model 3'],
+  o_s3:['en:BMW 3 Series (G20)','fr:BMW Série 3'],o_hilux:['fr:Toyota Hilux','en:Toyota Hilux'],o_911:['fr:Porsche 911 (997)','en:Porsche 997'],o_g:['fr:Mercedes-Benz Classe G','en:Mercedes-Benz G-Class'],
+  mt07:['fr:Yamaha MT-07','en:Yamaha MT-07'],gs:['en:BMW R1300GS','en:BMW R1250GS','fr:BMW R 1250 GS'],harley:['en:Harley-Davidson Fat Boy'],campingcar:['fr:Camping-car','en:Motorhome'],quad:['fr:Quad (véhicule)','en:All-terrain vehicle'],
+  appart:['en:Apartment','fr:Appartement'],maison:['fr:Maison individuelle','en:Single-family detached home'],villa:['fr:Villa (maison)','en:Villa'],maitre:['fr:Maison de maître'],chateau:['fr:Château de Modave','fr:Château de Vêves'],
+  chalet:['fr:Chalet','en:Chalet'],cote:['fr:Knokke-Heist','fr:Côte belge'],zodiac:['fr:Bateau pneumatique semi-rigide','en:Rigid inflatable boat'],moteur:['en:Motorboat','fr:Bateau à moteur'],voilier:['fr:Voilier','en:Sailboat'],
+  yacht:['fr:Azimut Yachts','en:Azimut Yachts','en:Motor yacht'],superyacht:['en:Superyacht','fr:Yacht'],rolex:['fr:Rolex Submariner','en:Rolex Submariner'],cheval:['fr:Selle français','en:Horse'],piscine:['fr:Piscine','en:Swimming pool'],
+  cessna:['fr:Cessna 172','en:Cessna 172'],helico:['fr:Robinson R44','en:Robinson R44'],canaries:['fr:Tenerife','en:Tenerife'],croisiere:['en:Cruise ship','fr:Paquebot de croisière'],dubai:['fr:Burj Khalifa','en:Burj Khalifa'],f1:['fr:Circuit de Spa-Francorchamps','en:Circuit de Spa-Francorchamps'],
+  eq_taillehaie:['fr:Taille-haie','en:Hedge trimmer'],eq_souffleur:['fr:Souffleur de feuilles','en:Leaf blower'],eq_debrou:['fr:Débroussailleuse','en:String trimmer'],eq_tondeuse:['fr:Tondeuse à gazon','en:Lawn mower'],
+  eq_remorque:['en:Trailer (vehicle)','fr:Remorque (véhicule)'],eq_signal:['fr:Cône de signalisation','en:Traffic cone'],eq_karcher:['fr:Nettoyeur haute pression','en:Pressure washer'],eq_fleche:['en:Arrow board','en:Variable-message sign'],
+  eq_broyeur:['fr:Broyeur de végétaux','en:Woodchipper'],eq_van:['fr:Ford Transit','en:Ford Transit'],eq_nacelle:['fr:Nacelle élévatrice','en:Aerial work platform'],eq_balayeuse:['en:Street sweeper','fr:Balayeuse de voirie'],
+  eq_tracteur:['fr:Épareuse','en:Flail mower'],eq_hydro:['fr:Hydrocureuse','en:Vacuum truck'],eq_trons:['fr:Tronçonneuse','en:Chainsaw'],eq_plaque:['en:Plate compactor','fr:Plaque vibrante'],eq_batteuse:['en:Pile driver','fr:Sonnette (construction)'],
+  eq_benne:['fr:Iveco Daily','en:Iveco Daily'],eq_pelle:['fr:Mini-pelle','en:Compact excavator'],eq_traceuse:['en:Road surface marking','fr:Marquage routier'],eq_saleuse:['fr:Saleuse','en:Winter service vehicle'],eq_benne19:['fr:Camion-benne','en:Dump truck']};
+let IMC={};try{IMC=JSON.parse(localStorage.getItem('rn-img1')||'{}')}catch(e){}
+const imgBusy={},imgFail={};let imgT=0;
+async function loadImg(k){if(imgBusy[k])return;imgBusy[k]=1;
+  for(const t of IMG[k]||[]){const i=t.indexOf(':'),l=t.slice(0,i),ti=t.slice(i+1);
+    try{const r=await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(ti.replace(/ /g,'_'))}`);if(!r.ok)continue;const j=await r.json();
+      const src=j.thumbnail&&j.thumbnail.source;if(src){IMC[k]={src:src.replace(/\/\d+px-/,'/480px-'),page:j.content_urls&&j.content_urls.desktop.page,title:j.title};break}}catch(e){imgFail[k]=Date.now();delete imgBusy[k];return}}
+  if(!IMC[k])IMC[k]={none:1};try{localStorage.setItem('rn-img1',JSON.stringify(IMC))}catch(e){}
+  clearTimeout(imgT);imgT=setTimeout(()=>{if(curTab==='pv'||curTab==='mt')render()},250)}
+function photo(k){const c=IMC[k];if(!IMG[k])return'';if(!c){if(imgFail[k]&&Date.now()-imgFail[k]<60000)return'';loadImg(k);return`<div class="ph ph0"></div>`}if(c.none)return'';
+  return`<div class="ph"><img src="${c.src}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'"><a class="phc" href="${c.page}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📷 ${esc(c.title)} — Wikipédia</a></div>`}
 let pvTab='car';
 function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=own.reduce((a,o)=>a+pValue(o)-(o.loan||0),0);
   let h=`<div class="card"><div class="hd"><div class="ic" style="--ac2:#3d2c66">🏡</div><div style="flex:1;min-width:0"><h3>Ta vie privée</h3><div class="mut sm">Ton argent à toi, séparé de celui de la société.</div></div></div>
@@ -1066,15 +1094,15 @@ function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=own.reduce((a,o
   <h2>Verser un supplément (prime, dividende)</h2><div class="card"><div class="mut sm">${st.srl?'Ta société est une SRL : une rémunération de dirigeant est taxée (IPP + cotisations, ± 45 %). Un dividende subit un précompte mobilier de 30 %.':'Tu es indépendant en personne physique : le bénéfice est déjà taxé chaque mois, tu peux le prélever sans impôt en plus.'}<br>Compte de la société : <b>${eur(st.cash)}</b></div>
   <div class="row" style="margin-top:10px">${[1000,5000,20000,100000].map(a=>`<button class="btn s" style="padding:7px 10px" ${st.cash<a?'disabled':''} onclick="pTransfer(${a},'rem')">+${nb(a)} €</button>`).join('')}</div>
   ${st.srl?`<div class="row" style="margin-top:8px">${[5000,20000,100000].map(a=>`<button class="btn s" style="padding:7px 10px" ${st.cash<a?'disabled':''} onclick="pTransfer(${a},'div')">Dividende ${nb(a)} €</button>`).join('')}</div>`:''}</div>`;
-  if(own.length){h+=`<h2>Ce que tu possèdes</h2>`;for(const o of own){const P=PRIV[o.k];h+=`<div class="card"><div class="hd"><div class="ic" style="--ac2:#2b3d52">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3><div class="mut sm">Acheté ${eur(o.price)} le ${dstr(o.day)} ${date(o.day).getFullYear()}</div></div></div>
+  if(own.length){h+=`<h2>Ce que tu possèdes</h2>`;for(const o of own){const P=PRIV[o.k];h+=`<div class="card">${photo(o.k)}<div class="hd"><div class="ic" style="--ac2:#2b3d52">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3><div class="mut sm">Acheté ${eur(o.price)} le ${dstr(o.day)} ${date(o.day).getFullYear()}</div></div></div>
     <div class="tags"><span class="tag ${pValue(o)>=o.price?'g':''}">Valeur : ${eur(pValue(o))}</span>${P.m?`<span class="tag">${eur(P.m)}/mois</span>`:''}${o.loan?`<span class="tag o">Crédit restant ${eur(o.loan)} · ${eur(o.pay)}/mois</span>`:''}</div>
     <button class="btn s" style="margin-top:10px" onclick="pSell(${o.id})">Vendre</button></div>`}}
   h+=`<h2>Acheter</h2>`+seg(pvTab,[['car','🚗 Neuves'],['occ','🚗 Occasion'],['moto','🏍️ Motos'],['home','🏠 Immo']],'pvTab')+seg(pvTab,[['boat','⛵ Bateaux'],['lux','💎 Luxe'],['exp','🌴 Vacances']],'pvTab');
   for(const k in PRIV){const P=PRIV[k];if(P.c!==pvTab)continue;const fee=buyFees(k);
-    h+=`<div class="card"><div class="hd"><div class="ic">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3><div class="mut sm">${eur(P.p)} TVAC${fee?` + ${P.c==='home'?'droits d’enregistrement et notaire':'taxe de mise en circulation'} ${eur(fee)}`:''}</div></div></div>
+    h+=`<div class="card">${photo(k)}<div class="hd"><div class="ic">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3><div class="mut sm">${eur(P.p)} TVAC${fee?` + ${P.c==='home'?'droits d’enregistrement et notaire':'taxe de mise en circulation'} ${eur(fee)}`:''}</div></div></div>
     <div class="tags">${P.m?`<span class="tag">${eur(P.m)}/mois (${P.c==='home'?'précompte immobilier, assurance incendie, énergie, entretien':P.c==='boat'?'anneau au port, entretien, assurance':P.c==='exp'?'':'assurance, taxe de circulation, entretien, carburant'})</span>`:''}${P.c==='home'&&P.home?`<span class="tag ${ownsHome()?'':'g'}">${ownsHome()?'Droits 12,5 % (tu as déjà un logement)':'Droits 3 % : habitation propre et unique'}</span>`:''}${P.dep<0?'<span class="tag g">prend de la valeur</span>':''}</div>
     <div class="row" style="margin-top:10px"><button class="btn" ${V.cash<P.p+fee?'disabled':''} onclick="pBuy('${k}',0)">${P.c==='exp'?'Réserver':'Acheter'}</button>${P.c==='home'?`<button class="btn s" ${V.cash<P.p*.2+fee?'disabled':''} onclick="pBuy('${k}',1)">🏦 Crédit hypothécaire (apport ${eur(P.p*.2+fee)})</button>`:''}</div></div>`}
-  return h+'<p class="mut sm">Prix moyens en Belgique (notaire.be 2025, prix catalogue, annonces). Les yachts coûtent chaque année environ 8 à 12 % de leur valeur.</p>'}
+  return h+'<p class="mut sm">Prix moyens en Belgique (notaire.be 2025, prix catalogue, annonces). Les yachts coûtent chaque année environ 8 à 12 % de leur valeur. Photos : Wikimedia Commons (licences libres), via Wikipédia — appuie sur 📷 pour voir l’auteur et la licence. Il faut internet pour les voir.</p>'}
 function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
   let h=goalCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le 1 mars 2027 · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
   <div class="kpi" style="margin-top:12px"><div><span>Compte en banque</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>Factures à recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers terminés</span><b>${st.stats.done}</b></div><div><span>Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div></div>
@@ -1379,7 +1407,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.22";
+var APPV="2026-11-03.23";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
