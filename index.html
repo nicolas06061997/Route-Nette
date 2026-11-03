@@ -550,6 +550,7 @@ function tick(){
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
     if(st.salAcc){mv(-st.salAcc,'Salaires du mois','sal');log(`💸 Salaires de ${MOIS[(x.getMonth()+11)%12]} payés : -${eur(st.salAcc)}`);st.salAcc=0}
+    {const pm=(x.getMonth()+11)%12,py=x.getMonth()?x.getFullYear():x.getFullYear()-1;const H=st.mHist||(st.mHist=[]);H.push({m:pm,y:py,prod:Math.round(st.mProd||0),res:Math.round(liveRes())});if(H.length>36)H.shift();st.mProd=0}
     paySalary();monthTax(MOIS[(x.getMonth()+11)%12]);privMonth();
     for(const c of running()){const J=JOBS[c.j];if(J.p)continue;const due=c.price*c.prog/c.q-c.billed;if(due>50){c.billed+=due;invoice(due,payDelay(Math.random()<.75?RI(25,30):RI(31,55)),`${c.buyer?c.buyer.split('—')[1]||'SPW':'SPW'} — état d'avancement`);log(`📄 État d'avancement envoyé (${J.n}) : ${eur(due)}`,false)}}}
   // salaires du jour (chômage temporaire pour intempéries : les ouvriers sont payés par l'ONEM)
@@ -571,7 +572,7 @@ function tick(){
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF;
     const wfj=J.allw?1:J.dry&&WX[st.wx].k!=='sun'&&WX[st.wx].k!=='cloud'?0:wf;const gb=J.gr&&crew.some(w=>w.r==='grimp')||c.j==='elagage'&&crew.some(w=>w.r==='grimp')?1.1:1;
     const pw=crew.reduce((a,w)=>a+w.sk*(w.mot??1),0);const dp=Math.min(c.q-c.prog,J.rate*pw*wfj*boost*gb);c.prog+=dp;observe(c,crew);
-    {const val=dp/c.q*c.price;crew.forEach(w=>{const s=w.s||(w.s={d:0,rev:0,cost:0});s.d++;s.rev+=pw?val*w.sk*(w.mot??1)/pw:0});if(has('dirt'))rsAdd('dirt',val*.08/1.08)}
+    {const val=dp/c.q*c.price;st.mProd=(st.mProd||0)+val;crew.forEach(w=>{const s=w.s||(w.s={d:0,rev:0,cost:0});s.d++;s.rev+=pw?val*w.sk*(w.mot??1)/pw:0});if(has('dirt'))rsAdd('dirt',val*.08/1.08)}
     if(c.xc)mv(-c.xc*dp/c.q,'Mise en décharge','use',1);
     crew.forEach(w=>{w.sk=Math.min(1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
     if(c.prog>=c.q-1e-6)finish(c);
@@ -587,7 +588,7 @@ function tick(){
   if(!st.jobs.some(o=>!JOBS[o.j].need.length))genJob(month()===12||month()<=2&&Math.random()<.5?'p_neige':'p_dechets');
   if(x.getDay()===1)refreshCand();
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
-  events(work);goals();
+  events(work);goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
   if(st.cash<-overdraft()&&!st.over)rescue();
   save();render();
 }
@@ -1114,8 +1115,24 @@ function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=own.reduce((a,o
     <div class="tags">${P.m?`<span class="tag">${eur(P.m)}/mois (${P.c==='home'?'précompte immobilier, assurance incendie, énergie, entretien':P.c==='boat'?'anneau au port, entretien, assurance':P.c==='exp'?'':'assurance, taxe de circulation, entretien, carburant'})</span>`:''}${P.c==='home'&&P.home?`<span class="tag ${ownsHome()?'':'g'}">${ownsHome()?'Droits 12,5 % (tu as déjà un logement)':'Droits 3 % : habitation propre et unique'}</span>`:''}${P.dep<0?'<span class="tag g">prend de la valeur</span>':''}</div>
     <div class="row" style="margin-top:10px"><button class="btn" ${V.cash<P.p+fee?'disabled':''} onclick="pBuy('${k}',0)">${P.c==='exp'?'Réserver':'Acheter'}</button>${P.c==='home'?`<button class="btn s" ${V.cash<P.p*.2+fee?'disabled':''} onclick="pBuy('${k}',1)">🏦 Crédit hypothécaire (apport ${eur(P.p*.2+fee)})</button>`:''}</div></div>`}
   return h+'<p class="mut sm">Prix moyens en Belgique (notaire.be 2025, prix catalogue, annonces). Les yachts coûtent chaque année environ 8 à 12 % de leur valeur. Photos : Wikimedia Commons (licences libres), via Wikipédia — appuie sur 📷 pour voir l’auteur et la licence. Il faut internet pour les voir.</p>'}
+// Résultat du mois en direct : production réalisée − dépenses d'exploitation − salaires et frais fixes déjà dus
+function liveRes(){const M=st.mon||{};let dep=0;for(const k of['use','fix','other','tax'])dep+=M[k]||0;if(M.sal)dep+=M.sal;
+  const d=date(st.day).getDate(),fx=fixedM()*Math.min(1,d/30);return (st.mProd||0)+dep-st.salAcc-(d>1?fx:0)}
+function spark(D,w,h){if(D.length<2)return'';const mn=Math.min(0,...D),mx=Math.max(...D,1),sx=w/(D.length-1),Y=v=>h-4-(v-mn)/(mx-mn||1)*(h-8);
+  const pts=D.map((v,i)=>`${(i*sx).toFixed(1)},${Y(v).toFixed(1)}`).join(' '),z=Y(0),up=D[D.length-1]>=D[0];
+  return`<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none" style="display:block"><defs><linearGradient id="sg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${up?'#4fdc7a':'#ff5d57'}" stop-opacity=".45"/><stop offset="1" stop-color="${up?'#4fdc7a':'#ff5d57'}" stop-opacity="0"/></linearGradient></defs>
+  <line x1="0" x2="${w}" y1="${z}" y2="${z}" stroke="#ffffff33" stroke-dasharray="4 4"/><polygon points="0,${h} ${pts} ${w},${h}" fill="url(#sg)"/><polyline points="${pts}" fill="none" stroke="${up?'#4fdc7a':'#ff5d57'}" stroke-width="2.2" vector-effect="non-scaling-stroke"/></svg>`}
+function bars(H,w,h){if(!H.length)return'<div class="mut sm">Le premier mois apparaîtra le 1er du mois prochain.</div>';const L=H.slice(-12),mx=Math.max(1,...L.map(x=>Math.max(x.prod,Math.abs(x.res)))),bw=w/L.length;
+  return`<svg viewBox="0 0 ${w} ${h+16}" width="100%" height="${h+16}" style="display:block">${L.map((x,i)=>{const ph=x.prod/mx*(h/2-4),rh=Math.abs(x.res)/mx*(h/2-4),cx=i*bw;
+    return`<rect x="${cx+bw*.15}" y="${h/2-ph}" width="${bw*.34}" height="${ph}" rx="2" fill="#4fb3ff"/><rect x="${cx+bw*.52}" y="${x.res>=0?h/2-rh:h/2}" width="${bw*.34}" height="${rh}" rx="2" fill="${x.res>=0?'#4fdc7a':'#ff5d57'}"/><text x="${cx+bw/2}" y="${h+12}" font-size="9" fill="#a3bcaa" text-anchor="middle">${MOIS[x.m].slice(0,3)}</text>`}).join('')}<line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="#ffffff33"/></svg>`}
+function dashCard(){const lr=liveRes(),D=(st.dHist||[]).slice(-180),y=date(st.day).getFullYear();
+  return`<div class="card acc" style="--ac:var(--bl)"><div class="row"><h3 style="flex:1">📈 En direct — ${MOIS[date(st.day).getMonth()]}</h3><span class="tag">${dstr(st.day)}</span></div>
+  <div class="kpi" style="margin-top:10px"><div><span>Production du mois (travaux réalisés)</span><b style="color:#7fc8ff">${eur(st.mProd||0)}</b></div><div><span>Résultat du mois en direct</span><b class="${lr>=0?'money':'neg'}">${lr>=0?'+':''}${eur(lr)}</b></div></div>
+  <h2 style="margin-top:12px">Ton compte en banque (6 derniers mois)</h2>${spark(D,320,90)||'<div class="mut sm">La courbe se dessine jour après jour.</div>'}
+  <h2 style="margin-top:12px">Chaque mois : <span style="color:#4fb3ff">production</span> et <span style="color:#4fdc7a">résultat</span></h2>${bars(st.mHist||[],320,110)}
+  <div class="mut sm" style="margin-top:6px">Chiffre d'affaires facturé en ${y} : <b>${eur((st.caY||{})[y]||0)}</b>. La production monte chaque jour de travail ; le résultat baisse avec les salaires, le carburant et les frais.</div></div>`}
 function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
-  let h=goalCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le ${dstr(st.found||0)} ${date(st.found||0).getFullYear()} · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
+  let h=goalCard()+dashCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le ${dstr(st.found||0)} ${date(st.found||0).getFullYear()} · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
   <div class="kpi" style="margin-top:12px"><div><span>Compte en banque</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>Factures à recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires ${date(st.day).getFullYear()}</span><b>${eur((st.caY||{})[date(st.day).getFullYear()]||0)}</b></div><div><span>Chiffre d'affaires depuis la création</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers terminés</span><b>${st.stats.done}</b></div><div><span>Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div>${st.career?`<div class="mut sm" style="margin-top:10px">🧳 Ta carrière avec tes anciennes sociétés : ${eur(st.career.ca)} de chiffre d'affaires, ${nb(st.career.done)} chantiers, ${st.career.won} marchés gagnés. Tes références de chantiers te suivent.</div>`:''}</div>
   ${monNow()}${bilanCard()}${releve()}
   <h2>Démarches</h2><div class="card">${Object.keys(ADM).map(k=>{const a=ADM[k];return`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:20px">${a.ic}</span><div style="flex:1;min-width:0"><b>${a.n}</b><div class="mut sm">${a.d}</div></div>${st.adm[k]?'<span class="tag g">✅ Fait</span>':`<button class="btn" style="padding:7px 11px" ${st.cash<a.p||(k!=='bce'&&!st.adm.bce)?'disabled':''} onclick="buyAdm('${k}')">${eur(a.p)}</button>`}</div>`}).join('')}</div>
@@ -1418,7 +1435,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.26";
+var APPV="2026-11-03.27";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
