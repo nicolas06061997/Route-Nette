@@ -278,12 +278,12 @@ const PROC={fm:{n:'Marché de faible montant',d:"Moins de 30 000 € : le pouvoi
    SAUVEGARDE — ne jamais changer SAVE : la progression des joueurs en dépend.
    Nouveau champ : l'ajouter dans defaults() ; migrate() complète les anciennes parties.
    ===================================================================== */
-const SAVE='routenette-save',BAK='routenette-bak',SCHEMA=2;
+const SAVE='routenette-save',BAK='routenette-bak',SCHEMA=3;
 let st=null;
 function newRivals(){return RIVT.map(r=>({n:r[0],sz:r[1],jobs:r[2],ag:r[3],rep:r[4],load:[],won:0,ca:0}))}
 function defaults(){return{schema:SCHEMA,name:'Ma petite entreprise',cash:3000,rep:10,day:0,adm:{},cls:0,loan:0,nid:2,
   workers:[{id:1,n:'Toi',r:'boss',boss:1,sk:1,day:0,pc:0,skin:0,base:1,mot:1,hd:0,warn:0}],eq:{},tenders:[],jobs:[],contracts:[],inv:[],cand:[],log:[],
-  stats:{won:0,lost:0,done:0,ca:0,spw:0,earned:0},refs:{},riv:null,salAcc:0,reports:[],mStart:3000,mCapex:0,mLoan:0,lastTax:null,srl:0,goals:{},sel:null,wx:0,started:false,snd:1,over:false}}
+  stats:{won:0,lost:0,done:0,ca:0,spw:0,earned:0},refs:{},riv:null,salAcc:0,reports:[],mStart:3000,mCapex:0,mLoan:0,lastTax:null,srl:0,mon:{},mv:[],lastMon:null,goals:{},sel:null,wx:0,started:false,snd:1,over:false}}
 function migrate(s){const d=defaults();if(s.mStart===undefined)s.mStart=s.cash;
   for(const k in d)if(s[k]===undefined)s[k]=d[k];
   for(const k in d.stats)if(s.stats[k]===undefined)s.stats[k]=d.stats[k];
@@ -294,6 +294,8 @@ function migrate(s){const d=defaults();if(s.mStart===undefined)s.mStart=s.cash;
     s.tenders=[];s.cand=[];
     s.contracts.forEach(c=>{if(!JOBS[c.j]||JOBS[c.j].p)return;c.N=c.N||Math.max(10,c.deadline-s.day);c.wd=0;c.billed=c.paid||0;c.caut=0});
   }
+  // version 2 -> 3 : le départ passe de 250 € à 3 000 € d'économies ; les anciennes parties reçoivent la différence
+  if((s.schema||1)<3){s.cash+=2750;s.mStart=(s.mStart||0)+2750;s.mv=[{d:s.day,a:2750,t:'Économies retrouvées (mise à jour du jeu)'}]}
   // éléments retirés : remboursés plutôt que perdus
   for(const k in s.eq)if(!EQ[k])delete s.eq[k];
   s.contracts=s.contracts.filter(c=>JOBS[c.j]);s.jobs=s.jobs.filter(o=>JOBS[o.j]);s.tenders=s.tenders.filter(t=>JOBS[t.j]&&t.postes);
@@ -462,7 +464,7 @@ function decide(t){const J=JOBS[t.j];const me=t.bids.find(b=>b.me);
   if(w.me){st.stats.won++;
     const startBy=addWork(st.day,t.proc==='po'?10:5);
     const c={id:st.nid++,j:t.j,q:t.q,road:t.road,town:t.town,buyer:t.buyer,ref:t.ref,price:t.my.tot,prog:0,vis:0,N:t.N,wd:0,startBy,st:'wait',crew:[],own:{},billed:0,caut:t.caut?Math.round(t.my.tot*.05):0,xc:t.postes.slice(1,-1).reduce((a,p)=>a+p.q*p.c,0),seed:RI(1,99999),tap:{},nRef:t.nRef};
-    if(c.caut){st.cash-=c.caut;st.mCapex+=c.caut;log(`🏦 Cautionnement de ${eur(c.caut)} constitué (bloqué jusqu'à la fin du chantier).`,false)}
+    if(c.caut){mv(-c.caut,'Cautionnement bloqué','buy');st.mCapex+=c.caut;log(`🏦 Cautionnement de ${eur(c.caut)} constitué (bloqué jusqu'à la fin du chantier).`,false)}
     st.contracts.push(c);log(`🎉 Marché attribué : ${J.ic} ${J.n} (${t.road}) pour ${eur(t.my.tot)} !`,false);kaching();
     showModal(`<h3>🎉 Marché attribué !</h3><div class="mut sm">${t.buyer}<br>Réf. ${t.ref}</div><div class="hd" style="margin-top:8px"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div><h2>Procès-verbal d'ouverture des offres</h2>${tbl}
     <p>Ordre de commencer : <b>${dlong(startBy)}</b>.<br>Délai d'exécution : <b>${t.N} jours ouvrables</b>.${c.caut?`<br>Cautionnement : ${eur(c.caut)}.`:''}</p><div class="row"><button class="btn" onclick="closeM();startUI(${c.id})">Préparer le chantier</button><button class="btn s" onclick="closeM()">Plus tard</button></div>`);
@@ -477,8 +479,8 @@ function invoice(amt,delay,lbl){if(amt<=0)return;st.inv.push({id:st.nid++,amt:Ma
 function tick(){
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),work=!kind;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
-  if(x.getDate()===1){const f=fixedM();if(f){st.cash-=f;log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
-    if(st.salAcc){st.cash-=st.salAcc;log(`💸 Salaires de ${MOIS[(x.getMonth()+11)%12]} payés : -${eur(st.salAcc)}`);st.salAcc=0}
+  if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
+    if(st.salAcc){mv(-st.salAcc,'Salaires du mois','sal');log(`💸 Salaires de ${MOIS[(x.getMonth()+11)%12]} payés : -${eur(st.salAcc)}`);st.salAcc=0}
     monthTax(MOIS[(x.getMonth()+11)%12]);
     for(const c of running()){const J=JOBS[c.j];if(J.p)continue;const due=c.price*c.prog/c.q-c.billed;if(due>50){c.billed+=due;invoice(due,payDelay(RI(30,45)),`${c.buyer?c.buyer.split('—')[1]||'SPW':'SPW'} — état d'avancement`);log(`📄 État d'avancement envoyé (${J.n}) : ${eur(due)}`,false)}}}
   // salaires du jour (chômage temporaire pour intempéries : les ouvriers sont payés par l'ONEM)
@@ -487,17 +489,17 @@ function tick(){
   for(const c of [...st.contracts]){const J=JOBS[c.j];
     if(c.st==='wait'&&st.day>c.startBy){st.contracts.splice(st.contracts.indexOf(c),1);
       if(J.p){st.rep=clamp(st.rep-2,0,100);log(`😠 ${c.road} a pris quelqu'un d'autre : tu n'es jamais venu. Réputation -2.`)}
-      else{st.rep=clamp(st.rep-10,0,100);if(c.caut)log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Cautionnement de ${eur(c.caut)} perdu, réputation -10.`);else{const f=Math.round(c.price*.05);st.cash-=f;log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Pénalité ${eur(f)}, réputation -10.`)}}continue}
+      else{st.rep=clamp(st.rep-10,0,100);if(c.caut)log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Cautionnement de ${eur(c.caut)} perdu, réputation -10.`);else{const f=Math.round(c.price*.05);mv(-f,'Pénalité du SPW','other');log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Pénalité ${eur(f)}, réputation -10.`)}}continue}
     if(c.st!=='run'||!work||intemp)continue;
-    c.wd++;let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;st.cash-=eqc+(J.p?(st.eq.van?0:14):40);
+    c.wd++;let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;mv(-(eqc+(J.p?(st.eq.van?0:14):40)),'Carburant et usure','use',1);
     const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF;
     const dp=Math.min(c.q-c.prog,J.rate*crew.reduce((a,w)=>a+w.sk*(w.mot??1),0)*wf*boost);c.prog+=dp;observe(c,crew);
-    if(c.xc)st.cash-=c.xc*dp/c.q;
+    if(c.xc)mv(-c.xc*dp/c.q,'Mise en décharge','use',1);
     crew.forEach(w=>{w.sk=Math.min(1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
     if(c.prog>=c.q-1e-6)finish(c);
   }
-  for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);st.cash+=v.amt;if(v.caut)st.mCapex-=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`);kaching()}
+  for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);mv(v.amt,'Paiement : '+v.from,v.caut?'buy':'in');if(v.caut)st.mCapex-=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`);kaching()}
   for(const t of [...st.tenders]){if(t.status==='open'&&st.day>=t.bidEnd)openBids(t);if(t.status==='opened'&&st.day>=t.dec)decide(t)}
   st.tenders=st.tenders.filter(t=>t.status!=='done'||(t.my&&st.day-t.dec<20));
   st.tenders=st.tenders.filter(t=>t.status!=='opened'||t.my||st.day-t.bidEnd<3);
@@ -513,12 +515,17 @@ function tick(){
   save();render();
 }
 // Bénéfice du mois (trésorerie + investissements − amortissements) → cotisations sociales et impôts
+// Mouvement sur le compte en banque (relevé + bilan du mois)
+function mv(a,t,cat,agg){a=Math.round(a*100)/100;st.cash+=a;const M=st.mon||(st.mon={});M[cat]=(M[cat]||0)+a;
+  const L=st.mv||(st.mv=[]);if(agg&&L[0]&&L[0].d===st.day&&L[0].t===t)L[0].a+=a;else L.unshift({d:st.day,a,t});if(L.length>120)L.length=120}
+const CATN={in:'💶 Rentrées (clients, SPW)',sal:'💸 Salaires et personnel',fix:'🧾 Frais fixes et vie privée',use:'⛽ Carburant, usure, décharge',tax:'🏛️ Impôts et cotisations',buy:'🛒 Achats et investissements',loan:'🏦 Banque (prêts)',other:'⚠️ Amendes et imprévus'};
 function monthTax(mn){const amort=Object.keys(st.eq).reduce((a,k)=>a+EQ[k].p*st.eq[k],0)/60;
   const profit=st.cash-st.mStart-st.mLoan+st.mCapex-amort;let cot=0,imp=0;
   if(!st.srl&&st.stats.ca>=120000){st.srl=1;log('🏢 Sur conseil de ta fiduciaire, ton entreprise devient une SRL (société) : impôt des sociétés à 20 % sur les premiers 100 000 €.')}
   if(st.adm.bce){if(st.srl){cot=290;imp=Math.max(0,profit-cot)*(profit>8333?.25:.2)}else{cot=Math.max(290,.205*profit);imp=Math.max(0,profit-cot)*.3}}
-  const t=Math.round(cot+imp);if(t>0){st.cash-=t;log(`🏛️ ${st.srl?'Cotisations du dirigeant + impôt des sociétés':'Cotisations sociales + précompte (impôt)'} pour ${mn} : -${eur(t)}`,false)}
-  st.lastTax={mn,profit:Math.round(profit),cot:Math.round(cot),imp:Math.round(imp)};st.mStart=st.cash;st.mCapex=0;st.mLoan=0}
+  const t=Math.round(cot+imp);if(t>0){mv(-t,'Impôts et cotisations','tax');log(`🏛️ ${st.srl?'Cotisations du dirigeant + impôt des sociétés':'Cotisations sociales + précompte (impôt)'} pour ${mn} : -${eur(t)}`,false)}
+  st.lastTax={mn,profit:Math.round(profit),cot:Math.round(cot),imp:Math.round(imp)};st.mStart=st.cash;st.mCapex=0;st.mLoan=0;
+  const M=st.mon||{};const tot=Object.values(M).reduce((a,b)=>a+b,0);st.lastMon={mn,M,tot,end:st.cash};st.mon={};toastMsg(`📊 Bilan de ${mn} : ${tot>=0?'+':''}${eur(tot)} sur ton compte. Détail dans 📊 Entreprise.`)}
 function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c),1);
   const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);const avg=crew.reduce((a,w)=>a+w.sk,0)/Math.max(1,crew.length);
   const n=Math.max(0,c.wd-c.N),late=n>0;
@@ -529,7 +536,7 @@ function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c)
   if(!J.p&&Math.random()<(1.25-avg)*.5&&!crew.some(w=>w.r==='chef')){dr-=2;msg=' Le fonctionnaire dirigeant a demandé des retouches avant la réception.'}
   st.rep=clamp(st.rep+dr,0,100);st.stats.done++;st.stats.ca+=c.price-fine;if(st.sel===c.id)st.sel=null;
   if(J.p){
-    if(c.ct==='part'&&Math.random()<.7){st.cash+=rest;st.stats.earned+=rest;kaching();log(`✅ ${J.n} chez ${c.road} terminé : payé tout de suite +${eur(rest)} ${late?'(en retard, réduction de 10 %)':''}`)}
+    if(c.ct==='part'&&Math.random()<.7){mv(rest,'Paiement : '+c.road,'in');st.stats.earned+=rest;kaching();log(`✅ ${J.n} chez ${c.road} terminé : payé tout de suite +${eur(rest)} ${late?'(en retard, réduction de 10 %)':''}`)}
     else{const d=payDelay(c.ct==='com'?30:c.ct==='pro'?RI(15,30):RI(8,15));invoice(rest,d,c.road);log(`✅ ${J.n} chez ${c.road} terminé : facture de ${eur(rest)}, payée dans ${d} jours.`)}
     return}
   st.stats.spw++;st.refs[c.j]=(st.refs[c.j]||0)+1;
@@ -544,13 +551,13 @@ function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c)
 }
 function events(work){if(Math.random()>.045)return;const run=running();const r=Math.random();
   const big=Object.keys(st.eq).some(k=>st.eq[k]>0&&EQ[k].p>10000);const emp=st.workers.filter(w=>!w.boss);
-  if(r<.2&&Object.keys(st.eq).some(k=>st.eq[k]>0)){const k=big?RI(350,2800):RI(40,180);st.cash-=k;log(`🔧 Panne de matériel : réparation ${eur(k)}`)}
+  if(r<.2&&Object.keys(st.eq).some(k=>st.eq[k]>0)){const k=big?RI(350,2800):RI(40,180);mv(-k,'Réparation de matériel','use');log(`🔧 Panne de matériel : réparation ${eur(k)}`)}
   else if(r<.36&&st.adm.vca){genTender('dechets',true);log('🚨 Dépôt clandestin signalé : marché urgent dans 🏛️ Marchés publics.')}
   else if(r<.5&&run.length){st.rep=clamp(st.rep+2,0,100);log('👍 Un client est ravi et parle de toi : réputation +2')}
   else if(r<.62&&emp.length&&!has('rh')){const w=pick(emp);log(`🤒 ${w.n} est malade (certificat médical). Le salaire garanti reste à ta charge.`)}
-  else if(r<.72){const k=RI(20,80);st.cash+=k;log(`🎁 Pourboire d'un client content : +${eur(k)}`)}
-  else if(r<.84&&run.length&&big){const k=RI(250,1200);st.cash-=k;log(`🚗 Un automobiliste a renversé la signalisation. Franchise d'assurance : ${eur(k)}`)}
-  else if(st.adm.bce&&Math.random()<.4){const k=RI(80,400)*(has('compta')?.5:1);st.cash-=k;log(`📮 Amende administrative : déclaration TVA rentrée en retard (-${eur(k)}).${has('compta')?'':' Un comptable éviterait ça.'}`)}
+  else if(r<.72){const k=RI(20,80);mv(k,'Pourboire','in');log(`🎁 Pourboire d'un client content : +${eur(k)}`)}
+  else if(r<.84&&run.length&&big){const k=RI(250,1200);mv(-k,'Franchise d’assurance','other');log(`🚗 Un automobiliste a renversé la signalisation. Franchise d'assurance : ${eur(k)}`)}
+  else if(st.adm.bce&&Math.random()<.4){const k=RI(80,400)*(has('compta')?.5:1);mv(-k,'Amende TVA','other');log(`📮 Amende administrative : déclaration TVA rentrée en retard (-${eur(k)}).${has('compta')?'':' Un comptable éviterait ça.'}`)}
 }
 function mkW(r){const R0=ROLES[r];const bonus=has('rh')?.06:0;const sk=+Math.min(1.45,R(R0.sk[0],R0.sk[1])+bonus).toFixed(2);
   return{id:st.nid++,n:pick(PREN)+' '+pick(NOMS),r,sk,day:Math.round(R0.day*R(.97,1.05)),pc:R0.pc||(r==='qual'&&Math.random()<.25)||(r==='chef'&&Math.random()<.5)?1:0,skin:RI(0,SKIN.length-1),base:base(),mot:0,hd:0,warn:0}}
@@ -576,14 +583,14 @@ function observe(c,crew){const chef=crew.find(w=>w.r==='chef'),boss=crew.find(w=
 function rptAct(id,a){const r=st.reports.find(x=>x.id===id);if(!r)return;const w=st.workers.find(x=>x.id===r.wid);if(!w){r.done='parti';render();return}const fn=w.n.split(' ')[0];click();
   if(a==='talk'){w.mot=Math.min(1,w.mot+.12);r.done='Recadré oralement';log(`🗣️ Tu as recadré ${fn}.`,false)}
   else if(a==='warn'){w.warn++;w.mot=Math.min(1,w.mot+.3);if(w.warn>=2&&Math.random()<.5)w.base=Math.min(1,w.base+.15);r.done=`Avertissement écrit n°${w.warn}`;log(`⚠️ Avertissement écrit n°${w.warn} envoyé à ${w.n} (recommandé).`)}
-  else if(a==='prime'){if(st.cash<250)return toastMsg('Il faut 250 €.');st.cash-=250;w.mot=1;w.base=Math.min(1,w.base+.05);r.done='Prime de 250 € accordée';log(`🎁 Prime de 250 € pour ${w.n}. Toute l'équipe est motivée !`);st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv')x.mot=Math.min(1,x.mot+.03)})}
+  else if(a==='prime'){if(st.cash<250)return toastMsg('Il faut 250 €.');mv(-250,'Prime à '+w.n,'sal');w.mot=1;w.base=Math.min(1,w.base+.05);r.done='Prime de 250 € accordée';log(`🎁 Prime de 250 € pour ${w.n}. Toute l'équipe est motivée !`);st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv')x.mot=Math.min(1,x.mot+.03)})}
   else if(a==='fire'){if(st.contracts.some(c=>c.st==='run'&&c.crew.includes(w.id)&&c.crew.length<=JOBS[c.j].minW))return toastMsg('Il manquerait du monde sur le chantier : ajoute quelqu’un d’abord.');
     const p=preavisCost(w);if(!confirm(`Licencier ${w.n} avec préavis ?\nAncienneté : ${Math.round((st.day-w.hd)/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(p)}`))return;
-    st.cash-=p;dropW(w);r.done='Licencié avec préavis';log(`📤 ${w.n} est licencié (indemnité de préavis ${eur(p)}).`)}
+    mv(-p,'Préavis de '+w.n,'sal');dropW(w);r.done='Licencié avec préavis';log(`📤 ${w.n} est licencié (indemnité de préavis ${eur(p)}).`)}
   else if(a==='grave'){const wd=workDaysSince(r.day);const ok=(r.grave||w.warn>=2)&&wd<=3;
     if(!confirm(`Licencier ${w.n} pour motif grave, sans préavis ?\n${ok?'Le dossier est solide.':'⚠️ Attention : le dossier est faible ('+(wd>3?'plus de 3 jours ouvrables depuis les faits':'pas de faute grave ni 2 avertissements')+'). Il risque d’aller au tribunal du travail.'}`))return;
     dropW(w);if(ok){r.done='Licencié pour motif grave';log(`🚪 ${w.n} est licencié pour motif grave.`)}
-    else{const p=preavisCost(w)+Math.round(w.day*5*3*R(1,4));st.cash-=p;st.rep=clamp(st.rep-3,0,100);r.done='Tribunal du travail : condamné';log(`⚖️ ${w.n} conteste au tribunal du travail : tu es condamné à payer ${eur(p)} (préavis + licenciement déraisonnable). Réputation -3.`)}}
+    else{const p=preavisCost(w)+Math.round(w.day*5*3*R(1,4));mv(-p,'Tribunal du travail','other');st.rep=clamp(st.rep-3,0,100);r.done='Tribunal du travail : condamné';log(`⚖️ ${w.n} conteste au tribunal du travail : tu es condamné à payer ${eur(p)} (préavis + licenciement déraisonnable). Réputation -3.`)}}
   else{r.done=r.good?'Félicité':'Classé sans suite';if(r.good)w.mot=Math.min(1,w.mot+.05)}
   st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv'&&(a==='warn'||a==='fire'||a==='grave'))x.mot=Math.min(1,x.mot+.02)});
   save();render()}
@@ -699,15 +706,15 @@ function hireRole(r){const R0=ROLES[r];if(!st.adm.bce)return;if(!R0.multi&&has(r
   const n=nextName(r);
   st.workers.push({id:st.nid++,n,r,sk:1,day,pc:0,skin:RI(0,SKIN.length-1),base:1,mot:1,hd:st.day,warn:0});log(`${R0.ic} ${n} rejoint ${esc(st.name)} : ${R0.n}.`);kaching();goals();save();render()}
 function fire(id){const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;if(st.contracts.some(c=>c.st==='run'&&c.crew.includes(id)))return toastMsg("Cette personne est sur un chantier : retire-la d'abord.");
-  const pre=preavisCost(w);if(!confirm(`Licencier ${w.n} ?\nAncienneté : ${Math.round((st.day-(w.hd||0))/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(pre)}`))return;st.cash-=pre;dropW(w);log(`📤 ${w.n} est licencié (préavis ${eur(pre)}).`,false);save();render()}
-function trainPC(id){const w=st.workers.find(x=>x.id===id);if(!w||w.pc)return;if(st.cash<2900)return toastMsg('Il faut 2 900 € pour le permis C (auto-école + examen + CAP).');st.cash-=2900;w.pc=1;log(`🪪 ${w.n} a obtenu son permis C !`);save();render()}
-function buy(t){const e=EQ[t];if(st.cash<e.p)return toastMsg(`Pas assez d'argent : il manque ${eur(e.p-st.cash)}.`);st.cash-=e.p;st.mCapex+=e.p;st.eq[t]=(st.eq[t]||0)+1;log(`🛒 Achat : ${e.ic} ${e.n}`,false);kaching();goals();save();render()}
-function sell(t){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const v=Math.round(EQ[t].p*.55);if(!confirm(`Revendre ${EQ[t].n} pour ${eur(v)} ?`))return;st.eq[t]--;st.cash+=v;st.mCapex-=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
-function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);st.cash-=a.p;st.adm[k]=1;log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
+  const pre=preavisCost(w);if(!confirm(`Licencier ${w.n} ?\nAncienneté : ${Math.round((st.day-(w.hd||0))/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(pre)}`))return;mv(-pre,'Préavis de '+w.n,'sal');dropW(w);log(`📤 ${w.n} est licencié (préavis ${eur(pre)}).`,false);save();render()}
+function trainPC(id){const w=st.workers.find(x=>x.id===id);if(!w||w.pc)return;if(st.cash<2900)return toastMsg('Il faut 2 900 € pour le permis C (auto-école + examen + CAP).');mv(-2900,'Permis C de '+w.n,'buy');w.pc=1;log(`🪪 ${w.n} a obtenu son permis C !`);save();render()}
+function buy(t){const e=EQ[t];if(st.cash<e.p)return toastMsg(`Pas assez d'argent : il manque ${eur(e.p-st.cash)}.`);mv(-e.p,'Achat : '+e.n,'buy');st.mCapex+=e.p;st.eq[t]=(st.eq[t]||0)+1;log(`🛒 Achat : ${e.ic} ${e.n}`,false);kaching();goals();save();render()}
+function sell(t){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const v=Math.round(EQ[t].p*.55);if(!confirm(`Revendre ${EQ[t].n} pour ${eur(v)} ?`))return;st.eq[t]--;mv(v,'Revente : '+EQ[t].n,'buy');st.mCapex-=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
+function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);mv(-a.p,a.n,'buy');st.adm[k]=1;log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
 function clsOk(u){return!!(st.adm.vca&&st.adm.rc)&&st.stats.ca>=u.ca&&ownW()>=u.w&&st.rep>=u.r&&st.cash>=u.c&&(!u.dir||u.dir.every(has))}
-function upCls(){const u=CLS[st.cls+1];if(!u||!clsOk(u))return;st.cash-=u.c;st.cls++;log(`🏅 Agréation ${u.n} (catégorie G — routes) : marchés de travaux jusqu'à ${eur(u.max)} !`);kaching();goals();save();render()}
+function upCls(){const u=CLS[st.cls+1];if(!u||!clsOk(u))return;mv(-u.c,'Dossier d’agréation','buy');st.cls++;log(`🏅 Agréation ${u.n} (catégorie G — routes) : marchés de travaux jusqu'à ${eur(u.max)} !`);kaching();goals();save();render()}
 const loanMax=()=>st.adm.bce?Math.round((10000+st.stats.ca*.3)*(has('compta')?1.5:1)*(has('daf')?2:1)/5000)*5000:0;
-function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?"La banque refuse : montant maximum atteint. Fais plus de chiffre d'affaires.":"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;st.cash+=5000;st.mLoan+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;st.cash-=5000;st.mLoan-=5000}save();render()}
+function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?"La banque refuse : montant maximum atteint. Fais plus de chiffre d'affaires.":"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;mv(5000,'Prêt bancaire','loan');st.mLoan+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;mv(-5000,'Remboursement du prêt','loan');st.mLoan-=5000}save();render()}
 function rename(){showModal(`<h3>Nom de ta société</h3><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">Enregistrer</button>`)}
 function setName(){const v=$('#nm').value.trim().replace(/[<>&"]/g,'');if(v)st.name=v;closeM();save();render()}
 function restart(force){if(!force&&!confirm('Tout effacer et recommencer une nouvelle entreprise ?'))return;try{localStorage.removeItem(SAVE);localStorage.removeItem(BAK)}catch(e){}location.reload()}
@@ -751,6 +758,7 @@ function render(){
 function goalCard(){const g=curGoal();return g?`<div class="goal"><span class="gi">🎯</span><div><b>Objectif</b><div>${g.t}</div></div></div>`:''}
 function jobHead(J,sub,right){return`<div class="hd"><div class="ic" style="--ac2:${J.ac}2e">${J.ic}</div><div style="flex:1;min-width:0"><h3>${J.n}</h3><div class="mut">${sub}</div></div>${right||''}</div>`}
 function rCh(){let h=goalCard();const cs=st.contracts;
+  if(st.cash<0)h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Ton compte est dans le rouge (${eur(st.cash)})</b><div class="mut sm" style="margin-top:4px">Chaque paiement reçu s'ajoute bien, mais les salaires, la vie privée et les impôts partent le 1er du mois. Regarde le relevé et le bilan dans 📊 Entreprise. Solutions : moins de personnel, plus de chantiers, ou un prêt.</div><button class="btn s" style="margin-top:8px" onclick="tab('bi')">Voir mon relevé de compte</button></div>`;
   if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--ye)"><h3>👋 Bienvenue, patron !</h3><p>Tu pars de zéro : ${eur(3000)} d'économies, ta vieille voiture, une pince, des gants et des sacs. Pas d'ouvrier, pas de machine. Attention : chaque mois, il faut aussi payer ta vie privée (loyer, courses…) et les impôts.</p><p class="mut">Première étape : inscrire ton entreprise à la Banque-Carrefour des Entreprises (guichet d'entreprise) pour avoir un numéro de TVA et pouvoir facturer.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire à la BCE (105 €)</button></div>`;
   else if(!cs.length)h+=`<div class="card"><h3>Aucun chantier en cours</h3><p class="mut">Prends un travail dans <b>🧰 Boulots</b>${st.adm.vca?' ou remets offre dans <b>🏛️ Marchés</b>':''}.</p><button class="btn w" onclick="tab('pb')">Voir les petits boulots</button></div>`;
   const run=running();if(run.length)h+=`<div class="row mut sm" style="margin:0 4px 8px"><span>📋 Encadrement : ${run.length} / ${mgmtCap()} chantiers</span>${run.length>mgmtCap()?'<span class="tag r">saturé : -25 %</span>':''}<span style="margin-left:auto">💸 Salaires du mois : ${eur(st.salAcc)}</span></div>`;
@@ -826,9 +834,15 @@ function rMt(){let h=goalCard()+`<h2>Matériel — prix HTVA</h2><p class="mut s
     <div class="tags">${jobs.map(J=>`<span class="tag ${J.p?'':'b'}">${J.ic} ${J.n.split(' ').slice(0,3).join(' ')}</span>`).join('')}</div>
     <div class="row" style="margin-top:10px"><button class="btn" ${st.cash<e.p?'disabled':''} onclick="buy('${t}')">Acheter</button>${n?`<button class="btn s" onclick="sell('${t}')">Revendre ${eur(e.p*.55)}</button><span class="mut sm">${f} libre(s)</span>`:''}</div></div>`}
   return h}
+function bilanCard(){const B=st.lastMon;if(!B)return'';const rows=Object.keys(CATN).filter(k=>B.M[k]).map(k=>`<tr><td>${CATN[k]}</td><td class="${B.M[k]>=0?'money':'neg'}">${B.M[k]>=0?'+':''}${eur(B.M[k])}</td></tr>`).join('');
+  return`<h2>Bilan de ${B.mn}</h2><div class="card"><table>${rows}<tr><td><b>Résultat sur ton compte</b></td><td class="${B.tot>=0?'money':'neg'}">${B.tot>=0?'+':''}${eur(B.tot)}</td></tr></table></div>`}
+function monNow(){const M=st.mon||{};const rows=Object.keys(CATN).filter(k=>M[k]).map(k=>`<tr><td>${CATN[k]}</td><td class="${M[k]>=0?'money':'neg'}">${M[k]>=0?'+':''}${eur(M[k])}</td></tr>`).join('');
+  const sal=st.salAcc,fx=fixedM();return`<h2>Ce mois-ci (${MOIS[date(st.day).getMonth()]})</h2><div class="card"><table>${rows||'<tr><td class="mut">Pas encore de mouvement</td><td></td></tr>'}</table><div class="mut sm" style="margin-top:8px">Le 1er du mois, il faudra encore payer : salaires ${eur(sal)} + frais fixes ${eur(fx)} + impôts et cotisations.</div></div>`}
+function releve(){return`<h2>Relevé de compte</h2><div class="card">${(st.mv||[]).slice(0,40).map(m=>`<div class="row sm" style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="mut" style="width:62px">${dstr(m.d)}</span><span style="flex:1;min-width:0">${esc(m.t)}</span><b class="${m.a>=0?'money':'neg'}">${m.a>=0?'+':''}${eur(m.a)}</b></div>`).join('')||'<span class="mut">Aucun mouvement.</span>'}</div>`}
 function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
   let h=goalCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le 1 mars 2027 · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
   <div class="kpi" style="margin-top:12px"><div><span>Compte en banque</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>Factures à recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers terminés</span><b>${st.stats.done}</b></div><div><span>Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div></div>
+  ${monNow()}${bilanCard()}${releve()}
   <h2>Démarches</h2><div class="card">${Object.keys(ADM).map(k=>{const a=ADM[k];return`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:20px">${a.ic}</span><div style="flex:1;min-width:0"><b>${a.n}</b><div class="mut sm">${a.d}</div></div>${st.adm[k]?'<span class="tag g">✅ Fait</span>':`<button class="btn" style="padding:7px 11px" ${st.cash<a.p||(k!=='bce'&&!st.adm.bce)?'disabled':''} onclick="buyAdm('${k}')">${eur(a.p)}</button>`}</div>`}).join('')}</div>
   <h2>Agréation des entrepreneurs (travaux)</h2><div class="card"><b>${st.cls?'🏅 '+CLS[st.cls].n+' — catégorie G':'Pas encore agréé'}</b><div class="mut sm">Marchés de travaux jusqu'à ${eur(CLS[st.cls].max)} HTVA. Les marchés de services n'ont pas besoin d'agréation.</div>
   ${u?`<p style="margin:10px 0 4px">${u.n} (jusqu'à ${eur(u.max)}) :</p>${reqHtml([{ok:!!(st.adm.vca&&st.adm.rc),tx:'🦺 VCA + RC'},{ok:st.stats.ca>=u.ca,tx:`💶 CA ${eur(u.ca)}`},{ok:ownW()>=u.w,tx:`👷 ${u.w} personnes`},{ok:st.rep>=u.r,tx:`⭐ réputation ${u.r}`},...(u.dir||[]).map(r=>({ok:has(r),tx:ROLES[r].ic+' '+ROLES[r].n})),{ok:st.cash>=u.c,tx:`🧾 frais de dossier ${eur(u.c)}`}])}<button class="btn w" style="margin-top:10px" onclick="upCls()" ${clsOk(u)?'':'disabled'}>Introduire la demande</button>`:'<p>Classe maximale 👑</p>'}</div>
@@ -1094,7 +1108,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.4";
+var APPV="2026-11-03.5";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
