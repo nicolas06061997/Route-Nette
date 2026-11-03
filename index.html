@@ -833,7 +833,7 @@ function rPb(){let h=goalCard()+`<h2>Petits boulots — particuliers, commerces,
   for(const o of L){const J=JOBS[o.j],miss=jobMiss(o);const ctl={part:'Particulier',pro:'Entreprise',com:'Commune'}[o.ct];
     h+=`<div class="card acc" style="--ac:${J.ac};${miss.length?'opacity:.62':''}">${jobHead(J,`${o.client} · ${ctl} — ${o.town}`,`<span class="tag g" style="font-size:15px">${eur(o.price)}</span>`)}
     <div class="tags"><span class="tag">${nb(o.q)} ${J.un}</span><span class="tag">⏱ ${o.dur} jours</span><span class="tag">${o.ct==='part'?'💶 payé à la fin':o.ct==='com'?'📄 payé à 30 jours':'📄 facture 15-30 jours'}</span><span class="tag">Jusqu'au ${dstr(o.until)}</span></div>
-    <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:freeCount()<JOBS[o.j].minW?`<button class="btn w s" disabled>⏳ Occupé : termine d’abord ton chantier en cours</button>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
+    <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:freeCount()<JOBS[o.j].minW?`<button class="btn w s" disabled>⏳ ${field().length>1?'Plus assez de monde de libre ('+Math.max(0,freeCount())+' / '+JOBS[o.j].minW+')':'Occupé : termine d’abord ton chantier en cours'}</button>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
   return h+(L.length?'':'<p class="mut">Pas de demande aujourd’hui. Reviens demain !</p>')}
 function rAo(){let h=goalCard();const mine=st.tenders.filter(t=>t.my);
   h+=seg(aoTab,[['pub','📢 Publiés'],['mes',`📨 Mes offres (${mine.length})`],['riv','⚔️ Concurrents']],'aoTab');
@@ -1191,7 +1191,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.11";
+var APPV="2026-11-03.12";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
