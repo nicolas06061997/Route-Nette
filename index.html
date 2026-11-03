@@ -478,22 +478,24 @@ function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
   if(w&&r<.12)return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
 function invoice(amt,delay,lbl){if(amt<=0)return;st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl})}
 function tick(){
-  st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),work=!kind;const wf=WX[st.wx].f,intemp=work&&wf===0;
+  st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
     if(st.salAcc){mv(-st.salAcc,'Salaires du mois','sal');log(`💸 Salaires de ${MOIS[(x.getMonth()+11)%12]} payés : -${eur(st.salAcc)}`);st.salAcc=0}
     monthTax(MOIS[(x.getMonth()+11)%12]);
     for(const c of running()){const J=JOBS[c.j];if(J.p)continue;const due=c.price*c.prog/c.q-c.billed;if(due>50){c.billed+=due;invoice(due,payDelay(RI(30,45)),`${c.buyer?c.buyer.split('—')[1]||'SPW':'SPW'} — état d'avancement`);log(`📄 État d'avancement envoyé (${J.n}) : ${eur(due)}`,false)}}}
   // salaires du jour (chômage temporaire pour intempéries : les ouvriers sont payés par l'ONEM)
-  if(work)st.salAcc+=st.workers.reduce((a,w)=>a+(intemp&&ROLES[w.r].cat==='ouv'?0:w.day),0);
+  if(!kind)st.salAcc+=st.workers.reduce((a,w)=>a+(intemp&&ROLES[w.r].cat==='ouv'?0:w.day),0);
   const run=running(),over=Math.max(0,run.length-mgmtCap()),mgF=over?.75:1;
   for(const c of [...st.contracts]){const J=JOBS[c.j];
     if(c.st==='wait'&&st.day>c.startBy){st.contracts.splice(st.contracts.indexOf(c),1);
       if(J.p){st.rep=clamp(st.rep-2,0,100);log(`😠 ${c.road} a pris quelqu'un d'autre : tu n'es jamais venu. Réputation -2.`)}
       else{st.rep=clamp(st.rep-10,0,100);if(c.caut)log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Cautionnement de ${eur(c.caut)} perdu, réputation -10.`);else{const f=Math.round(c.price*.05);mv(-f,'Pénalité du SPW','other');log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Pénalité ${eur(f)}, réputation -10.`)}}continue}
     if(c.st!=='run'||!work||intemp)continue;
-    c.wd++;let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;mv(-(eqc+(J.p?(st.eq.van?0:14):40)),'Carburant et usure','use',1);
-    const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);
+    // congés du bâtiment : les ouvriers sont en vacances, mais le patron peut travailler
+    if(conge&&!c.crew.some(i=>{const w=st.workers.find(x=>x.id===i);return w&&w.boss}))continue;
+    if(!conge)c.wd++;let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;mv(-(eqc+(J.p?(st.eq.van?0:14):40)),'Carburant et usure','use',1);
+    const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(w=>w&&(!conge||w.boss));
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF;
     const dp=Math.min(c.q-c.prog,J.rate*crew.reduce((a,w)=>a+w.sk*(w.mot??1),0)*wf*boost);c.prog+=dp;observe(c,crew);
     if(c.xc)mv(-c.xc*dp/c.q,'Mise en décharge','use',1);
@@ -770,6 +772,7 @@ function rCh(){let h=goalCard();const cs=st.contracts;
   if(st.cash<0)h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Ton compte est dans le rouge (${eur(st.cash)})</b><div class="mut sm" style="margin-top:4px">Chaque paiement reçu s'ajoute bien, mais les salaires, la vie privée et les impôts partent le 1er du mois. Regarde le relevé et le bilan dans 📊 Entreprise. Solutions : moins de personnel, plus de chantiers, ou un prêt.</div><button class="btn s" style="margin-top:8px" onclick="tab('bi')">Voir mon relevé de compte</button></div>`;
   if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--ye)"><h3>👋 Bienvenue, patron !</h3><p>Tu pars de zéro : ${eur(3000)} d'économies, ta vieille voiture, une pince, des gants et des sacs. Pas d'ouvrier, pas de machine. Attention : chaque mois, il faut aussi payer ta vie privée (loyer, courses…) et les impôts.</p><p class="mut">Première étape : inscrire ton entreprise à la Banque-Carrefour des Entreprises (guichet d'entreprise) pour avoir un numéro de TVA et pouvoir facturer.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire à la BCE (105 €)</button></div>`;
   else if(!cs.length)h+=`<div class="card"><h3>Aucun chantier en cours</h3><p class="mut">Prends un travail dans <b>🧰 Boulots</b>${st.adm.vca?' ou remets offre dans <b>🏛️ Marchés</b>':''}.</p><button class="btn w" onclick="tab('pb')">Voir les petits boulots</button></div>`;
+  const dk=dayKind(st.day);if(dk&&running().length)h+=`<div class="card acc" style="--ac:var(--bl)"><b>${dk==='Week-end'?'🛌 C’est le week-end':dk==='Congés du bâtiment'?'🏖️ Congés du bâtiment':'🎉 Jour férié : '+dk}</b><div class="mut sm" style="margin-top:4px">${dk==='Congés du bâtiment'?'Tes ouvriers sont en vacances jusqu’au 1er août (pécule de vacances). Toi, le patron, tu peux continuer à travailler sur tes chantiers.':'Personne ne travaille aujourd’hui : les chantiers reprennent le prochain jour ouvrable.'}</div></div>`;
   const run=running();if(run.length)h+=`<div class="row mut sm" style="margin:0 4px 8px"><span>📋 Encadrement : ${run.length} / ${mgmtCap()} chantiers</span>${run.length>mgmtCap()?'<span class="tag r">saturé : -25 %</span>':''}<span style="margin-left:auto">💸 Salaires du mois : ${eur(st.salAcc)}</span></div>`;
   const firstRun=run[0];
   for(const c of cs){const J=JOBS[c.j],pc=c.prog/c.q*100,left=c.N-c.wd;
@@ -1117,7 +1120,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.6";
+var APPV="2026-11-03.7";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
