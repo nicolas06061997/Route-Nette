@@ -393,7 +393,9 @@ function genJob(force){const m=month();const ok=PJ.filter(k=>inSeason(JOBS[k],m)
 }
 function inSeason(J,m){if(!J.mo)return true;const[a,b]=J.mo;return a<=b?(m>=a&&m<=b):(m>=a||m<=b)}
 function jobMiss(o){const J=JOBS[o.j];const r=[];if(!st.adm.bce)r.push('🧾 Inscription BCE');J.need.forEach(t=>{if(!(st.eq[t]>0))r.push(EQ[t].ic+' '+EQ[t].n+' ('+eur(EQ[t].p)+')')});return r}
-function acceptJob(id){const o=st.jobs.find(x=>x.id===id);if(!o||jobMiss(o).length)return;click();
+// personnes encore disponibles (sans compter celles réservées pour des chantiers acceptés mais pas commencés)
+function freeCount(){return freeW().length-st.contracts.filter(c=>c.st==='wait').reduce((a,c)=>a+JOBS[c.j].minW,0)}
+function acceptJob(id){const o=st.jobs.find(x=>x.id===id);if(!o||jobMiss(o).length)return;if(freeCount()<JOBS[o.j].minW)return toastMsg('⏳ Tout le monde est déjà sur un chantier. Termine d’abord le travail en cours.');click();
   st.jobs.splice(st.jobs.indexOf(o),1);
   const N=Math.max(2,o.dur-2);
   const c={id:st.nid++,j:o.j,q:o.q,road:o.client,ct:o.ct,town:o.town,price:o.price,prog:0,vis:0,N,wd:0,startBy:st.day+3,st:'wait',crew:[],own:{},billed:0,caut:0,seed:RI(1,99999),tap:{},nRef:1};
@@ -831,7 +833,7 @@ function rPb(){let h=goalCard()+`<h2>Petits boulots — particuliers, commerces,
   for(const o of L){const J=JOBS[o.j],miss=jobMiss(o);const ctl={part:'Particulier',pro:'Entreprise',com:'Commune'}[o.ct];
     h+=`<div class="card acc" style="--ac:${J.ac};${miss.length?'opacity:.62':''}">${jobHead(J,`${o.client} · ${ctl} — ${o.town}`,`<span class="tag g" style="font-size:15px">${eur(o.price)}</span>`)}
     <div class="tags"><span class="tag">${nb(o.q)} ${J.un}</span><span class="tag">⏱ ${o.dur} jours</span><span class="tag">${o.ct==='part'?'💶 payé à la fin':o.ct==='com'?'📄 payé à 30 jours':'📄 facture 15-30 jours'}</span><span class="tag">Jusqu'au ${dstr(o.until)}</span></div>
-    <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
+    <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:freeCount()<JOBS[o.j].minW?`<button class="btn w s" disabled>⏳ Occupé : termine d’abord ton chantier en cours</button>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
   return h+(L.length?'':'<p class="mut">Pas de demande aujourd’hui. Reviens demain !</p>')}
 function rAo(){let h=goalCard();const mine=st.tenders.filter(t=>t.my);
   h+=seg(aoTab,[['pub','📢 Publiés'],['mes',`📨 Mes offres (${mine.length})`],['riv','⚔️ Concurrents']],'aoTab');
@@ -1189,7 +1191,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.10";
+var APPV="2026-11-03.11";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
