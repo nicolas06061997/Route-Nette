@@ -262,6 +262,7 @@ const ROLES={
   grimp:{n:'Élagueur-grimpeur (certificat ETW)',ic:'🧗',cat:'ouv',day:274,sk:[1.05,1.3],d:"Obligatoire pour l'abattage d'arbres dangereux. +10 % en élagage."},
   meca:{n:"Mécanicien d'atelier",ic:'🔧',cat:'enc',day:255,multi:0,who:'Didier Hubert',d:'Répare au dépôt : 60 % de pannes en moins, usure des machines -10 %.'},
   prev:{n:'Conseiller en prévention (niveau II)',ic:'⛑️',cat:'enc',day:300,who:'Laurence Dethier',need:15,d:'Sécurité au travail : assurance accidents du travail à 3 % au lieu de 4 %, moins d’accidents.'},
+  plan:{n:'Chargée de clientèle et planning',ic:'📞',cat:'bur',day:180,who:'Manon Lecocq',d:'Répond aux clients et accepte elle-même les petits boulots rentables dès qu’une équipe est libre (le matériel doit être à toi).'},
   dirc:{n:'Directeur commercial',ic:'📈',cat:'dir',day:370,who:'Thierry Collard',need:10,d:'Plus d’invitations aux marchés, +3 offres en même temps, meilleure note technique.'}
 };
 const GESTN=['Christophe Hubert','Fanny Leclercq','Didier Massart','Julie Wautier','Kevin Jacquet','Laurent Pirotte','Céline Dethier','Nicolas Gillard'];
@@ -564,6 +565,7 @@ function tick(){
   if(!kind&&mgmtLoad()>2&&has('gest'))rsAdd('gest',Math.min(mgmtLoad()-2,3*cnt('gest')));
   if(x.getDate()===1&&x.getMonth()===0)st.workers.forEach(w=>{if(w.r==='etu')w.hy=0});
   const run=running(),over=Math.max(0,mgmtLoad()-mgmtCap()),mgF=over>0?.75:1;
+  if(work&&has('plan'))autoAccept();
   if(work)autoStaff();
   for(const c of [...st.contracts]){const J=JOBS[c.j];
     if(c.st==='wait'&&!J.p&&!c.md&&st.day>=c.startBy-4){c.md=1;log(`🚨 Mise en demeure du SPW : commence « ${J.n} » (${esc(c.road)}) avant le ${dstr(c.startBy)}, sinon le marché sera résilié avec une pénalité de ${eur(c.price*.05)}. Libère des ouvriers dans 🦺 Chantiers.`)}
@@ -714,7 +716,7 @@ function workDaysSince(d){let n=0;for(let k=d+1;k<=st.day;k++)if(isWork(k))n++;r
 // Statistiques réelles de chaque personne : ce qu'elle produit, ce qu'elle coûte, ce qu'elle apporte
 function staffStat(w){const s=w.s||{d:0,rev:0,cost:0},R=st.rs||{},m=Math.max(1,(st.day-(w.hd||0))/30.4);let L=[];
   if(ROLES[w.r].cat==='ouv'){const net=s.rev-s.cost;L.push(`🗓️ ${s.d} jour(s) sur chantier`,`💶 a produit ${eur(s.rev)}`);if(!w.boss)L.push(`💸 a coûté ${eur(s.cost)}`,`<b class="${net>=0?'money':'neg'}">${net>=0?'rapporte':'perd'} ${eur(Math.abs(net))}</b>`);if(s.d)L.push(`${eur(s.rev/s.d)} par jour`)}
-  else{const x={aide:`💶 ${eur(R.aide||0)} facturés et encaissés 10 jours plus tôt`,gest:`📋 ${nb(R.gest||0)} chantier-jours suivis en plus`,secr:`📨 ${nb(R.off||0)} offres remises en plus`,metreur:`📐 ${nb(R.metreur||0)} offres chiffrées au prix de revient exact`,compta:`💰 ${eur(R.compta||0)} de fiduciaire économisés`,rh:`🙋 ${nb(R.rh||0)} candidats en plus trouvés`,dirt:`🛠️ ${eur(R.dirt||0)} de production en plus (+8 %)`,daf:`🏦 capacité de prêt doublée : ${eur(loanMax())}`,dirc:`📈 ${nb(R.off||0)} offres remises en plus`,meca:`🔧 ${eur(R.meca||0)} de pannes et d’usure économisés`,prev:`⛑️ ${eur(R.prev||0)} d’assurance économisés`}[w.r];if(x)L.push(x);L.push(`💸 a coûté ${eur(s.cost)}`)}
+  else{const x={aide:`💶 ${eur(R.aide||0)} facturés et encaissés 10 jours plus tôt`,gest:`📋 ${nb(R.gest||0)} chantier-jours suivis en plus`,secr:`📨 ${nb(R.off||0)} offres remises en plus`,metreur:`📐 ${nb(R.metreur||0)} offres chiffrées au prix de revient exact`,compta:`💰 ${eur(R.compta||0)} de fiduciaire économisés`,rh:`🙋 ${nb(R.rh||0)} candidats en plus trouvés`,dirt:`🛠️ ${eur(R.dirt||0)} de production en plus (+8 %)`,daf:`🏦 capacité de prêt doublée : ${eur(loanMax())}`,dirc:`📈 ${nb(R.off||0)} offres remises en plus`,plan:`📞 ${nb(R.plan||0)} petits boulots acceptés pour ${eur(R.planv||0)}`,meca:`🔧 ${eur(R.meca||0)} de pannes et d’usure économisés`,prev:`⛑️ ${eur(R.prev||0)} d’assurance économisés`}[w.r];if(x)L.push(x);L.push(`💸 a coûté ${eur(s.cost)}`)}
   return`<div class="tags" style="margin-top:6px">${L.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`}
 const behav=w=>w.boss||w.seen===undefined?null:w.seen<.55?['🔴 À surveiller','r']:w.seen<.72?['🟠 Moyen','o']:['🟢 Sérieux','g'];
 
@@ -746,7 +748,7 @@ const EMPLO={ouv:["Ets Lambotte & Fils (ouvrier d'entretien)","Agence d'intérim
   dir:['Groupe routier wallon SA (directeur de division)','Bâti-Meuse SA (directeur de projets)','Ardenne Entretien SA (responsable de région)','Banque (chargé de relations entreprises)','Consultant indépendant']};
 const DIPL={etu:['CESS en cours (technique de qualification)','Bachelier en cours (Haute École)'],man:['CEB','CE1D','CQ6 Ouvrier en horticulture','Formation Forem : ouvrier en espaces verts'],qual:['CQ6 Ouvrier qualifié en horticulture','CESS technique : agronomie','Formation IFAPME : entrepreneur parcs et jardins'],
   chauf:['CQ6 Mécanique','CESS professionnel','Formation Forem : conducteur poids lourd'],chef:['CESS technique : construction','Formation IFAPME : chef d\'équipe','Bachelier en agronomie (non terminé)'],
-  aide:['Bachelier en comptabilité (Haute École)'],compta:['Bachelier en comptabilité','Expert-comptable ITAA (stagiaire)'],rh:['Master en gestion des ressources humaines'],secr:['Bachelier assistant(e) de direction'],metreur:['Bachelier en construction, option métreur-deviseur'],
+  aide:['Bachelier en comptabilité (Haute École)'],plan:['Bachelier en marketing / assistante de direction'],compta:['Bachelier en comptabilité','Expert-comptable ITAA (stagiaire)'],rh:['Master en gestion des ressources humaines'],secr:['Bachelier assistant(e) de direction'],metreur:['Bachelier en construction, option métreur-deviseur'],
   gest:['Bachelier en construction','Bachelier en agronomie'],dirt:["Master ingénieur civil des constructions"],daf:['Master en sciences de gestion','Expert-comptable ITAA'],dirc:['Master en sciences commerciales']};
 function cvOf(w){const g=rng(strHash('cv|'+w.n+'|'+w.r));const R0=ROLES[w.r];const cat=R0.cat;
   const age=w.r==='etu'?18+Math.floor(g()*5):cat==='dir'?38+Math.floor(g()*20):22+Math.floor(g()*36);
@@ -826,6 +828,9 @@ function pickFor(c,onlyFree){const J=JOBS[c.j];const fw=freeW(c).filter(w=>!(w.r
   for(const w of fw){if(sel.length>=Math.max(J.minW,c.nRef||1))break;if(!sel.includes(w))sel.push(w)}return sel}
 const crewOk=(J,sel)=>sel.length>=J.minW&&(!J.pc||hasPC(sel))&&(!J.op||sel.some(w=>w.r===J.op))&&(!J.gr||sel.some(w=>w.r==='grimp'));
 // chaque jour ouvrable : relance les chantiers en pause et commence les chantiers en attente dès que l'équipe est libre
+// Manon accepte les petits boulots, les plus rentables d'abord, tant qu'il reste du monde de libre
+function autoAccept(){const L=st.jobs.filter(o=>!jobMiss(o).length).sort((a,b)=>b.price/Math.max(1,b.q/JOBS[b.j].rate)-a.price/Math.max(1,a.q/JOBS[a.j].rate));
+  for(const o of L){if(freeCount()<JOBS[o.j].minW)break;const n=st.contracts.length;acceptJob(o.id);if(modalOpen)closeM();if(st.contracts.length>n){rsAdd('plan',1);rsAdd('planv',o.price);log(`📞 Manon a accepté : ${JOBS[o.j].n} chez ${o.client} (${eur(o.price)}).`,false)}}}
 function autoStaff(){if(st.autoStaff===0)return;const L=st.contracts.filter(c=>c.st==='wait'||(c.st==='run'&&!c.crew.length)).sort((a,b)=>(JOBS[a.j].p?1:0)-(JOBS[b.j].p?1:0)||a.startBy-b.startBy);
   for(const c of L){const J=JOBS[c.j];const sel=pickFor(c);if(!crewOk(J,sel))continue;const p=eqPlan(c.j,c);if(p.miss.length)continue;
     const was=c.st;c.own=p.own;c.rent=p.rent;c.crew=sel.map(w=>w.id);c.st='run';log(`▶ ${was==='wait'?'Chantier commencé':'Chantier relancé'} automatiquement : ${J.n} (${esc(c.road)}) avec ${sel.map(w=>w.n.split(' ')[0]).join(', ')}.`,false)}}
@@ -1072,7 +1077,7 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
   else if(eqTab==='bureau'){const office=st.workers.filter(w=>ROLES[w.r].cat!=='ouv');
     h+=`<h2>Encadrement, bureau et direction</h2>`;if(!office.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, factures, chantiers. Toi seul, tu peux suivre 2 chantiers et 2 offres en même temps.</p>';office.forEach(w=>h+=card(w));
     h+=`<h2>Postes à pourvoir</h2>`;
-    for(const r of['aide','gest','secr','metreur','compta','rh','meca','prev','dirt','daf','dirc']){const R0=ROLES[r];if(!R0.multi&&has(r))continue;const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
+    for(const r of['aide','plan','gest','secr','metreur','compta','rh','meca','prev','dirt','daf','dirc']){const R0=ROLES[r];if(!R0.multi&&has(r))continue;const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
       h+=`<div class="card" style="${lock?'opacity:.6':''}"><div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(R0.day*WDM)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>
       <button class="btn w" style="margin-top:10px" ${lock?'disabled':''} onclick="cvUI('role','${r}')">${R0.need&&ownW()<R0.need?`🔒 À partir de ${R0.need} personnes`:R0.multi&&has(r)?'📄 CV d’un gestionnaire de plus':'📄 Voir le CV'}</button></div>`}}
   else{h+=`<h2>Candidats (nouveaux chaque lundi${has('rh')?', trouvés par Sophie':''})</h2><p class="mut sm" style="margin:0 4px 10px">Coût employeur : salaire brut (barèmes 2026 de la commission paritaire 145.04 — parcs et jardins, 16,00 à 18,87 €/h brut) + ONSS + pécules de vacances. Pour engager, il faut de quoi payer un mois.</p>`;
@@ -1463,7 +1468,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.32";
+var APPV="2026-11-03.33";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
