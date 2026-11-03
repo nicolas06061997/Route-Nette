@@ -564,6 +564,7 @@ function tick(){
   if(!kind&&mgmtLoad()>2&&has('gest'))rsAdd('gest',Math.min(mgmtLoad()-2,3*cnt('gest')));
   if(x.getDate()===1&&x.getMonth()===0)st.workers.forEach(w=>{if(w.r==='etu')w.hy=0});
   const run=running(),over=Math.max(0,mgmtLoad()-mgmtCap()),mgF=over>0?.75:1;
+  if(work)autoStaff();
   for(const c of [...st.contracts]){const J=JOBS[c.j];
     if(c.st==='wait'&&!J.p&&!c.md&&st.day>=c.startBy-4){c.md=1;log(`🚨 Mise en demeure du SPW : commence « ${J.n} » (${esc(c.road)}) avant le ${dstr(c.startBy)}, sinon le marché sera résilié avec une pénalité de ${eur(c.price*.05)}. Libère des ouvriers dans 🦺 Chantiers.`)}
     if(c.st==='wait'&&st.day>c.startBy){st.contracts.splice(st.contracts.indexOf(c),1);
@@ -816,12 +817,18 @@ const curGoal=()=>GOALS.find(g=>!st.goals[g.k]);
 let pickSel=[];
 function startUI(id){const c=st.contracts.find(x=>x.id===id);if(!c)return;const J=JOBS[c.j];
   const fw=freeW(c).sort((a,b)=>b.sk-a.sk);
-  if(c.st==='run')pickSel=c.crew.filter(i=>fw.some(w=>w.id===i));
-  else{// d'abord les personnes obligatoires (permis C, conducteur d'engins, élagueur-grimpeur), puis les plus efficaces
-    const sel=[];const need=[J.pc?w=>w.pc:null,J.op?w=>w.r===J.op:null,J.gr?w=>w.r==='grimp':null].filter(Boolean);
-    for(const f of need){const w=fw.find(x=>f(x)&&!sel.includes(x));if(w)sel.push(w)}
-    for(const w of fw){if(sel.length>=Math.max(J.minW,c.nRef))break;if(!sel.includes(w))sel.push(w)}pickSel=sel.map(w=>w.id)}
+  if(c.st==='run'&&c.crew.length)pickSel=c.crew.filter(i=>fw.some(w=>w.id===i));else pickSel=pickFor(c).map(w=>w.id);
   startDraw(id)}
+// choix automatique de l'équipe : d'abord les personnes obligatoires (permis C, conducteur d'engins, élagueur-grimpeur), puis les plus efficaces
+function pickFor(c,onlyFree){const J=JOBS[c.j];const fw=freeW(c).filter(w=>!(w.r==='etu'&&(w.hy||0)>=650)).sort((a,b)=>b.sk-a.sk);const sel=[];
+  const need=[J.pc?w=>w.pc:null,J.op?w=>w.r===J.op:null,J.gr?w=>w.r==='grimp':null].filter(Boolean);
+  for(const f of need){const w=fw.find(x=>f(x)&&!sel.includes(x));if(w)sel.push(w)}
+  for(const w of fw){if(sel.length>=Math.max(J.minW,c.nRef||1))break;if(!sel.includes(w))sel.push(w)}return sel}
+const crewOk=(J,sel)=>sel.length>=J.minW&&(!J.pc||hasPC(sel))&&(!J.op||sel.some(w=>w.r===J.op))&&(!J.gr||sel.some(w=>w.r==='grimp'));
+// chaque jour ouvrable : relance les chantiers en pause et commence les chantiers en attente dès que l'équipe est libre
+function autoStaff(){if(st.autoStaff===0)return;const L=st.contracts.filter(c=>c.st==='wait'||(c.st==='run'&&!c.crew.length)).sort((a,b)=>(JOBS[a.j].p?1:0)-(JOBS[b.j].p?1:0)||a.startBy-b.startBy);
+  for(const c of L){const J=JOBS[c.j];const sel=pickFor(c);if(!crewOk(J,sel))continue;const p=eqPlan(c.j,c);if(p.miss.length)continue;
+    const was=c.st;c.own=p.own;c.rent=p.rent;c.crew=sel.map(w=>w.id);c.st='run';log(`▶ ${was==='wait'?'Chantier commencé':'Chantier relancé'} automatiquement : ${J.n} (${esc(c.road)}) avec ${sel.map(w=>w.n.split(' ')[0]).join(', ')}.`,false)}}
 function startDraw(id){const c=st.contracts.find(x=>x.id===id),J=JOBS[c.j];const fw=freeW(c).sort((a,b)=>b.sk-a.sk);
   const sel=fw.filter(w=>pickSel.includes(w.id));const n=sel.length,p=eqPlan(c.j,c);const pw=sel.reduce((a,w)=>a+w.sk,0)*(sel.some(w=>w.r==='chef')?1.15:1);
   const days=pw?Math.ceil((c.q-c.prog)/(J.rate*pw)):'∞';const left=c.N-c.wd;const pcOk=(!J.pc||hasPC(sel))&&(!J.op||sel.some(w=>w.r===J.op))&&(!J.gr||sel.some(w=>w.r==='grimp'));
@@ -1046,7 +1053,8 @@ function rAo(){let h=goalCard();const mine=st.tenders.filter(t=>t.my);
   return h}
 function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew.forEach(i=>busy.set(i,c)));
   let h=goalCard()+`<div class="kpi" style="margin-bottom:12px"><div><span>Personnel</span><b>${ownW()}</b></div><div><span>Masse salariale / mois</span><b>${eur(payroll()*WDM)}</b></div><div><span>Encadrement (charge)</span><b>${nb1(mgmtLoad())} / ${mgmtCap()}</b></div><div><span>Offres en parallèle</span><b>${myOffers()} / ${offerCap()}</b></div></div>`;
-  h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporaire pour manque de travail</b><button class="btn ${st.chomEco!==0?'g':'s'}" style="padding:6px 10px" onclick="st.chomEco=st.chomEco===0?1:0;save();render()">${st.chomEco!==0?'Activé':'Désactivé'}</button></div><div class="mut sm" style="margin-top:4px">Règle belge pour les ouvriers : quand il n'y a pas de chantier pour eux, ils sont au chômage temporaire (payés par l'ONEM). Tu ne paies qu'un petit supplément (12 €/jour). Maximum 4 semaines de suite, ensuite au moins une semaine de travail. Déjà économisé : <b>${eur((st.rs||{}).ce||0)}</b>.</div></div>`;
+  h+=`<div class="card"><div class="row"><b style="flex:1">🤖 Équipes automatiques</b><button class="btn ${st.autoStaff!==0?'g':'s'}" style="padding:6px 10px" onclick="st.autoStaff=st.autoStaff===0?1:0;save();render()">${st.autoStaff!==0?'Activé':'Désactivé'}</button></div><div class="mut sm" style="margin-top:4px">Ton chef d'équipe envoie lui-même les ouvriers libres sur les chantiers en attente ou en pause (marchés publics en premier), et loue le matériel s'il manque.</div></div>`;
+h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporaire pour manque de travail</b><button class="btn ${st.chomEco!==0?'g':'s'}" style="padding:6px 10px" onclick="st.chomEco=st.chomEco===0?1:0;save();render()">${st.chomEco!==0?'Activé':'Désactivé'}</button></div><div class="mut sm" style="margin-top:4px">Règle belge pour les ouvriers : quand il n'y a pas de chantier pour eux, ils sont au chômage temporaire (payés par l'ONEM). Tu ne paies qu'un petit supplément (12 €/jour). Maximum 4 semaines de suite, ensuite au moins une semaine de travail. Déjà économisé : <b>${eur((st.rs||{}).ce||0)}</b>.</div></div>`;
   const nR=st.reports.filter(r=>!r.done).length;h+=seg(eqTab,[['terrain','👷 Terrain'],['rap',`📋 Rapports${nR?' ('+nR+')':''}`],['bureau','🏢 Bureau'],['recru','🙋 Engager']],'eqTab');
   const card=w=>{const R0=ROLES[w.r],c=busy.get(w.id),stx=staffStat(w);return`<div class="card"><div class="hd">${avatar(w,48)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${R0.n}${w.day?' · '+eur(monthly(w))+'/mois (coût employeur)':''}</div></div></div>
     <div class="tags">${R0.cat==='ouv'?`<span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>`:''}${w.pc?'<span class="tag v">🪪 Permis C</span>':''}${w.r==='etu'?`<span class="tag ${(w.hy||0)>=650?'r':''}">⏱ ${Math.round(w.hy||0)} / 650 h cette année</span>`:''}${behav(w)?`<span class="tag ${behav(w)[1]}">${behav(w)[0]}</span>`:''}${w.warn?`<span class="tag r">⚠️ ${w.warn} avertissement${w.warn>1?'s':''}</span>`:''}${R0.cat==='ouv'?`<span class="tag ${c?'o':''}">${c?'🦺 '+JOBS[c.j].n.split(' ').slice(0,3).join(' '):(w.ce||0)>0?'🏠 Chômage temporaire ('+w.ce+' j)':'💤 Libre'}</span>`:''}</div>${R0.d&&R0.cat!=='ouv'?`<div class="mut sm" style="margin-top:6px">${R0.d}</div>`:''}${stx}
@@ -1455,7 +1463,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.31";
+var APPV="2026-11-03.32";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
