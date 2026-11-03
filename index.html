@@ -397,7 +397,12 @@ function acceptJob(id){const o=st.jobs.find(x=>x.id===id);if(!o||jobMiss(o).leng
   st.jobs.splice(st.jobs.indexOf(o),1);
   const N=Math.max(2,o.dur-2);
   const c={id:st.nid++,j:o.j,q:o.q,road:o.client,ct:o.ct,town:o.town,price:o.price,prog:0,vis:0,N,wd:0,startBy:st.day+3,st:'wait',crew:[],own:{},billed:0,caut:0,seed:RI(1,99999),tap:{},nRef:1};
-  st.contracts.push(c);save();startUI(c.id)}
+  st.contracts.push(c);save();
+  // on lance tout de suite avec l'équipe libre la plus efficace ; la fenêtre ne s'ouvre que s'il manque quelqu'un ou du matériel
+  const J=JOBS[c.j],fw=freeW(c).sort((a,b)=>b.sk-a.sk),p=eqPlan(c.j,c);
+  if(fw.length>=J.minW&&!p.miss.length){pickSel=fw.slice(0,J.minW).map(w=>w.id);c.own=p.own;c.crew=[...pickSel];c.st='run';st.sel=c.id;
+    log(`🦺 C'est parti chez ${c.road} : ${J.n} (${c.crew.map(i=>st.workers.find(w=>w.id===i).n.split(' ')[0]).join(', ')}).`);snd(440,.08,'square',.04);snd(660,.12,'square',.04,.08);save();render()}
+  else startUI(c.id)}
 
 /* ---------- Marchés publics ---------- */
 function clsFor(v,nat){if(nat!=='travaux'||v<=CLS[0].max)return 0;return v<=CLS[1].max?1:2}
@@ -1184,7 +1189,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.9";
+var APPV="2026-11-03.10";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
