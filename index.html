@@ -326,7 +326,7 @@ const PROC={fm:{n:'Marché de faible montant',d:"Moins de 30 000 € : le pouvoi
    SAUVEGARDE — ne jamais changer SAVE : la progression des joueurs en dépend.
    Nouveau champ : l'ajouter dans defaults() ; migrate() complète les anciennes parties.
    ===================================================================== */
-const SAVE='routenette-save',BAK='routenette-bak',SCHEMA=5;
+const SAVE='routenette-save',BAK='routenette-bak',SCHEMA=6;
 let st=null;
 function newRivals(){return RIVT.map(r=>({n:r[0],sz:r[1],jobs:r[2],ag:r[3],rep:r[4],load:[],won:0,ca:0}))}
 function defaults(){return{schema:SCHEMA,name:'Ma petite entreprise',cash:3000,rep:10,day:0,adm:{},cls:0,loan:0,nid:2,
@@ -348,6 +348,8 @@ function migrate(s){const d=defaults();if(s.mStart===undefined)s.mStart=s.cash;
   if((s.schema||1)<4){const O={etu:118,man:220,qual:240,chauf:258,chef:292},N={etu:110,man:192,qual:212,chauf:238,chef:268};s.workers.forEach(w=>{if(O[w.r])w.day=Math.round(w.day*N[w.r]/O[w.r])});(s.cand||[]).forEach(w=>{if(O[w.r])w.day=Math.round(w.day*N[w.r]/O[w.r])})}
   // version 4 -> 5 : barèmes 2026 de la CP 145.04 (parcs et jardins) avec le vrai coût employeur
   if((s.schema||1)<5){const O={etu:110,man:192,qual:212,chauf:238,chef:268},N={etu:132,man:225,qual:246,chauf:265,chef:291};[...s.workers,...(s.cand||[])].forEach(w=>{if(O[w.r])w.day=Math.round(w.day*N[w.r]/O[w.r])})}
+  // version 5 -> 6 : une société relancée après faillite repart avec son propre chiffre d'affaires (l'ancien va dans la carrière)
+  if((s.schema||1)<6){s.caY=s.caY||{};if(/\s\d+$/.test(s.name||'')&&!s.career){s.career={...s.stats};s.stats={won:0,lost:0,done:0,ca:0,spw:0,earned:0};s.found=s.day}}
   // éléments retirés : remboursés plutôt que perdus
   for(const k in s.eq)if(!EQ[k])delete s.eq[k];
   s.contracts=s.contracts.filter(c=>JOBS[c.j]);s.jobs=s.jobs.filter(o=>JOBS[o.j]);s.tenders=s.tenders.filter(t=>JOBS[t.j]&&t.postes);
@@ -609,7 +611,7 @@ function monthTax(mn){const amort=Object.keys(st.eq).reduce((a,k)=>a+EQ[k].p*st.
 function failUI(){showModal(`<h3>💀 Faillite</h3><p>C'est la 3e fois que <b>${esc(st.name)}</b> ne peut plus payer ses dettes. Le tribunal de l'entreprise prononce la <b>faillite</b> : le curateur vend tes machines, ton personnel est licencié, tes chantiers sont repris par d'autres.</p>
   <div class="card"><b>🔁 Relancer une nouvelle société</b><div class="mut sm" style="margin-top:4px">Tu repars avec 3 000 € d'économies, sans machine ni personnel. Tu gardes ton expérience : tes références de chantiers, ton chiffre d'affaires passé, tes objectifs atteints et ton efficacité. Réputation -20.</div><button class="btn w" style="margin-top:10px" onclick="relaunch()">Relancer une nouvelle société</button></div>
   <button class="btn s w" style="margin-top:6px" onclick="restart()">Tout recommencer à zéro</button>`)}
-function relaunch(){const boss=st.workers.find(w=>w.boss);st.workers=[boss];boss.mot=1;st.eq={};st.contracts=[];st.inv=[];st.reports=[];st.adm={};st.cls=0;st.loan=0;st.salAcc=0;st.prj=0;st.over=false;st.srl=0;
+function relaunch(){const C=st.career||(st.career={won:0,lost:0,done:0,ca:0,spw:0,earned:0});for(const k in st.stats)C[k]=(C[k]||0)+st.stats[k];st.stats={won:0,lost:0,done:0,ca:0,spw:0,earned:0};st.caY={};st.found=st.day+1;const boss=st.workers.find(w=>w.boss);st.workers=[boss];boss.mot=1;st.eq={};st.contracts=[];st.inv=[];st.reports=[];st.adm={};st.cls=0;st.loan=0;st.salAcc=0;st.prj=0;st.over=false;st.srl=0;
   st.tenders.forEach(t=>{if(t.status==='open')t.my=null});st.tenders=st.tenders.filter(t=>t.status==='open');st.rep=clamp(st.rep-20,5,100);st.cash=0;st.mv=[];st.mon={};
   mv(3000,"Nouveau départ : tes économies",'in');st.mStart=st.cash;st.mCapex=0;st.mLoan=0;st.name=st.name.replace(/( \d+)?$/,m=>' '+((parseInt(m)||1)+1));
   log(`🔁 Nouvelle société : ${esc(st.name)}. Inscris-la à la BCE pour recommencer à facturer.`);closeM();refreshCand();save();render()}
@@ -628,7 +630,7 @@ function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c)
   let rest=c.price-c.billed-fine,msg='';
   let dr=J.p?(late?-2:st.rep<40?RI(1,2):0):(late?-RI(3,6):RI(2,4)+(c.price>100000?2:0));
   if(!J.p&&Math.random()<(1.25-avg)*.5&&!crew.some(w=>w.r==='chef')){dr-=2;msg=' Le fonctionnaire dirigeant a demandé des retouches avant la réception.'}
-  st.rep=clamp(st.rep+dr,0,100);st.stats.done++;confetti(J.p?60:160);st.stats.ca+=c.price-fine;if(st.sel===c.id)st.sel=null;
+  st.rep=clamp(st.rep+dr,0,100);st.stats.done++;confetti(J.p?60:160);st.stats.ca+=c.price-fine;{const y=date(st.day).getFullYear(),Y=st.caY||(st.caY={});Y[y]=(Y[y]||0)+c.price-fine}if(st.sel===c.id)st.sel=null;
   if(J.p){
     if(c.ct==='part'&&Math.random()<.7){mv(rest,'Paiement : '+c.road,'in');st.stats.earned+=rest;kaching();log(`✅ ${J.n} chez ${c.road} terminé : payé tout de suite +${eur(rest)} ${late?'(en retard, réduction de 10 %)':''}`)}
     else{const d=payDelay(c.ct==='com'?30:c.ct==='pro'?RI(20,35):RI(8,15));invoice(rest,d,c.road);log(`✅ ${J.n} chez ${c.road} terminé : facture de ${eur(rest)}, payée dans ${d} jours.`)}
@@ -830,7 +832,9 @@ function sell(t){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur u
 function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);mv(-a.p,a.n,'buy');st.adm[k]=1;log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
 function clsOk(u){return!!(st.adm.vca&&st.adm.rc)&&st.stats.ca>=u.ca&&ownW()>=u.w&&st.rep>=u.r&&st.cash>=u.c&&(!u.dir||u.dir.every(has))}
 function upCls(){const u=CLS[st.cls+1];if(!u||!clsOk(u))return;mv(-u.c,'Dossier d’agréation','buy');st.cls++;log(`🏅 Agréation ${u.n} (catégorie G — routes) : marchés de travaux jusqu'à ${eur(u.max)} !`);kaching();goals();save();render()}
-const overdraft=()=>Math.round(Math.min(150000,20000+st.stats.ca*.1)/1000)*1000;
+// la banque regarde le chiffre d'affaires récent (année en cours ou année précédente)
+const caRecent=()=>{const y=date(st.day).getFullYear(),Y=st.caY||{};return Math.max(Y[y]||0,Y[y-1]||0)};
+const overdraft=()=>Math.round(Math.min(150000,20000+caRecent()*.1)/1000)*1000;
 
 /* =====================================================================
    VIE PRIVÉE — compte privé séparé de la société (comme en vrai).
@@ -922,7 +926,7 @@ function pTransfer(a,kind){a=Math.round(a);if(a<=0||st.cash<a)return toastMsg('P
 function privMonth(){const V=pv();let t=ownsHome()?850:1650;for(const o of [...V.own]){const P=PRIV[o.k];if(!P)continue;t+=P.m||0;if(o.loan){const it=o.loan*MORT_RATE/12;t+=o.pay;o.loan=Math.max(0,Math.round(o.loan-(o.pay-it)));if(!o.loan){delete o.pay;log(`🏠 Crédit hypothécaire remboursé : ${P.n} est entièrement à toi !`)}}}
   if(V.cash<0)t+=Math.round(-V.cash*.09/12);V.cash-=t;if(t)log(`🏡 Vie privée (${ownsHome()?'courses, énergie, voiture':'loyer, courses, énergie, voiture'}${V.own.length?', tes biens':''}${V.own.some(o=>o.loan)?', crédit':''}) : -${eur(t)}`,false);
   if(V.cash<-10000&&V.own.length){const o=V.own.slice().sort((a,b)=>pValue(b)-pValue(a))[0];const P=PRIV[o.k],v=pValue(o);V.own.splice(V.own.indexOf(o),1);V.cash+=v-(o.loan||0);log(`⚖️ Huissier : ${P.n} est saisi(e) et vendu(e) pour payer tes dettes privées.`)}}
-const loanMax=()=>st.adm.bce?Math.round((10000+st.stats.ca*.3)*(has('compta')?1.5:1)*(has('daf')?2:1)/5000)*5000:0;
+const loanMax=()=>st.adm.bce?Math.round((10000+caRecent()*.3)*(has('compta')?1.5:1)*(has('daf')?2:1)/5000)*5000:0;
 function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?"La banque refuse : montant maximum atteint. Fais plus de chiffre d'affaires.":"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;mv(5000,'Prêt bancaire','loan');st.mLoan+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;mv(-5000,'Remboursement du prêt','loan');st.mLoan-=5000}save();render()}
 function rename(){showModal(`<h3>Nom de ta société</h3><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">Enregistrer</button>`)}
 function setName(){const v=$('#nm').value.trim().replace(/[<>&"]/g,'');if(v)st.name=v;closeM();save();render()}
@@ -1111,8 +1115,8 @@ function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=own.reduce((a,o
     <div class="row" style="margin-top:10px"><button class="btn" ${V.cash<P.p+fee?'disabled':''} onclick="pBuy('${k}',0)">${P.c==='exp'?'Réserver':'Acheter'}</button>${P.c==='home'?`<button class="btn s" ${V.cash<P.p*.2+fee?'disabled':''} onclick="pBuy('${k}',1)">🏦 Crédit hypothécaire (apport ${eur(P.p*.2+fee)})</button>`:''}</div></div>`}
   return h+'<p class="mut sm">Prix moyens en Belgique (notaire.be 2025, prix catalogue, annonces). Les yachts coûtent chaque année environ 8 à 12 % de leur valeur. Photos : Wikimedia Commons (licences libres), via Wikipédia — appuie sur 📷 pour voir l’auteur et la licence. Il faut internet pour les voir.</p>'}
 function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
-  let h=goalCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le 1 mars 2027 · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
-  <div class="kpi" style="margin-top:12px"><div><span>Compte en banque</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>Factures à recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers terminés</span><b>${st.stats.done}</b></div><div><span>Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div></div>
+  let h=goalCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le ${dstr(st.found||0)} ${date(st.found||0).getFullYear()} · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
+  <div class="kpi" style="margin-top:12px"><div><span>Compte en banque</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>Factures à recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires ${date(st.day).getFullYear()}</span><b>${eur((st.caY||{})[date(st.day).getFullYear()]||0)}</b></div><div><span>Chiffre d'affaires depuis la création</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers terminés</span><b>${st.stats.done}</b></div><div><span>Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div>${st.career?`<div class="mut sm" style="margin-top:10px">🧳 Ta carrière avec tes anciennes sociétés : ${eur(st.career.ca)} de chiffre d'affaires, ${nb(st.career.done)} chantiers, ${st.career.won} marchés gagnés. Tes références de chantiers te suivent.</div>`:''}</div>
   ${monNow()}${bilanCard()}${releve()}
   <h2>Démarches</h2><div class="card">${Object.keys(ADM).map(k=>{const a=ADM[k];return`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:20px">${a.ic}</span><div style="flex:1;min-width:0"><b>${a.n}</b><div class="mut sm">${a.d}</div></div>${st.adm[k]?'<span class="tag g">✅ Fait</span>':`<button class="btn" style="padding:7px 11px" ${st.cash<a.p||(k!=='bce'&&!st.adm.bce)?'disabled':''} onclick="buyAdm('${k}')">${eur(a.p)}</button>`}</div>`}).join('')}</div>
   <h2>Agréation des entrepreneurs (travaux)</h2><div class="card"><b>${st.cls?'🏅 '+CLS[st.cls].n+' — catégorie G':'Pas encore agréé'}</b><div class="mut sm">Marchés de travaux jusqu'à ${eur(CLS[st.cls].max)} HTVA. Les marchés de services n'ont pas besoin d'agréation.</div>
@@ -1414,7 +1418,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.25";
+var APPV="2026-11-03.26";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
