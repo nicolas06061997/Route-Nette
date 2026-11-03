@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0d1a14">
+<meta name="description" content="Crée ton entreprise d'entretien des routes en Wallonie : petits boulots, machines, ouvriers, puis marchés publics du SPW.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Route Nette">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<title>Route Nette</title>
+<style>
+:root{
+  --bg:#0d1a14;--bg2:#12241b;--card:#18301f;--card2:#1f3b29;--line:#2c4d37;--tx:#f2f7f3;--mut:#a3bcaa;
+  --or:#ff9a1f;--or2:#ffb84d;--gr:#4fdc7a;--gr2:#2fb35a;--rd:#ff5d57;--bl:#4fb3ff;--ye:#ffd23f;--vi:#b48cff;
+  --sh:0 6px 20px rgba(0,0,0,.35);--r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:600 15px/1.35 Nunito,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+body{display:flex;flex-direction:column;height:100dvh;max-width:760px;margin:auto;background:linear-gradient(180deg,#0d1a14,#0a140f)}
+button{font-family:inherit}
+/* --- En-tête --- */
+#top{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;background:linear-gradient(180deg,#14281d,#0f2017);border-bottom:1px solid var(--line)}
+#logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--or),#ff6a00);display:grid;place-items:center;font-weight:900;color:#2a1600;font-size:15px;box-shadow:0 3px 10px rgba(255,140,0,.35);flex:none}
+#tinfo{flex:1;min-width:0}
+#tname{font-weight:900;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tsub{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cash{background:linear-gradient(135deg,#1f4d2e,#16371f);border:1px solid #2f7a45;border-radius:12px;padding:5px 10px;font-weight:900;font-size:17px;color:#b9ffd0;white-space:nowrap}
+#cash.neg{background:linear-gradient(135deg,#5a1f1d,#3b1412);border-color:#9b3a35;color:#ffc2bd}
+/* --- Barre de scène --- */
+#scene{position:relative}
+#cv{width:100%;height:230px;display:block;touch-action:manipulation;background:#7fb8e8}
+#hud{position:absolute;left:8px;right:150px;top:8px;flex-direction:column;align-items:flex-start;display:flex;gap:6px;align-items:center;pointer-events:none}
+.pill{background:rgba(8,18,13,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:800;white-space:nowrap}
+#hudJob{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+#speed{position:absolute;right:8px;top:8px;display:flex;gap:4px;background:rgba(8,18,13,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:12px;padding:3px;border:1px solid rgba(255,255,255,.12)}
+#speed button{background:none;border:0;color:#fff;font-size:12px;font-weight:900;padding:5px 7px;border-radius:9px;letter-spacing:-2px}
+#speed button.on{background:var(--or);color:#2a1600}
+#prog{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(0,0,0,.4);overflow:hidden;display:none}
+#prog i{display:block;height:100%;background:linear-gradient(90deg,var(--gr2),var(--gr));box-shadow:0 0 8px var(--gr)}
+/* --- Contenu --- */
+#pane{flex:1;overflow-y:auto;padding:12px 12px 24px;-webkit-overflow-scrolling:touch}
+.card{background:linear-gradient(180deg,var(--card),#152a1c);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.card.acc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac,var(--or))}
+.card h3{margin:0;font-size:16.5px;font-weight:900;line-height:1.2}
+.hd{display:flex;gap:10px;align-items:center}
+.ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex:none;background:var(--ac2,#2b4a35)}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mut{color:var(--mut);font-size:13px;font-weight:600}
+.sm{font-size:12.5px}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tag{display:inline-flex;align-items:center;gap:4px;background:#24402e;border-radius:8px;padding:3px 8px;font-size:12.5px;font-weight:800}
+.tag.g{background:#1d5232;color:#b6f7c9}.tag.r{background:#5b2322;color:#ffc0bb}.tag.o{background:#5c3a0e;color:#ffd79a}.tag.b{background:#173f5e;color:#bfe3ff}.tag.v{background:#3d2c66;color:#dccbff}
+.btn{appearance:none;border:0;border-radius:12px;padding:10px 16px;font-weight:900;font-size:15px;color:#2a1600;background:linear-gradient(180deg,var(--or2),var(--or));box-shadow:0 3px 0 #b8630a,0 6px 14px rgba(255,140,0,.25);cursor:pointer}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #b8630a}
+.btn.s{background:linear-gradient(180deg,#2f5139,#264430);color:var(--tx);box-shadow:0 3px 0 #18301f}
+.btn.g{background:linear-gradient(180deg,#6cf094,var(--gr2));color:#06230f;box-shadow:0 3px 0 #1d7a3c}
+.btn.r{background:linear-gradient(180deg,#ff7f79,var(--rd));color:#fff;box-shadow:0 3px 0 #a3302b}
+.btn.w{width:100%}
+.btn:disabled{opacity:.42;filter:saturate(.4);box-shadow:none}
+.bar{height:10px;background:#0b170f;border-radius:6px;overflow:hidden;margin:8px 0 4px;border:1px solid #23402d}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gr2),var(--gr));border-radius:6px}
+.money{color:var(--gr);font-weight:900}.neg{color:var(--rd);font-weight:900}
+h2{font-size:12.5px;color:var(--mut);margin:16px 4px 8px;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
+.req{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:12.5px}
+.goal{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#3b2a0a,#2a1f0b);border:1px solid #7a5418;border-radius:var(--r);padding:10px 12px;margin-bottom:12px}
+.goal b{color:var(--ye)}
+.goal .gi{font-size:26px}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi div{background:#132619;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.kpi b{display:block;font-size:17px;font-weight:900}
+.kpi span{font-size:12px;color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:14px}td{padding:6px 2px;border-bottom:1px solid var(--line)}td:last-child{text-align:right;font-weight:800}
+/* --- Onglets --- */
+nav{display:flex;background:#0b1711;border-top:1px solid var(--line);padding:4px 4px calc(env(safe-area-inset-bottom) + 4px)}
+nav button{flex:1;background:none;border:0;color:var(--mut);padding:5px 0 4px;font-size:10.5px;font-weight:800;position:relative;min-width:0;border-radius:12px}
+nav button b{display:block;font-size:21px;line-height:1.15;filter:grayscale(.5);opacity:.85}
+nav button.on{color:var(--or2);background:#1a3022}
+nav button.on b{filter:none;opacity:1;transform:scale(1.08)}
+nav .bd{position:absolute;top:1px;right:calc(50% - 22px);background:var(--rd);color:#fff;border-radius:9px;font-size:10px;padding:0 5px;font-weight:900;min-width:16px}
+/* --- Fenêtres --- */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:40;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+#modal.on{display:flex}
+#modal .box{background:linear-gradient(180deg,#1c3626,#132619);width:100%;max-width:760px;max-height:90dvh;overflow-y:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);border-top:3px solid var(--or);animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+#modal h3{margin:0 0 10px;font-size:20px;font-weight:900}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#203a29;border-radius:20px;padding:7px 11px;margin:3px;font-size:14px;font-weight:800}
+.chip.on{background:var(--gr);color:#06230f;border-color:var(--gr)}
+input[type=range]{width:100%;accent-color:var(--or);height:28px}
+input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);background:#0b170f;color:var(--tx);font:700 16px Nunito,system-ui,sans-serif}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 78px);transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:6px;width:94%;max-width:520px;pointer-events:none}
+#toast div{background:rgba(14,30,21,.96);border:1px solid var(--or);border-radius:14px;padding:9px 13px;animation:tin .3s;box-shadow:var(--sh);font-size:14px}
+@keyframes tin{from{opacity:0;transform:translateY(10px)}}
+.log div{padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.big{font-size:28px;font-weight:900}
+/* --- Accueil --- */
+#splash{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;
+  background:radial-gradient(120% 80% at 50% 0%,#2f7a45 0%,#163a24 45%,#0b1711 100%)}
+#splash h1{margin:0;font-size:46px;font-weight:900;letter-spacing:-.02em;line-height:1;background:linear-gradient(180deg,#fff,#ffd79a);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 6px 30px rgba(255,160,40,.25)}
+#splash p{margin:0;color:#cfe6d6;font-size:15px;max-width:340px}
+#splash .btn{min-width:230px;font-size:18px;padding:14px 20px}
+#splash .ver{font-size:12px;color:var(--mut);margin-top:6px}
+/* --- Installation et mises à jour --- */
+#upd,#ins{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 76px);z-index:60;display:none;align-items:center;gap:10px;background:#1c3626;border:1px solid var(--or);color:var(--tx);border-radius:16px;padding:10px 12px;box-shadow:var(--sh);max-width:736px;margin:auto}
+#upd.on,#ins.on{display:flex}#upd>div,#ins>div{flex:1}#upd small,#ins small{display:block;font-weight:600;opacity:.85;font-size:13px}
+#ins .x{background:transparent;color:var(--tx);border:0;font-size:18px;padding:8px}
+</style>
+</head>
+<body>
+<header id="top">
+  <div id="logo">RN</div>
+  <div id="tinfo"><div id="tname"></div><div id="tsub"></div></div>
+  <div id="cash"></div>
+</header>
+<div id="scene">
+  <canvas id="cv"></canvas>
+  <div id="hud"><span class="pill" id="hudJob"></span><span class="pill" id="hudW"></span></div>
+  <div id="prog"><i></i></div>
+  <div id="speed"><button data-sp="0" aria-label="Pause">❚❚</button><button data-sp="1" aria-label="Vitesse normale">▶</button><button data-sp="2" aria-label="Rapide">▶▶</button><button data-sp="3" aria-label="Très rapide">▶▶▶</button></div>
+</div>
+<main id="pane"></main>
+<nav id="tabs">
+  <button data-t="ch"><b>🦺</b>Chantiers</button>
+  <button data-t="pb"><b>🧰</b>Boulots</button>
+  <button data-t="ao"><b>🏛️</b>SPW</button>
+  <button data-t="eq"><b>👷</b>Équipe</button>
+  <button data-t="mt"><b>🚜</b>Matériel</button>
+  <button data-t="bi"><b>📊</b>Entreprise</button>
+</nav>
+<div id="modal"><div class="box" id="mbox"></div></div>
+<div id="toast"></div>
+<div id="splash">
+  <svg width="120" height="120" viewBox="0 0 512 512" aria-hidden="true"><use href="#lg"/></svg>
+  <h1>Route Nette</h1>
+  <p>Pars de zéro, monte ton entreprise d'entretien des routes et décroche les marchés publics du SPW.</p>
+  <button class="btn" id="play">▶ Jouer</button>
+  <button class="btn s" id="insp" style="display:none" onclick="showIns(1)">📲 Installer le jeu</button>
+  <div class="ver" id="ver"></div>
+</div>
+<svg width="0" height="0" style="position:absolute"><defs><g id="lg">
+  <defs><linearGradient id="lgb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ec7ff"/><stop offset=".62" stop-color="#bfe9ff"/></linearGradient></defs>
+  <rect width="512" height="512" rx="112" fill="url(#lgb)"/>
+  <path d="M0 300 Q130 250 256 285 T512 270 V512 H0Z" fill="#5fb845"/>
+  <path d="M0 330 L512 330 L512 420 L0 420Z" fill="#3c4148"/>
+  <rect x="30" y="371" width="70" height="10" rx="5" fill="#fff"/><rect x="150" y="371" width="70" height="10" rx="5" fill="#fff"/><rect x="270" y="371" width="70" height="10" rx="5" fill="#fff"/><rect x="390" y="371" width="70" height="10" rx="5" fill="#fff"/>
+  <path d="M0 420 H512 V512 H0Z" fill="#4fa83c"/>
+  <path d="M256 120 L320 330 H192Z" fill="#ff7a00"/><path d="M234 192 H278 L288 225 H224Z" fill="#fff"/><path d="M213 262 H299 L309 295 H203Z" fill="#fff"/>
+  <rect x="168" y="322" width="176" height="26" rx="8" fill="#ff7a00"/>
+</g></defs></svg>
+<div id="upd"><div><b>🎉 Nouvelle mise à jour disponible</b><small id="updn"></small></div><button class="btn" onclick="location.reload()">Mettre à jour</button></div>
+<div id="ins"><div><b>📲 Installer Route Nette</b><small id="insm"></small></div><button class="btn" id="insb" onclick="doIns()">Installer</button><button class="x" onclick="insLater()" aria-label="Plus tard">✕</button></div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const eur=n=>(n<0?'-':'')+Math.round(Math.abs(n)).toLocaleString('fr-BE')+' €';
+const nb=n=>Math.round(n).toLocaleString('fr-BE');
+const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+/* =====================================================================
+   DONNÉES — prix HTVA proches de la réalité en Belgique
+   ===================================================================== */
+// Matériel : p = prix d'achat, u = carburant + entretien par jour de chantier, veh = véhicule assuré (light/heavy)
+const EQ={
+  souffleur:{n:'Souffleur à dos',ic:'🍃',p:480,u:4},
+  taillehaie:{n:'Taille-haie thermique',ic:'✂️',p:650,u:4},
+  tondeuse:{n:'Tondeuse pro tractée',ic:'🌱',p:950,u:6},
+  debrou:{n:'Débroussailleuse pro',ic:'🪚',p:1100,u:7},
+  remorque:{n:'Remorque 750 kg',ic:'🛒',p:1300,u:3},
+  signal:{n:'Kit de signalisation (cônes, panneaux)',ic:'🚧',p:1600,u:2},
+  karcher:{n:'Nettoyeur haute pression thermique',ic:'💦',p:2200,u:12},
+  fleche:{n:'Remorque flèche lumineuse',ic:'⚠️',p:11500,u:8,veh:'l'},
+  van:{n:'Camionnette plateau (occasion)',ic:'🚐',p:16500,u:32,veh:'l'},
+  broyeur:{n:'Broyeur de branches',ic:'🪵',p:19000,u:35},
+  nacelle:{n:'Camion nacelle 20 m (occasion)',ic:'🏗️',p:87000,u:90,veh:'h'},
+  tracteur:{n:'Tracteur + épareuse (occasion)',ic:'🚜',p:89000,u:120,veh:'h'},
+  balayeuse:{n:'Balayeuse de voirie (occasion)',ic:'🧹',p:98000,u:110,veh:'h'},
+  hydro:{n:'Hydrocureuse (occasion)',ic:'🚛',p:145000,u:150,veh:'h'}
+};
+const ADM={
+  bce:{n:"Inscription à la BCE",ic:'🧾',p:95,d:"Numéro d'entreprise et TVA. Obligatoire pour faire des factures."},
+  rc:{n:'Assurance RC professionnelle',ic:'🛡️',p:350,d:'Premier trimestre payé, ensuite environ 3,50 € par jour.'},
+  vca:{n:'Certification sécurité VCA',ic:'🦺',p:1800,d:'Exigée par le SPW pour travailler sur la voie publique.'}
+};
+// Agréation des entrepreneurs (au-delà de 75 000 € HTVA)
+const CLS=[{max:75000},
+  {max:135000,ca:60000,w:3,r:30,c:450},{max:275000,ca:150000,w:5,r:40,c:450},{max:500000,ca:300000,w:8,r:50,c:650},
+  {max:900000,ca:600000,w:12,r:60,c:650},{max:1500000,ca:1000000,w:18,r:70,c:850}];
+// Travaux. rate = quantité par jour pour un ouvrier normal ; pu = prix unitaire HTVA.
+// p:1 = petit boulot privé ; sinon marché SPW. pc:1 = il faut un permis C dans l'équipe.
+const JOBS={
+  p_dechets:{p:1,n:'Ramassage de déchets',ic:'🗑️',un:'sacs',rate:10,pu:26,need:[],minW:1,vis:'dechets',tool:'pince',ac:'#7bd88f'},
+  p_tonte:{p:1,n:'Tonte de pelouse',ic:'🌱',un:'m²',rate:2500,pu:0.13,need:['tondeuse'],minW:1,vis:'lawn',tool:'tondeuse',mo:[4,10],ac:'#8be05a'},
+  p_haie:{p:1,n:'Taille de haies',ic:'✂️',un:'m',rate:70,pu:5,need:['taillehaie'],minW:1,vis:'hedge',tool:'haie',ac:'#4fc06a'},
+  p_debrous:{p:1,n:'Débroussaillage de terrain',ic:'🌿',un:'m²',rate:600,pu:0.55,need:['debrou'],minW:1,vis:'bush',tool:'debrou',mo:[3,11],ac:'#55b24a'},
+  p_feuilles:{p:1,n:'Ramassage des feuilles',ic:'🍂',un:'m²',rate:2000,pu:0.15,need:['souffleur'],minW:1,vis:'leaves',tool:'souffleur',mo:[10,12],ac:'#e39a3b'},
+  p_karcher:{p:1,n:'Nettoyage de cour et terrasse',ic:'💦',un:'m²',rate:100,pu:3.5,need:['karcher'],minW:1,vis:'paving',tool:'lance',ac:'#5fc3ff'},
+  p_verts:{p:1,n:'Évacuation de déchets verts',ic:'🪵',un:'m³',rate:8,pu:42,need:['remorque'],minW:1,vis:'branches',tool:'',ac:'#b5894f'},
+  p_neige:{p:1,n:'Déneigement de trottoirs',ic:'❄️',un:'m²',rate:300,pu:1,need:[],minW:1,vis:'snow',tool:'pelle',mo:[12,2],ac:'#bfe3ff'},
+  dechets:{n:'Ramassage des déchets le long des routes',ic:'🗑️',un:'km',q0:5,rate:2,pu:240,need:['van','signal'],minW:2,vis:'dechets',tool:'pince',ac:'#7bd88f'},
+  panneaux:{n:'Nettoyage des panneaux de signalisation',ic:'🪧',un:'panneaux',q0:60,rate:22,pu:22,need:['van','karcher','signal'],minW:2,vis:'signs',tool:'lance',ac:'#4fb3ff'},
+  glissieres:{n:'Nettoyage des glissières de sécurité',ic:'🛣️',un:'km',q0:4,rate:1.2,pu:420,need:['van','karcher','signal','fleche'],minW:2,vis:'rail',tool:'lance',ac:'#a9b8c8'},
+  debrous:{n:'Débroussaillage des talus',ic:'🌿',un:'km',q0:3,rate:0.35,pu:1400,need:['van','debrou','signal'],minW:2,vis:'bush',tool:'debrou',mo:[3,10],ac:'#55b24a'},
+  fauchage:{n:'Fauchage des accotements',ic:'🌾',un:'km',q0:40,rate:8,pu:85,need:['tracteur','fleche','signal'],minW:2,pc:1,vis:'grass',tool:'',mach:'tracteur',mo:[5,10],ac:'#c7d94f'},
+  balayage:{n:"Balayage des filets d'eau",ic:'🧹',un:'km',q0:40,rate:10,pu:55,need:['balayeuse','fleche'],minW:2,pc:1,vis:'sweep',tool:'',mach:'balayeuse',ac:'#ffd23f'},
+  elagage:{n:"Élagage des arbres d'alignement",ic:'🌳',un:'arbres',q0:30,rate:8,pu:75,need:['nacelle','broyeur','fleche','signal'],minW:3,pc:1,vis:'trees',tool:'',mach:'nacelle',mo:[10,3],ac:'#3fa34d'},
+  avaloirs:{n:'Curage des avaloirs',ic:'🕳️',un:'avaloirs',q0:120,rate:35,pu:16,need:['hydro','fleche','signal'],minW:2,pc:1,vis:'drains',tool:'',mach:'hydro',ac:'#e8742c'}
+};
+const SPWJ=Object.keys(JOBS).filter(k=>!JOBS[k].p),PJ=Object.keys(JOBS).filter(k=>JOBS[k].p);
+const ROADS=['N4','N5','N25','N40','N54','N63','N80','N89','N90','N97','N83','N86','E411','E42','E25','E19','A15','R3','R9'];
+const TOWNS=['Namur','Liège','Charleroi','Mons','Arlon','Bastogne','Dinant','Marche-en-Famenne','Wavre','Nivelles','Tournai','Verviers','Huy','Ciney','Libramont','Spa','Durbuy','Philippeville','Gembloux','Ath','Andenne','Rochefort','Neufchâteau','Waremme','Bouillon','Chimay','Malmedy','Hannut'];
+const CLIENTS=[['Mme Lambert','part'],['M. Dupont','part'],['Mme Collignon','part'],['M. Henrard','part'],['Mme Pirard','part'],['M. Lejeune','part'],['M. et Mme Gilson','part'],
+  ['Résidence Les Tilleuls','pro'],['Camping du Lac','pro'],['Supermarché du coin','pro'],['Garage Renard','pro'],['Ferme Delvaux','pro'],['Maison de repos Les Lilas','pro'],['Syndic Le Parc','pro'],['Club de foot','pro'],
+  ['Commune (service travaux)','com'],['École communale','com'],['CPAS','com']];
+const RIV=['Vert-Bord SRL','Routes Propres SA','Ardenne Entretien','Fauche & Fils','Mosan Services','Hainaut Voirie','EcoBerme SRL','Ets Lambotte','Condroz Paysage','Bermes du Sud','Famenne Travaux','Val de Meuse Services'];
+const PREN=['Kevin','Jordan','Mehdi','Steve','Dylan','Bryan','Julien','Maxime','Thomas','Sébastien','Rachid','Jonathan','Cédric','Michaël','Aurélie','Laura','Sarah','Ludovic','Grégory','Benoît','Fabrice','Yannick','Damien','Jessica','Loïc','Arnaud','Samir','Gaëtan','Nathalie','Youssef','Quentin','Jérôme'];
+const WX=[{ic:'☀️',n:'Soleil',f:1,k:'sun'},{ic:'⛅',n:'Nuageux',f:1,k:'cloud'},{ic:'🌧️',n:'Pluie',f:0.6,k:'rain'},{ic:'⛈️',n:'Orage',f:0,k:'storm'},{ic:'❄️',n:'Neige',f:0.3,k:'snow'}];
+const SKIN=['#f1c9a5','#e0ac7e','#c68a5a','#8d5a3b','#f5d6b8','#d9a066'];
+
+/* =====================================================================
+   SAUVEGARDE — ne jamais changer SAVE : la progression des joueurs en dépend.
+   Nouveaux champs : les ajouter dans defaults(), migrate() les complète.
+   ===================================================================== */
+const SAVE='routenette-save',BAK='routenette-bak',SCHEMA=1;
+let st=null;
+function defaults(){return{schema:SCHEMA,name:'Ma petite entreprise',cash:250,rep:10,day:0,adm:{},cls:0,loan:0,nid:2,
+  workers:[{id:1,n:'Toi (le patron)',boss:1,sk:1,sal:0,pc:0,skin:0}],eq:{},tenders:[],jobs:[],contracts:[],inv:[],cand:[],log:[],
+  stats:{won:0,lost:0,done:0,ca:0,spw:0,earned:0},goals:{},sel:null,wx:0,started:false,snd:1,lastLost:null,over:false}}
+function migrate(s){const d=defaults();
+  for(const k in d)if(s[k]===undefined||s[k]===null&&d[k]!==null)s[k]=d[k];
+  for(const k in d.stats)if(s.stats[k]===undefined)s.stats[k]=d.stats[k];
+  // éléments retirés du jeu : on rembourse au lieu de perdre
+  for(const k in s.eq)if(!EQ[k]){delete s.eq[k]}
+  s.contracts=s.contracts.filter(c=>JOBS[c.j]);s.tenders=s.tenders.filter(t=>JOBS[t.j]);s.jobs=s.jobs.filter(o=>JOBS[o.j]);
+  s.workers.forEach(w=>{if(w.skin===undefined)w.skin=RI(0,SKIN.length-1);if(w.pc===undefined)w.pc=0});
+  s.schema=SCHEMA;return s}
+function load(){for(const k of[SAVE,BAK]){try{const s=JSON.parse(localStorage.getItem(k));if(s&&typeof s==='object'&&s.workers)return migrate(s)}catch(e){}}return null}
+function save(){try{const j=JSON.stringify(st);localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j)}catch(e){}}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+addEventListener('visibilitychange',()=>{if(document.hidden&&st)save()});
+addEventListener('pagehide',()=>{if(st)save()});
+
+/* ===================================================================== */
+const date=d=>new Date(2027,2,1+d);
+const month=()=>date(st.day).getMonth()+1;
+const dstr=d=>{const x=date(d);return x.getDate()+' '+MOIS[x.getMonth()]};
+function inSeason(J,m){if(!J.mo)return true;const[a,b]=J.mo;return a<=b?(m>=a&&m<=b):(m>=a||m<=b)}
+function log(t,toast){st.log.unshift({d:st.day,t});if(st.log.length>80)st.log.length=80;if(toast!==false)toastMsg(t)}
+function toastMsg(t){const T=$('#toast');while(T.children.length>=3)T.firstChild.remove();const d=document.createElement('div');d.innerHTML=t;T.appendChild(d);setTimeout(()=>d.remove(),3500)}
+let AC=null;
+function snd(f,d,type,v,delay){if(!st||!st.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),gn=AC.createGain();o.type=type||'sine';o.frequency.value=f;o.connect(gn);gn.connect(AC.destination);const t=AC.currentTime+(delay||0);gn.gain.setValueAtTime(v||.06,t);gn.gain.exponentialRampToValueAtTime(.0001,t+(d||.12));o.start(t);o.stop(t+(d||.12)+.02)}catch(e){}}
+const kaching=()=>{snd(880,.08,'triangle',.07);snd(1320,.2,'triangle',.07,.08)};
+const click=()=>snd(520,.05,'square',.03);
+const ownW=()=>st.workers.length;
+const hasPC=ws=>ws.some(w=>w.pc);
+const vehCount=()=>Object.keys(st.eq).reduce((a,k)=>a+(EQ[k].veh?st.eq[k]:0),0);
+
+/* ---------- Coûts fixes (par jour) ---------- */
+function fixedList(){const L=[];
+  if(st.adm.bce)L.push(['Cotisations sociales d’indépendant',9]);
+  if(st.adm.rc)L.push(['Assurance RC professionnelle',3.5]);
+  if(ownW()>1)L.push(['Secrétariat social et comptable',6]);
+  let vl=0,vh=0;for(const k in st.eq){if(EQ[k].veh==='l')vl+=st.eq[k];if(EQ[k].veh==='h')vh+=st.eq[k]}
+  if(vl)L.push([`Assurance et taxe : ${vl} véhicule(s) léger(s)`,vl*3.6]);
+  if(vh)L.push([`Assurance et taxe : ${vh} poids lourd(s)`,vh*9.6]);
+  if(vehCount()>=3)L.push(['Location du hangar',30]);
+  if(st.loan)L.push(['Intérêts du prêt (5 %/an)',st.loan*0.05/365]);
+  return L}
+const fixed=()=>fixedList().reduce((a,x)=>a+x[1],0);
+const salaries=()=>st.workers.reduce((a,w)=>a+w.sal,0);
+
+/* ---------- Petits boulots ---------- */
+function genJob(force){const m=month();const ok=PJ.filter(k=>inSeason(JOBS[k],m));const j=force||pick(ok),J=JOBS[j];
+  const big=1+Math.min(4,ownW()-1)*0.5;const step=J.rate>=100?25:1;
+  const q=Math.max(step,Math.round(J.rate*R(0.6,3)*big/step)*step);
+  const price=Math.max(45,Math.round(q*J.pu*R(0.95,1.2)/5)*5);const cl=pick(CLIENTS);
+  st.jobs.push({id:st.nid++,j,q,price,dur:Math.ceil(q/J.rate)+RI(2,5),client:cl[0],ct:cl[1],town:pick(TOWNS),until:st.day+RI(2,6)});
+}
+function jobMiss(o){const J=JOBS[o.j];const r=[];if(!st.adm.bce)r.push('🧾 Inscription BCE');J.need.forEach(t=>{if(!(st.eq[t]>0))r.push(EQ[t].ic+' '+EQ[t].n+' ('+eur(EQ[t].p)+')')});return r}
+function acceptJob(id){const o=st.jobs.find(x=>x.id===id);if(!o)return;if(jobMiss(o).length)return;click();
+  st.jobs.splice(st.jobs.indexOf(o),1);
+  const c={id:st.nid++,j:o.j,q:o.q,road:o.client,ct:o.ct,town:o.town,price:o.price,prog:0,vis:0,deadline:st.day+o.dur,startBy:st.day+2,st:'wait',crew:[],own:{},pen:0,paid:0,half:false,seed:RI(1,99999),tap:{},nRef:1};
+  st.contracts.push(c);save();startUI(c.id)}
+
+/* ---------- Marchés SPW ---------- */
+function clsFor(v){for(let k=0;k<CLS.length;k++)if(v<=CLS[k].max)return k;return CLS.length-1}
+function genTender(forceJob,urgent){
+  const m=month(),ok=SPWJ.filter(k=>inSeason(JOBS[k],m));
+  const j=forceJob||pick(ok),J=JOBS[j];
+  const top=Math.min(CLS.length-1,st.cls+(Math.random()<0.3?1:0));
+  const maxV=CLS[top].max;
+  let V=urgent?R(3000,9000):3000+(maxV-3000)*Math.pow(Math.random(),2.4);
+  V=Math.max(V,J.q0*J.pu);
+  const q=Math.max(J.q0,Math.round(V/J.pu));
+  const est=Math.round(q*J.pu*R(0.93,1.08)/10)*10;
+  const dT=clamp(Math.sqrt(est)*0.3,5,150);
+  const nRef=Math.max(J.minW,Math.ceil(est/(J.rate*J.pu*dT)));
+  const dur=urgent?Math.ceil(q/(J.rate*nRef))+3:Math.ceil(q/(J.rate*nRef)*R(1.3,1.6))+2;
+  st.tenders.push({id:st.nid++,j,q,est,dur,nRef,road:pick(ROADS),town:pick(TOWNS),bidEnd:st.day+(urgent?2:RI(5,12)),bid:null,cls:clsFor(est),urgent:!!urgent});
+}
+function spwReq(t){const J=JOBS[t.j];const r=[];
+  r.push({ok:!!st.adm.bce,tx:'🧾 BCE'});r.push({ok:!!st.adm.rc,tx:'🛡️ Assurance RC'});r.push({ok:!!st.adm.vca,tx:'🦺 VCA'});
+  if(t.cls>0)r.push({ok:st.cls>=t.cls,tx:`🏅 Agréation classe ${t.cls}`});
+  r.push({ok:ownW()>=J.minW,tx:`👷 ${J.minW} personnes`});
+  if(J.pc)r.push({ok:hasPC(st.workers),tx:'🪪 Permis C'});
+  for(const k of J.need)r.push({ok:(st.eq[k]||0)>0,tx:EQ[k].ic+' '+EQ[k].n});
+  return r}
+const reqHtml=r=>'<div class="req">'+r.map(x=>`<span style="color:${x.ok?'#9df0b7':'#ffaaa4'}">${x.ok?'✅':'❌'} ${x.tx}</span>`).join('')+'</div>';
+function freeEq(t,ex){let u=0;for(const c of st.contracts)if(c.st==='run'&&c!==ex)u+=(c.own[t]||0);return(st.eq[t]||0)-u}
+function freeW(ex){const busy=new Set();for(const c of st.contracts)if(c.st==='run'&&c!==ex)c.crew.forEach(i=>busy.add(i));return st.workers.filter(w=>!busy.has(w.id))}
+function eqPlan(j,ex){const own={},miss=[];let day=0;for(const t of JOBS[j].need){if(freeEq(t,ex)>0){own[t]=1;day+=EQ[t].u}else miss.push(t)}return{own,miss,day}}
+function costEst(t){const J=JOBS[t.j];const ws=st.workers.slice().sort((a,b)=>b.sk-a.sk);const n=Math.max(1,Math.min(ws.length,Math.max(t.nRef,J.minW)));
+  const crew=ws.slice(0,n);const pw=crew.reduce((a,w)=>a+w.sk,0);const sal=crew.reduce((a,w)=>a+(w.sal||0),0);
+  const days=Math.ceil(t.q/(J.rate*pw));let eqd=0;J.need.forEach(k=>eqd+=EQ[k].u);return{days,n,cost:days*(sal+eqd)}}
+function resolveBid(t){
+  const n=RI(2,5)+(t.est>100000?1:0);const bids=[{n:st.name,p:t.bid,r:st.rep,me:1}];
+  const used=new Set();for(let i=0;i<n;i++){let nm;do nm=pick(RIV);while(used.has(nm));used.add(nm);bids.push({n:nm,p:Math.round(t.est*R(0.9,1.18)/10)*10,r:RI(25,75)})}
+  const mn=Math.min(...bids.map(b=>b.p));bids.forEach(b=>b.s=75*mn/b.p+25*b.r/100);bids.sort((a,b)=>b.s-a.s);
+  const J=JOBS[t.j];
+  const tbl='<table>'+bids.map((b,i)=>`<tr><td>${i===0?'🥇':i+1+'.'} ${b.me?'<b style="color:var(--or2)">'+b.n+'</b>':b.n}</td><td>${eur(b.p)}</td><td>${b.s.toFixed(1)} pts</td></tr>`).join('')+'</table>';
+  if(bids[0].me){st.stats.won++;
+    const c={id:st.nid++,j:t.j,q:t.q,road:t.road,town:t.town,price:t.bid,prog:0,vis:0,deadline:st.day+3+t.dur,startBy:st.day+7,st:'wait',crew:[],own:{},pen:0,paid:0,half:false,seed:RI(1,99999),tap:{},nRef:t.nRef};
+    st.contracts.push(c);log(`🎉 Marché SPW gagné : ${J.ic} ${J.n} (${t.road}) pour ${eur(t.bid)} !`,false);kaching();
+    showModal(`<h3>🎉 Marché attribué !</h3><div class="hd"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div><p class="mut">Ouverture des offres au SPW :</p>${tbl}<p>Commence avant le <b>${dstr(c.startBy)}</b>, termine avant le <b>${dstr(c.deadline)}</b>.</p><div class="row"><button class="btn" onclick="closeM();startUI(${c.id})">Lancer le chantier</button><button class="btn s" onclick="closeM()">Plus tard</button></div>`);
+  }else{st.stats.lost++;const i=bids.findIndex(b=>b.me);
+    log(`❌ Marché perdu (${J.n}, ${t.road}) : ${bids[0].n} gagne à ${eur(bids[0].p)}. Tu es ${i+1}e.`);
+    st.lastLost={t:`${J.ic} ${J.n} — ${t.road}`,tbl};}
+}
+
+/* ---------- Simulation d'une journée ---------- */
+function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
+  if(w&&r<0.22)return 4;if(r<0.05)return 3;if(r<(w?0.45:0.3))return 2;if(r<0.55)return 1;return 0}
+function invoice(c,amt,delay,lbl){st.inv.push({id:st.nid++,amt:Math.round(amt),due:st.day+delay,from:lbl})}
+function tick(){
+  st.day++;st.wx=weather();const wf=WX[st.wx].f;
+  st.cash-=salaries()+fixed();
+  for(const c of [...st.contracts]){const J=JOBS[c.j];
+    if(c.st==='wait'&&st.day>c.startBy){st.contracts.splice(st.contracts.indexOf(c),1);
+      if(J.p){st.rep=clamp(st.rep-2,0,100);log(`😠 ${c.road} a pris quelqu'un d'autre : tu n'es jamais venu. Réputation -2.`)}
+      else{st.rep=clamp(st.rep-10,0,100);const f=Math.round(c.price*0.05);st.cash-=f;log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Amende ${eur(f)}, réputation -10.`)}continue}
+    if(c.st!=='run')continue;
+    let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;st.cash-=eqc;
+    const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);
+    c.prog=Math.min(c.q,c.prog+J.rate*crew.reduce((a,w)=>a+w.sk,0)*wf);
+    crew.forEach(w=>w.sk=Math.min(1.5,+(w.sk+0.0025).toFixed(4)));
+    if(st.day>c.deadline)c.pen=Math.min(c.price*0.2,c.pen+c.price*(J.p?0.04:0.01));
+    if(!J.p&&!c.half&&c.prog>=c.q/2){c.half=true;const a=Math.round(c.price*0.45);c.paid+=a;invoice(c,a,30,`SPW — état d'avancement (${J.n})`);log(`📄 État d'avancement envoyé au SPW : ${eur(a)}, payé dans 30 jours.`)}
+    if(c.prog>=c.q)finish(c);
+  }
+  for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);st.cash+=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`);kaching()}
+  for(const t of [...st.tenders])if(st.day>=t.bidEnd){st.tenders.splice(st.tenders.indexOf(t),1);if(t.bid)resolveBid(t)}
+  if(st.tenders.length<8&&Math.random()<0.5)genTender();
+  if(st.tenders.length<4)genTender();
+  st.jobs=st.jobs.filter(o=>o.until>=st.day);
+  if(st.jobs.length<4+Math.min(5,ownW())&&Math.random()<0.8)genJob();
+  if(!st.jobs.some(o=>!JOBS[o.j].need.length))genJob(month()===12||month()<=2&&Math.random()<0.5?'p_neige':'p_dechets');
+  if(st.day%7===0)refreshCand();
+  events();goals();
+  if(st.cash<-15000&&!st.over){st.over=true;showModal(`<h3>💀 Faillite</h3><p>La banque ferme le compte de <b>${st.name}</b> (${eur(st.cash)}).</p><p class="mut">Tu as tenu ${st.day} jours et terminé ${st.stats.done} chantiers.</p><button class="btn w" onclick="restart(1)">Recommencer</button>`)}
+  save();render();
+}
+function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c),1);
+  const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);const avg=crew.reduce((a,w)=>a+w.sk,0)/Math.max(1,crew.length);
+  let rest=c.price-c.paid-c.pen,msg='';const late=st.day>c.deadline;
+  let dr=J.p?(late?-2:st.rep<40?RI(1,2):0):(late?-RI(3,7):RI(2,4)+(c.price>100000?2:0));
+  if(!J.p&&Math.random()<(1.25-avg)*0.6){dr-=2;rest-=c.price*0.03;msg=' Le contrôleur du SPW a demandé des retouches.'}
+  st.rep=clamp(st.rep+dr,0,100);st.stats.done++;st.stats.ca+=c.price-c.pen;if(!J.p)st.stats.spw++;if(st.sel===c.id)st.sel=null;
+  if(J.p){
+    if(c.ct==='part'&&Math.random()<0.7){st.cash+=rest;st.stats.earned+=rest;kaching();log(`✅ ${J.n} chez ${c.road} terminé : payé tout de suite +${eur(rest)} ${late?'(en retard)':''}`)}
+    else{const d=c.ct==='com'?30:c.ct==='pro'?RI(10,30):RI(5,15);invoice(c,rest,d,c.road);log(`✅ ${J.n} chez ${c.road} terminé : facture de ${eur(rest)}, payée dans ${d} jours.`)}
+    return}
+  invoice(c,rest,30,`SPW — décompte final (${J.n})`);
+  showModal(`<h3>✅ Chantier SPW terminé</h3><div class="hd"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${c.road} — ${c.town}</div></div></div><table style="margin-top:10px">
+  <tr><td>Prix du marché</td><td>${eur(c.price)}</td></tr><tr><td>État d'avancement déjà facturé</td><td>${eur(c.paid)}</td></tr>
+  ${c.pen?`<tr><td>Amendes de retard</td><td class="neg">-${eur(c.pen)}</td></tr>`:''}<tr><td><b>Décompte final</b> (payé dans 30 jours)</td><td class="money">${eur(rest)}</td></tr>
+  <tr><td>Réputation</td><td>${dr>0?'+':''}${dr}</td></tr></table><p class="mut">${late?'En retard sur le délai.':'Dans les délais, bravo !'}${msg}</p><button class="btn w" onclick="closeM()">Super</button>`);
+  log(`✅ ${J.n} (${c.road}) terminé. Réputation ${dr>0?'+':''}${dr}`,false);
+}
+function events(){if(Math.random()>0.05)return;const run=st.contracts.filter(c=>c.st==='run');const r=Math.random();
+  const big=Object.keys(st.eq).some(k=>st.eq[k]>0&&EQ[k].p>10000);
+  if(r<0.22&&Object.keys(st.eq).some(k=>st.eq[k]>0)){const k=big?RI(350,2800):RI(40,180);st.cash-=k;log(`🔧 Panne de matériel : réparation ${eur(k)}`)}
+  else if(r<0.4&&st.adm.vca){genTender('dechets',true);log('🚨 Dépôt clandestin signalé ! Marché urgent dans 🏛️ SPW.')}
+  else if(r<0.58&&run.length){st.rep=clamp(st.rep+2,0,100);log('👍 Un client est ravi et parle de toi : réputation +2')}
+  else if(r<0.72){const k=RI(20,80);st.cash+=k;log(`🎁 Pourboire d'un client content : +${eur(k)}`)}
+  else if(r<0.85&&run.length&&big){const k=RI(250,1200);st.cash-=k;log(`🚗 Un automobiliste a renversé des cônes. Franchise d'assurance : ${eur(k)}`)}
+  else if(st.adm.bce){const k=RI(150,1500);st.cash+=k;log(`🏦 Remboursement de TVA : +${eur(k)}`)}
+}
+function mkW(){const r=Math.random();let ty,sk,sal,pc=0;
+  if(r<0.3){ty='Étudiant jobiste';sk=R(0.6,0.8);sal=RI(115,135)}
+  else if(r<0.8){ty='Ouvrier';sk=R(0.85,1.1);sal=RI(215,245);pc=Math.random()<0.15?1:0}
+  else{ty='Ouvrier expérimenté';sk=R(1.12,1.3);sal=RI(260,300);pc=Math.random()<0.55?1:0}
+  return{id:st.nid++,n:pick(PREN)+' '+String.fromCharCode(65+RI(0,25))+'.',ty,sk:+sk.toFixed(2),sal,pc,skin:RI(0,SKIN.length-1)}}
+function refreshCand(){st.cand=[mkW(),mkW(),mkW(),mkW()]}
+const GOALS=[
+  {k:'g0',t:"Inscris ton entreprise à la BCE (📊 Entreprise)",ok:()=>!!st.adm.bce},
+  {k:'g1',t:'Termine ton premier petit boulot',ok:()=>st.stats.done>=1},
+  {k:'g2',t:'Achète ta première machine (🚜 Matériel)',ok:()=>Object.values(st.eq).some(n=>n>0)},
+  {k:'g3',t:'Atteins 3 000 € en caisse',ok:()=>st.cash>=3000},
+  {k:'g4',t:'Embauche ton premier ouvrier (👷 Équipe)',ok:()=>ownW()>=2},
+  {k:'g5',t:'Achète une camionnette',ok:()=>st.eq.van>0},
+  {k:'g6',t:"Assurance RC + certification VCA : accès au SPW",ok:()=>st.adm.rc&&st.adm.vca},
+  {k:'g7',t:'Gagne ton premier marché SPW',ok:()=>st.stats.won>=1},
+  {k:'g8',t:'Obtiens l’agréation classe 1',ok:()=>st.cls>=1},
+  {k:'g9',t:'Achète une grosse machine (tracteur, nacelle, balayeuse, hydrocureuse)',ok:()=>['tracteur','balayeuse','nacelle','hydro'].some(k=>st.eq[k]>0)},
+  {k:'g10',t:'Monte une équipe de 10 personnes',ok:()=>ownW()>=10},
+  {k:'g11',t:'Atteins la classe 3',ok:()=>st.cls>=3},
+  {k:'g12',t:'Atteins 1 million € de chiffre d’affaires',ok:()=>st.stats.ca>=1e6},
+  {k:'g13',t:'Classe 5 : tu es une grande entreprise !',ok:()=>st.cls>=5}];
+function goals(){for(const g of GOALS)if(!st.goals[g.k]&&g.ok()){st.goals[g.k]=1;log('🏆 Objectif atteint : '+g.t);snd(660,.1,'triangle',.06);snd(990,.25,'triangle',.06,.1)}}
+const curGoal=()=>GOALS.find(g=>!st.goals[g.k]);
+
+/* ---------- Actions du joueur ---------- */
+function bidUI(id){const t=st.tenders.find(x=>x.id===id);if(!t)return;const J=JOBS[t.j];click();
+  showModal(`<h3>Remettre une offre</h3><div class="hd"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div>
+  <div class="tags"><span class="tag">${nb(t.q)} ${J.un}</span><span class="tag">${t.dur} jours</span><span class="tag b">Estimation SPW ${eur(t.est)}</span><span class="tag">Équipe conseillée : ${t.nRef}</span></div>
+  <p style="margin:14px 0 2px">Ton prix (HTVA) : <b id="bp" style="font-size:20px"></b></p><input type="range" id="bs" min="75" max="125" value="100" oninput="bidUpd(${t.id})">
+  <div class="card" style="margin:8px 0" id="bm"></div><p class="mut">Le SPW attribue le marché à l'offre la plus avantageuse : 75 % le prix, 25 % ta réputation.</p>
+  <div class="row"><button class="btn" onclick="bidGo(${t.id})">Déposer l'offre</button><button class="btn s" onclick="closeM()">Annuler</button></div>`);
+  bidUpd(id);}
+function bidUpd(id){const t=st.tenders.find(x=>x.id===id),ce=costEst(t);const pr=Math.round(t.est*$('#bs').value/100/10)*10;$('#bp').textContent=eur(pr)+' ('+$('#bs').value+' %)';
+  const m=pr-ce.cost;$('#bm').innerHTML=`<div class="mut">Avec ${ce.n} personne(s) : environ <b>${ce.days} jours</b> ${ce.days>t.dur?'<span class="tag r">trop lent pour le délai !</span>':'<span class="tag g">dans les délais</span>'}</div><div class="mut">Coût (salaires + machines) : ${eur(ce.cost)}</div><div>Bénéfice estimé : <span class="${m>=0?'money':'neg'}">${eur(m)}</span></div>`}
+function bidGo(id){const t=st.tenders.find(x=>x.id===id);t.bid=Math.round(t.est*$('#bs').value/100/10)*10;closeM();log(`📨 Offre déposée : ${eur(t.bid)}. Ouverture des offres le ${dstr(t.bidEnd)}.`);snd(700,.1,'triangle',.05);save();render()}
+
+let pickSel=[];
+function startUI(id){const c=st.contracts.find(x=>x.id===id);if(!c)return;const J=JOBS[c.j];
+  const fw=freeW(c).sort((a,b)=>(J.pc?b.pc-a.pc:0)||b.sk-a.sk);
+  pickSel=c.st==='run'?c.crew.filter(i=>fw.some(w=>w.id===i)):fw.slice(0,Math.max(J.minW,c.nRef)).map(w=>w.id);
+  startDraw(id);}
+function startDraw(id){const c=st.contracts.find(x=>x.id===id),J=JOBS[c.j];const fw=freeW(c).sort((a,b)=>b.sk-a.sk);
+  const sel=fw.filter(w=>pickSel.includes(w.id));const n=sel.length,p=eqPlan(c.j,c);const pw=sel.reduce((a,w)=>a+w.sk,0);
+  const days=pw?Math.ceil((c.q-c.prog)/(J.rate*pw)):'∞';const left=c.deadline-st.day;const pcOk=!J.pc||hasPC(sel);
+  const cost=sel.reduce((a,w)=>a+w.sal,0)+p.day;
+  showModal(`<h3>${c.st==='run'?"Modifier l'équipe":'Lancer le chantier'}</h3><div class="hd"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${c.road} — ${c.town}</div></div></div>
+  <div class="tags"><span class="tag">Reste ${nb(c.q-c.prog)} ${J.un}</span><span class="tag ${left<0?'r':''}">Délai : ${left} jours</span><span class="tag g">${eur(c.price)}</span></div>
+  <h2>Qui y va ? (minimum ${J.minW}${J.pc?', dont un permis C':''})</h2><div>${fw.map(w=>`<span class="chip ${pickSel.includes(w.id)?'on':''}" onclick="togW(${c.id},${w.id})">${w.boss?'⭐':'👷'} ${w.n.split(' ')[0]} ${'●'.repeat(Math.round(w.sk*3))}${w.pc?' 🪪':''}</span>`).join('')||'<span class="mut">Tout le monde est déjà sur un chantier.</span>'}</div>
+  ${J.need.length?`<h2>Matériel</h2>${J.need.map(t=>`<div class="row" style="margin:3px 0">${EQ[t].ic} ${EQ[t].n} ${p.own[t]?'<span class="tag g">OK</span>':'<span class="tag r">utilisé sur un autre chantier</span>'}</div>`).join('')}`:'<p class="mut">Pas de machine : pince, gants et sacs suffisent.</p>'}
+  <div class="card" style="margin:12px 0"><div>Durée prévue : <b>${days} jours</b> ${days!=='∞'&&days>left?'<span class="tag r">trop lent !</span>':'<span class="tag g">OK</span>'}</div><div class="mut">Coût par jour : ${eur(cost)} (salaires + carburant)</div>${!pcOk?'<div class="neg">Il faut un permis C dans l’équipe.</div>':''}</div>
+  <div class="row"><button class="btn" ${n<J.minW||p.miss.length||!pcOk?'disabled':''} onclick="startGo(${c.id})">C'est parti !</button><button class="btn s" onclick="closeM()">${c.st==='run'?'Annuler':'Plus tard'}</button></div>`);}
+function togW(cid,wid){click();const i=pickSel.indexOf(wid);i<0?pickSel.push(wid):pickSel.splice(i,1);startDraw(cid)}
+function startGo(id){const c=st.contracts.find(x=>x.id===id);const p=eqPlan(c.j,c);if(p.miss.length)return;c.own=p.own;c.crew=[...pickSel];
+  if(c.st!=='run'){c.st='run';log(`🦺 Chantier lancé : ${JOBS[c.j].n} (${c.road})`,false)}st.sel=c.id;closeM();snd(440,.08,'square',.04);snd(660,.12,'square',.04,.08);save();tab('ch')}
+function hire(i){const w=st.cand[i];if(!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<w.sal*10)return toastMsg(`Économise d'abord : il faut de quoi payer 2 semaines de salaire (${eur(w.sal*10)}).`);
+  st.cand.splice(i,1);st.workers.push(w);log(`👷 ${w.n} rejoint l'équipe (${eur(w.sal)}/jour)`,false);kaching();goals();save();render()}
+function fire(id){const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;if(st.contracts.some(c=>c.st==='run'&&c.crew.includes(id)))return toastMsg("Il est sur un chantier : retire-le d'abord.");
+  if(!confirm(`Licencier ${w.n} ? Préavis : ${eur(w.sal*10)}`))return;st.cash-=w.sal*10;st.workers.splice(st.workers.indexOf(w),1);save();render()}
+function trainPC(id){const w=st.workers.find(x=>x.id===id);if(!w||w.pc)return;if(st.cash<2800)return toastMsg('Il faut 2 800 € pour la formation au permis C.');st.cash-=2800;w.pc=1;log(`🪪 ${w.n} a obtenu le permis C !`);save();render()}
+function buy(t){const e=EQ[t];if(st.cash<e.p)return toastMsg(`Pas assez d'argent : il manque ${eur(e.p-st.cash)}.`);st.cash-=e.p;st.eq[t]=(st.eq[t]||0)+1;log(`🛒 Achat : ${e.ic} ${e.n}`,false);kaching();goals();save();render()}
+function sell(t){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');if(!confirm(`Revendre ${EQ[t].n} pour ${eur(EQ[t].p*0.55)} ?`))return;const v=Math.round(EQ[t].p*0.55);st.eq[t]--;st.cash+=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
+function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);st.cash-=a.p;st.adm[k]=1;log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
+function upCls(){const u=CLS[st.cls+1];if(!u)return;if(!(st.adm.vca&&st.adm.rc))return;if(st.rep<u.r||st.stats.ca<u.ca||ownW()<u.w||st.cash<u.c)return;
+  st.cash-=u.c;st.cls++;log(`🏅 Agréation classe ${st.cls} : marchés jusqu'à ${eur(CLS[st.cls].max)} !`);kaching();goals();save();render()}
+const loanMax=()=>st.adm.bce?Math.round((5000+st.stats.ca*0.4)/5000)*5000:0;
+function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?'La banque refuse : montant maximum atteint. Fais plus de chiffre d’affaires.':"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;st.cash+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;st.cash-=5000}save();render()}
+function rename(){showModal(`<h3>Nom de ta société</h3><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">Enregistrer</button>`)}
+const esc=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+function setName(){const v=$('#nm').value.trim().replace(/[<>&"]/g,'');if(v)st.name=v;closeM();save();render()}
+function restart(force){if(!force&&!confirm('Tout effacer et recommencer une nouvelle entreprise ?'))return;try{localStorage.removeItem(SAVE);localStorage.removeItem(BAK)}catch(e){}location.reload()}
+function exportSave(){const code=btoa(unescape(encodeURIComponent(JSON.stringify(st))));showModal(`<h3>💾 Code de sauvegarde</h3><p class="mut">Garde ce code (copie-le dans tes notes) pour retrouver ta partie sur un autre téléphone.</p><textarea id="sv" rows="5" readonly>${code}</textarea><p></p><div class="row"><button class="btn" onclick="copySave()">Copier</button><button class="btn s" onclick="closeM()">Fermer</button></div>`)}
+function copySave(){const t=$('#sv');t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(()=>toastMsg('Code copié ✓')).catch(()=>{try{document.execCommand('copy');toastMsg('Code copié ✓')}catch(e){}})}
+function importUI(){showModal(`<h3>📥 Charger une sauvegarde</h3><p class="mut">Colle ici ton code de sauvegarde. Ta partie actuelle sera remplacée.</p><textarea id="sv" rows="5"></textarea><p></p><div class="row"><button class="btn" onclick="importGo()">Charger</button><button class="btn s" onclick="closeM()">Annuler</button></div>`)}
+function importGo(){try{const s=JSON.parse(decodeURIComponent(escape(atob($('#sv').value.trim()))));if(!s.workers)throw 0;st=migrate(s);save();closeM();render();toastMsg('Sauvegarde chargée ✓')}catch(e){toastMsg('Code invalide')}}
+
+/* ---------- Chargement ---------- */
+st=load();
+if(!st){st=defaults();for(let i=0;i<4;i++)genTender();genJob('p_dechets');genJob('p_dechets');genJob();genJob();refreshCand();save()}
+
+/* =====================================================================
+   INTERFACE
+   ===================================================================== */
+let curTab='ch',speed=1,modalOpen=false,playing=false;
+function showModal(h){$('#mbox').innerHTML=h;$('#modal').classList.add('on');modalOpen=true}
+function closeM(){$('#modal').classList.remove('on');modalOpen=false}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!st.over)closeM()});
+function tab(t){curTab=t;$('#pane').scrollTop=0;render()}
+$$('#tabs button').forEach(b=>b.onclick=()=>{click();tab(b.dataset.t)});
+$$('[data-sp]').forEach(b=>b.onclick=()=>{speed=+b.dataset.sp;click();render()});
+const stars=r=>'★'.repeat(Math.max(1,Math.round(r/20)))+'☆'.repeat(5-Math.max(1,Math.round(r/20)));
+const dots=s=>'●'.repeat(Math.round(s*3))+'○'.repeat(Math.max(0,5-Math.round(s*3)));
+const toRecv=()=>st.inv.reduce((a,v)=>a+v.amt,0);
+function render(){
+  $('#cash').textContent=eur(st.cash);$('#cash').classList.toggle('neg',st.cash<0);
+  $('#tname').textContent=st.name;$('#logo').textContent=st.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'RN';
+  $('#tsub').textContent=`${stars(st.rep)} ${Math.round(st.rep)} · ${st.cls?'Classe '+st.cls:st.adm.bce?'Entreprise inscrite':'Pas encore inscrit'}`;
+  $('#hudW').textContent=WX[st.wx].ic+' '+dstr(st.day)+' '+date(st.day).getFullYear();
+  $$('[data-sp]').forEach(b=>b.classList.toggle('on',+b.dataset.sp===speed));
+  $$('#tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===curTab);b.querySelector('.bd')?.remove()});
+  const nAo=st.tenders.filter(t=>!t.bid&&spwReq(t).every(x=>x.ok)).length,nWait=st.contracts.filter(c=>c.st==='wait').length,nJob=st.jobs.filter(o=>!jobMiss(o).length).length;
+  if(nAo)$('[data-t=ao]').insertAdjacentHTML('beforeend',`<span class="bd">${nAo}</span>`);
+  if(nWait)$('[data-t=ch]').insertAdjacentHTML('beforeend',`<span class="bd">${nWait}</span>`);
+  if(nJob&&!st.contracts.length)$('[data-t=pb]').insertAdjacentHTML('beforeend',`<span class="bd">${nJob}</span>`);
+  const P=$('#pane'),y=P.scrollTop;P.innerHTML=({ch:rCh,pb:rPb,ao:rAo,eq:rEq,mt:rMt,bi:rBi})[curTab]();P.scrollTop=y;
+}
+function goalCard(){const g=curGoal();return g?`<div class="goal"><span class="gi">🎯</span><div><b>Objectif</b><div>${g.t}</div></div></div>`:''}
+function jobHead(J,sub,right){return`<div class="hd"><div class="ic" style="--ac2:${J.ac}2e">${J.ic}</div><div style="flex:1;min-width:0"><h3>${J.n}</h3><div class="mut">${sub}</div></div>${right||''}</div>`}
+function rCh(){let h=goalCard();const cs=st.contracts;
+  if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--ye)"><h3>👋 Bienvenue, patron !</h3><p>Tu pars de zéro : ${eur(250)} en poche, une pince, des gants et des sacs. Pas d'ouvrier, pas de machine.</p><p class="mut">Première étape : inscrire ton entreprise à la Banque-Carrefour des Entreprises pour pouvoir faire des factures.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire à la BCE (95 €)</button></div>`;
+  else if(!cs.length)h+=`<div class="card"><h3>Aucun chantier en cours</h3><p class="mut">Prends un travail dans <b>🧰 Boulots</b>${st.adm.vca?' ou réponds à un marché dans <b>🏛️ SPW</b>':''}.</p><button class="btn w" onclick="tab('pb')">Voir les petits boulots</button></div>`;
+  const firstRun=cs.find(x=>x.st==='run');
+  for(const c of cs){const J=JOBS[c.j],pc=c.prog/c.q*100,left=c.deadline-st.day;
+    h+=`<div class="card acc" style="--ac:${J.ac}">${jobHead(J,`${c.road} — ${c.town}`,`<span class="tag ${J.p?'g':'o'}">${J.p?eur(c.price):'SPW'}</span>`)}`;
+    if(c.st==='wait')h+=`<div class="tags"><span class="tag o">À commencer avant le ${dstr(c.startBy)}</span></div><p style="margin:10px 0 0"><button class="btn w" onclick="startUI(${c.id})">🦺 Lancer le chantier</button></p>`;
+    else{const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);const shown=st.sel===c.id||(!cs.some(x=>x.id===st.sel&&x.st==='run')&&firstRun===c);
+      h+=`<div class="bar"><i style="width:${pc}%"></i></div><div class="row mut sm"><span>${nb(c.prog)} / ${nb(c.q)} ${J.un} · ${pc.toFixed(0)} %</span><span style="margin-left:auto" class="${left<0?'neg':''}">${left>=0?'⏱ '+left+' j restants':'⚠️ RETARD '+(-left)+' j (-'+eur(c.pen)+')'}</span></div>
+      <div class="mut sm" style="margin-top:4px">👷 ${crew.map(w=>w.n.split(' ')[0]).join(', ')}${J.p?'':' · '+eur(c.price)}</div><div class="row" style="margin-top:10px"><button class="btn s" onclick="st.sel=${c.id};render()">${shown?'👁 À l’écran':'👁 Regarder'}</button><button class="btn s" onclick="startUI(${c.id})">👷 Équipe</button></div>`}
+    h+='</div>'}
+  if(st.inv.length)h+=`<h2>Factures en attente de paiement</h2><div class="card">${st.inv.slice().sort((a,b)=>a.due-b.due).map(v=>`<div class="row sm" style="padding:4px 0"><span>${esc(v.from)}</span><span style="margin-left:auto" class="money">${eur(v.amt)}</span><span class="tag">${dstr(v.due)}</span></div>`).join('')}</div>`;
+  return h}
+function rPb(){let h=goalCard()+`<h2>Petits boulots — particuliers, commerces, communes</h2>`;
+  if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--rd)"><b>🔒 Inscris d'abord ton entreprise à la BCE</b><p class="mut">Sans numéro d'entreprise, tu ne peux pas faire de facture.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire (95 €)</button></div>`;
+  const L=st.jobs.slice().sort((a,b)=>jobMiss(a).length-jobMiss(b).length);
+  for(const o of L){const J=JOBS[o.j],miss=jobMiss(o);const ctl={part:'Particulier',pro:'Entreprise',com:'Commune'}[o.ct];
+    h+=`<div class="card acc" style="--ac:${J.ac};${miss.length?'opacity:.62':''}">${jobHead(J,`${o.client} · ${ctl} — ${o.town}`,`<span class="tag g" style="font-size:15px">${eur(o.price)}</span>`)}
+    <div class="tags"><span class="tag">${nb(o.q)} ${J.un}</span><span class="tag">⏱ ${o.dur} jours</span><span class="tag">${o.ct==='part'?'💶 payé à la fin':o.ct==='com'?'📄 payé à 30 jours':'📄 facture 10-30 jours'}</span><span class="tag">Valable jusqu'au ${dstr(o.until)}</span></div>
+    <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
+  return h+(L.length?'':'<p class="mut">Pas de demande aujourd’hui. Reviens demain !</p>')}
+function rAo(){let h=goalCard()+`<h2>Marchés publics — SPW Mobilité et Infrastructures</h2>`;
+  const acc=st.adm.bce&&st.adm.rc&&st.adm.vca;
+  if(!acc)h+=`<div class="card acc" style="--ac:var(--bl)"><h3>🔒 Pas encore accessible</h3><p class="mut">Pour travailler sur la voie publique pour le SPW, il faut :</p>${['bce','rc','vca'].map(k=>`<div class="row" style="margin:6px 0">${st.adm[k]?'✅':'❌'} ${ADM[k].ic} ${ADM[k].n} <span class="mut">(${eur(ADM[k].p)})</span>${st.adm[k]?'':`<button class="btn s" style="margin-left:auto;padding:6px 10px" onclick="buyAdm('${k}')">Obtenir</button>`}</div>`).join('')}<p class="mut">…plus le matériel et le nombre de personnes demandés dans chaque marché. Au-delà de 75 000 €, l'agréation est obligatoire.</p></div>`;
+  if(st.lastLost)h+=`<div class="card"><div class="mut">Dernier marché perdu : ${st.lastLost.t}</div>${st.lastLost.tbl}</div>`;
+  const ts=st.tenders.map(t=>({t,ok:spwReq(t).every(x=>x.ok)})).sort((a,b)=>b.ok-a.ok||a.t.bidEnd-b.t.bidEnd);
+  for(const{t,ok}of ts){const J=JOBS[t.j];
+    h+=`<div class="card acc" style="--ac:${J.ac}">${jobHead(J,`${t.road} — ${t.town}`,t.urgent?'<span class="tag r">URGENT</span>':'')}
+    <div class="tags"><span class="tag b">Estimation ${eur(t.est)}</span><span class="tag">${nb(t.q)} ${J.un}</span><span class="tag">⏱ ${t.dur} jours</span><span class="tag">👷 conseillé : ${t.nRef}</span><span class="tag o">Offres jusqu'au ${dstr(t.bidEnd)}</span></div>
+    ${t.bid?'':reqHtml(spwReq(t))}
+    <div style="margin-top:10px">${t.bid?`<span class="tag g">📨 Offre déposée : ${eur(t.bid)}</span>`:ok?`<button class="btn w" onclick="bidUI(${t.id})">Remettre un prix</button>`:''}</div></div>`}
+  return h}
+function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew.forEach(i=>busy.set(i,c)));
+  let h=goalCard()+`<h2>Ton équipe · ${ownW()} personne(s) · ${eur(salaries())}/jour</h2>`;
+  for(const w of st.workers){const c=busy.get(w.id);h+=`<div class="card"><div class="hd"><div class="ic" style="--ac2:${w.boss?'#5c4a12':'#3b2a12'}">${w.boss?'⭐':'👷'}</div><div style="flex:1;min-width:0"><h3>${w.n}</h3><div class="mut sm">${w.boss?'Patron':w.ty} · ${w.sal?eur(w.sal)+'/jour (coût employeur)':'pas de salaire'}</div></div></div>
+    <div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}<span class="tag ${c?'o':''}">${c?'🦺 '+JOBS[c.j].n.split(' ').slice(0,3).join(' '):'💤 Libre'}</span></div>
+    <div class="row" style="margin-top:8px">${w.pc?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="trainPC(${w.id})">🪪 Permis C (2 800 €)</button>`}${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="fire(${w.id})">Licencier</button>`}</div></div>`}
+  h+=`<h2>Candidats (nouveaux chaque lundi)</h2><p class="mut sm">Coût employeur par jour (salaire + ONSS). Un ouvrier est payé même sans chantier. Pour embaucher, il faut de quoi payer 2 semaines.</p>`;
+  st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd"><div class="ic">🙋</div><div style="flex:1;min-width:0"><h3>${w.n}</h3><div class="mut sm">${w.ty} · ${eur(w.sal)}/jour</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div><button class="btn w" style="margin-top:10px" ${st.cash<w.sal*10||!st.adm.bce?'disabled':''} onclick="hire(${i})">Embaucher</button></div>`);
+  return h}
+function rMt(){let h=goalCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm">Au départ : pince, gants et sacs. Chaque machine débloque de nouveaux travaux. « Usage » = carburant et entretien par jour de chantier.</p>`;
+  for(const t in EQ){const e=EQ[t],n=st.eq[t]||0,f=freeEq(t);const jobs=Object.values(JOBS).filter(J=>J.need.includes(t));
+    h+=`<div class="card ${n?'acc':''}" style="--ac:var(--gr)"><div class="hd"><div class="ic" style="--ac2:${n?'#1d5232':'#24402e'}">${e.ic}</div><div style="flex:1;min-width:0"><h3>${e.n}</h3><div class="mut sm">${eur(e.p)} · usage ${eur(e.u)}/jour${e.veh?' · assurance '+(e.veh==='h'?'9,60':'3,60')+' €/jour':''}</div></div>${n?`<span class="tag g">×${n}</span>`:''}</div>
+    <div class="tags">${jobs.map(J=>`<span class="tag ${J.p?'':'b'}">${J.ic} ${J.p?'':'SPW '}${J.n.split(' ').slice(0,3).join(' ')}</span>`).join('')}</div>
+    <div class="row" style="margin-top:10px"><button class="btn" ${st.cash<e.p?'disabled':''} onclick="buy('${t}')">Acheter</button>${n?`<button class="btn s" onclick="sell('${t}')">Revendre ${eur(e.p*0.55)}</button><span class="mut sm">${f} libre(s)</span>`:''}</div></div>`}
+  return h}
+function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
+  let h=goalCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Créée le 1 mars 2027 · jour ${st.day}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
+  <div class="kpi" style="margin-top:12px"><div><span>Trésorerie</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>À recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers finis</span><b>${st.stats.done}</b></div><div><span>Marchés SPW gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div></div>
+  <h2>Démarches</h2><div class="card">${Object.keys(ADM).map(k=>{const a=ADM[k];return`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:20px">${a.ic}</span><div style="flex:1;min-width:0"><b>${a.n}</b><div class="mut sm">${a.d}</div></div>${st.adm[k]?'<span class="tag g">✅ Fait</span>':`<button class="btn" style="padding:7px 11px" ${st.cash<a.p||(k!=='bce'&&!st.adm.bce)?'disabled':''} onclick="buyAdm('${k}')">${eur(a.p)}</button>`}</div>`}).join('')}</div>
+  <h2>Agréation des entrepreneurs</h2><div class="card"><b>${st.cls?'🏅 Classe '+st.cls:'Pas encore agréé'}</b><div class="mut sm">Marchés SPW jusqu'à ${eur(CLS[st.cls].max)} HTVA</div>
+  ${u?`<p style="margin:10px 0 4px">Pour la classe ${st.cls+1} (jusqu'à ${eur(u.max)}) :</p>${reqHtml([{ok:!!(st.adm.vca&&st.adm.rc),tx:'🦺 VCA + RC'},{ok:st.stats.ca>=u.ca,tx:`💶 CA ${eur(u.ca)}`},{ok:ownW()>=u.w,tx:`👷 ${u.w} personnes`},{ok:st.rep>=u.r,tx:`⭐ réputation ${u.r}`},{ok:st.cash>=u.c,tx:`🧾 dossier ${eur(u.c)}`}])}<button class="btn w" style="margin-top:10px" onclick="upCls()" ${st.rep<u.r||st.cash<u.c||st.stats.ca<u.ca||ownW()<u.w||!(st.adm.vca&&st.adm.rc)?'disabled':''}>Demander la classe ${st.cls+1}</button>`:'<p>Classe maximale 👑</p>'}</div>
+  <h2>Frais fixes par jour</h2><div class="card"><table>${fl.map(x=>`<tr><td>${x[0]}</td><td>${eur(x[1])}</td></tr>`).join('')}<tr><td>Salaires</td><td>${eur(salaries())}</td></tr><tr><td><b>Total</b></td><td class="neg">${eur(fixed()+salaries())}</td></tr></table></div>
+  <h2>Banque</h2><div class="card"><div class="mut sm">${st.adm.bce?`Prêt en cours : <b>${eur(st.loan)}</b> à 5 %/an · maximum ${eur(loanMax())} (selon ton chiffre d'affaires)`:"La banque prête seulement aux entreprises inscrites à la BCE."}</div><div class="row" style="margin-top:10px"><button class="btn s" onclick="loan(1)" ${st.adm.bce?'':'disabled'}>Emprunter 5 000 €</button><button class="btn s" onclick="loan(-1)" ${st.loan<=0?'disabled':''}>Rembourser 5 000 €</button></div><p class="mut sm">Faillite si le compte passe sous -15 000 €.</p></div>
+  <h2>Objectifs</h2><div class="card">${GOALS.map(g=>`<div style="padding:3px 0">${st.goals[g.k]?'✅':'⬜'} ${g.t}</div>`).join('')}</div>
+  <h2>Journal</h2><div class="card log">${st.log.slice(0,40).map(l=>`<div><span class="mut">${dstr(l.d)}</span> — ${l.t}</div>`).join('')||'<span class="mut">Rien encore.</span>'}</div>
+  <h2>Réglages</h2><div class="card"><div class="row"><button class="btn s" onclick="st.snd=st.snd?0:1;save();render()">${st.snd?'🔊 Son activé':'🔇 Son coupé'}</button><button class="btn s" onclick="exportSave()">💾 Sauvegarde</button><button class="btn s" onclick="importUI()">📥 Charger</button></div>
+  <div class="row" style="margin-top:10px"><button class="btn s" onclick="chkV(1)">🔄 Vérifier les mises à jour</button></div><p class="mut sm">Ta progression est enregistrée sur ce téléphone et reste intacte après les mises à jour. Version <span id="ver2"></span></p>
+  <button class="btn r" onclick="restart()">Recommencer une nouvelle entreprise</button></div>`;
+  setTimeout(()=>{const v=$('#ver2');if(v)v.textContent=window.APPV||''},0);
+  return h}
+
+/* =====================================================================
+   SCÈNE 2D (vue de côté, décor en parallaxe)
+   ===================================================================== */
+const cv=$('#cv'),g=cv.getContext('2d');let CW=0,CH=0;
+function rs(){const d=Math.min(2,devicePixelRatio||1);CW=cv.clientWidth;CH=cv.clientHeight;cv.width=Math.round(CW*d);cv.height=Math.round(CH*d);g.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',rs);rs();
+function hh(n){n=(n^61)^(n>>>16);n=n+(n<<3)|0;n^=n>>>4;n=Math.imul(n,0x27d4eb2d);n^=n>>>15;return(n>>>0)/4294967296}
+const SEG=34,LEN=4200;let cars=[],parts=[],flakes=[],camX=0,lastT=0,flash=0;
+const clouds=Array.from({length:7},(_,i)=>({x:i*190+R(0,120),y:R(.05,.3),s:R(.6,1.3)}));
+function selC(){const r=st.contracts.filter(c=>c.st==='run');return r.find(c=>c.id===st.sel)||r[0]||null}
+function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h)}
+function circ(x,y,r,c){g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,7);g.fill()}
+function ell(x,y,rx,ry,c){g.fillStyle=c;g.beginPath();g.ellipse(x,y,rx,ry,0,0,7);g.fill()}
+function rr(x,y,w,h,r,c){g.fillStyle=c;g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h);g.fill()}
+function ln(x1,y1,x2,y2,c,w){g.strokeStyle=c;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+function poly(pts,c){g.fillStyle=c;g.beginPath();g.moveTo(pts[0],pts[1]);for(let i=2;i<pts.length;i+=2)g.lineTo(pts[i],pts[i+1]);g.closePath();g.fill()}
+function season(){const m=month();return m===12||m<=2?0:m<=5?1:m<=8?2:3}
+const PAL=[
+  {grass:'#9cb487',grass2:'#7f9a70',leaf:null,hillF:'#a9bccb',hillN:'#8aa58f',field:['#b3b79a','#a2a88a'],ground:'#8f9d7c'},
+  {grass:'#7ccc52',grass2:'#5eac3d',leaf:['#7fd35a','#9be06e','#62bf47'],hillF:'#9cc5c9',hillN:'#74b36c',field:['#c4e07a','#9ccf5a'],ground:'#6cb846'},
+  {grass:'#86c049',grass2:'#68a338',leaf:['#3f9a3d','#4fae47','#2f8436'],hillF:'#99bfc6',hillN:'#5fa357',field:['#ead06a','#b9d66a'],ground:'#79b142'},
+  {grass:'#a2ad4e',grass2:'#848f3d',leaf:['#e38b2b','#cf5a2b','#e9b93a','#b16c2c'],hillF:'#b2b8b2',hillN:'#959f5e',field:['#c49a55','#a8a05a'],ground:'#97a149'}];
+const SKY={sun:['#2f8ff0','#9fd6ff','#e6f6ff'],cloud:['#6c9ccc','#c6dbea','#e8f0f5'],rain:['#536677','#91a1ae','#b9c4cc'],storm:['#28323f','#55616f','#7d8996'],snow:['#a3b3c3','#d6e0e9','#f2f6f9']};
+function hillY(x,par,base,amp,seed){const wx=x+camX*par;return base-amp*(0.55+0.25*Math.sin(wx*0.006+seed)+0.14*Math.sin(wx*0.017+seed*2)+0.06*Math.sin(wx*0.043+seed*3))}
+function hills(par,base,amp,col,seed){g.fillStyle=col;g.beginPath();g.moveTo(0,CH);for(let x=0;x<=CW+10;x+=10)g.lineTo(x,hillY(x,par,base,amp,seed));g.lineTo(CW,CH);g.closePath();g.fill()}
+function tree(x,y,s,pal,trim,shape){const L=pal.leaf;
+  if(shape===1){rect(x-1.5*s,y-14*s,3*s,14*s,'#5a3c25');poly([x,y-48*s,x+11*s,y-10*s,x-11*s,y-10*s],'#2d6b3a');poly([x,y-38*s,x+13*s,y-4*s,x-13*s,y-4*s],'#2a6234');return}// sapin
+  ln(x,y,x,y-20*s,'#5f402a',4*s);
+  if(!L){ln(x,y-16*s,x-9*s,y-30*s,'#6b4a33',2*s);ln(x,y-18*s,x+10*s,y-33*s,'#6b4a33',2*s);ln(x,y-20*s,x+1*s,y-38*s,'#6b4a33',2*s);return}
+  const r=trim?10:14;circ(x,y-28*s,r*s,L[0]);circ(x-8*s,y-22*s,(r-4)*s,L[1%L.length]);circ(x+8*s,y-24*s,(r-3)*s,L[2%L.length]);circ(x+2*s,y-36*s,(r-5)*s,L[1%L.length]);
+  g.globalAlpha=.25;circ(x-4*s,y-33*s,(r-7)*s,'#fff');g.globalAlpha=1}
+function house(x,y,s,c,roof){rect(x-14*s,y-18*s,28*s,18*s,c);poly([x-17*s,y-18*s,x,y-31*s,x+17*s,y-18*s],roof);rect(x-8*s,y-12*s,5*s,5*s,'#ffe9a8');rect(x+3*s,y-12*s,5*s,5*s,'#ffe9a8');rect(x-2*s,y-8*s,4*s,8*s,'#6b4a33')}
+function church(x,y,s){rect(x-8*s,y-22*s,16*s,22*s,'#cfc6b8');poly([x-10*s,y-22*s,x,y-30*s,x+10*s,y-22*s],'#5a6270');rect(x+6*s,y-40*s,8*s,40*s,'#d6cfc2');poly([x+5*s,y-40*s,x+10*s,y-56*s,x+15*s,y-40*s],'#5a6270')}
+function turbine(x,y,s,t,ph){ln(x,y,x,y-46*s,'#eef2f5',2.2*s);circ(x,y-46*s,2*s,'#fff');for(let k=0;k<3;k++){const a=t*1.6+ph+k*2.094;ln(x,y-46*s,x+Math.cos(a)*20*s,y-46*s+Math.sin(a)*20*s,'#f6f8fa',1.6*s)}}
+/* --- véhicules (vue de côté, roulent vers la droite) --- */
+function wheel(x,y,r){circ(x,y,r,'#1c1d20');circ(x,y,r*.55,'#9aa1a9');circ(x,y,r*.2,'#4b5058')}
+function beacon(x,y,t){const on=Math.sin(t*9)>0;rr(x-4,y-5,8,5,2,on?'#ffb000':'#c27a00');if(on){const gr=g.createRadialGradient(x,y-3,0,x,y-3,16);gr.addColorStop(0,'rgba(255,190,40,.7)');gr.addColorStop(1,'rgba(255,190,40,0)');g.fillStyle=gr;g.fillRect(x-16,y-19,32,32)}}
+function chevrons(x,y,w,h){g.save();g.beginPath();g.rect(x,y,w,h);g.clip();for(let i=-h;i<w+h;i+=8){poly([x+i,y+h,x+i+4,y+h,x+i+4+h,y,x+i+h,y],'#ff3b2f')}g.restore()}
+function van(x,y,t,load){// y = sol
+  rr(x-40,y-30,62,22,4,'#f3f5f7');rr(x+18,y-34,22,26,[8,8,3,3],'#f3f5f7');poly([x+24,y-31,x+36,y-31,x+39,y-20,x+24,y-20],'#7fb6dd');
+  rect(x-40,y-17,80,4,'#ff8a00');rect(x-40,y-12,80,2,'#d0d5da');chevrons(x-40,y-30,10,14);
+  rect(x-36,y-36,52,6,'#d8dde2');if(load){rr(x-32,y-44,12,9,3,'#2f79d9');rr(x-18,y-43,11,8,3,'#ffd23f');rr(x-5,y-44,12,9,3,'#2f79d9')}
+  rr(x+38,y-14,4,4,1,'#ffe9a0');rect(x-41,y-26,3,5,'#ff3b2f');
+  g.fillStyle='#2a3a4a';g.font='800 6px Nunito,sans-serif';g.fillText(st.name.slice(0,14).toUpperCase(),x-30,y-21);
+  wheel(x-25,y-6,7);wheel(x+26,y-6,7);beacon(x+28,y-34,t)}
+function car(x,y,c,flip,s){g.save();g.translate(x,y);g.scale(flip?-s:s,s);rr(-22,-14,44,10,4,c);rr(-12,-22,24,10,[6,8,0,0],c);poly([-9,-20,-1,-20,-1,-14,-11,-14],'#a8d4f0');poly([1,-20,8,-20,12,-14,1,-14],'#a8d4f0');rect(19,-11,3,3,'#ffe9a0');rect(-22,-11,2,3,'#d33');wheel(-13,-4,5);wheel(13,-4,5);g.restore()}
+function lorry(x,y,c,flip,s){g.save();g.translate(x,y);g.scale(flip?-s:s,s);rr(-40,-34,58,28,2,c);rr(20,-30,20,24,[6,6,2,2],'#e8e8e8');rect(26,-27,11,9,'#a8d4f0');wheel(-28,-5,6);wheel(-14,-5,6);wheel(28,-5,6);g.restore()}
+function oldcar(x,y,t,trailer){if(trailer){ln(x-24,y-8,x-34,y-8,'#555',2);rr(x-66,y-18,34,12,2,'#7a8088');if(trailer>1){circ(x-58,y-22,6,'#4f8a35');circ(x-48,y-24,7,'#5aa23c');circ(x-40,y-21,5,'#4f8a35')}wheel(x-50,y-5,5)}
+  rr(x-24,y-17,48,11,5,'#b33a3a');rr(x-14,y-26,26,11,[7,9,0,0],'#b33a3a');poly([x-11,y-24,x-1,y-24,x-1,y-17,x-13,y-17],'#a8d4f0');poly([x+1,y-24,x+9,y-24,x+12,y-17,x+1,y-17],'#a8d4f0');wheel(x-14,y-5,5.5);wheel(x+14,y-5,5.5)}
+function arrowTrailer(x,y,t){ln(x+20,y-8,x+30,y-8,'#555',2);rr(x-20,y-16,40,9,2,'#ff8a00');chevrons(x-20,y-16,40,9);rect(x-2,y-50,4,36,'#5b6169');rr(x-22,y-74,44,28,4,'#1b1d21');
+  const k=Math.floor(t*4)%4;for(let i=0;i<3;i++){const on=i<=k-1||k===3;const cx=x-12+i*10;g.fillStyle=on?'#ffd33d':'#3a3418';g.beginPath();g.moveTo(cx-3,y-66);g.lineTo(cx+4,y-60);g.lineTo(cx-3,y-54);g.lineTo(cx-6,y-54);g.lineTo(cx+1,y-60);g.lineTo(cx-6,y-66);g.fill()}
+  for(let i=0;i<4;i++)circ(x-16+i*10.5,y-71,1.6,Math.floor(t*3)%2?'#ffd33d':'#5a4a10');wheel(x-6,y-6,6)}
+function tractor(x,y,t,vy,park){// x = centre ; bras d'épareuse jusqu'à vy (bas-côté)
+  rr(x-6,y-26,40,14,4,'#2f9a3e');rect(x+28,y-30,4,6,'#555');rr(x-30,y-50,26,26,4,'#2a8a37');rect(x-27,y-47,20,18,'#a8d4f0');rect(x-32,y-52,30,4,'#1f6b2b');beacon(x-17,y-52,t);
+  wheel(x-18,y-14,14);wheel(x+24,y-9,9);
+  if(park){ln(x-6,y-26,x+14,y-58,'#d58b12',5);ln(x+14,y-58,x+30,y-30,'#e09a18',4);rr(x+22,y-32,24,10,3,'#c03a2b');return}
+  const hx=x+50+Math.sin(t*2)*3,hy=vy-6;ln(x-6,y-26,x+20,y-46,'#d58b12',5);ln(x+20,y-46,hx,hy-10,'#e09a18',4);rr(hx-14,hy-10,28,12,3,'#c03a2b');
+  g.save();g.translate(hx,hy-4);g.rotate(t*25);ln(-9,0,9,0,'#333',2);g.restore();
+  if(Math.random()<.7)parts.push({x:hx+camX+R(-12,12),y:hy,vx:R(-90,-20),vy:R(-80,-20),l:.6,c:pick(['#7cc24f','#a3d96a','#5aa83a']),r:R(1.2,2.4)})}
+function sweeper(x,y,t){rr(x-34,y-30,46,22,6,'#f2c230');rr(x+6,y-44,22,30,[8,8,2,2],'#f5cd3f');rect(x+10,y-40,14,13,'#a8d4f0');chevrons(x-34,y-30,8,22);beacon(x+17,y-44,t);
+  wheel(x-22,y-6,7);wheel(x+16,y-6,7);g.save();g.translate(x+34,y-4);g.scale(1,.35);g.rotate(t*12);for(let k=0;k<8;k++){g.rotate(.785);ln(0,0,12,0,'#444',2)}g.restore();
+  if(Math.random()<.5)parts.push({x:x+40+camX,y:y-4,vx:R(-30,30),vy:R(-30,-5),l:.7,c:'rgba(205,190,155,.55)',r:R(3,6)})}
+function nacelleTruck(x,y,t,tx,ty){rr(x-44,y-24,64,14,2,'#e9edf1');rr(x+20,y-38,24,30,[7,7,2,2],'#f3f5f7');rect(x+26,y-34,12,11,'#a8d4f0');chevrons(x-44,y-24,10,14);beacon(x+32,y-38,t);wheel(x-30,y-6,7);wheel(x-14,y-6,7);wheel(x+30,y-6,7);
+  const mx=(x-20+tx)/2-10,my=Math.min(y-40,ty)-10;ln(x-20,y-26,mx,my,'#ff8a00',6);ln(mx,my,tx,ty+6,'#ff8a00',5);worker(tx+1,ty+14,t,{tool:'scie',ph:1,skin:2,s:.8,noLegs:1});rr(tx-10,ty,20,13,2,'#ffd23f');rect(tx-10,ty+3,20,1.5,'#e0a800');
+  if(Math.random()<.25)parts.push({x:tx+12+camX,y:ty,vx:R(-20,30),vy:R(0,20),l:1.2,c:pick(PAL[season()].leaf||['#6b4a33']),r:R(1.5,3),gr:60})}
+function hydroTruck(x,y,t,gx,gy){rr(x-46,y-34,60,26,13,'#e8742c');rect(x-46,y-24,60,4,'#fff');rr(x+14,y-38,26,30,[8,8,2,2],'#f0f2f4');rect(x+20,y-34,13,11,'#a8d4f0');beacon(x+27,y-38,t);
+  wheel(x-34,y-6,7);wheel(x-20,y-6,7);wheel(x+28,y-6,7);circ(x-46,y-20,8,'#c95a1a');circ(x-46,y-20,3,'#333');
+  g.strokeStyle='#222';g.lineWidth=3;g.beginPath();g.moveTo(x-46,y-20);g.quadraticCurveTo(x-60,y+6,gx,gy);g.stroke();
+  if(Math.random()<.4)parts.push({x:gx+camX+R(-3,3),y:gy-2,vx:R(-20,20),vy:R(-70,-30),l:.5,c:'rgba(190,225,255,.8)',r:R(1,2)})}
+function cone(x,y){poly([x,y-14,x+5,y-1,x-5,y-1],'#ff6a00');rect(x-3,y-9,6,2.4,'#fff');rr(x-7,y-2,14,3,1,'#ff6a00')}
+function barrierSign(x,y){rect(x-1,y-26,2,26,'#888');poly([x,y-38,x+10,y-21,x-10,y-21],'#fff');g.strokeStyle='#e12';g.lineWidth=2.5;g.beginPath();g.moveTo(x,y-36);g.lineTo(x+8,y-22.5);g.lineTo(x-8,y-22.5);g.closePath();g.stroke();g.fillStyle='#111';g.font='900 8px sans-serif';g.fillText('!',x-1.5,y-24.5)}
+/* --- ouvrier (vue de côté) --- */
+function worker(x,y,t,o){const s=o.s||1,ph=o.ph||0,a=t*7+ph,walk=o.walk,sw=walk?Math.sin(a)*5:0,bob=walk?Math.abs(Math.sin(a))*1.2:Math.sin(a*.6)*.5;
+  g.save();g.translate(x,y-bob);g.scale(s,s);
+  if(o.tool==='souffleur')rr(-12,-34,7,14,2,'#d63a2a');
+  if(o.tool==='pince'){ln(-6,-24,-9,-14,'#f0c7a0',2.5);rr(-14,-16,9,13,[2,2,4,4],o.bag||'#2f79d9')}
+  if(!o.noLegs){ln(-2,-17,-2+sw,-3,'#24324a',4.5);ln(2,-17,2-sw,-3,'#24324a',4.5);rect(-4+sw*.6,-10,4,2,'#dfe8ee');rect(0-sw*.6,-10,4,2,'#dfe8ee');rr(-5+sw,-3.5,8,3.5,1.5,'#1b1b1b');rr(-1-sw,-3.5,8,3.5,1.5,'#1b1b1b')}
+  rr(-7,-34,14,18,4,o.vest||'#ff8a1c');rect(-7,-27,14,2.2,'#e9f1f5');rect(-7,-21,14,2.2,'#e9f1f5');
+  circ(1,-40,5.4,SKIN[o.skin||0]);circ(4.3,-40.5,.8,'#222');g.fillStyle=o.helm||'#ffffff';g.beginPath();g.arc(1,-42,6,Math.PI,0);g.fill();rect(-5,-42.6,13.5,1.8,o.helm||'#ffffff');
+  const k=Math.sin(a*1.4);
+  switch(o.tool){
+    case'pince':{const hx=8,hy=-22;ln(2,-30,hx,hy,'#ff8a1c',3);ln(hx,hy,15+k*2,-1+k*2,'#9aa1a9',1.6);ln(15+k*2,-1+k*2,18+k*2,-1,'#9aa1a9',1.6);break}
+    case'lance':{ln(2,-30,9,-24,'#ff8a1c',3);ln(6,-25,22,-30-k*3,'#333',2.2);if(Math.random()<.6)parts.push({x:x+22*s+camX,y:y-30*s,vx:R(60,120),vy:R(-40,20),l:.35,c:'rgba(170,220,255,.85)',r:R(1,2.2)});break}
+    case'debrou':{const ex=17+k*4,ey=-2;ln(-4,-27,ex,ey,'#d63a2a',2.2);ln(2,-30,6,-22,'#ff8a1c',3);g.save();g.translate(ex,ey);g.rotate(t*30);ln(-5,0,5,0,'#ccc',1.6);g.restore();if(Math.random()<.5)parts.push({x:x+ex*s+camX,y:y+ey*s,vx:R(-40,70),vy:R(-90,-20),l:.6,c:pick(['#5aa83a','#79c04f','#3f8a30']),r:R(1.2,2.2)});break}
+    case'haie':{ln(2,-30,10,-26,'#ff8a1c',3);rr(8,-29+k*2,20,3.5,1,'#555');rr(6,-31+k*2,6,6,2,'#e05a1a');if(Math.random()<.35)parts.push({x:x+24*s+camX,y:y-28*s,vx:R(-20,40),vy:R(-30,10),l:.8,c:'#4fa244',r:1.6,gr:120});break}
+    case'tondeuse':{ln(2,-30,12,-18,'#ff8a1c',3);ln(12,-18,18,-6,'#333',2);rr(14,-9,18,7,3,'#e03a2a');wheel(17,-2,2.5);wheel(29,-2,2.5);if(Math.random()<.4)parts.push({x:x+16*s+camX,y:y-4*s,vx:R(-70,-20),vy:R(-40,-5),l:.45,c:'#86c64f',r:1.6});break}
+    case'souffleur':{ln(2,-30,10,-20,'#ff8a1c',3);ln(-4,-24,18,-4,'#333',2.6);if(Math.random()<.6)parts.push({x:x+18*s+camX,y:y-4*s,vx:R(60,130),vy:R(-40,0),l:.6,c:pick(['#e38b2b','#cf5a2b','#e9b93a']),r:R(1.5,2.5)});break}
+    case'pelle':{const kk=Math.max(0,k);ln(2,-30,9,-20+kk*3,'#ff8a1c',3);ln(0,-28+kk*3,16,-2+kk*2,'#8a5a2b',2);rr(13,-5+kk*2,8,5,1,'#777');if(Math.random()<.35)parts.push({x:x+18*s+camX,y:y-6*s,vx:R(10,60),vy:R(-70,-30),l:.6,c:'#fff',r:R(1.5,2.5)});break}
+    case'scie':{ln(2,-30,10,-34,'#ff8a1c',3);ln(8,-34,16,-40+k*2,'#e05a1a',3);break}
+    case'porte':{ln(2,-30,8,-36,'#ff8a1c',3);rr(4,-46,16,10,2,'#6b4a33');break}
+    default:{ln(1,-30,3+sw*.3,-18,'#ff8a1c',3)}}
+  g.restore()}
+/* --- éléments du bas-côté --- */
+function litter(x,y,r){const k=Math.floor(r*6);
+  if(k===0){rr(x,y-3,11,4,2,'#3c9a4a');rect(x+10,y-2.5,2.5,3,'#e8e8e8')}
+  else if(k===1){rr(x,y-4,6,4.5,1,'#d33');rect(x+1,y-3,4,1.2,'#eee')}
+  else if(k===2){poly([x,y,x+6,y-5,x+11,y-1,x+5,y+1],'#f4f4f4');poly([x+2,y-1,x+6,y-4,x+9,y-1],'#dcdcdc')}
+  else if(k===3){ell(x+5,y-4,7,5,'#222');circ(x+9,y-8,2,'#222')}
+  else if(k===4){rr(x,y-6,7,6,1,'#c8a26b');rect(x,y-6,7,1.5,'#9c7a46')}
+  else{ell(x+6,y-5,7,6,'#262626');ell(x+6,y-5,3.5,3,'#5a5a5a')}}
+function pmc(x,y,c){rr(x-6,y-14,12,14,[3,3,5,5],c);poly([x-3,y-14,x,y-19,x+3,y-14],c);rect(x-6,y-8,12,1.2,'rgba(255,255,255,.3)')}
+function sign(x,y,kind,dirty,t){rect(x-1.3,y-34,2.6,34,'#a9b0b7');const sy=y-46;
+  if(kind===0){poly([x,sy-8,x+12,sy+12,x-12,sy+12],'#fff');g.strokeStyle='#e01b1b';g.lineWidth=3;g.beginPath();g.moveTo(x,sy-6);g.lineTo(x+10,sy+11);g.lineTo(x-10,sy+11);g.closePath();g.stroke();rect(x-1,sy,2,6,'#111')}
+  else if(kind===1){circ(x,sy+2,11,'#e01b1b');circ(x,sy+2,8,'#fff');g.fillStyle='#111';g.font='900 8px sans-serif';g.textAlign='center';g.fillText('70',x,sy+5);g.textAlign='left'}
+  else if(kind===2){rr(x-18,sy-6,36,18,2,'#1f5fbf');g.strokeStyle='#fff';g.lineWidth=1;g.strokeRect(x-16.5,sy-4.5,33,15);g.fillStyle='#fff';g.font='800 6.5px Nunito,sans-serif';g.fillText(pick2(x),x-13,sy+5)}
+  else{rr(x-9,sy-7,18,18,2,'#1f5fbf');rect(x-5,sy-3,10,10,'#fff');rect(x-2,sy-1,4,6,'#1f5fbf')}
+  if(dirty){g.fillStyle='rgba(92,72,42,.62)';g.fillRect(x-18,sy-8,36,22);circ(x-6,sy+4,2.5,'rgba(60,90,40,.8)');circ(x+5,sy-2,2,'rgba(60,90,40,.8)')}
+  else if(Math.sin(t*2+x)>.85){g.fillStyle='rgba(255,255,255,.6)';g.fillRect(x+4,sy-6,2,14)}}
+const pick2=x=>TOWNS[Math.abs(Math.floor(x/97+camX/97))%TOWNS.length].slice(0,9);
+function railSeg(x,y,w,dirty,r){rect(x,y-22,w,8,dirty?'#7f725c':'#c9d1da');rect(x,y-20,w,1.6,dirty?'#6b604c':'#f4f7fa');rect(x,y-16,w,1.4,dirty?'#5d5342':'#9aa4ae');
+  if(dirty&&r<.6){circ(x+r*w,y-18,2.6,'rgba(62,95,40,.85)');circ(x+w*.7,y-19,1.8,'rgba(40,32,22,.7)')}rect(x+w/2-1.5,y-18,3,18,'#8a939c')}
+function bush(x,y,r,pal){const c=['#2d6a25','#367a2c','#24591f'];circ(x+6,y-12-r*6,12+r*5,c[0]);circ(x-4,y-8,10,c[1]);circ(x+16,y-8,9,c[2]);circ(x+8,y-20-r*4,8,c[1]);
+  for(let i=0;i<4;i++)circ(x-2+i*6,y-12-hh(i+Math.floor(x))*10,1.4,'#6a2a6a');ln(x-6,y-2,x-14,y-22,'#3e7a2a',1.4);ln(x+20,y-2,x+28,y-20,'#3e7a2a',1.4)}
+function stub(x,y){ln(x,y,x,y-4,'#7a5a2a',2);ln(x+8,y,x+9,y-3,'#7a5a2a',2);ln(x+15,y,x+15,y-5,'#6b8a3a',2);circ(x+5,y-1,2,'#8aa04a')}
+function tallGrass(x,y,i,t,flowers){for(let k=0;k<7;k++){const bx=x+k*5,h=16+hh(i*7+k)*14,sw=Math.sin(t*2.2+bx*.04)*3;ln(bx,y,bx+sw,y-h,k%2?'#4f9a35':'#3f8a2d',1.6);
+  if(flowers&&hh(i*11+k)<.22)circ(bx+sw,y-h,1.9,hh(i*3+k)<.5?'#e8332a':'#fff')}}
+function grate(x,y,dirty){rr(x,y-3,20,5,1,'#1d1f22');for(let k=3;k<20;k+=3)rect(x+k,y-2.5,1,4,'#4b5058');if(dirty){ell(x+10,y-4,12,4,'#6b4a2a');circ(x+5,y-6,2.5,'#c9862b');circ(x+14,y-6,2,'#9b6a2a')}}
+function hedge(x,y,w,trim,i){if(trim){rr(x,y-30,w+1,30,[6,6,0,0],'#2f7a33');rect(x,y-30,w+1,4,'#3f9a3f')}else{for(let k=0;k<3;k++)circ(x+5+k*12,y-28-hh(i*5+k)*14,10+hh(i*3+k)*4,k%2?'#2f7a33':'#286a2c');rect(x,y-28,w+1,28,'#2a702e')}}
+function paving(x,y,w,dirty,i){const h=14;rect(x,y-h,w,h,dirty?'#6d7466':'#d9d2c4');g.strokeStyle=dirty?'#55594f':'#bfb6a6';g.lineWidth=1;for(let k=0;k<w;k+=11){g.beginPath();g.moveTo(x+k,y-h);g.lineTo(x+k,y);g.stroke()}g.beginPath();g.moveTo(x,y-h/2);g.lineTo(x+w,y-h/2);g.stroke();
+  if(dirty){circ(x+hh(i)*w,y-4,3,'rgba(50,90,40,.8)');circ(x+hh(i+9)*w,y-10,2.2,'rgba(30,30,30,.4)')}}
+function leaves(x,y,i,pal){const L=pal.leaf||['#c9862b','#b46a2a'];for(let k=0;k<9;k++)ell(x+hh(i*9+k)*SEG,y-2-hh(i*5+k)*8,2.6,1.5,L[k%L.length])}
+function branchPile(x,y){for(let k=0;k<5;k++)ln(x+k*3,y-2,x+16+k*2,y-12+k*2,'#6b4a33',2);circ(x+8,y-12,6,'#4f8a35');circ(x+16,y-9,5,'#5aa23c')}
+function snowCover(x,y,w){rr(x,y-8,w+1,8,[5,5,0,0],'#fbfdff');rect(x,y-2,w+1,2,'#dfe8f0')}
+/* --- dessin principal --- */
+let carsTimer=0;
+function draw(t){
+  const c=selC(),J=c?JOBS[c.j]:null,vk=J?J.vis:null,pal=PAL[season()],wk=WX[st.wx].k;
+  const yHill=CH*.52,yFar=CH*.585,yRoad=CH*.625,yMid=CH*.71,yNear=CH*.80,yWork=CH*.935;
+  let tx=200;if(c){c.vis+=(c.prog-c.vis)*.04;tx=c.vis/c.q*LEN+220}
+  const tgt=c?tx-CW*.58:0;if(Math.abs(tgt-camX)>CW*3)camX=tgt;camX+=(tgt-camX)*.08;
+  const sx=tx-camX;
+  // ciel
+  const sk=SKY[wk];let gr=g.createLinearGradient(0,0,0,yFar);gr.addColorStop(0,sk[0]);gr.addColorStop(.7,sk[1]);gr.addColorStop(1,sk[2]);g.fillStyle=gr;g.fillRect(0,0,CW,yFar+2);
+  if(wk==='sun'||wk==='cloud'){const sx2=CW*.84,sy2=CH*.13;const sg=g.createRadialGradient(sx2,sy2,0,sx2,sy2,60);sg.addColorStop(0,'rgba(255,248,200,.95)');sg.addColorStop(.25,'rgba(255,236,150,.55)');sg.addColorStop(1,'rgba(255,236,150,0)');g.fillStyle=sg;g.fillRect(sx2-60,sy2-60,120,120);circ(sx2,sy2,13,'#fff7cf')}
+  const cc=wk==='storm'?'rgba(70,80,95,.9)':wk==='rain'?'rgba(150,160,172,.9)':'rgba(255,255,255,.88)';
+  for(const cl of clouds){const x=((cl.x-camX*.04+t*6*cl.s)%(CW+260)+CW+260)%(CW+260)-130,y=CH*cl.y,s=cl.s*(wk==='sun'?.8:1.15);
+    if(wk==='sun'&&cl.s<.8)continue;g.fillStyle=cc;g.beginPath();g.ellipse(x,y,30*s,10*s,0,0,7);g.ellipse(x-14*s,y+2*s,16*s,9*s,0,0,7);g.ellipse(x+12*s,y-5*s,18*s,12*s,0,0,7);g.fill()}
+  // collines et éoliennes
+  hills(.08,yHill,CH*.2,pal.hillF,1.3);
+  for(let i=Math.floor(camX*.08/220)-1;i<Math.floor((camX*.08+CW)/220)+2;i++){if(hh(i*31+7)<.5){const x=i*220-camX*.08+hh(i)*80;turbine(x,hillY(x,.08,yHill,CH*.2,1.3)+4,.75,t,i)}}
+  hills(.22,CH*.57,CH*.13,pal.hillN,4.1);
+  // champs + haies (parallaxe moyenne)
+  const fo=camX*.45;for(let i=Math.floor(fo/140)-1;i<Math.floor((fo+CW)/140)+2;i++){const x=i*140-fo;rect(x,CH*.555,141,yFar-CH*.555+1,pal.field[i&1]);
+    if(hh(i*13)<.55)tree(x+hh(i*5)*120,CH*.575,.55,pal,0,hh(i*17)<.25?1:0);if(hh(i*19)<.12)church(x+60,CH*.575,.55);else if(hh(i*23)<.2){house(x+40,CH*.575,.55,'#efe6d6','#a5442f');house(x+64,CH*.575,.5,'#e6dccb','#5a6270')}}
+  // accotement d'en face
+  rect(0,yFar,CW,yRoad-yFar,pal.grass2);
+  for(let i=Math.floor(camX/SEG)-2;i<Math.floor((camX+CW)/SEG)+3;i++){const x=i*SEG-camX,r=hh(i*7+3);
+    if(J&&J.p&&r<.18)house(x,yFar+3,.8,pick3(i,['#f3ead9','#e9dfcf','#f6efe3','#dcd3c3']),pick3(i+1,['#a5442f','#5a6270','#7a3a2a']));
+    else if(r<.07)tree(x,yFar+4,.8,pal,0,r<.02?1:0);
+    if(i%4===0){rect(x,yFar+2,2,9,'#f4f4f4');rect(x,yFar+4,2,2,'#222')}}
+  // route
+  gr=g.createLinearGradient(0,yRoad,0,yNear);gr.addColorStop(0,'#41464d');gr.addColorStop(1,'#565c64');g.fillStyle=gr;g.fillRect(0,yRoad,CW,yNear-yRoad);
+  rect(0,yRoad+2,CW,2,'#f2f2f2');rect(0,yNear-4,CW,2.5,'#f2f2f2');
+  for(let x=(-camX%48+48)%48-48;x<CW;x+=48)rect(x,yMid-1.2,24,2.4,'#f2f2f2');
+  if(wk==='rain'||wk==='storm'){g.fillStyle='rgba(180,200,220,.12)';g.fillRect(0,yRoad,CW,yNear-yRoad)}
+  // bas-côté (zone de travail)
+  gr=g.createLinearGradient(0,yNear,0,CH);gr.addColorStop(0,pal.grass);gr.addColorStop(1,pal.grass2);g.fillStyle=gr;g.fillRect(0,yNear,CW,CH-yNear);
+  if(wk==='snow'||(season()===0&&st.wx===4)){g.fillStyle='rgba(255,255,255,.55)';g.fillRect(0,yNear,CW,CH-yNear);g.fillRect(0,yFar,CW,yRoad-yFar)}
+  if(J&&vk==='grass'){for(let x=(-camX%26+26)%26-26;x<sx;x+=26)rect(x,yNear+4,13,CH-yNear,'rgba(255,255,255,.08)')}
+  if(J&&vk==='lawn'){rect(0,yNear+2,CW,CH-yNear,'#6fbf45');for(let x=(-camX%26+26)%26-26;x<sx;x+=26)rect(x,yNear+2,13,CH-yNear,'#86d25a')}
+  // voitures
+  carsTimer-=1;if(carsTimer<=0){carsTimer=RI(40,110);const ln2=Math.random()<.5?0:1;cars.push({lane:ln2,x:ln2?camX-80:camX+CW+80,v:R(120,190),c:pick(['#c8312b','#2f62c9','#eceff2','#2b2d31','#8c939b','#2a9a5a','#e0a224','#6a3fb5']),tr:Math.random()<.18,y:0})}
+  const dt=Math.min(.05,t-lastT)||.016;
+  const zA=sx-300,zB=sx+90;
+  for(const k of cars){k.x+=(k.lane?1:-1)*k.v*dt;const scr=k.x-camX;let target=k.lane?yNear-6:yMid-9;if(J&&k.lane&&scr>zA-90&&scr<zB+60)target=yMid+3;k.y=k.y?k.y+(target-k.y)*.08:target}
+  cars=cars.filter(k=>k.x>camX-160&&k.x<camX+CW+160);
+  for(const k of cars.filter(k=>!k.lane))(k.tr?lorry:car)(k.x-camX,k.y,k.c,1,.82);
+  for(const k of cars.filter(k=>k.lane))(k.tr?lorry:car)(k.x-camX,k.y,k.c,0,1);
+  // décor du chantier
+  const i0=Math.floor(camX/SEG)-2,i1=Math.floor((camX+CW)/SEG)+3,seed=c?c.seed:7;
+  if(J){
+    for(let i=i0;i<=i1;i++){const x=i*SEG-camX,r=hh(i*7+seed),r2=hh(i*13+seed*3),r3=hh(i*29+seed);const done=i*SEG+SEG/2<tx||c.tap[i];
+      switch(vk){
+        case'dechets':if(!done){if(r2<.6)litter(x+r3*20,yWork-2+r*10-8,r);if(r2<.25)litter(x+r*14,yNear+12,r3)}else if(r2<.06)pmc(x+10,yNear+16,r<.5?'#2f79d9':'#ffd23f');break;
+        case'signs':if(i%5===0)sign(x,yNear+18,Math.floor(r*4),!done,t);break;
+        case'rail':railSeg(x,yNear+20,SEG,!done,r2);break;
+        case'bush':if(!done){if(r2<.8)bush(x,yNear+28,r3,pal)}else stub(x+6,yNear+24);break;
+        case'grass':if(!done)tallGrass(x,CH,i,t,1);break;
+        case'lawn':if(!done)tallGrass(x,CH,i,t,0);break;
+        case'trees':if(i%4===0){tree(x,yNear+26,1.6,pal,done,0);if(!done&&pal.leaf){circ(x+18,yRoad+8,14,pal.leaf[0]);circ(x+30,yRoad+16,10,pal.leaf[1%pal.leaf.length])}}break;
+        case'drains':if(i%4===0)grate(x,yNear-2,!done);break;
+        case'sweep':if(!done)for(let k=0;k<7;k++)circ(x+hh(i*3+k)*SEG,yNear-3-hh(i*11+k)*7,1.5,k%3?'#a39370':(pal.leaf?pal.leaf[0]:'#8a7a5a'));break;
+        case'hedge':hedge(x,yNear+30,SEG,done,i);break;
+        case'paving':paving(x,yNear+20,SEG,!done,i);break;
+        case'leaves':if(!done)leaves(x,yWork,i,pal);else if(r2<.05)pmc(x+10,yWork,'#3c7a2a');break;
+        case'branches':if(!done&&r2<.55)branchPile(x,yWork);break;
+        case'snow':rect(x,yNear+14,SEG+1,6,'#9aa0a6');if(!done)snowCover(x,yNear+16,SEG);else if(r2<.3)circ(x+r*SEG,yNear+16,1,'#fff');break}
+    }
+    // signalisation
+    const useSig=!J.p||J.need.includes('signal');
+    if(useSig){for(let x=sx-300;x<=sx+80;x+=28)cone(x,yNear-1);barrierSign(sx-330,yNear+8)}
+    const mach=J.mach;
+    if(mach==='tracteur'){tractor(sx-56,yNear-2,t,yWork);if(J.need.includes('fleche'))arrowTrailer(sx-150,yNear-2,t)}
+    else if(mach==='balayeuse'){sweeper(sx-34,yNear-2,t);arrowTrailer(sx-140,yNear-2,t)}
+    else if(mach==='nacelle'){nacelleTruck(sx-70,yNear-2,t,sx+4,CH*.3);arrowTrailer(sx-170,yNear-2,t)}
+    else if(mach==='hydro'){hydroTruck(sx-50,yNear-2,t,sx+6,yNear-4);arrowTrailer(sx-160,yNear-2,t)}
+    else if(st.eq.van>0||J.need.includes('van')){van(sx-95,yNear-2,t,vk==='dechets');if(J.need.includes('fleche'))arrowTrailer(sx-190,yNear-2,t)}
+    else oldcar(sx-110,yNear-2,t,J.need.includes('remorque')?(vk==='branches'?2:1):0);
+    // ouvriers
+    const crew=c.crew.map(id=>st.workers.find(w=>w.id===id)).filter(Boolean);const nShow=Math.min(6,crew.length)-(mach&&mach!=='nacelle'?1:0)-(mach==='nacelle'?1:0);
+    for(let k=0;k<Math.max(0,nShow);k++){const w=crew[k+(mach?1:0)]||crew[k];const wx=sx-6-k*22+Math.sin(t*.7+k)*5;const wy=yWork+(k%2)*6;
+      let tool=J.tool;if(mach)tool=k===0?'porte':'';if(vk==='branches')tool='porte';
+      worker(wx,wy,t,{tool,ph:k*1.9,skin:w.skin,helm:w.boss?'#fff':k%2?'#ffd23f':'#ff9a1f',bag:k%2?'#ffd23f':'#2f79d9'})}
+  }else{
+    // dépôt / maison quand il n'y a pas de chantier
+    const bx=CW*.08;
+    if(!st.adm.bce||vehCount()===0){house(bx+50,CH*.98,1.6,'#efe6d6','#a5442f');rr(bx+90,CH*.98-34,46,34,2,'#d9d0bf');rect(bx+94,CH*.98-28,38,28,'#8a8f96');for(let k=0;k<5;k++)rect(bx+94,CH*.98-27+k*5.5,38,1,'#7a7f86')}
+    else{rr(bx,CH*.98-64,150,64,3,'#9aa7b3');poly([bx-6,CH*.98-64,bx+75,CH*.98-86,bx+156,CH*.98-64],'#6c7a88');rect(bx+20,CH*.98-46,60,46,'#59646f');for(let k=0;k<8;k++)rect(bx+20,CH*.98-45+k*5.7,60,1.2,'#4b555f');
+      rr(bx+90,CH*.98-56,52,16,3,'#ff8a1c');g.fillStyle='#2a1600';g.font='900 8px Nunito,sans-serif';g.fillText(st.name.slice(0,12).toUpperCase(),bx+94,CH*.98-45)}
+    let px=bx+250;const order=['hydro','tracteur','balayeuse','nacelle','van','fleche'];
+    for(const k of order)for(let n=0;n<Math.min(2,st.eq[k]||0);n++){if(px>CW-30)break;const y=CH*.98;
+      if(k==='van'){van(px,y,t,0);px+=95}else if(k==='tracteur'){tractor(px+20,y,t,y,1);px+=110}else if(k==='balayeuse'){sweeper(px,y,t);px+=95}else if(k==='nacelle'){nacelleTruck(px,y,t,px+10,y-70);px+=110}else if(k==='hydro'){hydroTruck(px,y,t,px-70,y);px+=110}else{arrowTrailer(px,y,t);px+=60}}
+    if(px===bx+250)oldcar(px+20,CH*.98,t,st.eq.remorque?1:0);
+    for(let k=0;k<Math.min(5,ownW());k++)worker(bx+222-k*17,CH*.99-(k%2)*3,t*.3,{tool:'',ph:k,skin:st.workers[k].skin,helm:k===0?'#fff':k%2?'#ffd23f':'#ff9a1f'});
+  }
+  // touffes au premier plan
+  for(let i=Math.floor(camX*1.15/40)-1;i<Math.floor((camX*1.15+CW)/40)+2;i++){const x=i*40-camX*1.15;if(hh(i*41)<.5){const h=6+hh(i*43)*6;for(let k=0;k<4;k++)ln(x+k*3,CH,x+k*3+Math.sin(t*2+i)*1.5-2+k,CH-h,pal.grass2,1.5)}}
+  // particules
+  for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=(p.gr||160)*dt;p.l-=dt;if(p.txt){g.globalAlpha=Math.min(1,p.l*2);g.fillStyle='#ffe066';g.font='900 15px Nunito,sans-serif';g.strokeStyle='rgba(0,0,0,.5)';g.lineWidth=3;g.strokeText(p.txt,p.x-camX,p.y);g.fillText(p.txt,p.x-camX,p.y);g.globalAlpha=1}else circ(p.x-camX,p.y,p.r,p.c)}
+  parts=parts.filter(p=>p.l>0);if(parts.length>260)parts.splice(0,parts.length-260);
+  // météo
+  if(wk==='rain'||wk==='storm'){g.strokeStyle='rgba(210,225,240,.55)';g.lineWidth=1;g.beginPath();for(let k=0;k<70;k++){const x=(hh(k*3)*CW+t*60+k*7)%CW,y=(hh(k*7)*CH+t*520)%CH;g.moveTo(x,y);g.lineTo(x-3,y+10)}g.stroke()}
+  if(wk==='storm'){if(Math.random()<.004)flash=1;if(flash>0){g.fillStyle=`rgba(255,255,255,${flash*.6})`;g.fillRect(0,0,CW,CH);flash-=dt*3}}
+  if(wk==='snow'){for(let k=0;k<60;k++){const x=(hh(k*3)*CW+Math.sin(t+k)*12+t*10)%CW,y=(hh(k*7)*CH+t*40)%CH;circ(x,y,1.2+hh(k)*1.4,'rgba(255,255,255,.9)')}}
+  // vignette
+  const vg=g.createLinearGradient(0,CH-30,0,CH);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.25)');g.fillStyle=vg;g.fillRect(0,CH-30,CW,30);
+  lastT=t;
+  // HUD
+  const hj=$('#hudJob'),pb=$('#prog');
+  if(c){const txt=`${J.ic} ${J.p?c.road:c.road+' · '+c.town}`;if(hj.textContent!==txt)hj.textContent=txt;pb.style.display='block';pb.firstChild.style.width=(c.prog/c.q*100)+'%'}
+  else{const txt=st.adm.bce?'🏠 Au dépôt — pas de chantier':'🏠 À la maison';if(hj.textContent!==txt)hj.textContent=txt;pb.style.display='none'}
+}
+const pick3=(i,a)=>a[Math.abs(i)%a.length];
+cv.addEventListener('pointerdown',e=>{const c=selC();if(!c)return;const b=cv.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;
+  if(y<CH*.62)return;const wx=x+camX,tx=c.vis/c.q*LEN+220;
+  if(wx<tx-10||wx>tx+CW*.45)return;const i=Math.floor(wx/SEG);if(c.tap[i])return;c.tap[i]=1;const J=JOBS[c.j];c.prog=Math.min(c.q,c.prog+c.q*(J.p?0.012:0.0015));
+  parts.push({x:wx,y:y-6,vx:0,vy:-50,l:1,gr:30,txt:'+1 👍'});for(let k=0;k<8;k++)parts.push({x:wx,y,vx:R(-70,70),vy:R(-110,-30),l:.6,c:pick(['#ffd23f','#ff9a1f','#fff']),r:2});snd(900+Math.random()*300,.05,'triangle',.04)});
+
+/* ---------- Boucle ---------- */
+const SPD=[0,3000,1200,400];let acc=0,prevT=performance.now();
+function loop(now){const dt=Math.min(250,now-prevT);prevT=now;if(playing&&!modalOpen&&speed&&!st.over){acc+=dt;if(acc>=SPD[speed]){acc=0;tick()}}draw(now/1000);requestAnimationFrame(loop)}
+render();
+$('#play').onclick=()=>{playing=true;$('#splash').style.display='none';$('#ins').classList.remove('on');click();
+  if(!st.started){st.started=true;save();showModal(`<h3>🦺 Bienvenue dans Route Nette</h3><p>Tu pars de <b>zéro</b> : ${eur(st.cash)} en poche, ta vieille voiture, une pince, des gants et des sacs.</p>
+  <div class="card"><div style="margin:4px 0">1️⃣ <b>Inscris-toi à la BCE</b> pour pouvoir facturer.</div><div style="margin:4px 0">2️⃣ Fais des <b>petits boulots</b> (déchets, pelouses, haies…).</div><div style="margin:4px 0">3️⃣ Économise pour acheter des <b>machines</b> et <b>embaucher</b>.</div><div style="margin:4px 0">4️⃣ Assurance, VCA, camionnette : tu peux répondre aux <b>marchés du SPW</b>.</div><div style="margin:4px 0">5️⃣ Grandis : tracteurs, nacelles, hydrocureuses, agréation… 🏆</div></div>
+  <p class="mut">Tous les prix sont proches de la réalité (HTVA). Nom de ta société :</p><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">C'est parti !</button>`)}};
+requestAnimationFrame(loop);
+</script>
+<script>
+// Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
+var APPV="2026-11-03.1";
+var SWR=null,BIP=null;
+var say=function(t){try{toastMsg(t)}catch(x){}};
+if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
+(function(){var v=document.getElementById("ver");if(v)v.textContent="Version "+APPV})();
+function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){});
+ fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
+  if(!j||!j.v||j.v===APPV){if(man)say("Le jeu est à jour ✓ (version "+APPV+")");return}
+  try{save()}catch(x){}
+  document.getElementById("updn").textContent=(j.notes||"")+" Ta progression est conservée.";document.getElementById("ins").classList.remove("on");document.getElementById("upd").classList.add("on")}).catch(function(){if(man)say("Pas de connexion internet")})}
+(function(){try{var o=localStorage.getItem("routenette-v");localStorage.setItem("routenette-v",APPV);if(o&&o!==APPV)setTimeout(function(){say("Jeu mis à jour ✓ Ta progression est intacte.")},800)}catch(x){}})();
+chkV();setInterval(chkV,30*60000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden)chkV()});
+function standalone(){try{return matchMedia("(display-mode: standalone)").matches||matchMedia("(display-mode: fullscreen)").matches||navigator.standalone===true}catch(x){return false}}
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)}
+function inApp(){return /; wv\)|FBAN|FBAV|FB_IAB|Messenger|Instagram|WhatsApp|Snapchat|musical_ly|TikTok|Line\/|GSA\//.test(navigator.userAgent)}
+function isAndroid(){return /Android/i.test(navigator.userAgent)}
+function isChrome(){var u=navigator.userAgent;return !inApp()&& /Chrome\//.test(u)&&!/EdgA?\/|OPR\/|SamsungBrowser|HuaweiBrowser|HeyTapBrowser|MiuiBrowser|YaBrowser|Firefox|FxiOS|CriOS/.test(u)}
+function showIns(force){if(standalone()||document.getElementById("upd").classList.contains("on"))return;
+ if(!force){try{if(Date.now()-(+localStorage.getItem("routenette-ins")||0)<3*864e5)return}catch(x){}}
+ var m=document.getElementById("insm"),b=document.getElementById("insb");
+ if(BIP){m.textContent="Ajoute le jeu sur ton écran d’accueil, en un appui.";b.textContent="Installer";b.style.display=""}
+ else if(isAndroid()){m.textContent=isChrome()?"Menu ⋮ → « Installer l’application ». Pas dans le menu ? Ouvre d’abord dans Chrome.":"Ce navigateur ne peut pas installer le jeu : ouvre-le dans Chrome.";b.textContent="Ouvrir dans Chrome";b.style.display=""}
+ else if(inApp()){m.textContent="Tu es dans le navigateur d’une messagerie : ouvre le jeu dans Safari pour l’installer.";b.textContent="Copier le lien";b.style.display=""}
+ else if(isIOS()){m.textContent="Dans Safari : touche Partager ⬆️ puis « Sur l’écran d’accueil ».";b.style.display="none"}
+ else{m.textContent="Ce navigateur ne peut pas l’installer : copie le lien et ouvre-le dans Chrome.";b.textContent="Copier le lien";b.style.display=""}
+ document.getElementById("ins").classList.add("on")}
+function insLater(){try{localStorage.setItem("routenette-ins",Date.now())}catch(x){}document.getElementById("ins").classList.remove("on")}
+function doIns(){if(BIP){var e=BIP;BIP=null;e.prompt();e.userChoice.then(function(c){if(c&&c.outcome==="accepted")document.getElementById("ins").classList.remove("on");else insLater()}).catch(function(){});return}
+ var u=location.href.split("#")[0];
+ if(isAndroid()){location.href="intent://"+u.replace(/^https?:\/\//,"")+"#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url="+encodeURIComponent(u)+";end";return}
+ (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){say("Lien copié ✓ Colle-le dans Chrome")}).catch(function(){prompt("Copie ce lien et ouvre-le dans Chrome :",u)})}
+addEventListener("beforeinstallprompt",function(e){BIP=e;if(document.getElementById("splash").style.display!=="none")showIns()});
+addEventListener("appinstalled",function(){BIP=null;document.getElementById("ins").classList.remove("on");say("Jeu installé ✓")});
+(function(){var p=document.getElementById("insp");if(p&&!standalone())p.style.display=""})();
+setTimeout(function(){if(BIP||standalone()||document.getElementById("splash").style.display==="none")return;showIns()},3500);
+</script>
+</body>
+</html>

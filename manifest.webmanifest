@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "Route Nette",
+  "short_name": "Route Nette",
+  "description": "Crée ton entreprise d'entretien des routes et décroche les marchés publics du SPW.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1a14",
+  "theme_color": "#0d1a14",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
