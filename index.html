@@ -94,7 +94,7 @@ nav button.on b{animation:bounce .45s}
 h2{font-size:12.5px;color:var(--mut);margin:16px 4px 8px;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
 .req{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:12.5px}
 .cv h2{margin:14px 0 6px}
-.ph{position:relative;margin:-12px -14px 12px;height:170px;background:#0b170f;overflow:hidden}.ph img{width:100%;height:100%;object-fit:cover;display:block}.ph0{background:linear-gradient(90deg,#132619,#1d3526,#132619);background-size:200% 100%;animation:shim 1.2s linear infinite}@keyframes shim{to{background-position:-200% 0}}
+.ph{position:relative;margin:-12px -14px 12px;height:170px;background:#0b170f;overflow:hidden}.ph img{width:100%;height:100%;object-fit:cover;display:block}.ph1{height:auto;padding:10px 14px;color:var(--mut);font-size:12.5px}.ph0{background:linear-gradient(90deg,#132619,#1d3526,#132619);background-size:200% 100%;animation:shim 1.2s linear infinite}@keyframes shim{to{background-position:-200% 0}}
 .phc{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;padding:2px 6px;border-radius:6px;text-decoration:none;max-width:90%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .goal{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#3b2a0a,#2a1f0b);border:1px solid #7a5418;border-radius:var(--r);padding:10px 12px;margin-bottom:12px}
 .goal b{color:var(--ye)}
@@ -1072,16 +1072,20 @@ const IMG={sandero:['fr:Dacia Sandero','en:Dacia Sandero'],golf:['fr:Volkswagen 
   eq_broyeur:['fr:Broyeur de végétaux','en:Woodchipper'],eq_van:['fr:Ford Transit','en:Ford Transit'],eq_nacelle:['fr:Nacelle élévatrice','en:Aerial work platform'],eq_balayeuse:['en:Street sweeper','fr:Balayeuse de voirie'],
   eq_tracteur:['fr:Épareuse','en:Flail mower'],eq_hydro:['fr:Hydrocureuse','en:Vacuum truck'],eq_trons:['fr:Tronçonneuse','en:Chainsaw'],eq_plaque:['en:Plate compactor','fr:Plaque vibrante'],eq_batteuse:['en:Pile driver','fr:Sonnette (construction)'],
   eq_benne:['fr:Iveco Daily','en:Iveco Daily'],eq_pelle:['fr:Mini-pelle','en:Compact excavator'],eq_traceuse:['en:Road surface marking','fr:Marquage routier'],eq_saleuse:['fr:Saleuse','en:Winter service vehicle'],eq_benne19:['fr:Camion-benne','en:Dump truck']};
-let IMC={};try{IMC=JSON.parse(localStorage.getItem('rn-img1')||'{}')}catch(e){}
+let IMC={};try{IMC=JSON.parse(localStorage.getItem('rn-img2')||'{}')}catch(e){}
 const imgBusy={},imgFail={};let imgT=0;
-async function loadImg(k){if(imgBusy[k])return;imgBusy[k]=1;
+// API MediaWiki avec origin=* (autorisée depuis n'importe quel site) : image principale de l'article
+async function loadImg(k){if(imgBusy[k])return;imgBusy[k]=1;let net=0;
   for(const t of IMG[k]||[]){const i=t.indexOf(':'),l=t.slice(0,i),ti=t.slice(i+1);
-    try{const r=await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(ti.replace(/ /g,'_'))}`);if(!r.ok)continue;const j=await r.json();
-      const src=j.thumbnail&&j.thumbnail.source;if(src){IMC[k]={src:src.replace(/\/\d+px-/,'/480px-'),page:j.content_urls&&j.content_urls.desktop.page,title:j.title};break}}catch(e){imgFail[k]=Date.now();delete imgBusy[k];return}}
-  if(!IMC[k])IMC[k]={none:1};try{localStorage.setItem('rn-img1',JSON.stringify(IMC))}catch(e){}
+    try{const u=`https://${l}.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages|info&inprop=url&pithumbsize=640&titles=${encodeURIComponent(ti)}`;
+      const r=await fetch(u);net=1;if(!r.ok)continue;const j=await r.json();const pg=j.query&&j.query.pages&&Object.values(j.query.pages)[0];
+      if(pg&&pg.thumbnail&&pg.thumbnail.source){IMC[k]={src:pg.thumbnail.source,page:pg.fullurl||`https://${l}.wikipedia.org/wiki/${encodeURIComponent(ti)}`,title:pg.title};break}}catch(e){}}
+  if(!IMC[k]){if(!net){imgFail[k]=Date.now();delete imgBusy[k];render();return}IMC[k]={none:1,t:Date.now()}}
+  try{localStorage.setItem('rn-img2',JSON.stringify(IMC))}catch(e){}
   clearTimeout(imgT);imgT=setTimeout(()=>{if(curTab==='pv'||curTab==='mt')render()},250)}
-function photo(k){const c=IMC[k];if(!IMG[k])return'';if(!c){if(imgFail[k]&&Date.now()-imgFail[k]<60000)return'';loadImg(k);return`<div class="ph ph0"></div>`}if(c.none)return'';
-  return`<div class="ph"><img src="${c.src}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'"><a class="phc" href="${c.page}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📷 ${esc(c.title)} — Wikipédia</a></div>`}
+function photo(k){let c=IMC[k];if(!IMG[k])return'';if(c&&c.none&&Date.now()-c.t>864e5){delete IMC[k];c=null}
+  if(!c){if(imgFail[k]&&Date.now()-imgFail[k]<30000)return`<div class="ph ph1">📷 Photo indisponible : vérifie ta connexion internet</div>`;loadImg(k);return`<div class="ph ph0"></div>`}if(c.none)return'';
+  return`<div class="ph"><img src="${c.src}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"><a class="phc" href="${c.page}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📷 ${esc(c.title)} — Wikipédia</a></div>`}
 let pvTab='car';
 function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=own.reduce((a,o)=>a+pValue(o)-(o.loan||0),0);
   let h=`<div class="card"><div class="hd"><div class="ic" style="--ac2:#3d2c66">🏡</div><div style="flex:1;min-width:0"><h3>Ta vie privée</h3><div class="mut sm">Ton argent à toi, séparé de celui de la société.</div></div></div>
@@ -1407,7 +1411,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.23";
+var APPV="2026-11-03.24";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
