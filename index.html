@@ -304,7 +304,8 @@ function migrate(s){const d=defaults();if(s.mStart===undefined)s.mStart=s.cash;
 function load(){for(const k of[SAVE,BAK]){try{const s=JSON.parse(localStorage.getItem(k));if(s&&typeof s==='object'&&s.workers)return migrate(s)}catch(e){}}return null}
 function save(){try{const j=JSON.stringify(st);localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j)}catch(e){}}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-addEventListener('visibilitychange',()=>{if(document.hidden&&st)save()});
+addEventListener('visibilitychange',()=>{if(document.hidden&&st){save();if(typeof speed!=='undefined'&&speed){speed=0;pausedAway=1;try{render()}catch(e){}}}else if(typeof pausedAway!=='undefined'&&pausedAway){pausedAway=0;setTimeout(()=>toastMsg('⏸ Jeu en pause pendant ton absence. Appuie sur ▶ pour reprendre.'),300)}});
+var pausedAway=0;
 addEventListener('pagehide',()=>{if(st)save()});
 
 /* ---------- Calendrier belge ---------- */
@@ -642,8 +643,8 @@ function cvOf(w){const g=rng(strHash('cv|'+w.n+'|'+w.r));const R0=ROLES[w.r];con
   const ref=lz?(g()<.6?'« Pas toujours très motivé, à encadrer. »':'Pas de référence fournie'):pick2r(g,['« Travailleur sérieux, je le reprendrais sans hésiter. »','« Très fiable, toujours à l\'heure. »','« Bon élément, apprécié des collègues. »']);
   return{age,xp,town,parc,dipl:pick2r(g,DIPL[w.r]||['CESS']),lic,lang,atouts,ref,lz}}
 function cvUI(kind,ix){let w,act='';click();
-  if(kind==='cand'){w=st.cand[ix];if(!w)return;act=`<div class="row" style="margin-top:12px"><button class="btn" ${st.cash<monthly(w)||!st.adm.bce?'disabled':''} onclick="closeM();hire(${ix})">✅ Engager</button>${w.itv?'':`<button class="btn s" onclick="interview(${ix})">🗣️ Entretien d'embauche</button>`}<button class="btn s" onclick="closeM()">Fermer</button></div>`}
-  else if(kind==='role'){const r=ix,R0=ROLES[r];w={n:nextName(r),r,sk:1,day:R0.day,skin:strHash(nextName(r))%SKIN.length,base:1};act=`<div class="row" style="margin-top:12px"><button class="btn" ${st.cash<R0.day*WDM?'disabled':''} onclick="closeM();hireRole('${r}')">✅ Engager</button><button class="btn s" onclick="closeM()">Fermer</button></div>`}
+  if(kind==='cand'){w=st.cand[ix];if(!w)return;act=`<div class="row" style="margin-top:12px"><button class="btn" onclick="tryHire('cand',${ix})">✅ Engager</button>${w.itv?'':`<button class="btn s" onclick="interview(${ix})">🗣️ Entretien d'embauche</button>`}<button class="btn s" onclick="closeM()">Fermer</button></div>`}
+  else if(kind==='role'){const r=ix,R0=ROLES[r];w={n:nextName(r),r,sk:1,day:R0.day,skin:strHash(nextName(r))%SKIN.length,base:1};act=`<div class="row" style="margin-top:12px"><button class="btn" onclick="tryHire('role','${r}')">✅ Engager</button><button class="btn s" onclick="closeM()">Fermer</button></div>`}
   else{w=st.workers.find(x=>x.id===ix);if(!w)return;act='<button class="btn s w" style="margin-top:12px" onclick="closeM()">Fermer</button>'}
   const R0=ROLES[w.r],cv=cvOf(w);const f=isF(w.n);
   showModal(`<div class="cv"><div class="row" style="gap:14px;align-items:center">${avatar(w,96)}<div style="flex:1;min-width:0"><div class="mut sm">CURRICULUM VITAE</div><h3 style="margin:2px 0">${esc(w.n)}</h3><div class="mut">${cv.age} ans · ${cv.town}</div><div class="tag o" style="margin-top:6px">${R0.n}</div></div></div>
@@ -654,7 +655,15 @@ function cvUI(kind,ix){let w,act='';click();
   <h2>Qualités</h2><div class="tags" style="margin-top:0">${cv.atouts.map(x=>`<span class="tag g">${x}</span>`).join('')}</div>
   ${R0.cat==='ouv'&&!w.boss?`<h2>Référence d'un ancien employeur</h2><div class="sm"><i>${cv.ref}</i></div>`:''}
   ${w.itv?`<h2>Ton impression à l'entretien</h2><div class="sm">${w.itv}</div>`:''}
-  <h2>Coût employeur</h2><div class="sm"><b>${eur(w.day*WDM)}</b> par mois (${eur(w.day)} par jour ouvrable)</div></div>${act}`)}
+  <div id="cvmsg"></div><h2>Coût employeur</h2><div class="sm"><b>${eur(w.day*WDM)}</b> par mois (${eur(w.day)} par jour ouvrable)</div></div>${act}`)}
+// Pourquoi on ne peut pas engager (message clair dans le CV)
+function hireBlock(kind,ix){if(!st.adm.bce)return"Ton entreprise n'est pas encore inscrite à la BCE : sans numéro d'entreprise, tu ne peux engager personne. Va dans 📊 Entreprise → Démarches.";
+  let cost,w;if(kind==='cand'){w=st.cand[ix];if(!w)return'Ce candidat a trouvé un autre travail.';cost=monthly(w)}else{const R0=ROLES[ix];if(!R0.multi&&has(ix))return'Ce poste est déjà occupé.';if(R0.need&&ownW()<R0.need)return`Il faut au moins ${R0.need} personnes dans l'entreprise pour ce poste (tu en as ${ownW()}).`;cost=R0.day*WDM}
+  if(st.cash<0)return`Ton compte est dans le rouge (${eur(st.cash)}). La banque et l'ONSS ne te laisseront pas engager tant que tu as des dettes. Termine des chantiers, attends les paiements ou prends un prêt (📊 Entreprise → Banque).`;
+  if(st.cash<cost)return`Il faut avoir sur ton compte de quoi payer au moins un mois de salaire : ${eur(cost)}. Tu as ${eur(st.cash)}, il te manque ${eur(cost-st.cash)}.`;
+  return null}
+function tryHire(kind,ix){const why=hireBlock(kind,ix);if(why){const m=$('#cvmsg');if(m){m.innerHTML=`<div class="card acc" style="--ac:var(--rd);margin:14px 0 0"><b>🚫 Tu ne peux pas encore engager</b><div class="sm" style="margin-top:4px">${why}</div></div>`;m.scrollIntoView({behavior:'smooth',block:'center'})}snd(220,.15,'square',.04);return}
+  closeM();kind==='cand'?hire(ix):hireRole(ix)}
 function interview(ix){const w=st.cand[ix];if(!w)return;const right=Math.random()<.75,lz=(w.base??1)<.62;const say=(right?lz:!lz)?pick(['😕 Pas très motivé, regarde souvent son GSM.','😕 Répond vaguement, semble chercher surtout un salaire.','😕 Arrivé en retard à l’entretien.']):pick(['🙂 Motivé, pose de bonnes questions sur le travail.','🙂 Poignée de main franche, a l’air sérieux.','🙂 Connaît le métier, parle de ses anciens chantiers avec passion.']);
   w.itv=say;save();cvUI('cand',ix)}
 function refreshCand(){const n=has('rh')?7:4;st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.25?'etu':r<.6?'man':r<.8?'qual':r<.92?'chauf':'chef'))}}
@@ -1108,7 +1117,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.5";
+var APPV="2026-11-03.6";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
