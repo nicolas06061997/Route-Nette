@@ -281,8 +281,8 @@ const SAVE='routenette-save',BAK='routenette-bak',SCHEMA=2;
 let st=null;
 function newRivals(){return RIVT.map(r=>({n:r[0],sz:r[1],jobs:r[2],ag:r[3],rep:r[4],load:[],won:0,ca:0}))}
 function defaults(){return{schema:SCHEMA,name:'Ma petite entreprise',cash:250,rep:10,day:0,adm:{},cls:0,loan:0,nid:2,
-  workers:[{id:1,n:'Toi',r:'boss',boss:1,sk:1,day:0,pc:0,skin:0}],eq:{},tenders:[],jobs:[],contracts:[],inv:[],cand:[],log:[],
-  stats:{won:0,lost:0,done:0,ca:0,spw:0,earned:0},refs:{},riv:null,salAcc:0,goals:{},sel:null,wx:0,started:false,snd:1,over:false}}
+  workers:[{id:1,n:'Toi',r:'boss',boss:1,sk:1,day:0,pc:0,skin:0,base:1,mot:1,hd:0,warn:0}],eq:{},tenders:[],jobs:[],contracts:[],inv:[],cand:[],log:[],
+  stats:{won:0,lost:0,done:0,ca:0,spw:0,earned:0},refs:{},riv:null,salAcc:0,reports:[],goals:{},sel:null,wx:0,started:false,snd:1,over:false}}
 function migrate(s){const d=defaults();
   for(const k in d)if(s[k]===undefined)s[k]=d[k];
   for(const k in d.stats)if(s.stats[k]===undefined)s.stats[k]=d.stats[k];
@@ -296,7 +296,7 @@ function migrate(s){const d=defaults();
   // éléments retirés : remboursés plutôt que perdus
   for(const k in s.eq)if(!EQ[k])delete s.eq[k];
   s.contracts=s.contracts.filter(c=>JOBS[c.j]);s.jobs=s.jobs.filter(o=>JOBS[o.j]);s.tenders=s.tenders.filter(t=>JOBS[t.j]&&t.postes);
-  s.workers=s.workers.filter(w=>ROLES[w.r]);s.workers.forEach(w=>{if(w.skin===undefined)w.skin=RI(0,SKIN.length-1)});
+  s.workers=s.workers.filter(w=>ROLES[w.r]);s.workers.forEach(w=>{if(w.skin===undefined)w.skin=RI(0,SKIN.length-1);if(w.base===undefined){w.base=w.boss?1:R(.7,1);w.mot=w.base}if(w.hd===undefined)w.hd=s.day;if(w.warn===undefined)w.warn=0});
   s.schema=SCHEMA;return s}
 function load(){for(const k of[SAVE,BAK]){try{const s=JSON.parse(localStorage.getItem(k));if(s&&typeof s==='object'&&s.workers)return migrate(s)}catch(e){}}return null}
 function save(){try{const j=JSON.stringify(st);localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j)}catch(e){}}
@@ -490,9 +490,9 @@ function tick(){
     c.wd++;let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;st.cash-=eqc+(J.p?0:40);
     const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF;
-    const dp=Math.min(c.q-c.prog,J.rate*crew.reduce((a,w)=>a+w.sk,0)*wf*boost);c.prog+=dp;
+    const dp=Math.min(c.q-c.prog,J.rate*crew.reduce((a,w)=>a+w.sk*(w.mot??1),0)*wf*boost);c.prog+=dp;observe(c,crew);
     if(c.xc)st.cash-=c.xc*dp/c.q;
-    crew.forEach(w=>w.sk=Math.min(1.5,+(w.sk+.0025).toFixed(4)));
+    crew.forEach(w=>{w.sk=Math.min(1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
     if(c.prog>=c.q-1e-6)finish(c);
   }
   for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);st.cash+=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`);kaching()}
@@ -544,7 +544,43 @@ function events(work){if(Math.random()>.045)return;const run=running();const r=M
   else if(st.adm.bce){const k=RI(150,1500)*(has('compta')?1.5:1);st.cash+=k;log(`🏦 Remboursement de TVA : +${eur(k)}`)}
 }
 function mkW(r){const R0=ROLES[r];const bonus=has('rh')?.06:0;const sk=+Math.min(1.45,R(R0.sk[0],R0.sk[1])+bonus).toFixed(2);
-  return{id:st.nid++,n:pick(PREN)+' '+pick(NOMS),r,sk,day:Math.round(R0.day*R(.97,1.05)),pc:R0.pc||(r==='qual'&&Math.random()<.25)||(r==='chef'&&Math.random()<.5)?1:0,skin:RI(0,SKIN.length-1)}}
+  return{id:st.nid++,n:pick(PREN)+' '+pick(NOMS),r,sk,day:Math.round(R0.day*R(.97,1.05)),pc:R0.pc||(r==='qual'&&Math.random()<.25)||(r==='chef'&&Math.random()<.5)?1:0,skin:RI(0,SKIN.length-1),base:base(),mot:0,hd:0,warn:0}}
+function base(){const lazy=Math.random()<(has('rh')?.1:.22);return+(lazy?R(.35,.62):R(.75,1)).toFixed(2)}
+// Préavis en semaines selon l'ancienneté (statut unique, licenciement par l'employeur)
+function preavisW(w){const m=(st.day-(w.hd||0))/30.4;if(m<3)return 1;if(m<4)return 3;if(m<5)return 4;if(m<6)return 5;if(m<9)return 6;if(m<12)return 7;if(m<15)return 8;if(m<18)return 9;if(m<21)return 10;if(m<24)return 11;return 12+Math.floor(m/12-2)}
+const preavisCost=w=>Math.round(preavisW(w)*5*w.day);
+const FAUTES=[['passe beaucoup de temps sur son GSM',0],['fait des pauses beaucoup trop longues',0],['arrive en retard le matin',0],["attend qu'on lui dise quoi faire et travaille très lentement",0],['passe son temps dans la camionnette',0],
+  ['ne porte pas ses EPI (gilet, casque) au bord de la route malgré les consignes',1],["a été vu en train de boire de l'alcool sur le chantier",1],['a quitté le chantier sans prévenir',1]];
+// Le contremaître, le patron ou un gestionnaire de chantier remarque qui travaille mal
+function observe(c,crew){const chef=crew.find(w=>w.r==='chef'),boss=crew.find(w=>w.boss);const g=st.workers.filter(w=>w.r==='gest');
+  for(const w of crew){if(w.boss||w.r==='chef'&&w===chef)continue;
+    let who=null;if(chef&&Math.random()<.18)who=chef;else if(boss&&Math.random()<.14)who=boss;else if(g.length&&Math.random()<.06*g.length)who=pick(g);
+    if(!who)continue;w.seen=w.mot;
+    if(st.reports.some(r=>r.wid===w.id&&!r.done&&st.day-r.day<15))continue;
+    if(w.mot<.66){const grave=Math.random()<.18;const f=pick(FAUTES.filter(x=>x[1]===(grave?1:0)));
+      st.reports.unshift({id:st.nid++,wid:w.id,cid:c.id,day:st.day,by:who.boss?'Toi':who.n.split(' ')[0],role:who.boss?'patron':ROLES[who.r].n.toLowerCase(),txt:f[0],grave:f[1],road:c.road,done:0});
+      log(`📋 Rapport de ${who.boss?'chantier':who.n.split(' ')[0]} : ${w.n.split(' ')[0]} ${f[0]}.`)}
+    else if(w.mot>.92&&w.sk>1.15&&Math.random()<.08&&!st.reports.some(r=>r.wid===w.id&&r.good&&st.day-r.day<60)){
+      st.reports.unshift({id:st.nid++,wid:w.id,cid:c.id,day:st.day,by:who.boss?'Toi':who.n.split(' ')[0],role:who.boss?'patron':ROLES[who.r].n.toLowerCase(),txt:'fait un excellent travail et motive toute l’équipe',good:1,road:c.road,done:0});log(`🌟 ${w.n.split(' ')[0]} fait du super boulot sur ${esc(c.road)}.`)}
+  }
+  if(st.reports.length>40)st.reports.length=40}
+function rptAct(id,a){const r=st.reports.find(x=>x.id===id);if(!r)return;const w=st.workers.find(x=>x.id===r.wid);if(!w){r.done='parti';render();return}const fn=w.n.split(' ')[0];click();
+  if(a==='talk'){w.mot=Math.min(1,w.mot+.12);r.done='Recadré oralement';log(`🗣️ Tu as recadré ${fn}.`,false)}
+  else if(a==='warn'){w.warn++;w.mot=Math.min(1,w.mot+.3);if(w.warn>=2&&Math.random()<.5)w.base=Math.min(1,w.base+.15);r.done=`Avertissement écrit n°${w.warn}`;log(`⚠️ Avertissement écrit n°${w.warn} envoyé à ${w.n} (recommandé).`)}
+  else if(a==='prime'){if(st.cash<250)return toastMsg('Il faut 250 €.');st.cash-=250;w.mot=1;w.base=Math.min(1,w.base+.05);r.done='Prime de 250 € accordée';log(`🎁 Prime de 250 € pour ${w.n}. Toute l'équipe est motivée !`);st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv')x.mot=Math.min(1,x.mot+.03)})}
+  else if(a==='fire'){if(st.contracts.some(c=>c.st==='run'&&c.crew.includes(w.id)&&c.crew.length<=JOBS[c.j].minW))return toastMsg('Il manquerait du monde sur le chantier : ajoute quelqu’un d’abord.');
+    const p=preavisCost(w);if(!confirm(`Licencier ${w.n} avec préavis ?\nAncienneté : ${Math.round((st.day-w.hd)/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(p)}`))return;
+    st.cash-=p;dropW(w);r.done='Licencié avec préavis';log(`📤 ${w.n} est licencié (indemnité de préavis ${eur(p)}).`)}
+  else if(a==='grave'){const wd=workDaysSince(r.day);const ok=(r.grave||w.warn>=2)&&wd<=3;
+    if(!confirm(`Licencier ${w.n} pour motif grave, sans préavis ?\n${ok?'Le dossier est solide.':'⚠️ Attention : le dossier est faible ('+(wd>3?'plus de 3 jours ouvrables depuis les faits':'pas de faute grave ni 2 avertissements')+'). Il risque d’aller au tribunal du travail.'}`))return;
+    dropW(w);if(ok){r.done='Licencié pour motif grave';log(`🚪 ${w.n} est licencié pour motif grave.`)}
+    else{const p=preavisCost(w)+Math.round(w.day*5*3*R(1,4));st.cash-=p;st.rep=clamp(st.rep-3,0,100);r.done='Tribunal du travail : condamné';log(`⚖️ ${w.n} conteste au tribunal du travail : tu es condamné à payer ${eur(p)} (préavis + licenciement déraisonnable). Réputation -3.`)}}
+  else{r.done=r.good?'Félicité':'Classé sans suite';if(r.good)w.mot=Math.min(1,w.mot+.05)}
+  st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv'&&(a==='warn'||a==='fire'||a==='grave'))x.mot=Math.min(1,x.mot+.02)});
+  save();render()}
+function dropW(w){st.contracts.forEach(c=>{c.crew=c.crew.filter(i=>i!==w.id)});st.workers.splice(st.workers.indexOf(w),1)}
+function workDaysSince(d){let n=0;for(let k=d+1;k<=st.day;k++)if(isWork(k))n++;return n}
+const behav=w=>w.boss||w.seen===undefined?null:w.seen<.55?['🔴 À surveiller','r']:w.seen<.72?['🟠 Moyen','o']:['🟢 Sérieux','g'];
 function refreshCand(){const n=has('rh')?7:4;st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.25?'etu':r<.6?'man':r<.8?'qual':r<.92?'chauf':'chef'))}}
 const GOALS=[
   {k:'g0',t:"Inscris ton entreprise à la BCE (📊 Entreprise)",ok:()=>!!st.adm.bce},
@@ -588,13 +624,13 @@ function startGo(id){const c=st.contracts.find(x=>x.id===id);const p=eqPlan(c.j,
 
 /* ---------- Personnel, achats, banque ---------- */
 function hire(i){const w=st.cand[i];if(!w)return;if(!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<monthly(w))return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(monthly(w))}).`);
-  st.cand.splice(i,1);st.workers.push(w);log(`👷 ${w.n} rejoint l'équipe : ${ROLES[w.r].n}.`,false);kaching();goals();save();render()}
+  st.cand.splice(i,1);w.mot=w.base;w.hd=st.day;st.workers.push(w);log(`👷 ${w.n} rejoint l'équipe : ${ROLES[w.r].n}.`,false);kaching();goals();save();render()}
 function hireRole(r){const R0=ROLES[r];if(!st.adm.bce)return;if(!R0.multi&&has(r))return;if(R0.need&&ownW()<R0.need)return toastMsg(`Il faut au moins ${R0.need} personnes dans l'entreprise.`);
   const day=R0.day;if(st.cash<day*WDM)return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(day*WDM)}).`);
   const n=R0.who||GESTN.find(x=>!st.workers.some(w=>w.n===x))||pick(PREN)+' '+pick(NOMS);
-  st.workers.push({id:st.nid++,n,r,sk:1,day,pc:0,skin:RI(0,SKIN.length-1)});log(`${R0.ic} ${n} rejoint ${esc(st.name)} : ${R0.n}.`);kaching();goals();save();render()}
+  st.workers.push({id:st.nid++,n,r,sk:1,day,pc:0,skin:RI(0,SKIN.length-1),base:1,mot:1,hd:st.day,warn:0});log(`${R0.ic} ${n} rejoint ${esc(st.name)} : ${R0.n}.`);kaching();goals();save();render()}
 function fire(id){const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;if(st.contracts.some(c=>c.st==='run'&&c.crew.includes(id)))return toastMsg("Cette personne est sur un chantier : retire-la d'abord.");
-  const pre=Math.round(monthly(w)*(ROLES[w.r].cat==='ouv'?.5:1));if(!confirm(`Licencier ${w.n} ? Indemnité de préavis : ${eur(pre)}`))return;st.cash-=pre;st.workers.splice(st.workers.indexOf(w),1);save();render()}
+  const pre=preavisCost(w);if(!confirm(`Licencier ${w.n} ?\nAncienneté : ${Math.round((st.day-(w.hd||0))/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(pre)}`))return;st.cash-=pre;dropW(w);log(`📤 ${w.n} est licencié (préavis ${eur(pre)}).`,false);save();render()}
 function trainPC(id){const w=st.workers.find(x=>x.id===id);if(!w||w.pc)return;if(st.cash<2900)return toastMsg('Il faut 2 900 € pour le permis C (auto-école + examen + CAP).');st.cash-=2900;w.pc=1;log(`🪪 ${w.n} a obtenu son permis C !`);save();render()}
 function buy(t){const e=EQ[t];if(st.cash<e.p)return toastMsg(`Pas assez d'argent : il manque ${eur(e.p-st.cash)}.`);st.cash-=e.p;st.eq[t]=(st.eq[t]||0)+1;log(`🛒 Achat : ${e.ic} ${e.n}`,false);kaching();goals();save();render()}
 function sell(t){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const v=Math.round(EQ[t].p*.55);if(!confirm(`Revendre ${EQ[t].n} pour ${eur(v)} ?`))return;st.eq[t]--;st.cash+=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
@@ -638,6 +674,7 @@ function render(){
   $$('#tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===curTab);b.querySelector('.bd')?.remove()});
   const nAo=st.tenders.filter(t=>t.status==='open'&&!t.my&&spwReq(t).every(x=>x.ok)).length,nWait=st.contracts.filter(c=>c.st==='wait').length,nJob=st.jobs.filter(o=>!jobMiss(o).length).length;
   if(nAo)$('[data-t=ao]').insertAdjacentHTML('beforeend',`<span class="bd">${nAo}</span>`);
+  const nR=st.reports.filter(r=>!r.done).length;if(nR)$('[data-t=eq]').insertAdjacentHTML('beforeend',`<span class="bd">${nR}</span>`);
   if(nWait)$('[data-t=ch]').insertAdjacentHTML('beforeend',`<span class="bd">${nWait}</span>`);
   if(nJob&&!st.contracts.length)$('[data-t=pb]').insertAdjacentHTML('beforeend',`<span class="bd">${nJob}</span>`);
   const P=$('#pane'),y=P.scrollTop;const fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=({ch:rCh,pb:rPb,ao:rAo,eq:rEq,mt:rMt,bi:rBi})[curTab]();P.scrollTop=y;
@@ -690,11 +727,20 @@ function rAo(){let h=goalCard();const mine=st.tenders.filter(t=>t.my);
   return h}
 function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew.forEach(i=>busy.set(i,c)));
   let h=goalCard()+`<div class="kpi" style="margin-bottom:12px"><div><span>Personnel</span><b>${ownW()}</b></div><div><span>Masse salariale / mois</span><b>${eur(payroll()*WDM)}</b></div><div><span>Chantiers suivis</span><b>${running().length} / ${mgmtCap()}</b></div><div><span>Offres en parallèle</span><b>${myOffers()} / ${offerCap()}</b></div></div>`;
-  h+=seg(eqTab,[['terrain','👷 Terrain'],['bureau','🏢 Bureau'],['recru','🙋 Recrutement']],'eqTab');
+  const nR=st.reports.filter(r=>!r.done).length;h+=seg(eqTab,[['terrain','👷 Terrain'],['rap',`📋 Rapports${nR?' ('+nR+')':''}`],['bureau','🏢 Bureau'],['recru','🙋 Engager']],'eqTab');
   const card=w=>{const R0=ROLES[w.r],c=busy.get(w.id);return`<div class="card"><div class="hd"><div class="ic" style="--ac2:${w.boss?'#5c4a12':'#2b3d52'}">${R0.ic}</div><div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${R0.n}${w.day?' · '+eur(monthly(w))+'/mois (coût employeur)':''}</div></div></div>
-    <div class="tags">${R0.cat==='ouv'?`<span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>`:''}${w.pc?'<span class="tag v">🪪 Permis C</span>':''}${R0.cat==='ouv'?`<span class="tag ${c?'o':''}">${c?'🦺 '+JOBS[c.j].n.split(' ').slice(0,3).join(' '):'💤 Libre'}</span>`:''}</div>${R0.d&&R0.cat!=='ouv'?`<div class="mut sm" style="margin-top:6px">${R0.d}</div>`:''}
+    <div class="tags">${R0.cat==='ouv'?`<span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>`:''}${w.pc?'<span class="tag v">🪪 Permis C</span>':''}${behav(w)?`<span class="tag ${behav(w)[1]}">${behav(w)[0]}</span>`:''}${w.warn?`<span class="tag r">⚠️ ${w.warn} avertissement${w.warn>1?'s':''}</span>`:''}${R0.cat==='ouv'?`<span class="tag ${c?'o':''}">${c?'🦺 '+JOBS[c.j].n.split(' ').slice(0,3).join(' '):'💤 Libre'}</span>`:''}</div>${R0.d&&R0.cat!=='ouv'?`<div class="mut sm" style="margin-top:6px">${R0.d}</div>`:''}
     <div class="row" style="margin-top:8px">${R0.cat==='ouv'&&!w.pc?`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="trainPC(${w.id})">🪪 Permis C (2 900 €)</button>`:''}${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="fire(${w.id})">Licencier</button>`}</div></div>`};
   if(eqTab==='terrain'){h+=`<h2>Sur les chantiers (${field().length})</h2>`;field().forEach(w=>h+=card(w))}
+  else if(eqTab==='rap'){const sup=has('gest')||field().some(w=>w.r==='chef');
+    h+=`<p class="mut sm" style="margin:0 4px 10px">Quand ils passent sur chantier, ${sup?'tes contremaîtres et gestionnaires de chantier':'toi (et plus tard tes contremaîtres et gestionnaires de chantier)'} remarquent qui travaille et qui ne fait pas grand-chose. Sans encadrement, personne ne voit rien !</p>`;
+    const L=st.reports.slice(0,25);if(!L.length)h+='<div class="card"><p class="mut">Aucun rapport pour l’instant.</p></div>';
+    for(const r of L){const w=st.workers.find(x=>x.id===r.wid);const nm=w?esc(w.n):'(a quitté l’entreprise)';
+      h+=`<div class="card acc" style="--ac:${r.good?'var(--gr)':r.grave?'var(--rd)':'var(--or)'}"><div class="mut sm">${dstr(r.day)} · ${esc(r.road)} · ${r.by==='Toi'?'vu par toi-même':'rapport de '+esc(r.by)+' ('+r.role+')'}</div><h3 style="margin-top:4px">${r.good?'🌟':r.grave?'🚨':'⚠️'} ${nm}</h3><p style="margin:6px 0">${w?esc(w.n.split(' ')[0]):'Il'} ${r.txt}.</p>
+      ${w&&!r.good?`<div class="tags"><span class="tag">${w.warn} avertissement(s)</span><span class="tag">Ancienneté ${Math.round((st.day-w.hd)/30.4)} mois</span>${r.grave?'<span class="tag r">Faute grave</span>':''}</div>`:''}
+      ${r.done?`<div class="tags"><span class="tag g">✔ ${r.done}</span></div>`:w?(r.good?`<div class="row" style="margin-top:10px"><button class="btn g" onclick="rptAct(${r.id},'prime')">🎁 Prime de 250 €</button><button class="btn s" onclick="rptAct(${r.id},'ok')">👍 Le féliciter</button></div>`:
+      `<div class="row" style="margin-top:10px"><button class="btn s" onclick="rptAct(${r.id},'talk')">🗣️ Recadrer</button><button class="btn" onclick="rptAct(${r.id},'warn')">⚠️ Avertissement écrit</button></div><div class="row" style="margin-top:8px"><button class="btn s" onclick="rptAct(${r.id},'fire')">📤 Licencier (préavis ${eur(preavisCost(w))})</button><button class="btn r" onclick="rptAct(${r.id},'grave')">🚪 Motif grave</button><button class="btn s" onclick="rptAct(${r.id},'ok')">Ignorer</button></div>`):''}</div>`}
+    h+='<p class="mut sm">Rappel : en Belgique, le licenciement pour motif grave doit être notifié dans les 3 jours ouvrables qui suivent les faits, et la faute doit être prouvée. Sinon, l’ouvrier peut aller au tribunal du travail.</p>'}
   else if(eqTab==='bureau'){const office=st.workers.filter(w=>ROLES[w.r].cat!=='ouv');
     h+=`<h2>Encadrement, bureau et direction</h2>`;if(!office.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, factures, chantiers. Toi seul, tu peux suivre 2 chantiers et 2 offres en même temps.</p>';office.forEach(w=>h+=card(w));
     h+=`<h2>Postes à pourvoir</h2>`;
@@ -815,6 +861,7 @@ function worker(x,y,t,o){const s=o.s||1,ph=o.ph||0,a=t*7+ph,walk=o.walk,sw=walk?
     case'tondeuse':{ln(2,-30,12,-18,'#ff8a1c',3);ln(12,-18,18,-6,'#333',2);rr(14,-9,18,7,3,'#e03a2a');wheel(17,-2,2.5);wheel(29,-2,2.5);if(Math.random()<.4)parts.push({x:x+16*s+camX,y:y-4*s,vx:R(-70,-20),vy:R(-40,-5),l:.45,c:'#86c64f',r:1.6});break}
     case'souffleur':{ln(2,-30,10,-20,'#ff8a1c',3);ln(-4,-24,18,-4,'#333',2.6);if(Math.random()<.6)parts.push({x:x+18*s+camX,y:y-4*s,vx:R(60,130),vy:R(-40,0),l:.6,c:pick(['#e38b2b','#cf5a2b','#e9b93a']),r:R(1.5,2.5)});break}
     case'pelle':{const kk=Math.max(0,k);ln(2,-30,9,-20+kk*3,'#ff8a1c',3);ln(0,-28+kk*3,16,-2+kk*2,'#8a5a2b',2);rr(13,-5+kk*2,8,5,1,'#777');if(Math.random()<.35)parts.push({x:x+18*s+camX,y:y-6*s,vx:R(10,60),vy:R(-70,-30),l:.6,c:'#fff',r:R(1.5,2.5)});break}
+    case'gsm':{ln(2,-30,6,-38,'#ff8a1c',3);rr(5,-43,4,6,1,'#222');rect(5.6,-42.2,2.8,4,'#7fd0ff');break}
     case'scie':{ln(2,-30,10,-34,'#ff8a1c',3);ln(8,-34,16,-40+k*2,'#e05a1a',3);break}
     case'porte':{ln(2,-30,8,-36,'#ff8a1c',3);rr(4,-46,16,10,2,'#6b4a33');break}
     default:{ln(1,-30,3+sw*.3,-18,'#ff8a1c',3)}}
@@ -928,8 +975,8 @@ function draw(t){
     // ouvriers
     const crew=c.crew.map(id=>st.workers.find(w=>w.id===id)).filter(Boolean);const nShow=Math.min(6,crew.length)-(mach&&mach!=='nacelle'?1:0)-(mach==='nacelle'?1:0);
     for(let k=0;k<Math.max(0,nShow);k++){const w=crew[k+(mach?1:0)]||crew[k];const wx=sx-6-k*22+Math.sin(t*.7+k)*5;const wy=yWork+(k%2)*6;
-      let tool=J.tool;if(mach)tool=k===0?'porte':'';if(vk==='branches')tool='porte';
-      worker(wx,wy,t,{tool,ph:k*1.9,skin:w.skin,helm:w.boss?'#fff':k%2?'#ffd23f':'#ff9a1f',bag:k%2?'#ffd23f':'#2f79d9'})}
+      let tool=J.tool;if(mach)tool=k===0?'porte':'';if(vk==='branches')tool='porte';const lazy=(w.mot??1)<.55&&Math.sin(t*.4+k*2)>-.2;if(lazy)tool='gsm';
+      worker(lazy?wx-10:wx,wy,lazy?0:t,{tool,ph:k*1.9,skin:w.skin,helm:w.boss?'#fff':k%2?'#ffd23f':'#ff9a1f',bag:k%2?'#ffd23f':'#2f79d9'})}
   }else{
     // dépôt / maison quand il n'y a pas de chantier
     const bx=CW*.08;
@@ -977,7 +1024,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.1";
+var APPV="2026-11-03.2";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});

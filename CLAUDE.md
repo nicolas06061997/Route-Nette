@@ -36,3 +36,4 @@ L'utilisateur parle français et n'est pas développeur : réponses courtes, en 
 - **Interface** : onglets `rCh`, `rPb`, `rAo`, `rEq`, `rMt`, `rBi` ; fenêtres `showModal`.
 - **Scène** : `draw(t)` vue de côté en parallaxe (ciel/météo `WX`, saisons `PAL`, collines, éoliennes, route, voitures, décor par métier, véhicules `van`, `tractor`, `sweeper`, `nacelleTruck`, `hydroTruck`, `arrowTrailer`, ouvriers `worker`).
 - Second `<script>` : version, mises à jour (`version.json`), installation (bouton, bandeau).
+- **Rapports de chantier** : chaque ouvrier a une motivation cachée (`base`, `mot`). `observe()` (contremaître dans l'équipe, patron, gestionnaires de chantier) crée `st.reports` ; actions `rptAct()` : recadrer, avertissement écrit, licenciement avec préavis (`preavisW`, statut unique), motif grave (3 jours ouvrables, sinon tribunal du travail), prime.
