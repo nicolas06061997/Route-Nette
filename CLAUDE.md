@@ -21,10 +21,18 @@ L'utilisateur parle français et n'est pas développeur : réponses courtes, en 
 ## Lancer
 `python3 -m http.server 8000` puis `http://localhost:8000/`. Pas de build.
 
+## Réalisme (Belgique)
+- Prix HTVA du matériel relevés en 2026 (annonces truck1.be/.fr, machineseeker, hellopro, moniteurautomobile.be, ledenicheur) : nacelle 20 m occasion 20-45 k€, balayeuse compacte occasion 25-65 k€, hydrocureuse occasion 36-120 k€, Transit plateau 2019 ≈ 25 k€ HTVA, Stihl FS 461 ≈ 1 200 €.
+- Salaires : barèmes CP 124 (cat. I ≈ 17,74 €/h en 2024) × charges patronales et pécules ; employés selon salaires moyens belges (aide-comptable ≈ 3 000 € brut).
+- Marchés publics : faible montant < 30 000 €, procédure négociée sans publication < 143 000 €, procédure ouverte au-delà ; agréation (AR 14/04/2024 : classe 1 ≤ 819 000 €, classe 2 ≤ 2 640 000 €) pour les travaux > 75 000 € ; amende pour retard art. 86 RGE R = 0,45 × M × n²/N² (max 5 %) ; cautionnement 5 % ; délais en jours ouvrables ; jours fériés belges et congés du bâtiment ; chômage intempéries.
+- Personnel de bureau fixe : aide-comptable **Angélique** (demandé par l'utilisateur), comptable Marc Delvaux, RH Sophie Lambert, secrétaire Nadia Benali, métreur Olivier Gérard, directeurs Philippe Renard (technique), Isabelle Marchal (DAF), Thierry Collard (commercial).
+
 ## Structure du script principal
 - **Données** : `EQ` (matériel, prix HTVA réalistes, `u` = coût par jour d'usage, `veh` = assurance), `ADM` (BCE, RC, VCA), `CLS` (agréation des entrepreneurs, seuils réels), `JOBS` (`p:1` = petit boulot privé, sinon marché SPW ; `rate` par ouvrier-jour, `pu` prix unitaire, `need` matériel, `pc` permis C, `vis` décor).
 - **Simulation** : `tick()` = un jour (salaires, `fixedList()`, avancement, factures `st.inv` payées avec délai, appels d'offres, événements, objectifs `GOALS`).
-- **Marchés SPW** : `genTender`, conditions `spwReq`, offre `bidUI`, attribution `resolveBid` (75 % prix, 25 % réputation).
+- **Marchés publics** : `genTender` (pouvoir adjudicateur, procédure, métré `postes`, délai `N` en jours ouvrables), conditions `spwReq` (sélection qualitative), offre `bidUI`/`drawMetre` (prix unitaires), `openBids` (PV d'ouverture, concurrents `st.riv`), `decide` (offre anormalement basse, attribution).
+- **Personnel** : `ROLES` (ouvriers, bureau, encadrement, direction), effets via `has(r)`, `mgmtCap()`, `offerCap()`, `payDelay()`.
+- **Calendrier** : `dayKind`, `isWork`, `addWork` ; salaires cumulés `st.salAcc` payés le 1er du mois avec `fixedList()`.
 - **Interface** : onglets `rCh`, `rPb`, `rAo`, `rEq`, `rMt`, `rBi` ; fenêtres `showModal`.
 - **Scène** : `draw(t)` vue de côté en parallaxe (ciel/météo `WX`, saisons `PAL`, collines, éoliennes, route, voitures, décor par métier, véhicules `van`, `tractor`, `sweeper`, `nacelleTruck`, `hydroTruck`, `arrowTrailer`, ouvriers `worker`).
 - Second `<script>` : version, mises à jour (`version.json`), installation (bouton, bandeau).
