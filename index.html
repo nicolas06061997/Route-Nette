@@ -238,7 +238,7 @@ const ROLES={
   qual:{n:'Ouvrier qualifié (cat. II)',ic:'👷',cat:'ouv',day:240,sk:[1.05,1.25]},
   chauf:{n:'Chauffeur poids lourd (permis C)',ic:'🚛',cat:'ouv',day:258,sk:[.95,1.2],pc:1},
   chef:{n:"Contremaître / chef d'équipe",ic:'🦺',cat:'ouv',day:292,sk:[1.15,1.35],d:"Dans une équipe : +15 % de travail et moins de remarques du SPW."},
-  aide:{n:'Aide-comptable',ic:'🧮',cat:'bur',day:183,who:'Angélique Dumont',d:"Factures envoyées à temps : tu es payé 10 jours plus vite. Indispensable dès 6 personnes."},
+  aide:{n:'Aide-comptable',ic:'🧮',cat:'bur',day:183,who:'Angélique Mawet',d:"Factures envoyées à temps : tu es payé 10 jours plus vite. Indispensable dès 6 personnes."},
   secr:{n:'Secrétaire',ic:'☎️',cat:'bur',day:172,who:'Nadia Benali',d:'Prépare les dossiers : +3 offres en même temps.'},
   compta:{n:'Comptable',ic:'📒',cat:'bur',day:232,who:'Marc Delvaux',d:'Remplace la fiduciaire (250 €/mois) et la banque te prête 50 % de plus.'},
   rh:{n:'Gestionnaire RH',ic:'🤝',cat:'bur',day:238,who:'Sophie Lambert',d:'Deux fois plus de candidats chaque semaine, et de meilleurs profils.'},
@@ -323,7 +323,7 @@ function migrate(s){const d=defaults();if(s.mStart===undefined)s.mStart=s.cash;
   // éléments retirés : remboursés plutôt que perdus
   for(const k in s.eq)if(!EQ[k])delete s.eq[k];
   s.contracts=s.contracts.filter(c=>JOBS[c.j]);s.jobs=s.jobs.filter(o=>JOBS[o.j]);s.tenders=s.tenders.filter(t=>JOBS[t.j]&&t.postes);
-  s.workers=s.workers.filter(w=>ROLES[w.r]);s.workers.forEach(w=>{if(w.skin===undefined)w.skin=RI(0,SKIN.length-1);if(w.base===undefined){w.base=w.boss?1:R(.7,1);w.mot=w.base}if(w.hd===undefined)w.hd=s.day;if(w.warn===undefined)w.warn=0});
+  s.workers=s.workers.filter(w=>ROLES[w.r]);s.workers.forEach(w=>{if(w.r==='aide'&&/^Angélique/.test(w.n))w.n='Angélique Mawet'});s.workers.forEach(w=>{if(w.skin===undefined)w.skin=RI(0,SKIN.length-1);if(w.base===undefined){w.base=w.boss?1:R(.7,1);w.mot=w.base}if(w.hd===undefined)w.hd=s.day;if(w.warn===undefined)w.warn=0});
   s.schema=SCHEMA;return s}
 function load(){for(const k of[SAVE,BAK]){try{const s=JSON.parse(localStorage.getItem(k));if(s&&typeof s==='object'&&s.workers)return migrate(s)}catch(e){}}return null}
 function save(){try{const j=JSON.stringify(st);localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j)}catch(e){}}
@@ -1205,7 +1205,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.14";
+var APPV="2026-11-03.15";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
