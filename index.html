@@ -562,8 +562,16 @@ function monthTax(mn){const amort=Object.keys(st.eq).reduce((a,k)=>a+EQ[k].p*st.
   st.lastTax={mn,profit:Math.round(profit),cot:Math.round(cot),imp:Math.round(imp)};st.mStart=st.cash;st.mCapex=0;st.mLoan=0;
   const M=st.mon||{};const tot=Object.values(M).reduce((a,b)=>a+b,0);st.lastMon={mn,M,tot,end:st.cash};st.mon={};toastMsg(`📊 Bilan de ${mn} : ${tot>=0?'+':''}${eur(tot)} sur ton compte. Détail dans 📊 Entreprise.`)}
 // Compte trop dans le rouge : réorganisation judiciaire (PRJ) au tribunal de l'entreprise, puis faillite à la 3e fois
+// Faillite : le curateur vend tout ; on peut relancer une nouvelle société (on garde son expérience) ou tout recommencer
+function failUI(){showModal(`<h3>💀 Faillite</h3><p>C'est la 3e fois que <b>${esc(st.name)}</b> ne peut plus payer ses dettes. Le tribunal de l'entreprise prononce la <b>faillite</b> : le curateur vend tes machines, ton personnel est licencié, tes chantiers sont repris par d'autres.</p>
+  <div class="card"><b>🔁 Relancer une nouvelle société</b><div class="mut sm" style="margin-top:4px">Tu repars avec 3 000 € d'économies, sans machine ni personnel. Tu gardes ton expérience : tes références de chantiers, ton chiffre d'affaires passé, tes objectifs atteints et ton efficacité. Réputation -20.</div><button class="btn w" style="margin-top:10px" onclick="relaunch()">Relancer une nouvelle société</button></div>
+  <button class="btn s w" style="margin-top:6px" onclick="restart()">Tout recommencer à zéro</button>`)}
+function relaunch(){const boss=st.workers.find(w=>w.boss);st.workers=[boss];boss.mot=1;st.eq={};st.contracts=[];st.inv=[];st.reports=[];st.adm={};st.cls=0;st.loan=0;st.salAcc=0;st.prj=0;st.over=false;st.srl=0;
+  st.tenders.forEach(t=>{if(t.status==='open')t.my=null});st.tenders=st.tenders.filter(t=>t.status==='open');st.rep=clamp(st.rep-20,5,100);st.cash=0;st.mv=[];st.mon={};
+  mv(3000,"Nouveau départ : tes économies",'in');st.mStart=st.cash;st.mCapex=0;st.mLoan=0;st.name=st.name.replace(/( \d+)?$/,m=>' '+((parseInt(m)||1)+1));
+  log(`🔁 Nouvelle société : ${esc(st.name)}. Inscris-la à la BCE pour recommencer à facturer.`);closeM();refreshCand();save();render()}
 function rescue(){const n=(st.prj||0)+1;
-  if(n>=3){st.over=true;showModal(`<h3>💀 Faillite</h3><p>C'est la 3e fois que <b>${esc(st.name)}</b> ne peut plus payer ses dettes (${eur(st.cash)}). Le tribunal de l'entreprise prononce la faillite.</p><p class="mut">Tu as tenu ${st.day} jours et terminé ${st.stats.done} chantiers.</p><button class="btn w" onclick="restart(1)">Recommencer une entreprise</button>`);return}
+  if(n>=3){st.over=true;speed=0;failUI();return}
   st.prj=n;const debt=Math.round(-st.cash)+5000;st.loan+=debt;mv(debt,'Réorganisation judiciaire : dettes transformées en crédit','loan');st.mLoan+=debt;st.rep=clamp(st.rep-10,0,100);speed=0;
   log(`⚖️ Réorganisation judiciaire n°${n} : tes dettes deviennent un crédit de ${eur(debt)}. Réputation -10.`,false);
   showModal(`<h3>⚖️ Tribunal de l'entreprise</h3><p>Ton compte est descendu sous <b>-20 000 €</b>. Plutôt que la faillite, le tribunal t'accorde une <b>procédure de réorganisation judiciaire</b>.</p>
@@ -785,7 +793,7 @@ function importGo(){try{const s=JSON.parse(decodeURIComponent(escape(atob($('#sv
 
 /* ---------- Chargement ---------- */
 st=load();
-if(st&&st.over&&(st.prj||0)<2){st.over=false;setTimeout(()=>{rescue();render()},900)}
+if(st&&st.over){if((st.prj||0)<2){st.over=false;setTimeout(()=>{rescue();render()},900)}else setTimeout(failUI,900)}
 if(!st){st=defaults();st.riv=newRivals();for(let i=0;i<14;i++)genTender();genJob('p_dechets');genJob('p_dechets');genJob();genJob();refreshCand();save()}
 
 /* =====================================================================
@@ -1205,7 +1213,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.15";
+var APPV="2026-11-03.16";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
