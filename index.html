@@ -23,7 +23,7 @@
   --sh:0 6px 20px rgba(0,0,0,.35);--r:16px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:600 15px/1.35 Nunito,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font:600 15px/1.35 Nunito,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
 body{display:flex;flex-direction:column;height:100dvh;max-width:760px;margin:auto;background:linear-gradient(180deg,#0d1a14,#0a140f)}
 button{font-family:inherit}
 /* --- En-tête --- */
@@ -688,7 +688,7 @@ function hireBlock(kind,ix){if(!st.adm.bce)return"Ton entreprise n'est pas encor
   if(st.cash<0)return`Ton compte est dans le rouge (${eur(st.cash)}). La banque et l'ONSS ne te laisseront pas engager tant que tu as des dettes. Termine des chantiers, attends les paiements ou prends un prêt (📊 Entreprise → Banque).`;
   if(st.cash<cost)return`Il faut avoir sur ton compte de quoi payer au moins un mois de salaire : ${eur(cost)}. Tu as ${eur(st.cash)}, il te manque ${eur(cost-st.cash)}.`;
   return null}
-function tryHire(kind,ix){const why=hireBlock(kind,ix);if(why){const m=$('#cvmsg');if(m){m.innerHTML=`<div class="card acc" style="--ac:var(--rd);margin:14px 0 0"><b>🚫 Tu ne peux pas encore engager</b><div class="sm" style="margin-top:4px">${why}</div></div>`;m.scrollIntoView({behavior:'smooth',block:'center'})}snd(220,.15,'square',.04);return}
+function tryHire(kind,ix){const why=hireBlock(kind,ix);if(why){const m=$('#cvmsg');if(m){m.innerHTML=`<div class="card acc" style="--ac:var(--rd);margin:14px 0 0"><b>🚫 Tu ne peux pas encore engager</b><div class="sm" style="margin-top:4px">${why}</div></div>`;const bx=$('#mbox');bx.scrollTo({top:m.offsetTop-80,behavior:'smooth'})}snd(220,.15,'square',.04);return}
   closeM();kind==='cand'?hire(ix):hireRole(ix)}
 function interview(ix){const w=st.cand[ix];if(!w)return;const right=Math.random()<.75,lz=(w.base??1)<.62;const say=(right?lz:!lz)?pick(['😕 Pas très motivé, regarde souvent son GSM.','😕 Répond vaguement, semble chercher surtout un salaire.','😕 Arrivé en retard à l’entretien.']):pick(['🙂 Motivé, pose de bonnes questions sur le travail.','🙂 Poignée de main franche, a l’air sérieux.','🙂 Connaît le métier, parle de ses anciens chantiers avec passion.']);
   w.itv=say;save();cvUI('cand',ix)}
@@ -900,7 +900,7 @@ function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
   <h2>Objectifs</h2><div class="card">${GOALS.map(g=>`<div style="padding:3px 0">${st.goals[g.k]?'✅':'⬜'} ${g.t}</div>`).join('')}</div>
   <h2>Journal</h2><div class="card log">${st.log.slice(0,40).map(l=>`<div><span class="mut">${dstr(l.d)}</span> — ${l.t}</div>`).join('')||'<span class="mut">Rien encore.</span>'}</div>
   <h2>Réglages</h2><div class="card"><div class="row"><button class="btn s" onclick="st.snd=st.snd?0:1;save();render()">${st.snd?'🔊 Son activé':'🔇 Son coupé'}</button><button class="btn s" onclick="exportSave()">💾 Sauvegarde</button><button class="btn s" onclick="importUI()">📥 Charger</button></div>
-  <div class="row" style="margin-top:10px"><button class="btn s" onclick="chkV(1)">🔄 Vérifier les mises à jour</button></div><p class="mut sm">Ta partie est enregistrée sur ce GSM et reste intacte après chaque mise à jour. Version <span id="ver2"></span></p>
+  <div class="row" style="margin-top:10px"><button class="btn s" onclick="chkV(1)">🔄 Vérifier les mises à jour</button><button class="btn s" onclick="fullScreen()">⛶ Plein écran</button></div><p class="mut sm">Ta partie est enregistrée sur ce GSM et reste intacte après chaque mise à jour. Version <span id="ver2"></span></p>
   <button class="btn r" onclick="restart()">Recommencer une nouvelle entreprise</button></div>`;
   setTimeout(()=>{const v=$('#ver2');if(v)v.textContent=window.APPV||''},0);
   return h}
@@ -1174,7 +1174,9 @@ cv.addEventListener('pointerdown',e=>{const c=selC();if(!c)return;const b=cv.get
 const SPD=[0,4500,1800,600];let acc=0,prevT=performance.now();
 function loop(now){const dt=Math.min(250,now-prevT);prevT=now;if(playing&&!modalOpen&&speed&&!st.over){acc+=dt;if(acc>=SPD[speed]){acc=0;tick()}}draw(now/1000);requestAnimationFrame(loop)}
 render();
-$('#play').onclick=()=>{playing=true;$('#splash').style.display='none';$('#ins').classList.remove('on');click();
+function fullScreen(){try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).catch(()=>{});else if(d.webkitRequestFullscreen)d.webkitRequestFullscreen()}catch(e){}}
+addEventListener('scroll',()=>{if(scrollY)scrollTo(0,0)});
+$('#play').onclick=()=>{fullScreen();playing=true;$('#splash').style.display='none';$('#ins').classList.remove('on');click();
   if(!st.started){st.started=true;save();showModal(`<h3>🦺 Bienvenue dans Route Nette</h3><p>Tu pars de <b>zéro</b> : ${eur(st.cash)} d'économies, ta vieille voiture, une pince, des gants et des sacs.</p>
   <div class="card"><div style="margin:4px 0">1️⃣ <b>Inscris-toi à la BCE</b> pour pouvoir facturer.</div><div style="margin:4px 0">2️⃣ Fais des <b>petits boulots</b> (déchets, pelouses, haies…) et économise.</div><div style="margin:4px 0">3️⃣ Achète tes <b>machines</b>, engage des <b>ouvriers</b>.</div><div style="margin:4px 0">4️⃣ RC, VCA, camionnette : remets offre aux <b>marchés publics du SPW</b>, face aux autres entreprises.</div><div style="margin:4px 0">5️⃣ Engage Angélique (aide-comptable), des gestionnaires de chantier, des directeurs… et décroche l'agréation 🏆</div></div>
   <p class="mut">Prix HTVA, salaires et règles des marchés publics comme en Belgique. Nom de ta société :</p><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">C'est parti !</button>`)}};
@@ -1182,7 +1184,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.8";
+var APPV="2026-11-03.9";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
