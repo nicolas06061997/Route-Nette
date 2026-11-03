@@ -525,6 +525,7 @@ function tick(){
     if(c.st!=='run'||!work||intemp)continue;
     // congés du bâtiment : les ouvriers sont en vacances, mais le patron peut travailler
     if(conge&&!c.crew.some(i=>{const w=st.workers.find(x=>x.id===i);return w&&w.boss}))continue;
+    if(!c.crew.length){if(!conge)c.wd++;continue}
     if(!conge)c.wd++;let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;mv(-(eqc+(J.p?(st.eq.van?0:14):40)),'Carburant et usure','use',1);
     const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(w=>w&&(!conge||w.boss));
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF;
@@ -626,7 +627,7 @@ function rptAct(id,a){const r=st.reports.find(x=>x.id===id);if(!r)return;const w
   if(a==='talk'){w.mot=Math.min(1,w.mot+.12);r.done='Recadré oralement';log(`🗣️ Tu as recadré ${fn}.`,false)}
   else if(a==='warn'){w.warn++;w.mot=Math.min(1,w.mot+.3);if(w.warn>=2&&Math.random()<.5)w.base=Math.min(1,w.base+.15);r.done=`Avertissement écrit n°${w.warn}`;log(`⚠️ Avertissement écrit n°${w.warn} envoyé à ${w.n} (recommandé).`)}
   else if(a==='prime'){if(st.cash<250)return toastMsg('Il faut 250 €.');mv(-250,'Prime à '+w.n,'sal');w.mot=1;w.base=Math.min(1,w.base+.05);r.done='Prime de 250 € accordée';log(`🎁 Prime de 250 € pour ${w.n}. Toute l'équipe est motivée !`);st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv')x.mot=Math.min(1,x.mot+.03)})}
-  else if(a==='fire'){if(st.contracts.some(c=>c.st==='run'&&c.crew.includes(w.id)&&c.crew.length<=JOBS[c.j].minW))return toastMsg('Il manquerait du monde sur le chantier : ajoute quelqu’un d’abord.');
+  else if(a==='fire'){
     const p=preavisCost(w);if(!confirm(`Licencier ${w.n} avec préavis ?\nAncienneté : ${Math.round((st.day-w.hd)/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(p)}`))return;
     mv(-p,'Préavis de '+w.n,'sal');dropW(w);r.done='Licencié avec préavis';log(`📤 ${w.n} est licencié (indemnité de préavis ${eur(p)}).`)}
   else if(a==='grave'){const wd=workDaysSince(r.day);const ok=(r.grave||w.warn>=2)&&wd<=3;
@@ -636,7 +637,10 @@ function rptAct(id,a){const r=st.reports.find(x=>x.id===id);if(!r)return;const w
   else{r.done=r.good?'Félicité':'Classé sans suite';if(r.good)w.mot=Math.min(1,w.mot+.05)}
   st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv'&&(a==='warn'||a==='fire'||a==='grave'))x.mot=Math.min(1,x.mot+.02)});
   save();render()}
-function dropW(w){st.contracts.forEach(c=>{c.crew=c.crew.filter(i=>i!==w.id)});st.workers.splice(st.workers.indexOf(w),1)}
+function unassign(w){for(const c of st.contracts){if(!c.crew.includes(w.id))continue;c.crew=c.crew.filter(i=>i!==w.id);const J=JOBS[c.j];const rest=c.crew.map(i=>st.workers.find(x=>x.id===i)).filter(Boolean);
+  if(rest.length<J.minW||(J.pc&&!hasPC(rest))){c.crew=[];c.own={};log(`⏸ ${J.n} (${esc(c.road)}) est en pause : plus assez de monde. Remets une équipe dans 🦺 Chantiers.`)}}}
+function dropW(w){unassign(w);st.workers.splice(st.workers.indexOf(w),1)}
+function pauseC(id){const c=st.contracts.find(x=>x.id===id);if(!c)return;c.crew=[];c.own={};closeM();log(`⏸ Chantier mis en pause : ${JOBS[c.j].n} (${esc(c.road)}).`,false);save();render()}
 function workDaysSince(d){let n=0;for(let k=d+1;k<=st.day;k++)if(isWork(k))n++;return n}
 const behav=w=>w.boss||w.seen===undefined?null:w.seen<.55?['🔴 À surveiller','r']:w.seen<.72?['🟠 Moyen','o']:['🟢 Sérieux','g'];
 
@@ -749,7 +753,7 @@ function startDraw(id){const c=st.contracts.find(x=>x.id===id),J=JOBS[c.j];const
   <h2>Équipe (minimum ${J.minW}${J.pc?', dont un permis C':''})</h2><div>${fw.map(w=>`<span class="chip ${pickSel.includes(w.id)?'on':''}" onclick="togW(${c.id},${w.id})">${ROLES[w.r].ic} ${esc(w.n.split(' ')[0])} ${'●'.repeat(Math.round(w.sk*3))}${w.pc?' 🪪':''}</span>`).join('')||'<span class="mut">Tout le monde est déjà sur un chantier.</span>'}</div>
   ${J.need.length?`<h2>Matériel</h2>${J.need.map(t=>`<div class="row" style="margin:3px 0">${EQ[t].ic} ${EQ[t].n} ${p.own[t]?'<span class="tag g">OK</span>':'<span class="tag r">pris sur un autre chantier</span>'}</div>`).join('')}`:'<p class="mut">Pas de machine : pince, gants et sacs suffisent.</p>'}
   <div class="card" style="margin:12px 0"><div>Durée prévue : <b>${days} jours ouvrables</b> ${days!=='∞'&&days>left?'<span class="tag r">trop lent !</span>':'<span class="tag g">OK</span>'}</div><div class="mut sm">Coût par jour : ${eur(cost)} (salaires + carburant)</div>${sel.some(w=>w.r==='chef')?'<div class="mut sm">🦺 Contremaître présent : +15 %</div>':''}${!pcOk?'<div class="neg">Il faut un permis C dans l’équipe.</div>':''}${running().length>=mgmtCap()&&c.st!=='run'?`<div class="neg sm">Encadrement saturé (${running().length}/${mgmtCap()} chantiers) : les équipes iront moins vite.</div>`:''}</div>
-  <div class="row"><button class="btn" ${n<J.minW||p.miss.length||!pcOk?'disabled':''} onclick="startGo(${c.id})">C'est parti !</button><button class="btn s" onclick="closeM()">${c.st==='run'?'Annuler':'Plus tard'}</button></div>`)}
+  <div class="row"><button class="btn" ${n<J.minW||p.miss.length||!pcOk?'disabled':''} onclick="startGo(${c.id})">C'est parti !</button><button class="btn s" onclick="closeM()">${c.st==='run'?'Annuler':'Plus tard'}</button>${c.st==='run'&&c.crew.length?`<button class="btn s" onclick="pauseC(${c.id})">⏸ Retirer tout le monde</button>`:''}</div>`)}
 function togW(cid,wid){click();const i=pickSel.indexOf(wid);i<0?pickSel.push(wid):pickSel.splice(i,1);startDraw(cid)}
 function startGo(id){const c=st.contracts.find(x=>x.id===id);const p=eqPlan(c.j,c);if(p.miss.length)return;c.own=p.own;c.crew=[...pickSel];
   if(c.st!=='run'){c.st='run';log(`🦺 Chantier lancé : ${JOBS[c.j].n} (${esc(c.road)})`,false)}st.sel=c.id;closeM();snd(440,.08,'square',.04);snd(660,.12,'square',.04,.08);save();tab('ch')}
@@ -761,7 +765,7 @@ function hireRole(r){const R0=ROLES[r];if(!st.adm.bce)return;if(!R0.multi&&has(r
   const day=R0.day;if(st.cash<day*WDM)return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(day*WDM)}).`);
   const n=nextName(r);
   st.workers.push({id:st.nid++,n,r,sk:1,day,pc:0,skin:RI(0,SKIN.length-1),base:1,mot:1,hd:st.day,warn:0});log(`${R0.ic} ${n} rejoint ${esc(st.name)} : ${R0.n}.`);kaching();goals();save();render()}
-function fire(id){const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;if(st.contracts.some(c=>c.st==='run'&&c.crew.includes(id)))return toastMsg("Cette personne est sur un chantier : retire-la d'abord.");
+function fire(id){const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;const onC=st.contracts.find(c=>c.st==='run'&&c.crew.includes(id));if(onC&&!confirm(`${w.n} travaille sur « ${JOBS[onC.j].n} ». Si l'équipe devient trop petite, ce chantier sera mis en pause. Continuer ?`))return;
   const pre=preavisCost(w);if(!confirm(`Licencier ${w.n} ?\nAncienneté : ${Math.round((st.day-(w.hd||0))/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(pre)}`))return;mv(-pre,'Préavis de '+w.n,'sal');dropW(w);log(`📤 ${w.n} est licencié (préavis ${eur(pre)}).`,false);save();render()}
 function trainPC(id){const w=st.workers.find(x=>x.id===id);if(!w||w.pc)return;if(st.cash<2900)return toastMsg('Il faut 2 900 € pour le permis C (auto-école + examen + CAP).');mv(-2900,'Permis C de '+w.n,'buy');w.pc=1;log(`🪪 ${w.n} a obtenu son permis C !`);save();render()}
 function buy(t){const e=EQ[t];if(st.cash<e.p)return toastMsg(`Pas assez d'argent : il manque ${eur(e.p-st.cash)}.`);mv(-e.p,'Achat : '+e.n,'buy');st.mCapex+=e.p;st.eq[t]=(st.eq[t]||0)+1;log(`🛒 Achat : ${e.ic} ${e.n}`,false);kaching();goals();save();render()}
@@ -831,6 +835,7 @@ function rCh(){let h=goalCard();const cs=st.contracts;
     h+=`<div class="card acc" style="--ac:${J.ac}">${jobHead(J,`${esc(c.road)} — ${c.town}`,`<span class="tag ${J.p?'g':'o'}">${J.p?eur(c.price):'Public'}</span>`)}`;
     if(c.st==='wait')h+=`<div class="tags"><span class="tag o">${J.p?'À commencer avant le':'Ordre de commencer :'} ${dstr(c.startBy)}</span>${c.ref?`<span class="tag">Réf. ${c.ref}</span>`:''}</div><p style="margin:10px 0 0"><button class="btn w" onclick="startUI(${c.id})">🦺 Préparer le chantier</button></p>`;
     else{const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);const shown=st.sel===c.id||(!cs.some(x=>x.id===st.sel&&x.st==='run')&&firstRun===c);
+      if(!c.crew.length)h+=`<div class="tags"><span class="tag r">⏸ En pause : personne sur ce chantier</span></div>`;
       h+=`<div class="bar"><i style="width:${pc}%"></i></div><div class="row mut sm"><span>${nb(c.prog)} / ${nb(c.q)} ${J.un} · ${pc.toFixed(0)} %</span><span style="margin-left:auto" class="${left<0?'neg':''}">${left>=0?'⏱ '+left+' j ouvrables':'⚠️ RETARD '+(-left)+' j'}</span></div>
       <div class="mut sm" style="margin-top:4px">👷 ${crew.map(w=>esc(w.n.split(' ')[0])).join(', ')}${J.p?'':' · '+eur(c.price)+' · facturé '+eur(c.billed)}</div><div class="row" style="margin-top:10px"><button class="btn s" onclick="st.sel=${c.id};render()">${shown?'👁 À l’écran':'👁 Regarder'}</button><button class="btn s" onclick="startUI(${c.id})">👷 Équipe</button></div>`}
     h+='</div>'}
@@ -1200,7 +1205,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.13";
+var APPV="2026-11-03.14";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
