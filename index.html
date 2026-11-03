@@ -545,7 +545,7 @@ function tick(){
   if(x.getDay()===1)refreshCand();
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${run.length}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
   events(work);goals();
-  if(st.cash<-20000&&!st.over){st.over=true;showModal(`<h3>💀 Faillite</h3><p>La banque ferme le compte de <b>${esc(st.name)}</b> (${eur(st.cash)}). Le tribunal de l'entreprise prononce la faillite.</p><p class="mut">Tu as tenu ${st.day} jours et terminé ${st.stats.done} chantiers.</p><button class="btn w" onclick="restart(1)">Recommencer</button>`)}
+  if(st.cash<-20000&&!st.over)rescue();
   save();render();
 }
 // Bénéfice du mois (trésorerie + investissements − amortissements) → cotisations sociales et impôts
@@ -560,6 +560,14 @@ function monthTax(mn){const amort=Object.keys(st.eq).reduce((a,k)=>a+EQ[k].p*st.
   const t=Math.round(cot+imp);if(t>0){mv(-t,'Impôts et cotisations','tax');log(`🏛️ ${st.srl?'Cotisations du dirigeant + impôt des sociétés':'Cotisations sociales + précompte (impôt)'} pour ${mn} : -${eur(t)}`,false)}
   st.lastTax={mn,profit:Math.round(profit),cot:Math.round(cot),imp:Math.round(imp)};st.mStart=st.cash;st.mCapex=0;st.mLoan=0;
   const M=st.mon||{};const tot=Object.values(M).reduce((a,b)=>a+b,0);st.lastMon={mn,M,tot,end:st.cash};st.mon={};toastMsg(`📊 Bilan de ${mn} : ${tot>=0?'+':''}${eur(tot)} sur ton compte. Détail dans 📊 Entreprise.`)}
+// Compte trop dans le rouge : réorganisation judiciaire (PRJ) au tribunal de l'entreprise, puis faillite à la 3e fois
+function rescue(){const n=(st.prj||0)+1;
+  if(n>=3){st.over=true;showModal(`<h3>💀 Faillite</h3><p>C'est la 3e fois que <b>${esc(st.name)}</b> ne peut plus payer ses dettes (${eur(st.cash)}). Le tribunal de l'entreprise prononce la faillite.</p><p class="mut">Tu as tenu ${st.day} jours et terminé ${st.stats.done} chantiers.</p><button class="btn w" onclick="restart(1)">Recommencer une entreprise</button>`);return}
+  st.prj=n;const debt=Math.round(-st.cash)+5000;st.loan+=debt;mv(debt,'Réorganisation judiciaire : dettes transformées en crédit','loan');st.mLoan+=debt;st.rep=clamp(st.rep-10,0,100);speed=0;
+  log(`⚖️ Réorganisation judiciaire n°${n} : tes dettes deviennent un crédit de ${eur(debt)}. Réputation -10.`,false);
+  showModal(`<h3>⚖️ Tribunal de l'entreprise</h3><p>Ton compte est descendu sous <b>-20 000 €</b>. Plutôt que la faillite, le tribunal t'accorde une <b>procédure de réorganisation judiciaire</b>.</p>
+  <div class="card"><div>✅ Tes dettes sont transformées en <b>crédit bancaire de ${eur(debt)}</b> (5 %/an). Ton compte repart à +5 000 €.</div><div style="margin-top:6px">⚠️ Réputation -10.</div><div style="margin-top:6px">⚠️ C'est la <b>${n}e fois sur 2</b>. La prochaine fois, c'est la faillite.</div></div>
+  <p class="mut sm">Conseils : ne garde que le personnel dont tu as besoin, ne prends pas plus de chantiers que ton encadrement peut suivre, regarde ton bilan chaque mois dans 📊 Entreprise.</p><button class="btn w" onclick="closeM()">Compris, je repars</button>`)}
 function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c),1);
   const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);const avg=crew.reduce((a,w)=>a+w.sk,0)/Math.max(1,crew.length);
   const n=Math.max(0,c.wd-c.N),late=n>0;
@@ -773,6 +781,7 @@ function importGo(){try{const s=JSON.parse(decodeURIComponent(escape(atob($('#sv
 
 /* ---------- Chargement ---------- */
 st=load();
+if(st&&st.over&&(st.prj||0)<2){st.over=false;setTimeout(()=>{rescue();render()},900)}
 if(!st){st=defaults();st.riv=newRivals();for(let i=0;i<14;i++)genTender();genJob('p_dechets');genJob('p_dechets');genJob();genJob();refreshCand();save()}
 
 /* =====================================================================
@@ -1191,7 +1200,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.12";
+var APPV="2026-11-03.13";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
