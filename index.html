@@ -70,6 +70,7 @@ button{font-family:inherit}
 .money{color:var(--gr);font-weight:900}.neg{color:var(--rd);font-weight:900}
 h2{font-size:12.5px;color:var(--mut);margin:16px 4px 8px;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
 .req{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:12.5px}
+.cv h2{margin:14px 0 6px}
 .goal{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#3b2a0a,#2a1f0b);border:1px solid #7a5418;border-radius:var(--r);padding:10px 12px;margin-bottom:12px}
 .goal b{color:var(--ye)}
 .goal .gi{font-size:26px}
@@ -213,7 +214,7 @@ const ROLES={
   qual:{n:'Ouvrier qualifié (cat. II)',ic:'👷',cat:'ouv',day:240,sk:[1.05,1.25]},
   chauf:{n:'Chauffeur poids lourd (permis C)',ic:'🚛',cat:'ouv',day:258,sk:[.95,1.2],pc:1},
   chef:{n:"Contremaître / chef d'équipe",ic:'🦺',cat:'ouv',day:292,sk:[1.15,1.35],d:"Dans une équipe : +15 % de travail et moins de remarques du SPW."},
-  aide:{n:'Aide-comptable',ic:'🧮',cat:'bur',day:183,who:'Angélique',d:"Factures envoyées à temps : tu es payé 10 jours plus vite. Indispensable dès 6 personnes."},
+  aide:{n:'Aide-comptable',ic:'🧮',cat:'bur',day:183,who:'Angélique Dumont',d:"Factures envoyées à temps : tu es payé 10 jours plus vite. Indispensable dès 6 personnes."},
   secr:{n:'Secrétaire',ic:'☎️',cat:'bur',day:172,who:'Nadia Benali',d:'Prépare les dossiers : +3 offres en même temps.'},
   compta:{n:'Comptable',ic:'📒',cat:'bur',day:232,who:'Marc Delvaux',d:'Remplace la fiduciaire (250 €/mois) et la banque te prête 50 % de plus.'},
   rh:{n:'Gestionnaire RH',ic:'🤝',cat:'bur',day:238,who:'Sophie Lambert',d:'Deux fois plus de candidats chaque semaine, et de meilleurs profils.'},
@@ -581,6 +582,66 @@ function rptAct(id,a){const r=st.reports.find(x=>x.id===id);if(!r)return;const w
 function dropW(w){st.contracts.forEach(c=>{c.crew=c.crew.filter(i=>i!==w.id)});st.workers.splice(st.workers.indexOf(w),1)}
 function workDaysSince(d){let n=0;for(let k=d+1;k<=st.day;k++)if(isWork(k))n++;return n}
 const behav=w=>w.boss||w.seen===undefined?null:w.seen<.55?['🔴 À surveiller','r']:w.seen<.72?['🟠 Moyen','o']:['🟢 Sérieux','g'];
+
+/* ---------- CV et photos ---------- */
+const FEM=new Set(['Aurélie','Laura','Sarah','Jessica','Nathalie','Angélique','Sophie','Nadia','Isabelle','Fanny','Julie','Céline','Manon','Camille','Émilie','Amandine']);
+const isF=n=>FEM.has(String(n).split(' ')[0]);
+function strHash(t){let h=2166136261;for(const c of String(t))h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0}
+function rng(seed){let x=(seed>>>0)||1;return()=>{x^=x<<13;x>>>=0;x^=x>>>17;x^=x<<5;x>>>=0;return x/4294967296}}
+const nextName=r=>ROLES[r].who||GESTN.find(x=>!st.workers.some(w=>w.n===x))||pick(PREN)+' '+pick(NOMS);
+// Portrait dessiné (SVG), toujours le même pour une même personne
+function avatar(w,sz){const f=isF(w.n),g=rng(strHash(w.n+'|'+(w.r||'')));const cat=ROLES[w.r]?ROLES[w.r].cat:'ouv';
+  const skin=SKIN[w.skin??Math.floor(g()*SKIN.length)],age=cvOf(w).age,hairC=age>=50&&g()<.65?pick2r(g,['#8a8a8a','#b9b9b9']):pick2r(g,['#2b1b10','#4a2c17','#6b4423','#a8743f','#d9b26a','#1c1c1c','#b5432a']);
+  const bg=pick2r(g,['#ffd79a','#bfe3ff','#c8f0d2','#f6c6d0','#e2d4ff','#ffe7a3']);
+  let body;if(w.boss)body=`<path d="M10 100 Q14 74 50 70 Q86 74 90 100Z" fill="#2c3e50"/><path d="M42 72 L50 86 L58 72Z" fill="#fff"/>`;
+  else if(cat==='ouv')body=`<path d="M10 100 Q14 74 50 70 Q86 74 90 100Z" fill="#ff8a1c"/><rect x="12" y="86" width="76" height="4" fill="#e9f1f5"/><path d="M44 71 L50 80 L56 71Z" fill="#2b3a55"/>`;
+  else if(cat==='dir')body=`<path d="M10 100 Q14 74 50 70 Q86 74 90 100Z" fill="#23303f"/><path d="M41 71 L50 92 L59 71Z" fill="#fff"/>${f?'':'<path d="M48 76 L52 76 L53 92 L50 95 L47 92Z" fill="#b8323a"/>'}`;
+  else body=`<path d="M10 100 Q14 74 50 70 Q86 74 90 100Z" fill="${pick2r(g,['#3d6fb6','#7a4fa0','#2f8a6a','#c0504d','#5a6b7d'])}"/><path d="M42 71 L50 80 L58 71Z" fill="${skin}"/>`;
+  const hs=Math.floor(g()*3);let hairB='',hairF='';
+  if(f){hairB=`<path d="M27 44 Q26 16 50 15 Q74 16 73 44 L76 78 Q64 70 50 72 Q36 70 24 78Z" fill="${hairC}"/>`;hairF=hs===0?`<path d="M29 38 Q34 18 50 18 Q68 18 71 38 Q60 26 44 30 Q36 33 29 38Z" fill="${hairC}"/>`:`<path d="M29 40 Q30 18 50 17 Q70 18 71 40 Q66 30 50 29 Q36 29 29 40Z" fill="${hairC}"/>`;if(hs===2)hairB=`<circle cx="50" cy="14" r="9" fill="${hairC}"/>`+`<path d="M28 42 Q28 18 50 17 Q72 18 72 42 Q70 32 50 30 Q30 32 28 42Z" fill="${hairC}"/>`}
+  else{const bald=g()<.15;hairF=bald?`<path d="M29 40 Q28 33 31 30 L32 40Z M71 40 Q72 33 69 30 L68 40Z" fill="${hairC}"/>`:hs===0?`<path d="M29 38 Q29 17 50 17 Q71 17 71 38 Q68 27 50 26 Q33 27 29 38Z" fill="${hairC}"/>`:hs===1?`<path d="M30 36 Q31 20 50 20 Q69 20 70 36 Q60 29 50 29 Q40 29 30 36Z" fill="${hairC}" opacity=".85"/>`:`<path d="M29 38 Q27 14 52 15 Q74 16 71 38 Q66 24 56 28 Q46 22 29 38Z" fill="${hairC}"/>`}
+  const beard=!f&&g()<.3?`<path d="M32 50 Q34 70 50 72 Q66 70 68 50 Q64 62 50 63 Q36 62 32 50Z" fill="${hairC}" opacity=".9"/>`:'';
+  const glasses=g()<.25?`<g fill="none" stroke="#222" stroke-width="1.6"><circle cx="42" cy="45" r="5.5"/><circle cx="58" cy="45" r="5.5"/><path d="M47.5 45 L52.5 45"/></g>`:'';
+  const smile=g()<.7?`<path d="M43 58 Q50 64 57 58" stroke="#7a3b2e" stroke-width="2" fill="none" stroke-linecap="round"/>`:`<path d="M44 59 L56 59" stroke="#7a3b2e" stroke-width="2" stroke-linecap="round"/>`;
+  return`<svg width="${sz}" height="${sz}" viewBox="0 0 100 100" style="border-radius:${sz>60?18:12}px;flex:none;display:block"><rect width="100" height="100" fill="${bg}"/>${hairB}${body}<rect x="44" y="60" width="12" height="14" fill="${skin}"/><ellipse cx="29" cy="47" rx="4" ry="5.5" fill="${skin}"/><ellipse cx="71" cy="47" rx="4" ry="5.5" fill="${skin}"/><ellipse cx="50" cy="45" rx="21" ry="24" fill="${skin}"/>${beard}${hairF}
+  <path d="M37 38 L46 37 M54 37 L63 38" stroke="${hairC}" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="42" cy="45" rx="2.4" ry="2.8" fill="#222"/><ellipse cx="58" cy="45" rx="2.4" ry="2.8" fill="#222"/><path d="M50 47 Q48 53 51 54" stroke="#00000033" stroke-width="2" fill="none"/>${smile}${glasses}</svg>`}
+function pick2r(g,a){return a[Math.floor(g()*a.length)]}
+const EMPLO={ouv:["Ets Lambotte & Fils (ouvrier d'entretien)","Agence d'intérim (missions dans le bâtiment)","Commune de Ciney (ouvrier communal)","Parcs et Jardins Lemaire","Ferme familiale (aide agricole)","Intercommunale de propreté (ramassage)","Carrière du Condroz (manœuvre)","Jardinerie Delhez (magasinier)","Vert-Bord SRL (élagueur)","Défense belge (militaire)","Transports Massart (chauffeur)","Article 60 au CPAS"],
+  bur:['Fiduciaire Dumont & Associés','Bâti-Meuse SA (service administratif)','Administration communale de Namur',"Bureau d'études Gérard",'Secrétariat social (gestionnaire de dossiers)','Intercommunale de développement (InterMeuse)','Grossiste en matériaux Collard'],
+  dir:['Groupe routier wallon SA (directeur de division)','Bâti-Meuse SA (directeur de projets)','Ardenne Entretien SA (responsable de région)','Banque (chargé de relations entreprises)','Consultant indépendant']};
+const DIPL={etu:['CESS en cours (technique de qualification)','Bachelier en cours (Haute École)'],man:['CEB','CE1D','CQ6 Ouvrier en horticulture','Formation Forem : ouvrier en espaces verts'],qual:['CQ6 Ouvrier qualifié en horticulture','CESS technique : agronomie','Formation IFAPME : entrepreneur parcs et jardins'],
+  chauf:['CQ6 Mécanique','CESS professionnel','Formation Forem : conducteur poids lourd'],chef:['CESS technique : construction','Formation IFAPME : chef d\'équipe','Bachelier en agronomie (non terminé)'],
+  aide:['Bachelier en comptabilité (Haute École)'],compta:['Bachelier en comptabilité','Expert-comptable ITAA (stagiaire)'],rh:['Master en gestion des ressources humaines'],secr:['Bachelier assistant(e) de direction'],metreur:['Bachelier en construction, option métreur-deviseur'],
+  gest:['Bachelier en construction','Bachelier en agronomie'],dirt:["Master ingénieur civil des constructions"],daf:['Master en sciences de gestion','Expert-comptable ITAA'],dirc:['Master en sciences commerciales']};
+function cvOf(w){const g=rng(strHash('cv|'+w.n+'|'+w.r));const R0=ROLES[w.r];const cat=R0.cat;
+  const age=w.r==='etu'?18+Math.floor(g()*5):cat==='dir'?38+Math.floor(g()*20):22+Math.floor(g()*36);
+  const xp=w.r==='etu'?0:Math.max(1,Math.min(age-19,Math.round((w.sk||1)*8*g()+(cat==='dir'?12:2))));
+  const town=pick2r(g,TOWNS);const lz=(w.base??1)<.62;
+  const pool=EMPLO[cat==='ouv'||cat==='enc'?'ouv':cat==='dir'?'dir':'bur'];let parc=[],y=2027,n=w.r==='etu'?1:lz&&g()<.6?4:1+Math.floor(g()*3);
+  const pl=pool.slice();for(let i=0;i<n&&pl.length;i++){const d=lz&&n>=4?1:Math.max(1,Math.round(xp/n));parc.push(`${y-d}–${y} · ${pl.splice(Math.floor(g()*pl.length),1)[0]}`);y-=d}
+  if(w.r==='etu')parc=['Été 2026 · Job étudiant au supermarché du coin'];
+  const lic=['Permis B'];if(w.pc)lic.push('Permis C','CAP chauffeur professionnel');if(cat==='ouv'&&g()<.4)lic.push('Permis G (tracteur)');if(cat==='ouv'&&g()<.5)lic.push('Attestation VCA de base');if(w.r==='qual'&&g()<.4)lic.push('Phytolicence');
+  const lang=['Français (langue maternelle)'];if(g()<.55)lang.push('Néerlandais ('+pick2r(g,['scolaire','bon niveau','courant'])+')');if(g()<.35)lang.push('Anglais');if(g()<.12)lang.push('Allemand');if(g()<.12)lang.push(pick2r(g,['Arabe','Italien','Turc','Portugais','Polonais']));
+  const good=['Ponctuel et fiable','Travaille bien en équipe','Courageux, pas peur du mauvais temps','Débrouillard','Soigneux et précis','Sens de la sécurité','Bonne condition physique','Organisé','Calme et diplomate'];
+  const atouts=[pick2r(g,good),pick2r(g,good)].filter((v,i,a)=>a.indexOf(v)===i);
+  const ref=lz?(g()<.6?'« Pas toujours très motivé, à encadrer. »':'Pas de référence fournie'):pick2r(g,['« Travailleur sérieux, je le reprendrais sans hésiter. »','« Très fiable, toujours à l\'heure. »','« Bon élément, apprécié des collègues. »']);
+  return{age,xp,town,parc,dipl:pick2r(g,DIPL[w.r]||['CESS']),lic,lang,atouts,ref,lz}}
+function cvUI(kind,ix){let w,act='';click();
+  if(kind==='cand'){w=st.cand[ix];if(!w)return;act=`<div class="row" style="margin-top:12px"><button class="btn" ${st.cash<monthly(w)||!st.adm.bce?'disabled':''} onclick="closeM();hire(${ix})">✅ Engager</button>${w.itv?'':`<button class="btn s" onclick="interview(${ix})">🗣️ Entretien d'embauche</button>`}<button class="btn s" onclick="closeM()">Fermer</button></div>`}
+  else if(kind==='role'){const r=ix,R0=ROLES[r];w={n:nextName(r),r,sk:1,day:R0.day,skin:strHash(nextName(r))%SKIN.length,base:1};act=`<div class="row" style="margin-top:12px"><button class="btn" ${st.cash<R0.day*WDM?'disabled':''} onclick="closeM();hireRole('${r}')">✅ Engager</button><button class="btn s" onclick="closeM()">Fermer</button></div>`}
+  else{w=st.workers.find(x=>x.id===ix);if(!w)return;act='<button class="btn s w" style="margin-top:12px" onclick="closeM()">Fermer</button>'}
+  const R0=ROLES[w.r],cv=cvOf(w);const f=isF(w.n);
+  showModal(`<div class="cv"><div class="row" style="gap:14px;align-items:center">${avatar(w,96)}<div style="flex:1;min-width:0"><div class="mut sm">CURRICULUM VITAE</div><h3 style="margin:2px 0">${esc(w.n)}</h3><div class="mut">${cv.age} ans · ${cv.town}</div><div class="tag o" style="margin-top:6px">${R0.n}</div></div></div>
+  <h2>Expérience${cv.xp?' — '+cv.xp+' an'+(cv.xp>1?'s':''):''}</h2>${cv.parc.map(p=>`<div class="sm" style="padding:2px 0">• ${p}</div>`).join('')}
+  <h2>Formation</h2><div class="sm">🎓 ${cv.dipl}</div>
+  <h2>Permis et certificats</h2><div class="tags" style="margin-top:0">${cv.lic.map(x=>`<span class="tag">${x}</span>`).join('')}</div>
+  <h2>Langues</h2><div class="sm">${cv.lang.join(' · ')}</div>
+  <h2>Qualités</h2><div class="tags" style="margin-top:0">${cv.atouts.map(x=>`<span class="tag g">${x}</span>`).join('')}</div>
+  ${R0.cat==='ouv'&&!w.boss?`<h2>Référence d'un ancien employeur</h2><div class="sm"><i>${cv.ref}</i></div>`:''}
+  ${w.itv?`<h2>Ton impression à l'entretien</h2><div class="sm">${w.itv}</div>`:''}
+  <h2>Coût employeur</h2><div class="sm"><b>${eur(w.day*WDM)}</b> par mois (${eur(w.day)} par jour ouvrable)</div></div>${act}`)}
+function interview(ix){const w=st.cand[ix];if(!w)return;const right=Math.random()<.75,lz=(w.base??1)<.62;const say=(right?lz:!lz)?pick(['😕 Pas très motivé, regarde souvent son GSM.','😕 Répond vaguement, semble chercher surtout un salaire.','😕 Arrivé en retard à l’entretien.']):pick(['🙂 Motivé, pose de bonnes questions sur le travail.','🙂 Poignée de main franche, a l’air sérieux.','🙂 Connaît le métier, parle de ses anciens chantiers avec passion.']);
+  w.itv=say;save();cvUI('cand',ix)}
 function refreshCand(){const n=has('rh')?7:4;st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.25?'etu':r<.6?'man':r<.8?'qual':r<.92?'chauf':'chef'))}}
 const GOALS=[
   {k:'g0',t:"Inscris ton entreprise à la BCE (📊 Entreprise)",ok:()=>!!st.adm.bce},
@@ -627,7 +688,7 @@ function hire(i){const w=st.cand[i];if(!w)return;if(!st.adm.bce)return toastMsg(
   st.cand.splice(i,1);w.mot=w.base;w.hd=st.day;st.workers.push(w);log(`👷 ${w.n} rejoint l'équipe : ${ROLES[w.r].n}.`,false);kaching();goals();save();render()}
 function hireRole(r){const R0=ROLES[r];if(!st.adm.bce)return;if(!R0.multi&&has(r))return;if(R0.need&&ownW()<R0.need)return toastMsg(`Il faut au moins ${R0.need} personnes dans l'entreprise.`);
   const day=R0.day;if(st.cash<day*WDM)return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(day*WDM)}).`);
-  const n=R0.who||GESTN.find(x=>!st.workers.some(w=>w.n===x))||pick(PREN)+' '+pick(NOMS);
+  const n=nextName(r);
   st.workers.push({id:st.nid++,n,r,sk:1,day,pc:0,skin:RI(0,SKIN.length-1),base:1,mot:1,hd:st.day,warn:0});log(`${R0.ic} ${n} rejoint ${esc(st.name)} : ${R0.n}.`);kaching();goals();save();render()}
 function fire(id){const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;if(st.contracts.some(c=>c.st==='run'&&c.crew.includes(id)))return toastMsg("Cette personne est sur un chantier : retire-la d'abord.");
   const pre=preavisCost(w);if(!confirm(`Licencier ${w.n} ?\nAncienneté : ${Math.round((st.day-(w.hd||0))/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(pre)}`))return;st.cash-=pre;dropW(w);log(`📤 ${w.n} est licencié (préavis ${eur(pre)}).`,false);save();render()}
@@ -728,9 +789,9 @@ function rAo(){let h=goalCard();const mine=st.tenders.filter(t=>t.my);
 function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew.forEach(i=>busy.set(i,c)));
   let h=goalCard()+`<div class="kpi" style="margin-bottom:12px"><div><span>Personnel</span><b>${ownW()}</b></div><div><span>Masse salariale / mois</span><b>${eur(payroll()*WDM)}</b></div><div><span>Chantiers suivis</span><b>${running().length} / ${mgmtCap()}</b></div><div><span>Offres en parallèle</span><b>${myOffers()} / ${offerCap()}</b></div></div>`;
   const nR=st.reports.filter(r=>!r.done).length;h+=seg(eqTab,[['terrain','👷 Terrain'],['rap',`📋 Rapports${nR?' ('+nR+')':''}`],['bureau','🏢 Bureau'],['recru','🙋 Engager']],'eqTab');
-  const card=w=>{const R0=ROLES[w.r],c=busy.get(w.id);return`<div class="card"><div class="hd"><div class="ic" style="--ac2:${w.boss?'#5c4a12':'#2b3d52'}">${R0.ic}</div><div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${R0.n}${w.day?' · '+eur(monthly(w))+'/mois (coût employeur)':''}</div></div></div>
+  const card=w=>{const R0=ROLES[w.r],c=busy.get(w.id);return`<div class="card"><div class="hd">${avatar(w,48)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${R0.n}${w.day?' · '+eur(monthly(w))+'/mois (coût employeur)':''}</div></div></div>
     <div class="tags">${R0.cat==='ouv'?`<span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>`:''}${w.pc?'<span class="tag v">🪪 Permis C</span>':''}${behav(w)?`<span class="tag ${behav(w)[1]}">${behav(w)[0]}</span>`:''}${w.warn?`<span class="tag r">⚠️ ${w.warn} avertissement${w.warn>1?'s':''}</span>`:''}${R0.cat==='ouv'?`<span class="tag ${c?'o':''}">${c?'🦺 '+JOBS[c.j].n.split(' ').slice(0,3).join(' '):'💤 Libre'}</span>`:''}</div>${R0.d&&R0.cat!=='ouv'?`<div class="mut sm" style="margin-top:6px">${R0.d}</div>`:''}
-    <div class="row" style="margin-top:8px">${R0.cat==='ouv'&&!w.pc?`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="trainPC(${w.id})">🪪 Permis C (2 900 €)</button>`:''}${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="fire(${w.id})">Licencier</button>`}</div></div>`};
+    <div class="row" style="margin-top:8px">${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="cvUI('w',${w.id})">📄 CV</button>`}${R0.cat==='ouv'&&!w.pc?`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="trainPC(${w.id})">🪪 Permis C (2 900 €)</button>`:''}${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="fire(${w.id})">Licencier</button>`}</div></div>`};
   if(eqTab==='terrain'){h+=`<h2>Sur les chantiers (${field().length})</h2>`;field().forEach(w=>h+=card(w))}
   else if(eqTab==='rap'){const sup=has('gest')||field().some(w=>w.r==='chef');
     h+=`<p class="mut sm" style="margin:0 4px 10px">Quand ils passent sur chantier, ${sup?'tes contremaîtres et gestionnaires de chantier':'toi (et plus tard tes contremaîtres et gestionnaires de chantier)'} remarquent qui travaille et qui ne fait pas grand-chose. Sans encadrement, personne ne voit rien !</p>`;
@@ -745,10 +806,10 @@ function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew
     h+=`<h2>Encadrement, bureau et direction</h2>`;if(!office.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, factures, chantiers. Toi seul, tu peux suivre 2 chantiers et 2 offres en même temps.</p>';office.forEach(w=>h+=card(w));
     h+=`<h2>Postes à pourvoir</h2>`;
     for(const r of['aide','gest','secr','metreur','compta','rh','dirt','daf','dirc']){const R0=ROLES[r];if(!R0.multi&&has(r))continue;const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
-      h+=`<div class="card" style="${lock?'opacity:.6':''}"><div class="hd"><div class="ic">${R0.ic}</div><div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${R0.who?R0.who+' · ':''}${eur(R0.day*WDM)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>
-      <button class="btn w" style="margin-top:10px" ${lock||st.cash<R0.day*WDM?'disabled':''} onclick="hireRole('${r}')">${R0.need&&ownW()<R0.need?`🔒 À partir de ${R0.need} personnes`:R0.multi&&has(r)?'Engager un gestionnaire de plus':'Engager'}</button></div>`}}
+      h+=`<div class="card" style="${lock?'opacity:.6':''}"><div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(R0.day*WDM)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>
+      <button class="btn w" style="margin-top:10px" ${lock?'disabled':''} onclick="cvUI('role','${r}')">${R0.need&&ownW()<R0.need?`🔒 À partir de ${R0.need} personnes`:R0.multi&&has(r)?'📄 CV d’un gestionnaire de plus':'📄 Voir le CV'}</button></div>`}}
   else{h+=`<h2>Candidats (nouveaux chaque lundi${has('rh')?', trouvés par Sophie':''})</h2><p class="mut sm" style="margin:0 4px 10px">Coût employeur : salaire brut (barèmes de la commission paritaire 124) + ONSS + pécules de vacances. Pour engager, il faut de quoi payer un mois.</p>`;
-    st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd"><div class="ic">${ROLES[w.r].ic}</div><div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${ROLES[w.r].n} · ${eur(monthly(w))}/mois</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div>${ROLES[w.r].d?`<div class="mut sm" style="margin-top:6px">${ROLES[w.r].d}</div>`:''}<button class="btn w" style="margin-top:10px" ${st.cash<monthly(w)||!st.adm.bce?'disabled':''} onclick="hire(${i})">Engager</button></div>`);
+    st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd">${avatar(w,52)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${ROLES[w.r].n} · ${eur(monthly(w))}/mois</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div>${ROLES[w.r].d?`<div class="mut sm" style="margin-top:6px">${ROLES[w.r].d}</div>`:''}<button class="btn w" style="margin-top:10px" onclick="cvUI('cand',${i})">📄 Voir le CV</button></div>`);
     if(!st.cand.length)h+='<p class="mut">Plus de candidats cette semaine. Nouveaux CV lundi !</p>'}
   return h}
 function rMt(){let h=goalCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
@@ -1024,7 +1085,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.2";
+var APPV="2026-11-03.3";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
