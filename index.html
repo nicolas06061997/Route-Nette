@@ -95,6 +95,7 @@ h2{font-size:12.5px;color:var(--mut);margin:16px 4px 8px;text-transform:uppercas
 .req{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:12.5px}
 .cv h2{margin:14px 0 6px}
 .ph{position:relative;margin:-12px -14px 12px;height:170px;background:#0b170f;overflow:hidden}.ph img{width:100%;height:100%;object-fit:cover;display:block}.ph1{height:auto;padding:10px 14px;color:var(--mut);font-size:12.5px}.ph0{background:linear-gradient(90deg,#132619,#1d3526,#132619);background-size:200% 100%;animation:shim 1.2s linear infinite}@keyframes shim{to{background-position:-200% 0}}
+.phx{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.55);color:#fff;border:0;font:700 10.5px Nunito,sans-serif;padding:3px 7px;border-radius:6px}
 .phc{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;padding:2px 6px;border-radius:6px;text-decoration:none;max-width:90%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .goal{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#3b2a0a,#2a1f0b);border:1px solid #7a5418;border-radius:var(--r);padding:10px 12px;margin-bottom:12px}
 .goal b{color:var(--ye)}
@@ -1068,11 +1069,11 @@ const IMG={sandero:['fr:Dacia Sandero','en:Dacia Sandero'],golf:['fr:Volkswagen 
   yacht:['fr:Azimut Yachts','en:Azimut Yachts','en:Motor yacht'],superyacht:['en:Superyacht','fr:Yacht'],rolex:['fr:Rolex Submariner','en:Rolex Submariner'],cheval:['fr:Selle français','en:Horse'],piscine:['fr:Piscine','en:Swimming pool'],
   cessna:['fr:Cessna 172','en:Cessna 172'],helico:['fr:Robinson R44','en:Robinson R44'],canaries:['fr:Tenerife','en:Tenerife'],croisiere:['en:Cruise ship','fr:Paquebot de croisière'],dubai:['fr:Burj Khalifa','en:Burj Khalifa'],f1:['fr:Circuit de Spa-Francorchamps','en:Circuit de Spa-Francorchamps'],
   eq_taillehaie:['fr:Taille-haie','en:Hedge trimmer'],eq_souffleur:['fr:Souffleur de feuilles','en:Leaf blower'],eq_debrou:['fr:Débroussailleuse','en:String trimmer'],eq_tondeuse:['fr:Tondeuse à gazon','en:Lawn mower'],
-  eq_remorque:['en:Trailer (vehicle)','fr:Remorque (véhicule)'],eq_signal:['fr:Cône de signalisation','en:Traffic cone'],eq_karcher:['fr:Nettoyeur haute pression','en:Pressure washer'],eq_fleche:['en:Arrow board','en:Variable-message sign'],
+  eq_remorque:['en:Trailer (vehicle)','fr:Remorque (véhicule)'],eq_signal:['fr:Cône de signalisation','en:Traffic cone'],eq_karcher:['fr:Nettoyeur haute pression','en:Pressure washer'],
   eq_broyeur:['fr:Broyeur de végétaux','en:Woodchipper'],eq_van:['fr:Ford Transit','en:Ford Transit'],eq_nacelle:['fr:Nacelle élévatrice','en:Aerial work platform'],eq_balayeuse:['en:Street sweeper','fr:Balayeuse de voirie'],
-  eq_tracteur:['fr:Épareuse','en:Flail mower'],eq_hydro:['fr:Hydrocureuse','en:Vacuum truck'],eq_trons:['fr:Tronçonneuse','en:Chainsaw'],eq_plaque:['en:Plate compactor','fr:Plaque vibrante'],eq_batteuse:['en:Pile driver','fr:Sonnette (construction)'],
+  eq_tracteur:['fr:Épareuse','en:Flail mower'],eq_hydro:['fr:Hydrocureuse','en:Vacuum truck'],eq_trons:['fr:Tronçonneuse','en:Chainsaw'],eq_plaque:['en:Plate compactor','fr:Plaque vibrante'],
   eq_benne:['fr:Iveco Daily','en:Iveco Daily'],eq_pelle:['fr:Mini-pelle','en:Compact excavator'],eq_traceuse:['en:Road surface marking','fr:Marquage routier'],eq_saleuse:['fr:Saleuse','en:Winter service vehicle'],eq_benne19:['fr:Camion-benne','en:Dump truck']};
-let IMC={};try{IMC=JSON.parse(localStorage.getItem('rn-img2')||'{}')}catch(e){}
+let IMC={};try{IMC=JSON.parse(localStorage.getItem('rn-img3')||'{}')}catch(e){}
 const imgBusy={},imgFail={};let imgT=0;
 // API MediaWiki avec origin=* (autorisée depuis n'importe quel site) : image principale de l'article
 async function loadImg(k){if(imgBusy[k])return;imgBusy[k]=1;let net=0;
@@ -1081,11 +1082,13 @@ async function loadImg(k){if(imgBusy[k])return;imgBusy[k]=1;let net=0;
       const r=await fetch(u);net=1;if(!r.ok)continue;const j=await r.json();const pg=j.query&&j.query.pages&&Object.values(j.query.pages)[0];
       if(pg&&pg.thumbnail&&pg.thumbnail.source){IMC[k]={src:pg.thumbnail.source,page:pg.fullurl||`https://${l}.wikipedia.org/wiki/${encodeURIComponent(ti)}`,title:pg.title};break}}catch(e){}}
   if(!IMC[k]){if(!net){imgFail[k]=Date.now();delete imgBusy[k];render();return}IMC[k]={none:1,t:Date.now()}}
-  try{localStorage.setItem('rn-img2',JSON.stringify(IMC))}catch(e){}
+  try{localStorage.setItem('rn-img3',JSON.stringify(IMC))}catch(e){}
   clearTimeout(imgT);imgT=setTimeout(()=>{if(curTab==='pv'||curTab==='mt')render()},250)}
-function photo(k){let c=IMC[k];if(!IMG[k])return'';if(c&&c.none&&Date.now()-c.t>864e5){delete IMC[k];c=null}
+let IMH={};try{IMH=JSON.parse(localStorage.getItem('rn-imghide')||'{}')}catch(e){}
+function hidePhoto(k){IMH[k]=1;try{localStorage.setItem('rn-imghide',JSON.stringify(IMH))}catch(e){}toastMsg('Photo masquée. Dis à Claude laquelle était fausse pour la remplacer.');render()}
+function photo(k){let c=IMC[k];if(!IMG[k]||IMH[k])return'';if(c&&c.none&&Date.now()-c.t>864e5){delete IMC[k];c=null}
   if(!c){if(imgFail[k]&&Date.now()-imgFail[k]<30000)return`<div class="ph ph1">📷 Photo indisponible : vérifie ta connexion internet</div>`;loadImg(k);return`<div class="ph ph0"></div>`}if(c.none)return'';
-  return`<div class="ph"><img src="${c.src}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"><a class="phc" href="${c.page}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📷 ${esc(c.title)} — Wikipédia</a></div>`}
+  return`<div class="ph"><img src="${c.src}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"><a class="phc" href="${c.page}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📷 ${esc(c.title)} — Wikipédia</a><button class="phx" onclick="hidePhoto('${k}')">✕ Pas la bonne photo</button></div>`}
 let pvTab='car';
 function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=own.reduce((a,o)=>a+pValue(o)-(o.loan||0),0);
   let h=`<div class="card"><div class="hd"><div class="ic" style="--ac2:#3d2c66">🏡</div><div style="flex:1;min-width:0"><h3>Ta vie privée</h3><div class="mut sm">Ton argent à toi, séparé de celui de la société.</div></div></div>
@@ -1411,7 +1414,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.24";
+var APPV="2026-11-03.25";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
