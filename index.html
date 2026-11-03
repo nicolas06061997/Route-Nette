@@ -122,8 +122,8 @@ nav .bd{position:absolute;top:1px;right:calc(50% - 22px);background:var(--rd);co
 .chip.on{background:var(--gr);color:#06230f;border-color:var(--gr)}
 input[type=range]{width:100%;accent-color:var(--or);height:28px}
 input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);background:#0b170f;color:var(--tx);font:700 16px Nunito,system-ui,sans-serif}
-#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 78px);transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:6px;width:94%;max-width:520px;pointer-events:none}
-#toast div{background:rgba(14,30,21,.96);border:1px solid var(--or);border-radius:14px;padding:9px 13px;animation:tin .3s;box-shadow:var(--sh);font-size:14px}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 112px);transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:4px;width:86%;max-width:480px;pointer-events:none;align-items:center}
+#toast div{background:rgba(10,22,15,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,154,31,.7);border-radius:12px;padding:5px 10px;animation:tin .25s;font-size:12.5px;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:opacity .4s}
 @keyframes tin{from{opacity:0;transform:translateY(10px)}}
 .log div{padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
 .big{font-size:28px;font-weight:900}
@@ -379,7 +379,7 @@ function addWork(d,n){let k=d;while(n>0){k++;if(isWork(k))n--}return k}
 
 /* ---------- Petits outils ---------- */
 function log(t,toast){st.log.unshift({d:st.day,t});if(st.log.length>100)st.log.length=100;if(toast!==false)toastMsg(t)}
-function toastMsg(t){const T=$('#toast');while(T.children.length>=3)T.firstChild.remove();const d=document.createElement('div');d.innerHTML=t;if(/^(💶|🎉|✅|🏆|🏅|🌟|🎁|👍)/u.test(t))d.className='good';else if(/^(❌|⚖️|🔧|🚨|⚠️|💀|😠|📮|🚗|🤒)/u.test(t))d.className='bad';T.appendChild(d);setTimeout(()=>d.remove(),3800)}
+function toastMsg(t){const T=$('#toast');const imp=/^(💶|🎉|🏆|🏅|❌|⚖️|🚨|💀|⚠️|🏛️|📊|🚫|⏸|🎊|📂)/u.test(t)||/Il faut|manque|Pas assez|refuse|d'abord|Code|copié|installé|à jour|connexion/.test(t);const N=st&&st.ntf||'imp';if(N==='off'&&!/Il faut|manque|Pas assez|refuse|d'abord/.test(t))return;if(N==='imp'&&!imp)return;while(T.children.length>=2)T.firstChild.remove();const d=document.createElement('div');d.innerHTML=t;if(/^(💶|🎉|✅|🏆|🏅|🌟|🎁|👍)/u.test(t))d.className='good';else if(/^(❌|⚖️|🔧|🚨|⚠️|💀|😠|📮|🚗|🤒)/u.test(t))d.className='bad';T.appendChild(d);setTimeout(()=>{d.style.opacity=0},2400);setTimeout(()=>d.remove(),2800)}
 let AC=null;
 function snd(f,d,type,v,delay){if(!st||!st.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),gn=AC.createGain();o.type=type||'sine';o.frequency.value=f;o.connect(gn);gn.connect(AC.destination);const t=AC.currentTime+(delay||0);gn.gain.setValueAtTime(v||.06,t);gn.gain.exponentialRampToValueAtTime(.0001,t+(d||.12));o.start(t);o.stop(t+(d||.12)+.02)}catch(e){}}
 const kaching=()=>{snd(880,.08,'triangle',.07);snd(1320,.2,'triangle',.07,.08)};
@@ -1143,7 +1143,7 @@ function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
   <h2>Banque</h2><div class="card"><div class="mut sm">${st.adm.bce?`Crédit en cours : <b>${eur(st.loan)}</b> à 5 %/an · maximum ${eur(loanMax())} (selon ton chiffre d'affaires${has('daf')?', ton DAF':''}${has('compta')?', ton comptable':''})`:"La banque prête seulement aux entreprises inscrites à la BCE."}</div><div class="row" style="margin-top:10px"><button class="btn s" onclick="loan(1)" ${st.adm.bce?'':'disabled'}>Emprunter 5 000 €</button><button class="btn s" onclick="loan(-1)" ${st.loan<=0?'disabled':''}>Rembourser 5 000 €</button></div><p class="mut sm">Crédit de caisse (découvert autorisé) : ${eur(overdraft())}, il augmente avec ton chiffre d'affaires. Compte sous 0 € = dettes ONSS : plus le droit de remettre offre. Sous la limite : tribunal de l'entreprise.</p></div>
   <h2>Objectifs</h2><div class="card">${GOALS.map(g=>`<div style="padding:3px 0">${st.goals[g.k]?'✅':'⬜'} ${g.t}</div>`).join('')}</div>
   <h2>Journal</h2><div class="card log">${st.log.slice(0,40).map(l=>`<div><span class="mut">${dstr(l.d)}</span> — ${l.t}</div>`).join('')||'<span class="mut">Rien encore.</span>'}</div>
-  <h2>Réglages</h2><div class="card"><div class="row"><button class="btn s" onclick="st.snd=st.snd?0:1;save();render()">${st.snd?'🔊 Son activé':'🔇 Son coupé'}</button><button class="btn s" onclick="exportSave()">💾 Sauvegarde</button><button class="btn s" onclick="importUI()">📥 Charger</button></div>
+  <h2>Réglages</h2><div class="card"><div class="row"><button class="btn s" onclick="st.snd=st.snd?0:1;save();render()">${st.snd?'🔊 Son activé':'🔇 Son coupé'}</button><button class="btn s" onclick="st.ntf={all:'imp',imp:'off',off:'all'}[st.ntf||'imp'];save();render()">${{all:'💬 Messages : tous',imp:'💬 Messages : importants',off:'💬 Messages : aucun'}[st.ntf||'imp']}</button><button class="btn s" onclick="exportSave()">💾 Sauvegarde</button><button class="btn s" onclick="importUI()">📥 Charger</button></div>
   <div class="row" style="margin-top:10px"><button class="btn s" onclick="chkV(1)">🔄 Vérifier les mises à jour</button><button class="btn s" onclick="fullScreen()">⛶ Plein écran</button></div><p class="mut sm">Ta partie est enregistrée sur ce GSM et reste intacte après chaque mise à jour. Version <span id="ver2"></span></p>
   <button class="btn r" onclick="restart()">Recommencer une nouvelle entreprise</button></div>`;
   setTimeout(()=>{const v=$('#ver2');if(v)v.textContent=window.APPV||''},0);
@@ -1435,7 +1435,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-03.27";
+var APPV="2026-11-03.28";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
