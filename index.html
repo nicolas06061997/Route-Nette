@@ -1085,10 +1085,10 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
     if(!st.cand.length)h+='<p class="mut">Plus de candidats cette semaine. Nouveaux CV lundi !</p>'}
   return h}
 function rMt(){let h=goalCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
-  // regroupés par type, du plus cher au moins cher dans chaque groupe
+  // regroupés par type : du petit matériel aux véhicules, et du moins cher au plus cher dans chaque groupe
   const EQG=[['🚚 Véhicules',['van','benne','benne19','nacelle','hydro','balayeuse']],['🚜 Engins et machines',['tracteur','pelle','broyeur','traceuse','saleuse','batteuse']],['🚧 Signalisation et remorques',['fleche','signal','remorque']]];
-  const inG=new Set(EQG.flatMap(g=>g[1]));EQG.push(['🧰 Petit matériel',Object.keys(EQ).filter(k=>!inG.has(k))]);
-  for(const [gn,keys] of EQG){const ks=keys.filter(k=>EQ[k]).sort((a,b)=>EQ[b].p-EQ[a].p);if(!ks.length)continue;h+=`<h2>${gn}</h2>`;
+  const inG=new Set(EQG.flatMap(g=>g[1]));EQG.push(['🧰 Petit matériel',Object.keys(EQ).filter(k=>!inG.has(k))]);EQG.reverse();
+  for(const [gn,keys] of EQG){const ks=keys.filter(k=>EQ[k]).sort((a,b)=>EQ[a].p-EQ[b].p);if(!ks.length)continue;h+=`<h2>${gn}</h2>`;
   for(const t of ks){const e=EQ[t],n=st.eq[t]||0,f=freeEq(t);const jobs=Object.values(JOBS).filter(J=>J.need.includes(t));
     h+=`<div class="card ${n?'acc':''}" style="--ac:var(--gr)">${photo('eq_'+t)}<div class="hd"><div class="ic" style="--ac2:${n?'#1d5232':'#24402e'}">${e.ic}</div><div style="flex:1;min-width:0"><h3>${e.n}</h3><div class="mut sm">${eur(e.p)} HTVA · usage ${eur(e.u)}/jour${e.veh?' · assurance + taxe '+(e.veh==='h'?'310':e.veh==='a'?'70':'160')+' €/mois':''}</div></div>${n?`<span class="tag g">×${n}</span>`:''}</div>
     <div class="tags">${jobs.map(J=>`<span class="tag ${J.p?'':'b'}">${J.ic} ${J.n.split(' ').slice(0,3).join(' ')}</span>`).join('')}</div>
@@ -1473,7 +1473,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.1";
+var APPV="2026-11-04.2";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
