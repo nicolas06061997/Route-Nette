@@ -625,12 +625,13 @@ const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/
 function b64d(c){try{const o=JSON.parse(decodeURIComponent(escape(atob(c.replace(/-/g,'+').replace(/_/g,'/')))));if(!o||typeof o.n!=='string'||typeof o.u!=='string')return null;
   const N=x=>Number.isFinite(+x)?+x:0;return{u:o.u.slice(0,12),n:o.n.slice(0,40),t:N(o.t),d:N(o.d),ca:N(o.ca),cash:N(o.cash),val:N(o.val),w:N(o.w),cls:Math.max(0,Math.min(CLS.length-1,N(o.cls)|0)),rep:N(o.rep),won:N(o.won),
     fil:Array.isArray(o.fil)?o.fil.filter(k=>EU[k]):[],grp:N(o.grp),ino:N(o.ino),gl:N(o.gl),dep:N(o.dep),veh:N(o.veh),pw:N(o.pw),lux:Array.isArray(o.lux)?o.lux.map(String).map(x=>x.slice(0,4)).slice(0,8):[],home:String(o.home||'').slice(0,4),ipo:N(o.ipo)}}catch(e){return null}}
+function copyTxt(t){try{navigator.clipboard.writeText(t).then(()=>toastMsg('Lien copié !'),()=>toastMsg('Copie impossible : appuie longtemps sur le lien pour le copier.'))}catch(e){toastMsg('Copie impossible : appuie longtemps sur le lien pour le copier.')}}
 const myLink=()=>location.origin+location.pathname+'#voir='+b64e(snap());
 function shareMe(){const url=myLink(),txt=`Viens voir mon entreprise « ${st.name} » dans Route Nette 🚧`;click();save();
   if(navigator.share){navigator.share({title:'Route Nette',text:txt,url}).catch(()=>{});return}
   showModal(`<h3>📤 Partager mon entreprise</h3><p class="mut sm">Envoie ce lien à ton frère, ton cousin… Ils verront ton entreprise telle qu’elle est maintenant. Renvoie-le de temps en temps pour qu’ils voient tes progrès.</p>
   <textarea readonly style="width:100%;height:90px;margin-top:10px;background:#0f1f15;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px;font:12px monospace" onclick="this.select()">${esc(url)}</textarea>
-  <div class="row" style="margin-top:10px"><a class="btn" style="text-decoration:none" href="https://wa.me/?text=${encodeURIComponent(txt+' '+url)}" target="_blank" rel="noopener">WhatsApp</a><button class="btn s" onclick="navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(url).replace(/"/g,'&quot;')});toastMsg('Lien copié !')">Copier le lien</button></div><button class="btn s w" style="margin-top:10px" onclick="closeM()">Fermer</button>`)}
+  <div class="row" style="margin-top:10px"><a class="btn" style="text-decoration:none" href="https://wa.me/?text=${encodeURIComponent(txt+' '+url)}" target="_blank" rel="noopener">WhatsApp</a><button class="btn s" onclick="copyTxt(${JSON.stringify(url).replace(/"/g,'&quot;')})">Copier le lien</button></div><button class="btn s w" style="margin-top:10px" onclick="closeM()">Fermer</button>`)}
 function addFriend(o,show){if(!o)return toastMsg('Ce lien ne marche pas.');if(o.u===st.uid)return toastMsg('C’est ta propre entreprise 🙂');const F=st.friends||(st.friends={}),old=F[o.u];F[o.u]=o;save();
   log(`👥 ${old?'Mise à jour de':'Nouvelle entreprise d’ami :'} ${o.n}.`,false);if(show)friendUI(o.u);else render()}
 let pendFr=null;
@@ -1914,7 +1915,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.2";
+var APPV="2026-11-05.3";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
