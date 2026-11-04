@@ -259,7 +259,23 @@ const EQ={
   pelle:{n:'Mini-pelle 5 t (occasion 2018)',ic:'🦾',p:22750,u:72},
   traceuse:{n:'Machine de marquage routier (traceuse autotractée)',ic:'〰️',p:28000,u:40},
   saleuse:{n:'Saleuse + lame de déneigement (pour camion 19 t)',ic:'🧂',p:28000,u:20},
-  benne19:{n:'Camion benne-grue 19 t (occasion 2015)',ic:'🚚',p:45000,u:107,veh:'h'}
+  benne19:{n:'Camion benne-grue 19 t (occasion 2015)',ic:'🚚',p:45000,u:107,veh:'h'},
+  // matériel ajouté (prix HTVA estimés d'après des annonces d'occasion et des catalogues)
+  aspifeuilles:{n:'Aspirateur de feuilles tracté',ic:'🍂',p:7800,u:18},
+  rogneuse:{n:'Rogneuse de souches pro',ic:'🪵',p:9800,u:22},
+  rouleau:{n:'Rouleau vibrant 2,5 t (occasion)',ic:'🛞',p:17500,u:25},
+  tondap:{n:'Tondeuse autoportée frontale pro (occasion)',ic:'🚜',p:18500,u:30},
+  desherb:{n:'Désherbeur à eau chaude sur remorque (sans pesticides)',ic:'♨️',p:26000,u:38},
+  chargeuse:{n:'Chargeuse compacte sur pneus (occasion)',ic:'🏗️',p:29000,u:48},
+  fourgon:{n:'Fourgon 9 places pour les équipes (occasion)',ic:'🚐',p:31000,u:30,veh:'l'},
+  hydroseed:{n:'Hydroseeder 3 000 L sur remorque (enherbement)',ic:'🌱',p:34000,u:40},
+  telesc:{n:'Faucheuse débroussailleuse à bras télescopique 7 m',ic:'🦾',p:39000,u:55},
+  tma:{n:'Camion TMA atténuateur de chocs (occasion)',ic:'🛑',p:92000,u:60,veh:'h'},
+  laveuse:{n:'Camion laveuse de voirie 16 t (occasion)',ic:'🚿',p:118000,u:130,veh:'h'},
+  balaygr:{n:'Grande balayeuse aspiratrice 6 m³ sur porteur (occasion)',ic:'🧹',p:125000,u:140,veh:'h'},
+  epandeur:{n:'Camion épandeur 26 t avec saleuse intégrée (occasion)',ic:'🧂',p:145000,u:120,veh:'h'},
+  tunnel:{n:'Camion laveur de tunnels à brosses (occasion)',ic:'🚇',p:165000,u:150,veh:'h'},
+  marqauto:{n:'Camion de marquage thermoplastique (occasion)',ic:'〰️',p:215000,u:170,veh:'h'}
 };
 const ADM={
   bce:{n:"Inscription à la BCE (guichet d'entreprise)",ic:'🧾',p:105,d:"Numéro d'entreprise et TVA. Obligatoire pour facturer."},
@@ -310,6 +326,11 @@ const JOBS={
   p_feuilles:{p:1,n:'Ramassage des feuilles',ic:'🍂',un:'m²',rate:2000,pu:.22,need:['souffleur'],minW:1,vis:'leaves',tool:'souffleur',mo:[10,12],ac:'#e39a3b'},
   p_karcher:{p:1,n:'Nettoyage de cour et terrasse',ic:'💦',un:'m²',rate:100,pu:5,need:['karcher'],minW:1,vis:'paving',tool:'lance',ac:'#5fc3ff'},
   p_verts:{p:1,n:'Évacuation de déchets verts',ic:'🪵',un:'m³',rate:8,pu:60,need:['remorque'],minW:1,vis:'branches',tool:'',ac:'#b5894f'},
+  p_grandpel:{p:1,n:'Tonte de grands terrains (parcs, terrains de foot)',ic:'⚽',un:'m²',rate:9000,pu:.09,need:['tondap'],minW:1,vis:'lawn',tool:'tondeuse',mo:[4,10],ac:'#8be05a'},
+  p_souches:{p:1,n:'Rognage de souches',ic:'🪵',un:'souches',rate:10,pu:85,need:['rogneuse'],minW:1,vis:'trees',tool:'scie',ac:'#8a5a2b'},
+  p_desherb:{p:1,n:'Désherbage d’allées sans produits',ic:'♨️',un:'m²',rate:600,pu:1.1,need:['desherb'],minW:1,vis:'paving',tool:'lance',mo:[4,10],ac:'#9fd36a'},
+  p_aspi:{p:1,n:'Aspiration des feuilles dans un grand parc',ic:'🍂',un:'m²',rate:8000,pu:.08,need:['aspifeuilles','van'],minW:1,vis:'leaves',tool:'souffleur',mo:[10,12],ac:'#e39a3b'},
+  p_allee:{p:1,n:'Pose d’une allée en gravier stabilisé',ic:'🧱',un:'m²',rate:25,pu:38,need:['plaque','benne'],minW:2,vis:'paving',tool:'pelle',ac:'#c9b48a'},
   p_neige:{p:1,n:'Déneigement de trottoirs',ic:'❄️',un:'m²',rate:300,pu:1.45,need:[],minW:1,vis:'snow',tool:'pelle',mo:[12,2],ac:'#bfe3ff'},
   dechets:{n:'Ramassage des déchets le long des routes',main:'Ramassage manuel des déchets sur accotements et talus',ic:'🗑️',un:'km',q0:8,rate:2,pu:255,need:['van','signal'],minW:2,vis:'dechets',tool:'pince',ac:'#7bd88f',nat:'services',ex:{d:'Évacuation et mise en CET des déchets',u:'t',k:.12,pu:160,c:128}},
   panneaux:{n:'Nettoyage des panneaux de signalisation',main:'Nettoyage haute pression de panneaux de signalisation',ic:'🪧',un:'pièces',q0:80,rate:16,pu:23,need:['van','karcher','signal'],minW:2,vis:'signs',tool:'lance',ac:'#4fb3ff',nat:'services'},
@@ -326,6 +347,18 @@ const JOBS={
   glis_pose:{n:'Pose de glissières de sécurité',main:'Fourniture et pose de glissières de sécurité',ic:'🛡️',un:'m',q0:100,rate:40,pu:20,need:['pelle','batteuse','benne','signal','fleche'],minW:3,op:'engin',vis:'rail',tool:'',mach:'pelle',ac:'#c9d1da',nat:'travaux',ex:{d:'Fourniture des glissières (lisses, poteaux)',u:'m',k:1,pu:42,c:34}},
   invasives:{n:'Gestion des plantes invasives',main:'Arrachage et fauche de la renouée du Japon et de la berce du Caucase',ic:'🌱',un:'m²',q0:1000,rate:150,pu:2,need:['van','debrou','signal'],minW:2,vis:'bush',tool:'debrou',mo:[5,9],ac:'#7ac943',nat:'services',ex:{d:'Évacuation en filière agréée',u:'t',k:.01,pu:170,c:140}},
   abattage:{n:'Abattage d’arbres dangereux',main:'Abattage, démontage et dessouchage d’arbres dangereux',ic:'🪓',un:'arbres',q0:8,rate:2,pu:400,need:['nacelle','trons','broyeur','benne','signal','fleche'],minW:3,gr:1,vis:'trees',tool:'scie',mach:'nacelle',mo:[10,3],ac:'#8a5a2b',nat:'travaux',ex:{d:'Évacuation et valorisation du bois',u:'m³',k:2.5,pu:20,c:10}},
+  desherbspw:{n:'Désherbage alternatif des trottoirs et îlots',main:'Désherbage à l’eau chaude des trottoirs, îlots et bordures (sans pesticides)',ic:'♨️',un:'m²',q0:2000,rate:900,pu:.9,need:['desherb','van','signal'],minW:2,vis:'paving',tool:'lance',mo:[4,10],ac:'#9fd36a',nat:'services'},
+  souches:{n:'Dessouchage d’arbres abattus',main:'Rognage des souches et remise en état du sol',ic:'🪵',un:'souches',q0:20,rate:8,pu:95,need:['rogneuse','benne','signal'],minW:2,vis:'trees',tool:'scie',ac:'#8a5a2b',nat:'travaux',ex:{d:'Évacuation des copeaux',u:'m³',k:.4,pu:28,c:22}},
+  talus:{n:'Fauchage des talus hauts (bras télescopique)',main:'Fauchage-débroussaillage des talus hauts au bras télescopique',ic:'⛰️',un:'km',q0:15,rate:3,pu:260,need:['tracteur','telesc','fleche','signal'],minW:2,pc:1,vis:'grass',tool:'',mach:'tracteur',mo:[5,10],ac:'#a8c94f',nat:'services'},
+  bassins:{n:'Curage des bassins d’orage',main:'Curage des bassins d’orage et de décantation',ic:'💧',un:'m³',q0:200,rate:60,pu:14,need:['pelle','chargeuse','benne19','signal'],minW:3,op:'engin',vis:'drains',tool:'',mach:'pelle',ac:'#5f8fb0',nat:'travaux',ex:{d:'Évacuation et traitement des boues de curage',u:'t',k:.9,pu:38,c:30}},
+  trottoirs:{n:'Réfection de trottoirs et accotements',main:'Réfection de trottoirs et d’accotements stabilisés',ic:'🧱',un:'m²',q0:150,rate:40,pu:32,need:['benne','plaque','rouleau','signal'],minW:3,vis:'paving',tool:'pelle',ac:'#b8a07a',nat:'travaux',ex:{d:'Fourniture de matériaux (empierrement, gravier stabilisé)',u:'t',k:.15,pu:32,c:25}},
+  enherb:{n:'Enherbement de talus (hydroseeding)',main:'Enherbement de talus par projection hydraulique',ic:'🌱',un:'m²',q0:3000,rate:2500,pu:.7,need:['hydroseed','van','signal'],minW:2,vis:'grass',tool:'',mo:[3,10],ac:'#7ac943',nat:'travaux',ex:{d:'Fourniture de semences, engrais et mulch',u:'m²',k:1,pu:.35,c:.27}},
+  lavage:{n:'Lavage des voiries et des places',main:'Lavage mécanique des voiries, places et pistes cyclables',ic:'🚿',un:'km',q0:30,rate:12,pu:75,need:['laveuse','fleche'],minW:1,pc:1,vis:'sweep',tool:'',mach:'balayeuse',ac:'#6fc8ff',nat:'services'},
+  autoroute:{n:'Entretien des accotements d’autoroute (sous TMA)',main:'Débroussaillage et propreté des accotements d’autoroute sous protection d’un TMA',ic:'🛣️',un:'km',q0:20,rate:4,pu:520,need:['tma','van','debrou','signal'],minW:3,pc:1,vis:'bush',tool:'debrou',mo:[3,10],ac:'#55b24a',nat:'services',ex:{d:'Évacuation des déchets et déchets verts',u:'t',k:.4,pu:150,c:120}},
+  tunnels:{n:'Lavage des tunnels routiers',main:'Lavage des parois, luminaires et panneaux des tunnels',ic:'🚇',un:'m',q0:2000,rate:900,pu:3.2,need:['tunnel','tma','fleche'],minW:3,pc:1,vis:'signs',tool:'lance',ac:'#9aa7b3',nat:'services'},
+  marq_auto:{n:'Marquages autoroutiers (thermoplastique)',main:'Marquages en thermoplastique sur autoroutes et voies rapides',ic:'〰️',un:'m²',q0:2000,rate:1200,pu:6,need:['marqauto','tma','signal'],minW:3,pc:1,vis:'sweep',tool:'',dry:1,mo:[4,10],ac:'#f4f4f4',nat:'travaux',ex:{d:'Fourniture de thermoplastique et de billes de verre',u:'m²',k:1,pu:4.2,c:3.3}},
+  deneig_auto:{n:'Service d’hiver autoroutier',main:'Circuits d’épandage et de raclage sur autoroutes (astreinte 24 h/24)',ic:'❄️',un:'km',q0:300,rate:90,pu:7,need:['epandeur'],minW:1,pc:1,allw:1,vis:'snow',tool:'',mach:'benne19',mo:[11,3],ac:'#bfe3ff',nat:'services'},
+  balay_auto:{n:'Balayage aspirant des autoroutes et ronds-points',main:'Balayage aspirant des bandes d’arrêt d’urgence et ronds-points',ic:'🧹',un:'km',q0:60,rate:18,pu:70,need:['balaygr','tma'],minW:2,pc:1,vis:'sweep',tool:'',mach:'balayeuse',ac:'#ffd23f',nat:'services',ex:{d:'Évacuation des balayures',u:'t',k:.3,pu:145,c:118}},
   aires:{n:'Propreté des aires de repos',main:'Nettoyage des aires de repos (poubelles, abords, sanitaires)',ic:'🚻',un:'passages',q0:60,rate:6,pu:60,need:['van'],minW:1,vis:'dechets',tool:'pince',ac:'#7bd88f',nat:'services',ex:{d:'Évacuation des déchets collectés',u:'t',k:.02,pu:160,c:128}}
 };
 const SPWJ=Object.keys(JOBS).filter(k=>!JOBS[k].p),PJ=Object.keys(JOBS).filter(k=>JOBS[k].p);
@@ -341,9 +374,9 @@ const BUYERS=[
 const RIVT=[
   ['Vert-Bord SRL',0,['dechets','debrous','panneaux'],.96,48],['Ets Lambotte & Fils',0,['dechets','debrous','glissieres'],1.0,55],
   ['EcoBerme SRL',0,['dechets','panneaux','glissieres'],.93,40],['Condroz Paysage',0,['debrous','elagage','dechets'],.99,58],
-  ['Fauche & Fils SRL',1,['fauchage','debrous'],.95,62],['Ardenne Entretien SA',1,['fauchage','elagage','debrous','dechets'],.98,66],
-  ['Mosan Services SA',1,['balayage','avaloirs','dechets','panneaux'],.97,60],['Hainaut Voirie SA',1,['avaloirs','balayage','glissieres'],1.01,57],
-  ['Famenne Travaux SRL',1,['elagage','debrous','fauchage'],.94,52],['Val de Meuse Services',1,['panneaux','glissieres','balayage'],.99,63],
+  ['Fauche & Fils SRL',1,['fauchage','debrous','talus','enherb'],.95,62],['Ardenne Entretien SA',1,['fauchage','elagage','debrous','dechets'],.98,66],
+  ['Mosan Services SA',1,['balayage','avaloirs','dechets','panneaux','lavage','desherbspw'],.97,60],['Hainaut Voirie SA',1,['avaloirs','balayage','glissieres','bassins','trottoirs'],1.01,57],
+  ['Famenne Travaux SRL',1,['elagage','debrous','fauchage','souches'],.94,52],['Val de Meuse Services',1,['panneaux','glissieres','balayage'],.99,63],
   ['Routes Propres SA',2,SPWJ,1.02,74],['Wallonie Entretien Routier SA',2,SPWJ,.97,78]];
 const CLIENTS=[['Mme Lambert','part'],['M. Dupont','part'],['Mme Collignon','part'],['M. Henrard','part'],['Mme Pirard','part'],['M. Lejeune','part'],['M. et Mme Gilson','part'],['Mme Delhaye','part'],
   ['Résidence Les Tilleuls','pro'],['Camping du Lac','pro'],['Supermarché du coin','pro'],['Garage Renard','pro'],['Ferme Delvaux','pro'],['Maison de repos Les Lilas','pro'],['Syndic Le Parc','pro'],['RFC Club de foot','pro'],
@@ -681,81 +714,78 @@ function friendsCard(){const F=Object.values(st.friends||{}),me={...snap(),me:1}
   return`<div class="card acc" style="--ac:var(--bl)"><div class="hd"><div class="ic" style="--ac2:#173f5e">👥</div><div style="flex:1;min-width:0"><h3>Entre amis</h3><div class="mut sm">${F.length?'Classement par valeur du groupe':'Montre ton entreprise à ta famille et tes amis, et vois la leur.'}</div></div></div>
   ${F.length?L.map((o,i)=>`<div class="row" style="flex-wrap:nowrap;padding:8px 0;border-bottom:1px solid #ffffff10;${o.me?'':'cursor:pointer'}" ${o.me?'':`onclick="click();friendUI('${o.u}')"`}><b style="width:26px;font-size:17px">${['🥇','🥈','🥉'][i]||i+1}</b><div style="flex:1;min-width:0"><b class="sm" style="${o.me?'color:var(--or2)':''}">${esc(o.n)}${o.me?' (toi)':''}</b><div class="mut sm">${o.cls?CLS[o.cls].n:'Sans agréation'} · ${o.w} pers.${o.me?'':' · '+ago(o.t)}</div></div><b class="sm">${eur(o.val)}</b></div>`).join(''):''}
   <div class="row" style="margin-top:10px"><button class="btn" style="padding:8px 12px" onclick="shareMe()">📤 Partager mon entreprise</button><button class="btn s" style="padding:8px 12px" onclick="click();showModal('<h3>➕ Ajouter un ami</h3><p class=&quot;mut sm&quot;>Colle ici le lien qu’il t’a envoyé (utile si le jeu est installé sur l’écran d’accueil).</p><textarea id=&quot;flink&quot; style=&quot;width:100%;height:90px;margin-top:10px;background:#0f1f15;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px&quot;></textarea><button class=&quot;btn w&quot; style=&quot;margin-top:10px&quot; onclick=&quot;pasteFriend()&quot;>Voir son entreprise</button><button class=&quot;btn s w&quot; style=&quot;margin-top:8px&quot; onclick=&quot;closeM()&quot;>Fermer</button>')">➕ Coller un lien</button></div></div>`}
-/* ---------- Carrière : défis du jour (vrai calendrier), niveaux 1-100, grands chantiers en temps réel ----------
-   Conçu pour ± 3 mois de jeu réel : l'XP vient surtout des défis du jour/de la semaine (une fois par vrai jour)
-   et l'XP des chantiers est plafonnée par vrai jour, donc accélérer le temps du jeu ne suffit pas. */
+/* ---------- Carrière (tout en temps du jeu) : défis du mois et de l'année, niveaux 1-100, 12 grands chantiers ----------
+   Pas de vrai calendrier : tout avance avec les jours du jeu. Les niveaux deviennent de plus en plus longs. */
 const ck=(k,v)=>{const C=st.ck||(st.ck={});C[k]=(C[k]||0)+(v||1)};
-const realKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const weekKey=()=>{const d=new Date(),j=new Date(d.getFullYear(),0,1);return d.getFullYear()+'-S'+Math.ceil(((d-j)/864e5+j.getDay()+1)/7)};
-const xpNeed=l=>150+l*6;
+const gmKey=()=>{const d=date(st.day);return d.getFullYear()+'-'+(d.getMonth()+1)},gyKey=()=>String(date(st.day).getFullYear());
+const xpNeed=l=>Math.round(200+l*l*1.5);
 const TITLES=['Débutant','Ouvrier confirmé','Chef d’équipe','Contremaître','Conducteur de travaux','Chef d’entreprise','Patron reconnu','Grand patron','Capitaine d’industrie','Légende de la route','Légende absolue'];
-const crr=()=>st.car||(st.car={lv:1,xp:0,tot:0,gk:'',gx:0,streak:0,last:'',mega:{},trophy:[]});
+const crr=()=>{const C=st.car||(st.car={lv:1,xp:0,tot:0,streak:0,mega:{},trophy:[]});for(const k in C.mega)if(typeof C.mega[k]==='number'&&C.mega[k]>1e11)C.mega[k]=st.day+30;return C};
 const carTitle=l=>TITLES[Math.min(10,Math.floor(l/10))];
 const carBonus=()=>1+Math.min(.2,Math.floor(crr().lv/5)*.01);
-function addXP(n,src){const C=crr();if(src==='jeu'){const k=realKey();if(C.gk!==k){C.gk=k;C.gx=0}n=Math.max(0,Math.min(n,120-C.gx));C.gx+=n}if(!n)return;
-  C.xp+=n;C.tot+=n;while(C.lv<100&&C.xp>=xpNeed(C.lv)){C.xp-=xpNeed(C.lv);C.lv++;log(`🎖️ Niveau de carrière ${C.lv} : ${carTitle(C.lv)} !${C.lv%5===0?' Bonus : +1 % de travail sur tous les chantiers.':''}`);confetti(150)}
-  if(C.lv>=100)C.xp=Math.min(C.xp,xpNeed(100))}
-// défis : chaque type mesure un compteur st.ck depuis le début du jour réel
+function addXP(n){const C=crr();if(!n||C.lv>=100)return;C.xp+=n;C.tot+=n;
+  while(C.lv<100&&C.xp>=xpNeed(C.lv)){C.xp-=xpNeed(C.lv);C.lv++;log(`🎖️ Niveau de carrière ${C.lv} : ${carTitle(C.lv)} !${C.lv%5===0?' Bonus : +1 % de travail sur tous les chantiers.':''}`);confetti(150)}}
+// défis : chaque type mesure un compteur st.ck depuis le début du mois du jeu
 const DQT=[
-  {k:'prod',ic:'🛠️',t:n=>`Réalise ${eur(n)} de travaux`,n:()=>Math.round(Math.max(3000,ownW()*R(2500,4500))/500)*500},
-  {k:'done',ic:'✅',t:n=>`Termine ${n} chantier(s)`,n:()=>RI(2,Math.max(3,Math.min(12,Math.round(ownW()/8))))},
-  {k:'jobs',ic:'🧰',t:n=>`Termine ${n} petit(s) boulot(s)`,n:()=>RI(2,6)},
-  {k:'won',ic:'🏛️',t:n=>`Gagne ${n} marché(s) public(s)`,n:()=>RI(1,3),ok:()=>st.adm.vca},
-  {k:'bid',ic:'📨',t:n=>`Remets ${n} offre(s) au SPW`,n:()=>RI(2,5),ok:()=>st.adm.vca},
-  {k:'days',ic:'📅',t:n=>`Fais tourner ton entreprise ${n} jours`,n:()=>RI(20,45)},
-  {k:'hire',ic:'👷',t:n=>`Embauche ${n} personne(s)`,n:()=>RI(1,2)},
+  {k:'prod',ic:'🛠️',t:n=>`Réalise ${eur(n)} de travaux`,n:()=>Math.round(Math.max(15000,ownW()*R(9000,15000))/1000)*1000},
+  {k:'done',ic:'✅',t:n=>`Termine ${n} chantier(s)`,n:()=>RI(3,Math.max(4,Math.min(25,Math.round(ownW()/4))))},
+  {k:'jobs',ic:'🧰',t:n=>`Termine ${n} petit(s) boulot(s)`,n:()=>RI(3,10)},
+  {k:'won',ic:'🏛️',t:n=>`Gagne ${n} marché(s) public(s)`,n:()=>RI(1,Math.max(2,Math.min(6,Math.round(ownW()/15)))),ok:()=>st.adm.vca},
+  {k:'bid',ic:'📨',t:n=>`Remets ${n} offre(s) au SPW`,n:()=>RI(3,8),ok:()=>st.adm.vca},
+  {k:'hire',ic:'👷',t:n=>`Embauche ${n} personne(s)`,n:()=>RI(1,3)},
   {k:'prime',ic:'🎁',t:n=>`Donne ${n} prime(s) à ton personnel`,n:()=>1},
   {k:'pv',ic:'🏡',t:n=>`Achète ${n} chose(s) pour ta vie privée`,n:()=>1}];
-function dqGen(){const C=st.ck||(st.ck={}),k=realKey();let D=st.dq;if(D&&D.k===k)return D;
-  const C2=crr(),y=new Date(Date.now()-864e5);C2.streak=C2.last===realKey(y)?C2.streak:(C2.last===k?C2.streak:0);
+const dqX=()=>40+crr().lv*3;
+function dqGen(){const C=st.ck||(st.ck={}),k=gmKey();let D=st.dq;if(D&&D.k===k)return D;
+  const C2=crr();if(D&&!D.all)C2.streak=0;
   const pool=DQT.filter(q=>!q.ok||q.ok()).sort(()=>Math.random()-.5).slice(0,3);
-  D=st.dq={k,list:pool.map(q=>({k:q.k,n:q.n(),b:C[q.k]||0,x:RI(45,65),ok:0}))};
-  const wk=weekKey();if(!st.wq||st.wq.k!==wk){const q=pick(DQT.filter(q=>['prod','done','won','days'].includes(q.k)&&(!q.ok||q.ok())));st.wq={k:wk,q:q.k,n:q.k==='prod'?Math.round(Math.max(30000,ownW()*R(20000,30000))/1000)*1000:q.k==='days'?RI(150,250):q.k==='won'?RI(8,15):RI(15,40),b:C[q.k]||0,x:400,ok:0}}
+  D=st.dq={k,list:pool.map(q=>({k:q.k,n:q.n(),b:C[q.k]||0,x:dqX(),ok:0}))};
+  const yk=gyKey();if(!st.wq||st.wq.k!==yk){const q=pick(DQT.filter(q=>['prod','done','won'].includes(q.k)&&(!q.ok||q.ok())));st.wq={k:yk,q:q.k,n:q.k==='prod'?Math.round(Math.max(200000,ownW()*R(120000,170000))/10000)*10000:q.k==='won'?RI(10,Math.max(12,Math.round(ownW()/2))):RI(30,Math.max(40,ownW()*2)),b:C[q.k]||0,x:dqX()*8,ok:0}}
   return D}
 const dqProg=q=>Math.max(0,((st.ck||{})[q.k]||0)-q.b);
-function dqTick(){if(!st.adm.bce)return;const D=dqGen(),C=crr();let any=0;
-  for(const q of D.list)if(!q.ok&&dqProg(q)>=q.n){q.ok=1;any=1;const bon=Math.round(q.x*(1+Math.min(.5,C.streak*.1)));addXP(bon,'defi');toastMsg(`📋 Défi réussi : ${DQT.find(x=>x.k===q.k).t(q.n)} (+${bon} XP)`)}
-  if(D.list.every(q=>q.ok)&&!D.all){D.all=1;if(C.last!==D.k){C.streak=(C.last===realKey(new Date(Date.now()-864e5))?C.streak:0)+1;C.last=D.k}addXP(60,'defi');toastMsg(`🔥 Les 3 défis du jour sont réussis ! Série : ${C.streak} jour(s) d’affilée.`)}
-  const W=st.wq;if(W&&!W.ok&&Math.max(0,((st.ck||{})[W.q]||0)-W.b)>=W.n){W.ok=1;addXP(W.x,'defi');toastMsg(`🏅 Défi de la semaine réussi ! +${W.x} XP`)}
+function dqTick(){if(!st.adm.bce)return;const D=dqGen(),C=crr();
+  for(const q of D.list)if(!q.ok&&dqProg(q)>=q.n){q.ok=1;const bon=Math.round(q.x*(1+Math.min(.5,C.streak*.1)));addXP(bon);toastMsg(`📋 Défi réussi : ${DQT.find(x=>x.k===q.k).t(q.n)} (+${bon} XP)`,1)}
+  if(D.list.every(q=>q.ok)&&!D.all){D.all=1;C.streak++;addXP(dqX());toastMsg(`🔥 Les 3 défis du mois sont réussis ! Série : ${C.streak} mois d’affilée.`,1)}
+  const W=st.wq;if(W&&!W.ok&&Math.max(0,((st.ck||{})[W.q]||0)-W.b)>=W.n){W.ok=1;addXP(W.x);toastMsg(`🏅 Défi de l’année réussi ! +${W.x} XP`,1)}
   megaTick()}
-// grands chantiers emblématiques : durée réelle (le jeu peut être fermé)
+// grands chantiers emblématiques : durée en jours du jeu, il faut assez de personnel
 const MEGA=[
-  {k:'m1',ic:'🏟️',n:'Abords du nouveau stade de Liège',h:1,lv:2,c:150000,g:260000,x:150,cls:1},
-  {k:'m2',ic:'🌼',n:'Plan wallon de fauchage tardif « Bords de route »',h:3,lv:5,c:300000,g:520000,x:220,cls:1},
-  {k:'m3',ic:'🅿️',n:'Réhabilitation de toutes les aires de la E42',h:8,lv:9,c:600000,g:1050000,x:300,cls:2},
-  {k:'m4',ic:'🛣️',n:'Contrat d’entretien de 100 km de la E411',h:16,lv:14,c:1200000,g:2100000,x:420,cls:2},
-  {k:'m5',ic:'🌉',n:'Nettoyage et sécurisation du viaduc de Huccorgne',h:24,lv:20,c:2000000,g:3500000,x:550,cls:2},
-  {k:'m6',ic:'🏗️',n:'Plan Infrastructures 2030 — lot espaces verts',h:36,lv:27,c:3500000,g:6100000,x:700,cls:3},
-  {k:'m7',ic:'🔄',n:'Entretien complet du ring de Charleroi (R3)',h:48,lv:35,c:5000000,g:8800000,x:850,cls:3},
-  {k:'m8',ic:'❄️',n:'Service d’hiver de toute la province de Luxembourg',h:72,lv:44,c:7000000,g:12300000,x:1000,cls:3},
-  {k:'m9',ic:'🌊',n:'Restauration des berges de la Vesdre après les inondations',h:96,lv:54,c:10000000,g:17500000,x:1200,cls:4},
-  {k:'m10',ic:'🏛️',n:'Bail d’entretien de toutes les autoroutes wallonnes (SOFICO)',h:120,lv:66,c:15000000,g:26000000,x:1500,cls:4},
-  {k:'m11',ic:'🇪🇺',n:'Chantier européen : corridor E40 – E25',h:168,lv:80,c:25000000,g:44000000,x:1800,cls:4},
-  {k:'m12',ic:'👑',n:'Projet légendaire : des routes wallonnes impeccables',h:240,lv:95,c:40000000,g:72000000,x:2500,cls:4}];
+  {k:'m1',ic:'🏟️',n:'Abords du nouveau stade de Liège',d:30,lv:3,w:10,c:150000,g:260000,x:400,cls:1},
+  {k:'m2',ic:'🌼',n:'Plan wallon de fauchage tardif « Bords de route »',d:60,lv:7,w:15,c:300000,g:520000,x:700,cls:1},
+  {k:'m3',ic:'🅿️',n:'Réhabilitation de toutes les aires de la E42',d:90,lv:12,w:25,c:600000,g:1050000,x:1100,cls:2},
+  {k:'m4',ic:'🛣️',n:'Contrat d’entretien de 100 km de la E411',d:120,lv:18,w:35,c:1200000,g:2100000,x:1600,cls:2},
+  {k:'m5',ic:'🌉',n:'Nettoyage et sécurisation du viaduc de Huccorgne',d:150,lv:25,w:45,c:2000000,g:3500000,x:2300,cls:2},
+  {k:'m6',ic:'🏗️',n:'Plan Infrastructures 2030 — lot espaces verts',d:180,lv:33,w:60,c:3500000,g:6100000,x:3200,cls:3},
+  {k:'m7',ic:'🔄',n:'Entretien complet du ring de Charleroi (R3)',d:210,lv:42,w:75,c:5000000,g:8800000,x:4200,cls:3},
+  {k:'m8',ic:'❄️',n:'Service d’hiver de toute la province de Luxembourg',d:240,lv:51,w:90,c:7000000,g:12300000,x:5400,cls:3},
+  {k:'m9',ic:'🌊',n:'Restauration des berges de la Vesdre après les inondations',d:300,lv:61,w:110,c:10000000,g:17500000,x:7000,cls:4},
+  {k:'m10',ic:'🏛️',n:'Bail d’entretien de toutes les autoroutes wallonnes (SOFICO)',d:365,lv:72,w:140,c:15000000,g:26000000,x:9000,cls:4},
+  {k:'m11',ic:'🇪🇺',n:'Chantier européen : corridor E40 – E25',d:450,lv:84,w:180,c:25000000,g:44000000,x:12000,cls:4},
+  {k:'m12',ic:'👑',n:'Projet légendaire : des routes wallonnes impeccables',d:540,lv:95,w:250,c:40000000,g:72000000,x:16000,cls:4}];
 const megaState=k=>crr().mega[k];
 function megaGo(k,ok){const M=MEGA.find(x=>x.k===k),C=crr(),i=MEGA.indexOf(M);if(C.mega[k])return;
   if(i>0&&megaState(MEGA[i-1].k)!=='ok')return toastMsg('Termine d’abord le grand chantier précédent.');
   if(C.lv<M.lv)return toastMsg(`Il faut le niveau de carrière ${M.lv}.`);if(st.cls<M.cls)return toastMsg(`Il faut l’agréation ${CLS[M.cls].n.toLowerCase()}.`);
-  if(st.cash<M.c)return toastMsg(`Il faut ${eur(M.c)} sur le compte pour démarrer.`);
-  if(!ok)return ask(`Lancer le grand chantier ?\nChantier : ${M.n}\nInvestissement de départ : ${eur(M.c)}\nPayé à la fin : ${eur(M.g)}\nDurée réelle : ${M.h<24?M.h+' heure(s)':Math.round(M.h/24)+' jour(s)'}\nUne équipe dédiée (sous-traitants compris) y travaille en vrai temps, même quand le jeu est fermé.`,()=>megaGo(k,1),{ic:M.ic,ok:'Lancer'});
-  mv(-M.c,'Grand chantier : '+M.n,'use');C.mega[k]=Date.now()+M.h*36e5;log(`${M.ic} Grand chantier lancé : ${M.n}. Fin dans ${M.h<24?M.h+' h':Math.round(M.h/24)+' jours'} (temps réel).`);save();closeM();careerUI()}
-function megaTick(){const C=crr();for(const M of MEGA){const v=C.mega[M.k];if(typeof v==='number'&&Date.now()>=v){C.mega[M.k]='ok';C.trophy.push(M.k);mv(M.g,'Grand chantier terminé : '+M.n,'in');st.stats.ca+=M.g;st.rep=clamp(st.rep+3,0,100);addXP(M.x,'mega');log(`${M.ic} Grand chantier terminé : ${M.n} ! +${eur(M.g)}`);confetti(200)}}}
-const left=t=>{const m=Math.max(0,Math.round((t-Date.now())/6e4));return m>=1440?Math.floor(m/1440)+' j '+Math.floor(m%1440/60)+' h':m>=60?Math.floor(m/60)+' h '+m%60+' min':m+' min'};
-function carPct(){const C=crr();const lv=(C.lv-1+Math.min(1,C.xp/xpNeed(C.lv)))/99,mg=MEGA.filter(M=>megaState(M.k)==='ok').length/MEGA.length,gl=Object.keys(st.goals).length/GOALS.length;return Math.min(100,Math.round((lv*.5+mg*.3+gl*.2)*100))}
-function careerUI(){const C=crr();dqGen();const nx=xpNeed(C.lv);let h=`<h3>🎖️ Ta carrière</h3><div class="card pvh"><div class="row" style="flex-wrap:nowrap"><div style="font-size:42px;line-height:1;margin-right:12px">🎖️</div><div style="flex:1;min-width:0"><div class="mut sm">Niveau ${C.lv} / 100</div><h3 style="color:var(--or2)">${carTitle(C.lv)}</h3><div class="mut sm">Bonus permanent : +${Math.round((carBonus()-1)*100)} % de travail · 🔥 série ${C.streak} jour(s)</div></div></div>
-  <div class="pvbar"><i style="width:${C.lv>=100?100:Math.round(C.xp/nx*100)}%"></i></div><div class="mut sm">${C.lv>=100?'Niveau maximum !':`${C.xp} / ${nx} XP`} · XP des chantiers aujourd’hui : ${C.gk===realKey()?C.gx:0} / 120</div></div>
-  <div class="card"><b>🏁 Le jeu est fini à ${carPct()} %</b><div class="pvbar"><i style="width:${carPct()}%"></i></div><div class="mut sm">Niveau 100, les 12 grands chantiers et les ${GOALS.length} succès. Les défis changent chaque vrai jour : reviens tous les jours !</div></div>
-  <h2>🏗️ Grands chantiers (temps réel)</h2>`;
-  MEGA.forEach((M,i)=>{const v=C.mega[M.k],prevOk=i===0||megaState(MEGA[i-1].k)==='ok',lock=!prevOk||C.lv<M.lv||st.cls<M.cls;if(!prevOk&&i>0&&megaState(MEGA[i-1].k)!=='ok'&&i>MEGA.findIndex(x=>!C.mega[x.k]||C.mega[x.k]!=='ok')+1)return;
-    h+=`<div class="card" style="${v==='ok'?'border-color:var(--gr)':typeof v==='number'?'border-color:var(--bl)':''}"><div class="hd"><div class="ic">${M.ic}</div><div style="flex:1;min-width:0"><h3>${M.n}</h3><div class="mut sm">Durée réelle : ${M.h<24?M.h+' h':Math.round(M.h/24)+' jour(s)'} · investi ${eur(M.c)} → payé ${eur(M.g)} · +${M.x} XP</div></div></div>
-    <div class="tags">${v==='ok'?'<span class="tag g">🏆 Terminé</span>':typeof v==='number'?`<span class="tag b">⏳ encore ${left(v)}</span>`:lock?`<span class="tag r">🔒 ${!prevOk?'chantier précédent':C.lv<M.lv?'niveau '+M.lv:CLS[M.cls].n}</span>`:''}</div>
+  if(ownW()<M.w)return toastMsg(`Il faut au moins ${M.w} personnes dans l’entreprise.`);if(st.cash<M.c)return toastMsg(`Il faut ${eur(M.c)} sur le compte pour démarrer.`);
+  if(!ok)return ask(`Lancer le grand chantier ?\nChantier : ${M.n}\nInvestissement de départ : ${eur(M.c)}\nPayé à la fin : ${eur(M.g)}\nDurée : ${M.d} jours\nUne équipe dédiée (avec des sous-traitants) s’en occupe pendant que ton entreprise continue ses autres chantiers.`,()=>megaGo(k,1),{ic:M.ic,ok:'Lancer'});
+  mv(-M.c,'Grand chantier : '+M.n,'use');C.mega[k]=st.day+M.d;log(`${M.ic} Grand chantier lancé : ${M.n}. Fin le ${dstr(C.mega[k])} ${date(C.mega[k]).getFullYear()}.`);save();closeM();careerUI()}
+function megaTick(){const C=crr();for(const M of MEGA){const v=C.mega[M.k];if(typeof v==='number'&&st.day>=v){C.mega[M.k]='ok';C.trophy.push(M.k);mv(M.g,'Grand chantier terminé : '+M.n,'in');st.stats.ca+=M.g;{const y=date(st.day).getFullYear(),Y=st.caY||(st.caY={});Y[y]=(Y[y]||0)+M.g}st.rep=clamp(st.rep+3,0,100);addXP(M.x);log(`${M.ic} Grand chantier terminé : ${M.n} ! +${eur(M.g)}`);confetti(200)}}}
+const left=t=>{const n=Math.max(0,t-st.day);return n+' jour(s)'};
+function carPct(){const C=crr();const lv=(C.lv-1+Math.min(1,C.xp/xpNeed(C.lv)))/99,mg=MEGA.filter(M=>megaState(M.k)==='ok').length/MEGA.length,gl=Object.keys(st.goals).filter(k=>GOALS.some(g=>g.k===k)).length/GOALS.length;return Math.min(100,Math.round((lv*.5+mg*.25+gl*.25)*100))}
+function careerUI(){const C=crr();dqGen();const nx=xpNeed(C.lv);let h=`<h3>🎖️ Ta carrière</h3><div class="card pvh"><div class="row" style="flex-wrap:nowrap"><div style="font-size:42px;line-height:1;margin-right:12px">🎖️</div><div style="flex:1;min-width:0"><div class="mut sm">Niveau ${C.lv} / 100</div><h3 style="color:var(--or2)">${carTitle(C.lv)}</h3><div class="mut sm">Bonus permanent : +${Math.round((carBonus()-1)*100)} % de travail · 🔥 série ${C.streak} mois</div></div></div>
+  <div class="pvbar"><i style="width:${C.lv>=100?100:Math.round(C.xp/nx*100)}%"></i></div><div class="mut sm">${C.lv>=100?'Niveau maximum !':`${nb(C.xp)} / ${nb(nx)} XP`} · gagne de l’XP en finissant des chantiers, des défis et des grands chantiers</div></div>
+  <div class="card"><b>🏁 Le jeu est fini à ${carPct()} %</b><div class="pvbar"><i style="width:${carPct()}%"></i></div><div class="mut sm">Pour tout finir : niveau 100, les 12 grands chantiers et les ${GOALS.length} succès (🏆 dans 📊 Entreprise).</div></div>
+  <h2>🏗️ Grands chantiers</h2>`;
+  let shown=0;MEGA.forEach((M,i)=>{const v=C.mega[M.k],prevOk=i===0||megaState(MEGA[i-1].k)==='ok';if(!prevOk&&shown>=1&&!v)return;if(!prevOk)shown++;const lock=!prevOk||C.lv<M.lv||st.cls<M.cls||ownW()<M.w;
+    h+=`<div class="card" style="${v==='ok'?'border-color:var(--gr)':typeof v==='number'?'border-color:var(--bl)':''}"><div class="hd"><div class="ic">${M.ic}</div><div style="flex:1;min-width:0"><h3>${M.n}</h3><div class="mut sm">${M.d} jours · ${M.w} personnes · investi ${eur(M.c)} → payé ${eur(M.g)} · +${nb(M.x)} XP</div></div></div>
+    <div class="tags">${v==='ok'?'<span class="tag g">🏆 Terminé</span>':typeof v==='number'?`<span class="tag b">⏳ encore ${left(v)}</span>`:lock?`<span class="tag r">🔒 ${!prevOk?'chantier précédent':C.lv<M.lv?'niveau '+M.lv:st.cls<M.cls?CLS[M.cls].n:M.w+' personnes'}</span>`:''}</div>
     ${!v&&!lock?`<button class="btn" style="margin-top:10px" ${st.cash<M.c?'disabled':''} onclick="megaGo('${M.k}')">Lancer</button>`:''}</div>`});
   showModal(h+'<button class="btn s w" onclick="closeM()">Fermer</button>')}
 function dqCard(){if(!st.adm.bce)return'';const D=dqGen(),C=crr(),W=st.wq,run=MEGA.find(M=>typeof C.mega[M.k]==='number');
-  return`<div class="card acc" style="--ac:var(--vi)"><div class="row" style="flex-wrap:nowrap"><h3 style="flex:1">📋 Défis du jour</h3><button class="btn s" style="padding:6px 10px" onclick="click();careerUI()">🎖️ Niv. ${C.lv}</button></div>
+  return`<div class="card acc" style="--ac:var(--vi)"><div class="row" style="flex-wrap:nowrap"><h3 style="flex:1">📋 Défis du mois</h3><button class="btn s" style="padding:6px 10px" onclick="click();careerUI()">🎖️ Niv. ${C.lv}</button></div>
   ${D.list.map(q=>{const T=DQT.find(x=>x.k===q.k),p=Math.min(q.n,dqProg(q));return`<div style="margin-top:8px"><div class="row sm" style="flex-wrap:nowrap"><span style="flex:1">${q.ok?'✅':T.ic} ${T.t(q.n)}</span><b class="${q.ok?'money':''}">${q.ok?'+'+q.x+' XP':(q.k==='prod'?eur(p):p)+' / '+(q.k==='prod'?eur(q.n):q.n)}</b></div><div class="pvbar" style="margin:4px 0 0;height:6px"><i style="width:${Math.round(p/q.n*100)}%"></i></div></div>`}).join('')}
-  ${W?`<div class="mut sm" style="margin-top:10px">🏅 Semaine : ${DQT.find(x=>x.k===W.q).t(W.n)} — ${W.ok?'✅ réussi':(W.q==='prod'?eur(Math.max(0,(st.ck[W.q]||0)-W.b)):Math.max(0,(st.ck[W.q]||0)-W.b))+' / '+(W.q==='prod'?eur(W.n):W.n)} (+${W.x} XP)</div>`:''}
-  <div class="mut sm" style="margin-top:6px">🔥 Série : ${C.streak} jour(s) · nouveaux défis demain${run?` · ${run.ic} grand chantier : encore ${left(C.mega[run.k])}`:''}</div></div>`}
+  ${W?`<div class="mut sm" style="margin-top:10px">🏅 Année ${W.k} : ${DQT.find(x=>x.k===W.q).t(W.n)} — ${W.ok?'✅ réussi':(W.q==='prod'?eur(Math.max(0,(st.ck[W.q]||0)-W.b)):Math.max(0,(st.ck[W.q]||0)-W.b))+' / '+(W.q==='prod'?eur(W.n):W.n)} (+${nb(W.x)} XP)</div>`:''}
+  <div class="mut sm" style="margin-top:6px">🔥 Série : ${C.streak} mois · nouveaux défis le 1er du mois${run?` · ${run.ic} grand chantier : encore ${left(C.mega[run.k])}`:''}</div></div>`}
 /* ---------- Publicité : plus de demandes de petits boulots (tarifs moyens d'agences belges) ---------- */
 const ADS={
   web:{n:'Site internet + fiche Google',ic:'🌐',p:1900,m:25,b:.12,d:'Les clients te trouvent sur Google : +12 % de demandes.'},
@@ -807,7 +837,7 @@ function genTender(forceJob,urgent){
   // invitation : en faible montant et négociée, il faut être invité
   if(proc!=='po'){const pInv=.3+st.rep/140+(has('dirc')?.25:0)+(st.stats.spw>0?.1:0);if(!urgent&&Math.random()>pInv)return}
   // montant maximum réaliste d'un lot pour ce type de travaux
-  const VMAX={aires:150000,panneaux:150000,invasives:200000,abattage:300000,glissieres:300000,avaloirs:300000,dechets:400000,balayage:400000,elagage:400000,debrous:500000,fosses:500000,fauchage:600000,marquage:600000,deneig:600000,nids:800000,glis_pose:1200000};
+  const VMAX={souches:150000,desherbspw:200000,enherb:300000,trottoirs:600000,bassins:500000,talus:500000,lavage:400000,autoroute:900000,tunnels:700000,marq_auto:1500000,deneig_auto:1200000,balay_auto:700000,aires:150000,panneaux:150000,invasives:200000,abattage:300000,glissieres:300000,avaloirs:300000,dechets:400000,balayage:400000,elagage:400000,debrous:500000,fosses:500000,fauchage:600000,marquage:600000,deneig:600000,nids:800000,glis_pose:1200000};
   V=Math.min(V,(VMAX[j]||400000)*(st.cls>=4?10:st.cls>=3?4:1));
   const q=Math.max(J.q0,Math.round(V/(trueUnit(j)*COEF)));
   const nRef=Math.min(Math.max(J.minW,V>1.4e6?40:8),Math.max(J.minW,Math.ceil(q/(J.rate*(V>1.4e6?160:90)))));
@@ -837,7 +867,7 @@ const reqHtml=r=>'<div class="req">'+r.map(x=>`<span style="color:${x.ok?'#9df0b
 function freeEq(t,ex){let u=0;for(const c of st.contracts)if(c.st==='run'&&c!==ex)u+=(c.own[t]||0);return(st.eq[t]||0)-u}
 function freeW(ex){const busy=new Set();for(const c of st.contracts)if(c.st==='run'&&c!==ex)c.crew.forEach(i=>busy.add(i));return field().filter(w=>!busy.has(w.id))}
 // Location chez un loueur (Boels, Loxam…) quand ta machine est déjà prise : tarifs journaliers HTVA (estimations des tarifs publics, sans chauffeur)
-const RENT={taillehaie:30,souffleur:30,debrou:35,tondeuse:40,remorque:35,signal:25,karcher:75,fleche:60,broyeur:140,van:95,nacelle:250,balayeuse:420,tracteur:380,hydro:550,trons:35,plaque:45,batteuse:90,benne:110,pelle:160,traceuse:180,saleuse:150,benne19:350};
+const RENT={aspifeuilles:70,rogneuse:120,rouleau:110,tondap:130,desherb:190,chargeuse:170,fourgon:110,hydroseed:220,telesc:240,tma:420,laveuse:650,balaygr:700,epandeur:600,tunnel:900,marqauto:1100,taillehaie:30,souffleur:30,debrou:35,tondeuse:40,remorque:35,signal:25,karcher:75,fleche:60,broyeur:140,van:95,nacelle:250,balayeuse:420,tracteur:380,hydro:550,trons:35,plaque:45,batteuse:90,benne:110,pelle:160,traceuse:180,saleuse:150,benne19:350};
 function eqPlan(j,ex){const own={},rent={},miss=[];let day=0;for(const t of JOBS[j].need){if(freeEq(t,ex)>0){own[t]=1;day+=EQ[t].u}else if(RENT[t]){rent[t]=1;day+=RENT[t]+EQ[t].u}else miss.push(t)}return{own,rent,miss,day}}
 // prix de revient vu par le joueur : exact avec un métreur, approximatif sinon
 function seenCost(t,p){const f=has('metreur')?1:1+t.noise;return p.c*f}
@@ -998,7 +1028,7 @@ function aidList(){const L=[];const emp=st.workers.filter(w=>!w.boss).sort((a,b)
   emp.slice(0,5).forEach((w,i)=>L.push([`Réduction ONSS premiers engagements (${i+1}${i?'e':'er'} : ${w.n.split(' ')[0]})`,R1[i]]));
   emp.forEach(w=>{if(ROLES[w.r].cat==='ouv'&&(w.age??cvOf(w).age)<25&&st.day-(w.hd||0)<730)L.push([`Impulsion -25 ans (Forem) : ${w.n.split(' ')[0]}`,500])});return L}
 function payAids(){const t=aidList().reduce((a,x)=>a+x[1],0);if(t>0){mv(t,'Aides à l’emploi (ONSS premiers engagements, Impulsion -25 ans)','aid');log(`🤝 Aides à l'emploi reçues : +${eur(t)}`,false)}}
-function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c),1);ck('done');if(J.p)ck('jobs');addXP(J.p?2:6,'jeu');
+function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c),1);ck('done');if(J.p)ck('jobs');addXP(J.p?3:10);
   const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);const avg=crew.reduce((a,w)=>a+w.sk,0)/Math.max(1,crew.length);
   const n=Math.max(0,c.wd-c.N),late=n>0;
   // amende pour retard (art. 86 RGE) : R = 0,45 × M × n² / N², maximum 5 %
@@ -1183,7 +1213,48 @@ const GOALS=[
   {k:'g26',t:'Entre en bourse sur Euronext Brussels',ok:()=>!!st.ipo},
   {k:'g27',t:'Filiales dans les 6 pays',ok:()=>Object.keys(st.fil||{}).length>=6},
   {k:'g28',t:'Crée ta fondation et donne 5 millions €',ok:()=>(st.fond||0)>=5e6},
-  {k:'g29',t:'Valeur de ton groupe : 1 milliard € — légende de l’entretien routier',ok:()=>grpValue()>=1e9}];
+  {k:'g29',t:'Valeur de ton groupe : 1 milliard € — légende de l’entretien routier',ok:()=>grpValue()>=1e9},
+  {k:'h1',t:'Gagne 50 marchés publics',ok:()=>st.stats.won>=50},
+  {k:'h2',t:'Termine 100 chantiers',ok:()=>st.stats.done>=100},
+  {k:'h3',t:'Niveau de carrière 10',ok:()=>crr().lv>=10},
+  {k:'h4',t:'Équipe de 30 personnes',ok:()=>ownW()>=30},
+  {k:'h5',t:'10 véhicules',ok:()=>vehCount()>=10},
+  {k:'h6',t:'3 dépôts',ok:()=>xs().length>=2},
+  {k:'h7',t:'Réussis les défis 6 mois d’affilée',ok:()=>crr().streak>=6},
+  {k:'h8',t:'CA de 2 millions € sur un an',ok:()=>caRecent()>=2e6},
+  {k:'h9',t:'Forme 10 ouvriers (formateur ou école)',ok:()=>((st.rs||{}).form||0)>=10},
+  {k:'h10',t:'Rachète 3 concurrents',ok:()=>(st.grp||[]).length>=3},
+  {k:'h11',t:'Termine 3 grands chantiers',ok:()=>MEGA.filter(M=>crr().mega[M.k]==='ok').length>=3},
+  {k:'h12',t:'Niveau de carrière 25',ok:()=>crr().lv>=25},
+  {k:'h13',t:'Gagne 100 marchés publics',ok:()=>st.stats.won>=100},
+  {k:'h14',t:'Équipe de 50 personnes',ok:()=>ownW()>=50},
+  {k:'h15',t:'CA de 5 millions € sur un an',ok:()=>caRecent()>=5e6},
+  {k:'h16',t:'25 véhicules',ok:()=>vehCount()>=25},
+  {k:'h17',t:'Termine 500 chantiers',ok:()=>st.stats.done>=500},
+  {k:'h18',t:'Une filiale au niveau 3',ok:()=>Object.values(st.fil||{}).some(f=>f.lv>=3)},
+  {k:'h19',t:'5 dépôts',ok:()=>xs().length>=4},
+  {k:'h20',t:'Termine 6 grands chantiers',ok:()=>MEGA.filter(M=>crr().mega[M.k]==='ok').length>=6},
+  {k:'h21',t:'Niveau de carrière 50',ok:()=>crr().lv>=50},
+  {k:'h22',t:'Réussis les défis 12 mois d’affilée',ok:()=>crr().streak>=12},
+  {k:'h23',t:'Équipe de 100 personnes',ok:()=>ownW()>=100},
+  {k:'h24',t:'CA de 25 millions € sur un an',ok:()=>caRecent()>=25e6},
+  {k:'h25',t:'Gagne 250 marchés publics',ok:()=>st.stats.won>=250},
+  {k:'h26',t:'Rachète tous les concurrents de Wallonie',ok:()=>!st.riv.some(r=>r.sz>=1)},
+  {k:'h27',t:'Toutes tes filiales au niveau 3 (6 pays)',ok:()=>Object.keys(st.fil||{}).length>=6&&Object.values(st.fil).every(f=>f.lv>=3)},
+  {k:'h28',t:'50 véhicules',ok:()=>vehCount()>=50},
+  {k:'h29',t:'Forme 50 ouvriers',ok:()=>((st.rs||{}).form||0)>=50},
+  {k:'h30',t:'Termine 9 grands chantiers',ok:()=>MEGA.filter(M=>crr().mega[M.k]==='ok').length>=9},
+  {k:'h31',t:'Niveau de carrière 75',ok:()=>crr().lv>=75},
+  {k:'h32',t:'Équipe de 200 personnes',ok:()=>ownW()>=200},
+  {k:'h33',t:'Termine 1 000 chantiers',ok:()=>st.stats.done>=1000},
+  {k:'h34',t:'CA de 50 millions € sur un an',ok:()=>caRecent()>=5e7},
+  {k:'h35',t:'Ta fondation a donné 50 millions €',ok:()=>(st.fond||0)>=5e7},
+  {k:'h36',t:'Patrimoine privé de 100 millions €',ok:()=>pvWorth()>=1e8},
+  {k:'h37',t:'Gagne 500 marchés publics',ok:()=>st.stats.won>=500},
+  {k:'h38',t:'Termine les 12 grands chantiers',ok:()=>MEGA.every(M=>crr().mega[M.k]==='ok')},
+  {k:'h39',t:'CA de 100 millions € sur un an',ok:()=>caRecent()>=1e8},
+  {k:'h41',t:'Possède au moins une machine de chaque sorte (37 machines)',ok:()=>Object.keys(EQ).every(k=>st.eq[k]>0)},
+  {k:'h40',t:'Niveau de carrière 100 : légende absolue',ok:()=>crr().lv>=100}];
 // Confettis (au-dessus de tout)
 const fxc=$('#fx'),fg=fxc.getContext('2d');let conf=[];
 let confT=0;function confetti(n){const now=performance.now();if(document.hidden||conf.length||(typeof speed!=='undefined'&&speed>=3&&!modalOpen)||now-confT<8000)return;confT=now;n=Math.min(n||120,160);const W=innerWidth,H=innerHeight;if(fxc.width!==W||fxc.height!==H){fxc.width=W;fxc.height=H}for(let i=0;i<n;i++)conf.push({x:W/2+R(-60,60),y:H*.35,vx:R(-260,260),vy:R(-520,-180),r:R(3,6),c:pick(['#ffd23f','#ff9a1f','#4fdc7a','#4fb3ff','#ff5d57','#b48cff','#fff']),a:R(0,6),va:R(-10,10),l:R(1.6,2.6)});if(!confRun)confLoop(performance.now())}
@@ -1447,7 +1518,7 @@ function importUI(){showModal(`<h3>📥 Charger une sauvegarde</h3><p class="mut
 function importGo(){try{const s=JSON.parse(decodeURIComponent(escape(atob($('#sv').value.trim()))));if(!s.workers)throw 0;st=migrate(s);save();closeM();render();toastMsg('Sauvegarde chargée ✓')}catch(e){toastMsg('Code invalide')}}
 
 /* ---------- Chargement ---------- */
-setInterval(()=>{try{if(st&&st.adm&&st.adm.bce&&playing){const C=crr(),b=JSON.stringify(C.mega);megaTick();if(JSON.stringify(C.mega)!==b){save();render()}}}catch(e){}},15000);
+
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 st=load();
 if(st&&st.over){if((st.prj||0)<2){st.over=false;setTimeout(()=>{rescue();render()},900)}else setTimeout(failUI,900)}
@@ -1606,7 +1677,7 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
   return h}
 function rMt(){let h=goalCard()+siteCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
   // regroupés par type : du petit matériel aux véhicules, et du moins cher au plus cher dans chaque groupe
-  const EQG=[['🚚 Véhicules',['van','benne','benne19','nacelle','hydro','balayeuse']],['🚜 Engins et machines',['tracteur','pelle','broyeur','traceuse','saleuse','batteuse']],['🚧 Signalisation et remorques',['fleche','signal','remorque']]];
+  const EQG=[['🚚 Véhicules',['van','fourgon','benne','benne19','nacelle','hydro','balayeuse']],['🚛 Camions spéciaux (autoroutes)',['tma','laveuse','balaygr','epandeur','tunnel','marqauto']],['🚜 Engins et machines',['tracteur','telesc','tondap','pelle','chargeuse','rouleau','broyeur','traceuse','saleuse','batteuse','hydroseed','desherb']],['🚧 Signalisation et remorques',['fleche','signal','remorque']]];
   const inG=new Set(EQG.flatMap(g=>g[1]));EQG.push(['🧰 Petit matériel',Object.keys(EQ).filter(k=>!inG.has(k))]);EQG.reverse();
   for(const [gn,keys] of EQG){const ks=keys.filter(k=>EQ[k]).sort((a,b)=>EQ[a].p-EQ[b].p);if(!ks.length)continue;h+=`<h2>${gn}</h2>`;
   for(const t of ks){const e=EQ[t],n=st.eq[t]||0,f=freeEq(t);const jobs=Object.values(JOBS).filter(J=>J.need.includes(t));
@@ -1631,7 +1702,7 @@ const IMG={sandero:['fr:Dacia Sandero','en:Dacia Sandero'],vwgolf:['fr:Volkswage
   chalet:['fr:Chalet','en:Chalet'],cote:['fr:Knokke-Heist','fr:Côte belge'],zodiac:['fr:Bateau pneumatique semi-rigide','en:Rigid inflatable boat'],moteur:['en:Motorboat','fr:Bateau à moteur'],voilier:['fr:Voilier','en:Sailboat'],
   yacht:['fr:Azimut Yachts','en:Azimut Yachts','en:Motor yacht'],superyacht:['en:Superyacht','fr:Yacht'],gigayacht:['en:Lürssen','fr:Lürssen'],bugatti:['fr:Bugatti Chiron','en:Bugatti Chiron'],phenom:['fr:Embraer Phenom 300','en:Embraer Phenom 300'],g700:['en:Gulfstream G700','fr:Gulfstream G700'],foot:['fr:Challenger Pro League','en:Challenger Pro League'],capferrat:['fr:Saint-Jean-Cap-Ferrat','en:Saint-Jean-Cap-Ferrat'],vigne:['fr:Saint-Émilion','en:Saint-Émilion'],rolex:['fr:Rolex Submariner','en:Rolex Submariner'],cheval:['fr:Selle français','en:Horse'],piscine:['fr:Piscine','en:Swimming pool'],
   cessna:['fr:Cessna 172','en:Cessna 172'],helico:['fr:Robinson R44','en:Robinson R44'],canaries:['fr:Tenerife','en:Tenerife'],croisiere:['en:Cruise ship','fr:Paquebot de croisière'],dubai:['fr:Burj Khalifa','en:Burj Khalifa'],f1:['fr:Circuit de Spa-Francorchamps','en:Circuit de Spa-Francorchamps'],
-  eq_taillehaie:['fr:Taille-haie','en:Hedge trimmer'],eq_souffleur:['fr:Souffleur de feuilles','en:Leaf blower'],eq_debrou:['fr:Débroussailleuse','en:String trimmer'],eq_tondeuse:['fr:Tondeuse à gazon','en:Lawn mower'],
+  eq_tondap:['en:Riding mower','fr:Tondeuse autoportée'],eq_rogneuse:['en:Stump grinder','fr:Rogneuse de souches'],eq_rouleau:['fr:Compacteur','en:Road roller'],eq_chargeuse:['en:Skid-steer loader','fr:Chargeuse compacte'],eq_fourgon:['fr:Volkswagen Crafter','en:Volkswagen Crafter'],eq_hydroseed:['en:Hydroseeding','fr:Hydroensemencement'],eq_tma:['en:Truck-mounted attenuator','fr:Atténuateur de chocs'],eq_laveuse:['en:Street sweeper','fr:Balayeuse'],eq_epandeur:['en:Winter service vehicle','fr:Saleuse'],eq_marqauto:['en:Road surface marking','fr:Marquage routier'],eq_telesc:['en:Flail mower','fr:Épareuse'],eq_taillehaie:['fr:Taille-haie','en:Hedge trimmer'],eq_souffleur:['fr:Souffleur de feuilles','en:Leaf blower'],eq_debrou:['fr:Débroussailleuse','en:String trimmer'],eq_tondeuse:['fr:Tondeuse à gazon','en:Lawn mower'],
   eq_remorque:['en:Trailer (vehicle)','fr:Remorque (véhicule)'],eq_signal:['fr:Cône de signalisation','en:Traffic cone'],eq_karcher:['fr:Nettoyeur haute pression','en:Pressure washer'],
   eq_broyeur:['fr:Broyeur de végétaux','en:Woodchipper'],eq_van:['fr:Ford Transit','en:Ford Transit'],eq_nacelle:['fr:Nacelle élévatrice','en:Aerial work platform'],eq_balayeuse:['en:Street sweeper','fr:Balayeuse de voirie'],
   eq_tracteur:['fr:Épareuse','en:Flail mower'],eq_hydro:['fr:Hydrocureuse','en:Vacuum truck'],eq_trons:['fr:Tronçonneuse','en:Chainsaw'],eq_plaque:['en:Plate compactor','fr:Plaque vibrante'],
@@ -2049,7 +2120,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.10";
+var APPV="2026-11-05.11";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
