@@ -861,7 +861,7 @@ function tick(){
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
   events(work);goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
   if(st.cash<-overdraft()&&!st.over)rescue();
-  save();render();
+  save();renderTick();
 }
 // Bénéfice du mois (trésorerie + investissements − amortissements) → cotisations sociales et impôts
 // Mouvement sur le compte en banque (relevé + bilan du mois)
@@ -992,7 +992,9 @@ function strHash(t){let h=2166136261;for(const c of String(t))h=Math.imul(h^c.ch
 function rng(seed){let x=(seed>>>0)||1;return()=>{x^=x<<13;x>>>=0;x^=x>>>17;x^=x<<5;x>>>=0;return x/4294967296}}
 const nextName=r=>ROLES[r].who||GESTN.find(x=>!st.workers.some(w=>w.n===x))||pick(PREN)+' '+pick(NOMS);
 // Portrait dessiné (SVG), toujours le même pour une même personne
-function avatar(w,sz){const f=isF(w.n),g=rng(strHash(w.n+'|'+(w.r||'')));const cat=ROLES[w.r]?ROLES[w.r].cat:'ouv';
+const AVC=new Map();
+function avatar(w,sz){const kk=w.n+'|'+w.r+'|'+w.skin+'|'+sz;let v=AVC.get(kk);if(v)return v;if(AVC.size>600)AVC.clear();v=avatar0(w,sz);AVC.set(kk,v);return v}
+function avatar0(w,sz){const f=isF(w.n),g=rng(strHash(w.n+'|'+(w.r||'')));const cat=ROLES[w.r]?ROLES[w.r].cat:'ouv';
   const skin=SKIN[w.skin??Math.floor(g()*SKIN.length)],age=cvOf(w).age,hairC=age>=50&&g()<.65?pick2r(g,['#8a8a8a','#b9b9b9']):pick2r(g,['#2b1b10','#4a2c17','#6b4423','#a8743f','#d9b26a','#1c1c1c','#b5432a']);
   const bg=pick2r(g,['#ffd79a','#bfe3ff','#c8f0d2','#f6c6d0','#e2d4ff','#ffe7a3']);
   let body;if(w.boss)body=`<path d="M10 100 Q14 74 50 70 Q86 74 90 100Z" fill="#2c3e50"/><path d="M42 72 L50 86 L58 72Z" fill="#fff"/>`;
@@ -1381,7 +1383,9 @@ function cashFx(){const el=$('#cash');if(shownCash===null){shownCash=st.cash;el.
   const b=el.getBoundingClientRect(),f=document.createElement('div');f.className='fly';f.style.left=(b.left+4)+'px';f.style.top=(b.bottom+2)+'px';f.style.color=d>0?'#7dffa6':'#ff9b96';f.textContent=(d>0?'+':'')+eur(d);document.body.appendChild(f);setTimeout(()=>f.remove(),1400);
   const from=shownCash,to=st.cash,t0=performance.now();shownCash=to;(function step(n){const k=Math.min(1,(n-t0)/600),v=from+(to-from)*(1-Math.pow(1-k,3));el.textContent=eur(v);if(k<1)requestAnimationFrame(step)})(t0)}
 let lastTab=null;
-function render(){
+// pendant le jeu rapide, la liste (surtout l'Équipe avec ses portraits) n'est redessinée que toutes les 0,8 à 1,5 s : plus fluide sur téléphone
+let lastPaneT=0;function renderTick(){const now=performance.now(),gap=speed>=3?1500:speed===2?800:0;render(gap&&now-lastPaneT<gap&&!modalOpen)}
+function render(headOnly){
   cashFx();$('#cash').classList.toggle('neg',st.cash<0);
   $('#tname').textContent=st.name;$('#lt').textContent=st.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'RN';{const n=Object.keys(st.goals).length;$('#lvl').textContent=n+1;$('#logo').style.setProperty('--lv',Math.round(n/GOALS.length*100)+'%')}
   $('#tsub').textContent=`${stars(st.rep)} ${Math.round(st.rep)} · ${st.cls?CLS[st.cls].n:st.adm.bce?'Entreprise inscrite':'Pas encore inscrit'} · ${ownW()} pers.`;
@@ -1393,6 +1397,7 @@ function render(){
   cleanReports();const nR=st.reports.filter(r=>!r.done).length;if(nR)$('[data-t=eq]').insertAdjacentHTML('beforeend',`<span class="bd">${nR}</span>`);
   if(nWait)$('[data-t=ch]').insertAdjacentHTML('beforeend',`<span class="bd">${nWait}</span>`);
   if(nJob&&!st.contracts.length)$('[data-t=pb]').insertAdjacentHTML('beforeend',`<span class="bd">${nJob}</span>`);
+  if(headOnly===true)return;lastPaneT=performance.now();
   const P=$('#pane'),y=P.scrollTop;P.classList.toggle('enter',lastTab!==curTab+aoTab+eqTab);lastTab=curTab+aoTab+eqTab;const fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=({ch:rCh,pb:rPb,ao:rAo,eq:rEq,mt:rMt,bi:rBi,pv:rPv})[curTab]();P.scrollTop=y;
 }
 function goalCard(){const g=curGoal();return g?`<div class="goal"><span class="gi">🎯</span><div><b>Objectif</b><div>${g.t}</div></div></div>`:''}
@@ -1927,7 +1932,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.4";
+var APPV="2026-11-05.5";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
