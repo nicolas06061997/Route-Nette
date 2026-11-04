@@ -905,9 +905,32 @@ function unionTick(){const x=date(st.day),emp=field().filter(w=>!w.boss);if(!emp
   if(x.getMonth()===11&&x.getDate()===15){const c=emp.length*250;mv(-c,`Éco-chèques de fin d’année (${emp.length} ouvriers × 250 €, CP 145.04)`,'sal');log(`🧾 Éco-chèques versés : ${eur(c)} (obligatoires dans le secteur des jardins).`,false)}
   if(x.getMonth()===0&&x.getDate()===15&&x.getFullYear()%2===1&&emp.length>=5){const D=st.dec||(st.dec=[]);if(!D.some(d=>d.k==='syndic'))D.push({id:st.nid++,k:'syndic',exp:st.day+30,t:`Négociation avec les syndicats (FGTB, CSC) : ils demandent +2 % de salaire pour tes ${emp.length} ouvriers.`});log('✊ Les syndicats demandent à négocier (📬 Décisions du patron).')}}
 // accidents de chantier
-function accidentTick(){for(const c of running()){if(!c.crew.length)continue;const p=.0005*c.crew.length*(has('prev')?.6:1)*(c.vd!==undefined&&st.day-c.vd<30?.6:1);if(Math.random()>p)continue;
+function accidentTick(){for(const c of running()){if(!c.crew.length)continue;const p=.0003*c.crew.length*(has('prev')?.6:1)*(c.vd!==undefined&&st.day-c.vd<30?.6:1);if(Math.random()>p)continue;
   const w=st.workers.find(x=>x.id===pick(c.crew));if(!w||w.boss)continue;w.off=st.day+RI(5,30);c.crew=c.crew.filter(i=>i!==w.id);const k=RI(800,4000);mv(-k,'Accident du travail (franchise, jours non couverts)','other');st.rep=clamp(st.rep-1,0,100);
-  log(`🚑 Accident du travail : ${w.n} est blessé(e) sur le chantier ${JOBS[c.j].n} et absent(e) jusqu’au ${dstr(w.off)}. Déclaration à l’assurance faite. ${has('prev')?'':'Un conseiller en prévention et des visites de chantier réduisent les accidents.'}`)}}
+  log(`🚑 Accident du travail : ${w.n} est blessé(e) sur le chantier ${JOBS[c.j].n} et absent(e) jusqu’au ${dstr(w.off)}. Déclaration à l’assurance faite. ${has('prev')?'':'Un conseiller en prévention et des visites de chantier réduisent les accidents.'}`);try{lawOpen(c,w)}catch(e){}}}
+// Procès après un accident : seulement si le patron a fait des fautes de sécurité (loi sur les accidents du travail, art. 46 :
+// l'ouvrier peut attaquer l'employeur qui a gravement manqué au bien-être au travail ; l'inspection peut aussi infliger une amende pénale sociale)
+function lawOpen(c,w){const why=[];if(Object.keys(c.own||{}).some(t=>wear(t)>70))why.push('une machine usée à plus de 70 % n’avait pas été révisée');
+  if(c.vd===undefined||st.day-c.vd>30)why.push('tu n’avais pas fait de visite de chantier depuis plus d’un mois');if(!has('prev')&&ownW()>=15)why.push('pas de conseiller en prévention alors que l’entreprise a plus de 15 personnes');
+  if(!c.crew.some(i=>{const x=st.workers.find(y=>y.id===i);return x&&(x.r==='chef'||x.boss)}))why.push('aucun chef d’équipe sur le chantier');
+  if(why.length<2||Math.random()>.3)return;const claim=Math.round(R(8000,40000)*(1+why.length*.25)/500)*500;
+  (st.law||(st.law=[])).push({id:st.nid++,w:w.n,why,claim,fault:why.length,st:'open',d:st.day,exp:st.day+45});
+  log(`⚖️ ${w.n} a pris un avocat : il/elle t’attaque en justice pour l’accident (fautes de sécurité). Réponds dans 🦺 Chantiers.`)}
+function lawAct(id,a,ok){const L=st.law||[],x=L.find(y=>y.id===id);if(!x||x.st!=='open')return;const deal=Math.round(x.claim*.5/100)*100,fee=Math.round(R(3000,8000)/100)*100;
+  if(!ok){if(a==='deal')return ask(`Arrangement à l’amiable ?\nAvec : ${x.w}\nIl/elle réclame : ${eur(x.claim)}\nArrangement proposé : ${eur(deal)}\nC’est fini tout de suite, sans tribunal. Ta réputation baisse un peu.`,()=>lawAct(id,a,1),{ic:'🤝',ok:'Payer l’arrangement'});
+    return ask(`Aller au tribunal du travail ?\nAvocat : ± ${eur(fee)} (payé maintenant)\nSi tu gagnes : tu ne paies rien de plus\nSi tu perds : ${eur(x.claim)} + frais de justice + amende pénale sociale\nTes chances dépendent de tes fautes : ${x.fault} faute(s) relevée(s).\nLe jugement tombe dans 3 à 6 mois.`,()=>lawAct(id,a,1),{ic:'⚖️',ok:'Prendre un avocat',danger:1})}
+  click();if(a==='deal'){if(st.cash<deal)return toastMsg(`Il faut ${eur(deal)}.`);mv(-deal,`Arrangement à l’amiable avec ${x.w}`,'other');st.rep=clamp(st.rep-1,0,100);x.st='done';x.res=`Arrangement à l’amiable : ${eur(deal)}`;log(`🤝 Arrangement à l’amiable avec ${x.w} : ${eur(deal)}. Affaire terminée.`)}
+  else{mv(-fee,`Avocat (procès de ${x.w})`,'other');x.st='court';x.v=st.day+RI(90,180);x.fee=fee;log(`⚖️ Ton avocat défend l’entreprise. Jugement prévu vers le ${dstr(x.v)} ${date(x.v).getFullYear()}.`)}
+  save();render()}
+function lawTick(){for(const x of st.law||[]){
+  if(x.st==='open'&&st.day>x.exp){x.st='court';x.v=st.day+RI(60,120);x.nodef=1;log(`⚖️ Tu n’as pas répondu : ${x.w} va au tribunal sans que tu sois défendu(e).`)}
+  else if(x.st==='court'&&st.day>=x.v){const pWin=x.nodef?.1:clamp(.8-.15*x.fault,.15,.75);x.st='done';
+    if(Math.random()<pWin){st.rep=clamp(st.rep+1,0,100);x.res='Procès gagné';log(`⚖️✅ Procès gagné contre ${x.w} : le tribunal estime que l’entreprise n’est pas responsable.`)}
+    else{const amende=Math.round(R(800,8000)/100)*100,frais=Math.round(x.claim*.08),tot=Math.round(x.claim*(x.nodef?1.2:1))+frais+amende;mv(-tot,`Jugement : dommages et intérêts à ${x.w}, frais et amende pénale sociale`,'other');st.rep=clamp(st.rep-4,0,100);x.res=`Procès perdu : ${eur(tot)}`;
+      log(`⚖️❌ Procès perdu contre ${x.w} : ${eur(tot)} (dommages et intérêts ${eur(x.claim*(x.nodef?1.2:1))}, indemnité de procédure ${eur(frais)}, amende pénale sociale ${eur(amende)}). Réputation -4.`)}}}
+  if(st.law&&st.law.length>20)st.law=st.law.filter(x=>x.st!=='done').concat(st.law.filter(x=>x.st==='done').slice(-10))}
+function lawCard(){const L=(st.law||[]).filter(x=>x.st!=='done');if(!L.length)return'';return`<h2>⚖️ Justice · ${L.length}</h2>`+L.map(x=>`<div class="card acc" style="--ac:var(--rd)"><b class="sm">⚖️ ${esc(x.w)} t’attaque en justice après son accident</b><div class="mut sm" style="margin-top:4px">Il/elle réclame <b>${eur(x.claim)}</b>. Ce qu’on te reproche : ${x.why.join(' ; ')}.</div>
+  ${x.st==='open'?`<div class="mut sm" style="margin-top:4px">Réponds avant le ${dstr(x.exp)}, sinon le procès a lieu sans toi.</div><div class="row" style="margin-top:8px"><button class="btn s" style="padding:7px 10px" onclick="lawAct(${x.id},'deal')">🤝 Arrangement (${eur(Math.round(x.claim*.5/100)*100)})</button><button class="btn" style="padding:7px 10px" onclick="lawAct(${x.id},'court')">⚖️ Prendre un avocat</button></div>`:`<div class="tags"><span class="tag o">⏳ Jugement vers le ${dstr(x.v)}</span>${x.nodef?'<span class="tag r">Pas défendu</span>':''}</div>`}</div>`).join('')}
 // contrôle qualité du SPW à la fin d'un marché public
 function spwCheck(c){if(Math.random()>.35)return;const sc=.2+(c.vd!==undefined?.3:0)+(has('prev')?.15:0)+(has('dirt')?.1:0)+Math.random()*.5;
   if(sc>.7){const b=Math.round(c.price*.01);mv(b,'Bonus qualité du SPW','in');st.rep=clamp(st.rep+2,0,100);log(`✅ Contrôle qualité du SPW : travail impeccable sur ${JOBS[c.j].n}. Bonus ${eur(b)}, réputation +2.`)}
@@ -1139,7 +1162,7 @@ function tick(){ck('days');try{if(isWork(st.day+1))mkDay()}catch(e){}
   if(!st.jobs.some(o=>!JOBS[o.j].need.length))genJob(month()===12||month()<=2&&Math.random()<.5?'p_neige':'p_dechets');
   if(x.getDay()===1)refreshCand();
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
-  events(work);decTick(work);try{wxUrgent();unionTick();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
+  events(work);decTick(work);try{wxUrgent();unionTick();lawTick();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
   if(st.cash<-overdraft()&&!st.over)rescue();
   dqTick();save();renderTick();
 }
@@ -1982,7 +2005,7 @@ function render(headOnly){
   const k=dayKind(st.day);$('#hudW').textContent=(k?'🏖️ ':WX[st.wx].ic+' ')+dstr(st.day)+' '+date(st.day).getFullYear()+(k?' · '+k:'');
   $$('[data-sp]').forEach(b=>b.classList.toggle('on',+b.dataset.sp===speed));
   $$('#tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===curTab);b.querySelector('.bd')?.remove()});
-  const nAo=st.tenders.filter(t=>t.status==='open'&&!t.my&&spwReq(t).every(x=>x.ok)).length,nWait=st.contracts.filter(c=>c.st==='wait').length+(st.dec||[]).length,nJob=st.jobs.filter(o=>!jobMiss(o).length).length;
+  const nAo=st.tenders.filter(t=>t.status==='open'&&!t.my&&spwReq(t).every(x=>x.ok)).length,nWait=st.contracts.filter(c=>c.st==='wait').length+(st.dec||[]).length+(st.law||[]).filter(x=>x.st==='open').length,nJob=st.jobs.filter(o=>!jobMiss(o).length).length;
   if(nAo)$('[data-t=ao]').insertAdjacentHTML('beforeend',`<span class="bd">${nAo}</span>`);
   cleanReports();const nR=st.reports.filter(r=>!r.done).length;if(nR)$('[data-t=eq]').insertAdjacentHTML('beforeend',`<span class="bd">${nR}</span>`);
   if(nWait)$('[data-t=ch]').insertAdjacentHTML('beforeend',`<span class="bd">${nWait}</span>`);
@@ -1995,7 +2018,7 @@ function render(headOnly){
 }
 function goalCard(){const g=curGoal();if(!g&&st.adm.bce){const C=crr(),M=MEGA.find(x=>crr().mega[x.k]!=='ok');return`<div class="goal" onclick="click();careerUI()" style="cursor:pointer"><span class="gi">🎖️</span><div><b>Objectif de carrière</b><div>${M?(typeof C.mega[M.k]==='number'?`${M.ic} ${M.n} : fini dans ${left(C.mega[M.k])}`:C.lv<M.lv?`Atteins le niveau ${M.lv} (tu es niveau ${C.lv}) pour le grand chantier « ${M.n} »`:`Lance le grand chantier « ${M.n} »`):C.lv<100?`Atteins le niveau 100 (tu es niveau ${C.lv})`:'🏆 Tu as tout fini. Respect, patron !'}</div></div></div>`}return g?`<div class="goal"><span class="gi">🎯</span><div><b>Objectif</b><div>${g.t}</div></div></div>`:''}
 function jobHead(J,sub,right){return`<div class="hd"><div class="ic" style="--ac2:${J.ac}2e">${J.ic}</div><div style="flex:1;min-width:0"><h3>${J.n}</h3><div class="mut">${sub}</div></div>${right||''}</div>`}
-function rCh(){let h=goalCard()+dqCard()+decCard();const cs=st.contracts;
+function rCh(){let h=goalCard()+dqCard()+decCard()+lawCard();const cs=st.contracts;
   if(st.cash<0)h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Ton compte est dans le rouge (${eur(st.cash)})</b><div class="mut sm" style="margin-top:4px">Chaque paiement reçu s'ajoute bien, mais les salaires, la vie privée et les impôts partent le 1er du mois. Regarde le relevé et le bilan dans 📊 Entreprise. Solutions : moins de personnel, plus de chantiers, ou un prêt.</div><button class="btn s" style="margin-top:8px" onclick="tab('bi')">Voir mon relevé de compte</button></div>`;
   if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--ye)"><h3>👋 Bienvenue, patron !</h3><p>Tu pars de zéro : ${eur(3000)} d'économies, ta vieille voiture, une pince, des gants et des sacs. Pas d'ouvrier, pas de machine. Attention : chaque mois, il faut aussi payer ta vie privée (loyer, courses…) et les impôts.</p><p class="mut">Première étape : inscrire ton entreprise à la Banque-Carrefour des Entreprises (guichet d'entreprise) pour avoir un numéro de TVA et pouvoir facturer.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire à la BCE (105 €)</button></div>`;
   else if(!cs.length)h+=`<div class="card"><h3>Aucun chantier en cours</h3><p class="mut">Prends un travail dans <b>🧰 Boulots</b>${st.adm.vca?' ou remets offre dans <b>🏛️ Marchés</b>':''}.</p><button class="btn w" onclick="tab('pb')">Voir les petits boulots</button></div>`;
@@ -2532,7 +2555,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.24";
+var APPV="2026-11-05.25";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
