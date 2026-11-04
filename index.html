@@ -485,6 +485,54 @@ function siteCard(){const k=siteK(),S=SITES[k],n=vehCount(),cap=siteCap(),ov=Mat
   ${Object.keys(SFX).filter(f=>sfx(f)).map(f=>`<div class="sm" style="margin-top:4px">${SFX[f]}</div>`).join('')}
   ${X.map(x=>{const Y=SITES[x.k];return`<div class="row" style="flex-wrap:nowrap;margin-top:8px;padding-top:8px;border-top:1px solid #ffffff14"><div style="font-size:26px">${Y.ic}</div><div style="flex:1;min-width:0"><b class="sm">Dépôt n°${x.n} : ${Y.n}</b><div class="mut sm">🚚 ${Y.v} places · ${Y.rent?eur(Y.rent)+'/mois':'vaut '+eur(xVal(x))}${x.loan?' · crédit '+eur(x.loan.cap):''}</div></div><button class="btn s" style="padding:6px 9px" onclick="dropSite(${x.id})">${Y.p?'Vendre':'Fermer'}</button></div>`}).join('')}
   <button class="btn s" style="margin-top:10px" onclick="click();siteUI()">${k==='home'&&!X.length?'🏭 Louer ou acheter un entrepôt':'🏭 Changer ou ajouter un dépôt'}</button></div>`}
+/* ---------- Filiales en Europe ----------
+   Coûts estimés d'une implantation réelle (création de société, avocat, capital, dépôt, machines, recrutement, directeur local) ;
+   impôt des sociétés de chaque pays (2025) ; dividendes vers la Belgique exonérés (directive mère-filiale + RDT/DBI 100 %).
+   pot = chiffre d'affaires mensuel à pleine vitesse (niveau 1), var = part des coûts variables (salaires, carburant), fix = frais fixes/mois. */
+const EU={
+  fr:{n:'France (Hauts-de-France)',f:'🇫🇷',tax:.25,setup:450000,fix:32000,pot:160000,var:.72,d:'Marché énorme et proche, même langue. Les charges sociales françaises sont parmi les plus élevées d’Europe.'},
+  lu:{n:'Luxembourg',f:'🇱🇺',tax:.2387,setup:380000,fix:36000,pot:150000,var:.70,d:'Tout près, communes riches qui paient bien, mais salaires minimums très élevés.'},
+  nl:{n:'Pays-Bas',f:'🇳🇱',tax:.258,setup:520000,fix:40000,pot:190000,var:.71,d:'Gros budgets d’entretien des routes (Rijkswaterstaat), mais concurrence très forte.'},
+  de:{n:'Allemagne (Rhénanie-du-Nord)',f:'🇩🇪',tax:.30,setup:650000,fix:48000,pot:240000,var:.72,d:'Le plus grand marché, mais l’allemand est obligatoire et l’impôt est à ± 30 %.'},
+  es:{n:'Espagne',f:'🇪🇸',tax:.25,setup:400000,fix:26000,pot:120000,var:.74,d:'Moins cher, mais loin : difficile à surveiller depuis la Belgique.'},
+  pl:{n:'Pologne',f:'🇵🇱',tax:.19,setup:320000,fix:18000,pot:95000,var:.70,d:'Main-d’œuvre moins chère et impôt à 19 %, mais petits contrats.'}};
+const fil=()=>st.fil||(st.fil={});
+function euReq(){return[[st.srl,'Être une SRL (société)'],[caRecent()>=1500000,`Chiffre d’affaires d’au moins 1 500 000 € sur un an (${eur(caRecent())})`],[st.rep>=60,`Réputation d’au moins 60 (${st.rep})`],[has('daf'),'Un directeur administratif et financier (DAF)']]}
+function euOpen(k,ok){const C=EU[k];if(fil()[k])return;if(!euReq().every(x=>x[0]))return toastMsg('Conditions pas encore remplies.');
+  if(st.cash<C.setup)return toastMsg(`Il faut ${eur(C.setup)} sur le compte de la société.`);
+  if(!ok)return ask(`Créer une filiale : ${C.n} ?\nInvestissement de départ : ${eur(C.setup)}\nFrais fixes : ${eur(C.fix)}/mois\nImpôt des sociétés : ${(C.tax*100).toFixed(C.tax*100%1?2:0).replace('.',',')} %\nPleine vitesse : après ± 18 mois\nAvocat, notaire, capital, dépôt, machines, recrutement et directeur local. Les premiers mois, la filiale perd de l’argent : la société belge comble les pertes.\n⚠️ Rien n’est garanti : une filiale mal partie peut coûter très cher.`,()=>euOpen(k,1),{ic:C.f,ok:'Créer la filiale',danger:1});
+  mv(-C.setup,'Création de la filiale '+C.n,'buy');st.mCapex+=C.setup;fil()[k]={d:st.day,lv:1,inv:C.setup,cash:Math.round(C.setup*.12),m:0,last:null,hist:[],div:0,tot:0};
+  log(`${C.f} Ta filiale ${C.n} est créée ! Le directeur local recrute ses premières équipes.`);confetti(200);kaching();save();closeM();render()}
+function euMonth(){for(const k in fil()){const F=fil()[k],C=EU[k];F.m++;const L=F.lv,pot=C.pot*(L===1?1:L===2?1.7:2.5),fix=C.fix*(L===1?1:L===2?1.45:2),ramp=Math.max(.08,Math.min(1,(F.m-1)/17));
+    const mo=month(),sea=mo===12||mo<=2?.7:mo>=4&&mo<=9?1.12:1;let ev='';let rv=pot*ramp*sea*R(.8,1.2);
+    const r=Math.random();if(F.m>3&&r<.06){rv*=1.35;ev=pick(['gros contrat gagné auprès d’une région','nouveau client : une autoroute privée','contrat d’urgence après des tempêtes'])}else if(F.m>3&&r<.12){rv*=.65;ev=pick(['grève dans le secteur','un gros client paie en retard','chantier perdu face à un concurrent local'])}
+    rv=Math.round(rv);const ebt=Math.round(rv*(1-C.var)-fix),tax=ebt>0?Math.round(ebt*C.tax):0,net=ebt-tax;F.cash+=net;F.tot+=net;F.last={rv,ebt,tax,net,ev};F.hist.push(net);if(F.hist.length>12)F.hist.shift();
+    if(ev)log(`${C.f} Filiale ${C.n} : ${ev}.`,false);
+    if(F.cash<0){const inj=-F.cash+Math.round(fix*.5);mv(-inj,'Apport en capital : filiale '+C.n,'buy');st.mCapex+=inj;F.inv+=inj;F.cash+=inj;log(`${C.f} La filiale ${C.n} manque d’argent : la société belge lui verse ${eur(inj)}.`,false)}}}
+function euDiv(k){const F=fil()[k],C=EU[k];const a=Math.round(F.cash-EU[k].fix*.5);click();if(a<1000)return toastMsg('La filiale doit garder de quoi payer ses frais du mois.');
+  F.cash-=a;F.div+=a;mv(a,'Dividende de la filiale '+C.n+' (exonéré : RDT)','in');st.mCapex-=a;log(`${C.f} Dividende rapatrié de ${C.n} : +${eur(a)} (pas d’impôt en plus : directive mère-filiale).`);kaching();save();render()}
+function euUp(k,ok){const F=fil()[k],C=EU[k];if(F.lv>=3)return;const c=Math.round(C.setup*.7*F.lv);if(st.cash<c)return toastMsg(`Il faut ${eur(c)} sur le compte de la société.`);
+  if(!ok)return ask(`Agrandir la filiale ${C.n} ?\nInvestissement : ${eur(c)}\nNiveau : ${F.lv} → ${F.lv+1}\nChiffre d’affaires possible : ×${F.lv===1?'1,7':'2,5 (au lieu de 1,7)'}\nNouveaux frais fixes : ${eur(C.fix*(F.lv===1?1.45:2))}/mois\nUn 2e dépôt, plus de machines et une nouvelle équipe dans le pays.`,()=>euUp(k,1),{ic:C.f,ok:'Agrandir'});
+  mv(-c,`Agrandissement de la filiale ${C.n}`,'buy');st.mCapex+=c;F.inv+=c;F.lv++;log(`${C.f} La filiale ${C.n} passe au niveau ${F.lv} !`);confetti(150);save();render()}
+function euVal(k){const F=fil()[k],y=F.hist.reduce((a,b)=>a+b,0)*(12/Math.max(1,F.hist.length));return Math.max(Math.round(F.inv*.25),Math.round(y*5))+Math.max(0,F.cash)}
+function euSell(k,ok){const F=fil()[k],C=EU[k],v=euVal(k);
+  if(!ok)return ask(`Vendre la filiale ${C.n} ?\nDéjà investi : ${eur(F.inv)}\nDividendes déjà reçus : ${eur(F.div)}\nPrix de vente : ${eur(v)}\nUn repreneur paie ± 5 ans de bénéfice (ou au moins un quart de ce que tu as investi, s’il perd de l’argent). Plus-value sur actions exonérée en Belgique.`,()=>euSell(k,1),{ic:C.f,ok:'Vendre',danger:1});
+  mv(v,'Vente de la filiale '+C.n,'buy');st.mCapex-=v;delete fil()[k];log(`${C.f} Filiale ${C.n} vendue pour ${eur(v)}.`);save();render()}
+function euUI(){const ok=euReq().every(x=>x[0]);let h=`<h3>🌍 Ouvrir une filiale en Europe</h3><p class="mut sm">Une filiale est une société à toi dans un autre pays, dirigée par un directeur local. Elle coûte très cher au départ et met ± 18 mois à tourner à plein. Ses bénéfices peuvent revenir en Belgique sans impôt en plus.</p>
+  <div class="card">${euReq().map(x=>`<div class="sm" style="margin:3px 0">${x[0]?'✅':'❌'} ${x[1]}</div>`).join('')}</div>`;
+  for(const k in EU){const C=EU[k],F=fil()[k],full=Math.round(C.pot*(1-C.var)-C.fix);
+    h+=`<div class="card"><div class="hd"><div style="font-size:38px;line-height:1;margin-right:10px">${C.f}</div><div style="flex:1;min-width:0"><h3>${C.n}</h3><div class="mut sm">${C.d}</div></div></div>
+    <div class="tags"><span class="tag">Départ ${eur(C.setup)}</span><span class="tag">Frais ${eur(C.fix)}/mois</span><span class="tag">Impôt ${(C.tax*100).toFixed(C.tax*100%1?2:0).replace('.',',')} %</span><span class="tag ${full>0?'g':'r'}">± ${eur(full)}/mois avant impôt à pleine vitesse</span></div>
+    <div class="row" style="margin-top:10px">${F?'<span class="tag g">✅ Ta filiale</span>':`<button class="btn" ${ok&&st.cash>=C.setup?'':'disabled'} onclick="euOpen('${k}')">Créer la filiale</button>`}</div></div>`}
+  showModal(h+'<p class="mut sm">Chiffres estimés à partir des coûts réels d’implantation (création, dépôt, machines, salaires locaux) et des impôts des sociétés 2025 de chaque pays.</p><button class="btn s w" onclick="closeM()">Fermer</button>')}
+function euCard(){const F=fil(),ks=Object.keys(F);if(!ks.length&&caRecent()<500000)return'';
+  let h=`<div class="card acc" style="--ac:var(--vi)"><div class="hd"><div class="ic" style="--ac2:#3d2c66">🌍</div><div style="flex:1;min-width:0"><h3>Filiales en Europe</h3><div class="mut sm">${ks.length?ks.map(k=>EU[k].f).join(' ')+' · '+ks.length+' pays':'Développe ton entreprise à l’étranger (gros investissement).'}</div></div></div>`;
+  for(const k of ks){const C=EU[k],f=F[k],L=f.last;const ramp=Math.min(100,Math.round(Math.max(.08,Math.min(1,(f.m)/17))*100));
+    h+=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #ffffff14"><div class="row" style="flex-wrap:nowrap"><div style="font-size:30px">${C.f}</div><div style="flex:1;min-width:0"><b>${C.n}</b> <span class="tag v">niv. ${f.lv}</span><div class="mut sm">${f.m} mois · démarrage ${ramp} %</div></div></div>
+    <div class="tags">${L?`<span class="tag b">CA du mois ${eur(L.rv)}</span><span class="tag ${L.net>=0?'g':'r'}">Résultat ${L.net>=0?'+':''}${eur(L.net)}</span>`:'<span class="tag">1er bilan le 1er du mois</span>'}<span class="tag">Caisse ${eur(f.cash)}</span><span class="tag">Investi ${eur(f.inv)}</span>${f.div?`<span class="tag g">Dividendes reçus ${eur(f.div)}</span>`:''}</div>
+    ${L&&L.ev?`<div class="mut sm" style="margin-top:4px">📰 ${L.ev}</div>`:''}
+    <div class="row" style="margin-top:8px"><button class="btn s" style="padding:6px 9px" ${f.cash-C.fix*.5>=1000?'':'disabled'} onclick="euDiv('${k}')">💶 Rapatrier ${eur(Math.max(0,f.cash-C.fix*.5))}</button>${f.lv<3?`<button class="btn s" style="padding:6px 9px" onclick="euUp('${k}')">⬆️ Agrandir (${eur(C.setup*.7*f.lv)})</button>`:''}<button class="btn s" style="padding:6px 9px" onclick="euSell('${k}')">Vendre (${eur(euVal(k))})</button></div></div>`}
+  return h+`<button class="btn s" style="margin-top:10px" onclick="click();euUI()">🌍 ${ks.length?'Ouvrir dans un autre pays':'Voir les pays'}</button></div>`}
 /* ---------- Publicité : plus de demandes de petits boulots (tarifs moyens d'agences belges) ---------- */
 const ADS={
   web:{n:'Site internet + fiche Google',ic:'🌐',p:1900,m:25,b:.12,d:'Les clients te trouvent sur Google : +12 % de demandes.'},
@@ -638,7 +686,7 @@ function tick(){
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
     if(st.salAcc){mv(-st.salAcc,'Salaires du mois','sal');log(`💸 Salaires de ${MOIS[(x.getMonth()+11)%12]} payés : -${eur(st.salAcc)}`);st.salAcc=0}
     {const pm=(x.getMonth()+11)%12,py=x.getMonth()?x.getFullYear():x.getFullYear()-1;const H=st.mHist||(st.mHist=[]);H.push({m:pm,y:py,prod:Math.round(st.mProd||0),res:Math.round(liveRes())});if(H.length>36)H.shift();st.mProd=0}
-    payAids();paySalary();monthTax(MOIS[(x.getMonth()+11)%12]);privMonth();
+    payAids();paySalary();euMonth();monthTax(MOIS[(x.getMonth()+11)%12]);privMonth();
     for(const c of running()){const J=JOBS[c.j];if(J.p)continue;const due=c.price*c.prog/c.q-c.billed;if(due>50){c.billed+=due;invoice(due,payDelay(Math.random()<.75?RI(25,30):RI(31,55)),`${c.buyer?c.buyer.split('—')[1]||'SPW':'SPW'} — état d'avancement`);log(`📄 État d'avancement envoyé (${J.n}) : ${eur(due)}`,false)}}}
   // salaires du jour (chômage temporaire pour intempéries : les ouvriers sont payés par l'ONEM)
   // chômage temporaire pour manque de travail (ouvriers) : l'ONEM paie, l'employeur ne verse qu'un supplément ; max 4 semaines de suite, puis une semaine de travail
@@ -1422,7 +1470,7 @@ function dashCard(){const lr=liveRes(),D=(st.dHist||[]).slice(-180),y=date(st.da
   <h2 style="margin-top:12px">Chaque mois : <span style="color:#4fb3ff">production</span> et <span style="color:#4fdc7a">résultat</span></h2>${bars(st.mHist||[],320,110)}
   <div class="mut sm" style="margin-top:6px">Chiffre d'affaires facturé en ${y} : <b>${eur((st.caY||{})[y]||0)}</b>. La production monte chaque jour de travail ; le résultat baisse avec les salaires, le carburant et les frais.</div></div>`}
 function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
-  let h=goalCard()+adviceCard()+dashCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le ${dstr(st.found||0)} ${date(st.found||0).getFullYear()} · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
+  let h=goalCard()+adviceCard()+dashCard()+euCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le ${dstr(st.found||0)} ${date(st.found||0).getFullYear()} · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
   <div class="kpi" style="margin-top:12px"><div><span>Compte en banque</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>Factures à recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires ${date(st.day).getFullYear()}</span><b>${eur((st.caY||{})[date(st.day).getFullYear()]||0)}</b></div><div><span>Chiffre d'affaires depuis la création</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers terminés</span><b>${st.stats.done}</b></div><div><span>Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div>${st.career?`<div class="mut sm" style="margin-top:10px">🧳 Ta carrière avec tes anciennes sociétés : ${eur(st.career.ca)} de chiffre d'affaires, ${nb(st.career.done)} chantiers, ${st.career.won} marchés gagnés. Tes références de chantiers te suivent.</div>`:''}</div>
   ${monNow()}${bilanCard()}${releve()}
   <h2>Démarches</h2><div class="card">${Object.keys(ADM).map(k=>{const a=ADM[k];return`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:20px">${a.ic}</span><div style="flex:1;min-width:0"><b>${a.n}</b><div class="mut sm">${a.d}</div></div>${st.adm[k]?'<span class="tag g">✅ Fait</span>':`<button class="btn" style="padding:7px 11px" ${st.cash<a.p||(k!=='bce'&&!st.adm.bce)?'disabled':''} onclick="buyAdm('${k}')">${eur(a.p)}</button>`}</div>`}).join('')}</div>
@@ -1726,7 +1774,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.16";
+var APPV="2026-11-04.17";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
