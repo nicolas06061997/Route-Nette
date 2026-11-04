@@ -1689,30 +1689,49 @@ function stkSell(k,part){const V=pv(),S=STK.find(x=>x.k===k),h=(V.stk||{})[k];if
   const y=date(st.day).getFullYear(),G=V.cg||(V.cg={});const before=G[y]||0;G[y]=before+gain;const taxable=Math.max(0,G[y]-10000)-Math.max(0,before-10000),tax=gain>0?Math.round(Math.max(0,taxable)*.1):0;
   V.cash+=gross-f-tax;h.n-=n;h.c-=cb;if(!h.n)delete V.stk[k];V.gainT=(V.gainT||0)+gain-tax;
   pEv(`📉 Vente de ${n} action(s) ${S.n} à ${eur2(p)} : ${gain>=0?'gain':'perte'} ${eur(gain)}${tax?` (taxe plus-values ${eur(tax)})`:''}`,gross-f-tax,false);save();render()}
-/* ---------- Casino (vie privée) : roulette européenne (un seul zéro), machine à sous (± 92 % redistribués), blackjack (paie 3 contre 2).
-   Comme en vrai, la banque gagne à la longue. Jeu interdit aux moins de 21 ans en Belgique (contrôle EPIS à l'entrée). */
-let casG='roul',casBet=100,casSel='rouge',casBusy=0,bj=null;
+/* ---------- Casino (vie privée) : jeux de hasard ÉQUITABLES (demande du joueur : « c'est le casino ou c'est moi »).
+   Chaque jeu rend ± 100 % des mises en moyenne : aucun avantage pour la maison. Tirages au hasard (Math.random). */
+let casG='roul',casBet=100,casSel='rouge',casBusy=0,bj=null,casM='fruits',vp=null,bac='joueur',dice='grand',kenoSel=[],scratch=null,casK='spa';
+const CASI=[
+  {k:'spa',n:'Casino de Spa',ic:'🏛️',max:1e5,w:0,bg:'linear-gradient(160deg,#4a1030,#1f0d2e)',d:'Le plus vieux casino du monde (1763), dans les Ardennes.'},
+  {k:'namur',n:'Casino de Namur',ic:'🏰',max:1e5,w:0,bg:'linear-gradient(160deg,#10304a,#0d1a2e)',d:'Au bord de la Meuse, au pied de la citadelle.'},
+  {k:'knokke',n:'Casino de Knokke',ic:'🌊',max:5e5,w:5e5,bg:'linear-gradient(160deg,#0f3d3a,#0b1f2a)',d:'Le casino chic de la Côte belge, avec ses fresques de Magritte.'},
+  {k:'monaco',n:'Casino de Monte-Carlo',ic:'👑',max:5e6,w:5e6,bg:'linear-gradient(160deg,#5a3a0a,#2a1505)',d:'Le casino le plus célèbre du monde, à Monaco.'},
+  {k:'vegas',n:'Bellagio, Las Vegas',ic:'🎆',max:5e7,w:5e7,bg:'linear-gradient(160deg,#3a0a5a,#120520)',d:'Les fontaines, les néons et les tables sans limite.'}];
 const ROUGE=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 const casV=()=>{const V=pv();return V.cas||(V.cas={mise:0,gain:0,n:0})};
-function casPay(bet){const V=pv();if(V.cash<bet){toastMsg('Pas assez sur ton compte privé.');return false}V.cash-=bet;const C=casV();C.mise+=bet;C.n++;return true}
-function casWin(a){if(a<=0)return;pv().cash+=a;casV().gain+=a}
+const casInfo=()=>CASI.find(c=>c.k===casK)||CASI[0];
+const vip=()=>pvWorth()>=2e6;
+function casPay(bet){const V=pv();if(bet>casInfo().max)return toastMsg(`Mise maximum ici : ${eur(casInfo().max)}.`),false;if(V.cash<bet){toastMsg('Pas assez sur ton compte privé.');return false}V.cash-=bet;const C=casV();C.mise+=bet;C.n++;return true}
+function casWin(a){if(a<=0)return;pv().cash+=a;casV().gain+=a;if(a>=1e6)pEv(`🎰 Énorme gain au ${casInfo().n} : +${eur(a)} !`,a,false)}
 function casEnd(){save();const e=$('#cashead');if(e)e.textContent=eur(pv().cash);const b=$('#casbil');if(b){const C=casV(),r=C.gain-C.mise;b.innerHTML=`Bilan au casino : <b class="${r>=0?'money':'neg'}">${r>=0?'+':''}${eur(r)}</b> · ${C.n} partie(s)`}render(true)}
+let casLast='';const casMsg=h=>{casLast=h;const e=$('#casmsg');if(e)e.innerHTML=h};
+// --- Roulette sans zéro
 function roulSpin(){if(casBusy)return;const bet=casBet;if(!casPay(bet))return;casBusy=1;click();const el=$('#roul'),res=RI(1,36);let n=0;
-  const t=setInterval(()=>{n++;const x=RI(1,36);el.textContent=x;el.style.background=x===0?'#1d7a3c':ROUGE.includes(x)?'#c62828':'#1b1b1b';snd(400+n*10,.03,'square',.02);
-    if(n>=18){clearInterval(t);el.textContent=res;el.style.background=res===0?'#1d7a3c':ROUGE.includes(res)?'#c62828':'#1b1b1b';
-      const red=ROUGE.includes(res),s=casSel;let mult=0;
-      if(s==='rouge'&&red)mult=2;else if(s==='noir'&&res&&!red)mult=2;else if(s==='pair'&&res&&res%2===0)mult=2;else if(s==='impair'&&res%2===1)mult=2;
-      else if(s==='d1'&&res>=1&&res<=12)mult=3;else if(s==='d2'&&res>=13&&res<=24)mult=3;else if(s==='d3'&&res>=25)mult=3;else if(s===String(res))mult=36;
-      casWin(bet*mult);$('#casmsg').innerHTML=mult?`🎉 Le ${res} ! Tu gagnes <b class="money">${eur(bet*mult)}</b>`:`Le ${res}. Perdu ${eur(bet)}.`;if(mult)kaching();casBusy=0;casEnd()}},70)}
-const SLOT=[['🍒',.35],['🍋',.25],['🔔',.18],['⭐',.12],['7️⃣',.07],['💎',.03]],SLOTPAY={'🍒':7,'🍋':10,'🔔':20,'⭐':50,'7️⃣':150,'💎':2000};
-const slotSym=()=>{let r=Math.random();for(const [e,p] of SLOT){if(r<p)return e;r-=p}return'🍒'};
-function slotSpin(){if(casBusy)return;const bet=casBet;if(!casPay(bet))return;casBusy=1;click();const res=[slotSym(),slotSym(),slotSym()],els=[0,1,2].map(i=>$('#sl'+i));let n=0;
-  const t=setInterval(()=>{n++;els.forEach((e,i)=>{if(n<8+i*5)e.textContent=pick(SLOT)[0];else e.textContent=res[i]});snd(300+Math.random()*200,.02,'square',.02);
-    if(n>=18){clearInterval(t);let m=0;if(res[0]===res[1]&&res[1]===res[2])m=SLOTPAY[res[0]];else if(res.filter(x=>x==='🍒').length===2)m=1;
-      casWin(bet*m);$('#casmsg').innerHTML=m>1?`🎉 ${res.join(' ')} : tu gagnes <b class="money">${eur(bet*m)}</b> (×${m})`:m===1?'🍒🍒 Deux cerises : tu récupères ta mise.':`${res.join(' ')} : perdu ${eur(bet)}.`;if(m>1){kaching();if(m>=150)confetti(160)}casBusy=0;casEnd()}},80)}
-const card=()=>{const v=pick(['A','2','3','4','5','6','7','8','9','10','V','D','R']),c=pick(['♠','♥','♦','♣']);return{v,c}};
+  const t=setInterval(()=>{n++;const x=n>=18?res:RI(1,36);el.textContent=x;el.style.background=ROUGE.includes(x)?'#c62828':'#1b1b1b';snd(400+n*10,.03,'square',.02);
+    if(n>=18){clearInterval(t);const red=ROUGE.includes(res),s=casSel;let mult=0;
+      if(s==='rouge'&&red)mult=2;else if(s==='noir'&&!red)mult=2;else if(s==='pair'&&res%2===0)mult=2;else if(s==='impair'&&res%2===1)mult=2;
+      else if(s==='d1'&&res<=12)mult=3;else if(s==='d2'&&res>=13&&res<=24)mult=3;else if(s==='d3'&&res>=25)mult=3;else if(s===String(res))mult=36;
+      casWin(bet*mult);casMsg(mult?`🎉 Le ${res} ! Tu gagnes <b class="money">${eur(bet*mult)}</b>`:`Le ${res}. Perdu ${eur(bet)}.`);if(mult)kaching();casBusy=0;casEnd()}},70)}
+// --- Machines à sous (3 machines, ± 100 % chacune ; la machine à jackpot met 6 % de chaque mise dans la cagnotte)
+const MACH={
+  fruits:{n:'Fruits classique',sym:[['🍒',.35],['🍋',.25],['🔔',.18],['⭐',.12],['7️⃣',.07],['💎',.03]],pay:{'🍒':7,'🍋':10,'🔔':20,'⭐':50,'7️⃣':150,'💎':2000},two:1,d:'Gains fréquents mais petits.'},
+  diamant:{n:'Diamants (gros gains rares)',sym:[['🍒',.35],['🍋',.25],['🔔',.18],['⭐',.12],['7️⃣',.07],['💎',.03]],pay:{'🍒':3,'🍋':6,'🔔':15,'⭐':60,'7️⃣':500,'💎':6500},two:1,d:'Moins souvent, mais beaucoup plus gros.'},
+  jackpot:{n:'Méga Jackpot progressif',sym:[['🍒',.36],['🍋',.25],['🔔',.18],['⭐',.12],['7️⃣',.07],['👑',.02]],pay:{'🍒':6,'🍋':10,'🔔':20,'⭐':50,'7️⃣':150},two:1,jack:1,d:'👑👑👑 = la cagnotte entière (si tu mises au moins 1 000 €).'}};
+const jackPool=()=>st.jack||(st.jack=50000);
+const slotSym=m=>{let r=Math.random();for(const [e,p] of MACH[m||casM].sym){if(r<p)return e;r-=p}return MACH[m||casM].sym[0][0]};
+function slotSpin(){if(casBusy)return;const bet=casBet,M=MACH[casM];if(!casPay(bet))return;casBusy=1;click();if(M.jack)st.jack=jackPool()+bet*.06;
+  const res=[slotSym(),slotSym(),slotSym()],els=[0,1,2].map(i=>$('#sl'+i));let n=0;
+  const t=setInterval(()=>{n++;els.forEach((e,i)=>{e.textContent=n<8+i*5?pick(M.sym)[0]:res[i]});snd(300+Math.random()*200,.02,'square',.02);
+    if(n>=18){clearInterval(t);let m=0,jk=0;if(res[0]===res[1]&&res[1]===res[2]){if(res[0]==='👑'){jk=Math.round(jackPool()*Math.min(1,bet/1000));st.jack=Math.max(50000,jackPool()-jk)}else m=M.pay[res[0]]}else if(res.filter(x=>x==='🍒').length===2)m=M.two;
+      casWin(bet*m+jk);casMsg(jk?`👑👑👑 JACKPOT ! Tu gagnes <b class="money">${eur(jk)}</b> !`:m>1?`🎉 ${res.join(' ')} : tu gagnes <b class="money">${eur(bet*m)}</b> (×${m})`:m===1?'🍒🍒 Deux cerises : tu récupères ta mise.':`${res.join(' ')} : perdu ${eur(bet)}.`);
+      if(m>1||jk){kaching();if(m>=150||jk)confetti(160)}casBusy=0;const J=$('#jackv');if(J)J.textContent=eur(jackPool());casEnd()}},80)}
+// --- Cartes
+const deck=()=>{const D=[];for(const c of ['♠','♥','♦','♣'])for(const v of ['A','2','3','4','5','6','7','8','9','10','V','D','R'])D.push({v,c});for(let i=D.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[D[i],D[j]]=[D[j],D[i]]}return D};
+const card=()=>({v:pick(['A','2','3','4','5','6','7','8','9','10','V','D','R']),c:pick(['♠','♥','♦','♣'])});
+const cardH=(x,on)=>`<span style="display:inline-block;background:#fff;color:${'♥♦'.includes(x.c)?'#c62828':'#111'};border-radius:8px;padding:6px 7px;margin:2px;font-weight:900;font-size:17px;min-width:36px;text-align:center;${on?'outline:3px solid #ffd76b':''}">${x.v}${x.c}</span>`;
+// --- Blackjack équilibré (égalité = mise + 50 %)
 const bjVal=h=>{let t=0,a=0;for(const x of h){if(x.v==='A'){t+=11;a++}else t+=['V','D','R','10'].includes(x.v)?10:+x.v}while(t>21&&a){t-=10;a--}return t};
-const bjShow=h=>h.map(x=>`<span style="display:inline-block;background:#fff;color:${'♥♦'.includes(x.c)?'#c62828':'#111'};border-radius:8px;padding:6px 8px;margin:2px;font-weight:900;font-size:18px;min-width:38px;text-align:center">${x.v}${x.c}</span>`).join('');
 function bjStart(){if(bj&&!bj.done)return;const bet=casBet;if(!casPay(bet))return;click();bj={bet,p:[card(),card()],d:[card()],done:0};if(bjVal(bj.p)===21)return bjStop(1);bjDraw()}
 function bjHit(){if(!bj||bj.done)return;click();bj.p.push(card());if(bjVal(bj.p)>21)return bjStop();bjDraw()}
 function bjStop(nat){if(!bj||bj.done)return;bj.done=1;const pv_=bjVal(bj.p);let msg,win=0;
@@ -1723,24 +1742,71 @@ function bjStop(nat){if(!bj||bj.done)return;bj.done=1;const pv_=bjVal(bj.p);let 
     else if(pv_===dv){win=Math.round(bj.bet*1.5);msg=`Égalité (${pv_}) : tu récupères ta mise <b class="money">+ la moitié</b> (${eur(win)}).`}
     else msg=`${pv_} contre ${dv} pour la banque. Perdu ${eur(bj.bet)}.`}
   casWin(win);if(win>bj.bet)kaching();bjDraw(msg);casEnd()}
-function bjDraw(msg){const e=$('#bjzone');if(!e)return;e.innerHTML=`<div class="mut sm">Banque ${bj.done?'('+bjVal(bj.d)+')':''}</div><div>${bjShow(bj.d)}${bj.done?'':'<span style="display:inline-block;background:#3d2c66;border-radius:8px;padding:6px 8px;margin:2px;min-width:38px;text-align:center">🂠</span>'}</div>
-  <div class="mut sm" style="margin-top:6px">Toi (${bjVal(bj.p)})</div><div>${bjShow(bj.p)}</div>
-  <div class="row" style="margin-top:8px">${bj.done?`<button class="btn" onclick="bjStart()">Rejouer (${eur(casBet)})</button>`:`<button class="btn" onclick="bjHit()">Tirer une carte</button><button class="btn s" onclick="bjStop()">Rester</button>`}</div>`;if(msg)$('#casmsg').innerHTML=msg}
-function rCasino(){const V=pv(),C=casV(),r=C.gain-C.mise;
-  let h=`<div class="card" style="background:linear-gradient(160deg,#4a1030,#1f0d2e);border-color:#c9a227"><div class="row" style="flex-wrap:nowrap"><div style="font-size:40px">🎰</div><div style="flex:1;min-width:0"><h3 style="color:#ffd76b">Casino de Spa</h3><div class="mut sm">Le plus vieux casino du monde (1763). Ton argent privé : <b id="cashead" class="money">${eur(V.cash)}</b></div></div></div>
-  <div class="sm" id="casbil" style="margin-top:6px">Bilan au casino : <b class="${r>=0?'money':'neg'}">${r>=0?'+':''}${eur(r)}</b> · ${C.n} partie(s)</div></div>
-  <div class="seg">${[['roul','🎡 Roulette'],['slot','🎰 Machine'],['bj','🃏 Blackjack']].map(([k,l])=>`<button class="${casG===k?'on':''}" onclick="if(!casBusy){casG='${k}';bj=null;click();render()}">${l}</button>`).join('')}</div>
-  <div class="card"><div class="mut sm">Ta mise</div><div class="row" style="margin-top:6px">${[10,100,1000,10000,100000].map(a=>`<button class="btn ${casBet===a?'':'s'}" style="padding:6px 9px" onclick="casBet=${a};click();render()">${nb(a)} €</button>`).join('')}</div></div>`;
+function bjDraw(msg){const e=$('#bjzone');if(!e||!bj)return;e.innerHTML=`<div class="mut sm">Banque ${bj.done?'('+bjVal(bj.d)+')':''}</div><div>${bj.d.map(x=>cardH(x)).join('')}${bj.done?'':'<span style="display:inline-block;background:#3d2c66;border-radius:8px;padding:6px 8px;margin:2px;min-width:36px;text-align:center">🂠</span>'}</div>
+  <div class="mut sm" style="margin-top:6px">Toi (${bjVal(bj.p)})</div><div>${bj.p.map(x=>cardH(x)).join('')}</div>
+  <div class="row" style="margin-top:8px">${bj.done?`<button class="btn" onclick="bjStart()">Rejouer (${eur(casBet)})</button>`:`<button class="btn" onclick="bjHit()">Tirer une carte</button><button class="btn s" onclick="bjStop()">Rester</button>`}</div>`;if(msg)casMsg(msg)}
+// --- Baccara (vraies règles du tirage ; gains équitables : joueur ×2,03, banque ×1,97, égalité ×10,5 ; égalité = mise rendue sur joueur/banque)
+const bacV=c=>c.v==='A'?1:['10','V','D','R'].includes(c.v)?0:+c.v,bacT=h=>h.reduce((a,c)=>a+bacV(c),0)%10;
+function bacPlay(){if(casBusy)return;const bet=casBet;if(!casPay(bet))return;click();const D=deck(),P=[D.pop(),D.pop()],B=[D.pop(),D.pop()];
+  if(bacT(P)<8&&bacT(B)<8){let p3=null;if(bacT(P)<=5){p3=D.pop();P.push(p3)}const b=bacT(B),v=p3?bacV(p3):null;
+    const draw=p3===null?b<=5:(b<=2||(b===3&&v!==8)||(b===4&&v>=2&&v<=7)||(b===5&&v>=4&&v<=7)||(b===6&&v>=6&&v<=7));if(draw)B.push(D.pop())}
+  const p=bacT(P),b=bacT(B),r=p>b?'joueur':b>p?'banque':'egal';let win=0;
+  if(r==='egal')win=bac==='egal'?bet*10.5:bet;else if(r===bac)win=Math.round(bet*(r==='joueur'?2.03:1.97));casWin(win);
+  const e=$('#baczone');if(e)e.innerHTML=`<div class="mut sm">Joueur (${p})</div><div>${P.map(x=>cardH(x)).join('')}</div><div class="mut sm" style="margin-top:6px">Banque (${b})</div><div>${B.map(x=>cardH(x)).join('')}</div>`;
+  casMsg(`${r==='egal'?'Égalité':r==='joueur'?'Le joueur gagne':'La banque gagne'} (${p} contre ${b}). ${win>bet?`Tu gagnes <b class="money">${eur(win)}</b>`:win===bet?'Mise rendue.':`Perdu ${eur(bet)}.`}`);if(win>bet)kaching();casEnd()}
+// --- Vidéo poker « Jacks or Better » (table 9/6 : ± 99,5 % en jouant bien)
+const VPPAY=[['Quinte flush royale',800],['Quinte flush',50],['Carré',25],['Full',9],['Couleur',6],['Quinte',4],['Brelan',3],['Deux paires',2],['Paire de valets ou mieux',1]];
+const rk=c=>({'A':14,'R':13,'D':12,'V':11}[c.v]||+c.v);
+function vpEval(h){const r=h.map(rk).sort((a,b)=>a-b),cnt={};r.forEach(x=>cnt[x]=(cnt[x]||0)+1);const c=Object.values(cnt).sort((a,b)=>b-a),fl=h.every(x=>x.c===h[0].c);
+  const st_=(new Set(r).size===5&&(r[4]-r[0]===4||r.join()==='2,3,4,5,14'));
+  if(fl&&st_&&r[0]===10)return 0;if(fl&&st_)return 1;if(c[0]===4)return 2;if(c[0]===3&&c[1]===2)return 3;if(fl)return 4;if(st_)return 5;if(c[0]===3)return 6;if(c[0]===2&&c[1]===2)return 7;
+  if(c[0]===2&&Object.keys(cnt).some(k=>cnt[k]===2&&+k>=11))return 8;return -1}
+function vpDeal(){if(vp&&vp.st==='hold')return;const bet=casBet;if(!casPay(bet))return;click();const D=deck();vp={bet,D,h:[D.pop(),D.pop(),D.pop(),D.pop(),D.pop()],hold:[0,0,0,0,0],st:'hold'};vpDraw()}
+function vpHold(i){if(!vp||vp.st!=='hold')return;vp.hold[i]=vp.hold[i]?0:1;click();vpDraw()}
+function vpGo(){if(!vp||vp.st!=='hold')return;click();vp.h=vp.h.map((c,i)=>vp.hold[i]?c:vp.D.pop());vp.st='done';const k=vpEval(vp.h),win=k>=0?vp.bet*VPPAY[k][1]:0;casWin(win);
+  casMsg(k>=0?`🎉 ${VPPAY[k][0]} ! Tu gagnes <b class="money">${eur(win)}</b>`:`Rien. Perdu ${eur(vp.bet)}.`);if(win>vp.bet)kaching();if(k>=0&&k<=2)confetti(150);vpDraw();casEnd()}
+function vpDraw(){const e=$('#vpzone');if(!e||!vp)return;e.innerHTML=`<div style="text-align:center">${vp.h.map((c,i)=>`<span onclick="vpHold(${i})" style="cursor:pointer;display:inline-block">${cardH(c,vp.hold[i])}<div class="sm" style="color:#ffd76b;height:16px">${vp.hold[i]?'GARDÉE':''}</div></span>`).join('')}</div>
+  <div class="row" style="margin-top:8px;justify-content:center">${vp.st==='hold'?`<button class="btn w" onclick="vpGo()">Changer les autres cartes</button>`:`<button class="btn w" onclick="vpDeal()">Nouvelle main (${eur(casBet)})</button>`}</div>`}
+// --- Dés (3 dés) : Petit 3-10 / Grand 11-18 = exactement 1 chance sur 2 ; triple ×36
+function diceRoll(){if(casBusy)return;const bet=casBet;if(!casPay(bet))return;casBusy=1;click();const R3=[RI(1,6),RI(1,6),RI(1,6)],F=['','⚀','⚁','⚂','⚃','⚄','⚅'];let n=0;
+  const t=setInterval(()=>{n++;const e=$('#dice');if(e)e.textContent=(n<14?[RI(1,6),RI(1,6),RI(1,6)]:R3).map(x=>F[x]).join(' ');snd(250+Math.random()*200,.02,'square',.02);
+    if(n>=14){clearInterval(t);const sum=R3[0]+R3[1]+R3[2],tri=R3[0]===R3[1]&&R3[1]===R3[2];let m=0;if(dice==='grand'&&sum>=11)m=2;else if(dice==='petit'&&sum<=10)m=2;else if(dice==='triple'&&tri)m=36;
+      casWin(bet*m);casMsg(`Total ${sum}${tri?' (triple !)':''} : ${m?`tu gagnes <b class="money">${eur(bet*m)}</b>`:`perdu ${eur(bet)}`}.`);if(m)kaching();casBusy=0;casEnd()}},70)}
+// --- Keno : choisis 5 numéros sur 40, 10 sont tirés ; 3 bons ×5, 4 bons ×43, 5 bons ×500 (± 100 %)
+const KENOPAY={3:5,4:43,5:500};
+function kenoTog(n){if(casBusy)return;const i=kenoSel.indexOf(n);if(i>=0)kenoSel.splice(i,1);else if(kenoSel.length<5)kenoSel.push(n);click();render()}
+function kenoPlay(){if(kenoSel.length!==5)return toastMsg('Choisis 5 numéros.');const bet=casBet;if(!casPay(bet))return;click();const all=Array.from({length:40},(_,i)=>i+1).sort(()=>Math.random()-.5).slice(0,10),hit=kenoSel.filter(x=>all.includes(x)).length,m=KENOPAY[hit]||0;
+  casWin(bet*m);st.kenoLast=all;casMsg(`Tirage : ${all.sort((a,b)=>a-b).join(', ')} — ${hit} bon(s). ${m?`Tu gagnes <b class="money">${eur(bet*m)}</b>`:`Perdu ${eur(bet)}.`}`);if(m)kaching();casEnd();render()}
+// --- Cartes à gratter : 6 cases, 3 multiplicateurs identiques = gagné ; ± 100 % redistribués
+const SCR=[[1000,.0001],[100,.001],[10,.02],[5,.04],[2,.1],[1,.2]];
+function scrBuy(){if(scratch&&!scratch.done)return;const bet=casBet;if(!casPay(bet))return;click();let r=Math.random(),m=0;for(const [x,p] of SCR){if(r<p){m=x;break}r-=p}
+  const vals=[1,2,5,10,100,1000],cells=[];if(m){cells.push(m,m,m);const o=vals.filter(v=>v!==m).sort(()=>Math.random()-.5);cells.push(o[0],o[1],o[0]===o[1]?o[2]:o[2])}else{const o=vals.slice().sort(()=>Math.random()-.5);cells.push(o[0],o[0],o[1],o[1],o[2],o[3])}
+  scratch={bet,m,cells:cells.sort(()=>Math.random()-.5),open:[0,0,0,0,0,0],done:0};render()}
+function scrOpen(i){if(!scratch||scratch.done||scratch.open[i])return;scratch.open[i]=1;snd(600,.03,'triangle',.03);if(scratch.open.every(x=>x)){scratch.done=1;const w=scratch.bet*scratch.m;casWin(w);casMsg(scratch.m?`🎉 3 fois ×${scratch.m} : tu gagnes <b class="money">${eur(w)}</b> !`:`Pas de chance, perdu ${eur(scratch.bet)}.`);if(scratch.m>1)kaching();casEnd()}render()}
+function rCasino(){const V=pv(),C=casV(),r=C.gain-C.mise,K=casInfo(),wealth=pvWorth();
+  const bets=[10,100,1000,1e4,1e5,5e5,1e6,5e6,1e7,5e7].filter(a=>a<=K.max&&(a<1e6||vip()));if(!bets.includes(casBet))casBet=bets[Math.min(1,bets.length-1)];
+  let h=`<div class="chips">${CASI.map(c=>{const lock=wealth<c.w;return`<button class="${casK===c.k?'on':''}" ${lock?'disabled style="opacity:.5"':''} onclick="if(!casBusy){casK='${c.k}';click();render()}">${c.ic} ${c.n.replace('Casino de ','')}${lock?' 🔒':''}</button>`}).join('')}</div>
+  <div class="card" style="background:${K.bg};border-color:#c9a227"><div class="row" style="flex-wrap:nowrap"><div style="font-size:40px">${K.ic}</div><div style="flex:1;min-width:0"><h3 style="color:#ffd76b">${K.n}</h3><div class="mut sm">${K.d} Mise maximum : ${eur(K.max)}.</div></div></div>
+  <div class="sm" style="margin-top:6px">Ton argent privé : <b id="cashead" class="money">${eur(V.cash)}</b>${vip()?' · 💎 <b style="color:#ffd76b">Salon VIP</b> (mises d’un million et plus)':' · 💎 Salon VIP à partir de 2 M€ de patrimoine'}</div>
+  <div class="sm" id="casbil" style="margin-top:4px">Bilan au casino : <b class="${r>=0?'money':'neg'}">${r>=0?'+':''}${eur(r)}</b> · ${C.n} partie(s)</div>${CASI.some(c=>wealth<c.w)?`<div class="mut sm" style="margin-top:4px">🔒 Knokke dès 500 000 €, Monte-Carlo dès 5 M€, Las Vegas dès 50 M€ de patrimoine.</div>`:''}</div>
+  <div class="chips">${[['roul','🎡 Roulette'],['slot','🎰 Machines'],['bj','🃏 Blackjack'],['bac','🎴 Baccara'],['vp','♠️ Vidéo poker'],['dice','🎲 Dés'],['keno','🔢 Keno'],['scr','🎟️ Grattage']].map(([k,l])=>`<button class="${casG===k?'on':''}" onclick="if(!casBusy){casG='${k}';bj=null;vp=null;scratch=null;casLast='';click();render()}">${l}</button>`).join('')}</div>
+  <div class="card"><div class="mut sm">Ta mise</div><div class="row" style="margin-top:6px">${bets.map(a=>`<button class="btn ${casBet===a?'':'s'}" style="padding:6px 9px" onclick="if(!casBusy){casBet=${a};click();render()}">${a>=1e6?(a/1e6)+' M€':nb(a)+' €'}</button>`).join('')}</div></div>`;
   if(casG==='roul'){const opt=[['rouge','🔴 Rouge ×2'],['noir','⚫ Noir ×2'],['pair','Pair ×2'],['impair','Impair ×2'],['d1','1-12 ×3'],['d2','13-24 ×3'],['d3','25-36 ×3'],['17','Le 17 ×36'],['7','Le 7 ×36']];
     h+=`<div class="card" style="text-align:center"><div id="roul" style="width:96px;height:96px;border-radius:50%;margin:6px auto 10px;display:grid;place-items:center;font-size:38px;font-weight:900;background:#1b1b1b;border:5px solid #c9a227;color:#fff">?</div>
     <div class="row" style="justify-content:center">${opt.map(([k,l])=>`<button class="btn ${casSel===k?'':'s'}" style="padding:6px 9px" onclick="if(!casBusy){casSel='${k}';click();render()}">${l}</button>`).join('')}</div>
-    <button class="btn w" style="margin-top:12px" onclick="roulSpin()">🎡 Lancer la bille (${eur(casBet)})</button><div class="mut sm" style="margin-top:6px">Roulette équitable : 36 cases (1 à 36), pas de zéro. Rouge ou noir, c’est vraiment une chance sur deux.</div></div>`}
-  else if(casG==='slot')h+=`<div class="card" style="text-align:center"><div style="display:flex;justify-content:center;gap:8px;margin:6px 0 12px">${[0,1,2].map(i=>`<div id="sl${i}" style="width:74px;height:84px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:44px;border:4px solid #c9a227">🍒</div>`).join('')}</div>
-    <button class="btn w" onclick="slotSpin()">🎰 Jouer (${eur(casBet)})</button><div class="mut sm" style="margin-top:8px">3 identiques : 🍒 ×7 · 🍋 ×10 · 🔔 ×20 · ⭐ ×50 · 7️⃣ ×150 · 💎 ×2 000. Deux 🍒 : mise rendue. Tirage au hasard à chaque tour, rend 100 % en moyenne : ni toi ni le casino n’êtes avantagés.</div></div>`;
-  else h+=`<div class="card"><div id="bjzone">${bj?'':`<p class="sm">Approche-toi le plus possible de 21 sans dépasser. La banque tire jusqu’à 17. Le blackjack paie 3 contre 2. Version équitable : en cas d’égalité, tu gagnes la moitié de ta mise en plus.</p><button class="btn w" onclick="bjStart()">🃏 Distribuer (${eur(casBet)})</button>`}</div></div>`;
-  h+=`<div class="card" style="text-align:center;padding:10px"><div id="casmsg" class="sm">🍀 Bonne chance ! Tout se joue au hasard.</div></div>
-  <p class="mut sm">🎲 Aucune triche : chaque tour est tiré au hasard, comme dans un vrai casino. Tu peux gagner gros… ou tout perdre, c’est la chance ! Ici, aucun avantage pour le casino : roulette sans zéro, machine qui rend 100 % en moyenne, blackjack équilibré. C’est toi ou le casino, 50/50. Jeu interdit aux moins de 21 ans en Belgique ; dans la vraie vie, si jouer devient un problème, de l’aide gratuite existe (gamingcommission.be).</p>`;
-  if(bj)setTimeout(()=>bjDraw(),0);return h}
+    <button class="btn w" style="margin-top:12px" onclick="roulSpin()">🎡 Lancer la bille (${eur(casBet)})</button><div class="mut sm" style="margin-top:6px">36 cases (1 à 36), pas de zéro : rouge ou noir, c’est vraiment une chance sur deux.</div></div>`}
+  else if(casG==='slot'){const M=MACH[casM];h+=`<div class="chips">${Object.entries(MACH).map(([k,m])=>`<button class="${casM===k?'on':''}" onclick="if(!casBusy){casM='${k}';click();render()}">${m.n}</button>`).join('')}</div>
+    <div class="card" style="text-align:center">${M.jack?`<div style="font-size:13px;color:#ffd76b;font-weight:900">👑 CAGNOTTE : <span id="jackv">${eur(jackPool())}</span></div>`:''}<div style="display:flex;justify-content:center;gap:8px;margin:6px 0 12px">${[0,1,2].map(i=>`<div id="sl${i}" style="width:74px;height:84px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:44px;border:4px solid #c9a227">${M.sym[0][0]}</div>`).join('')}</div>
+    <button class="btn w" onclick="slotSpin()">🎰 Jouer (${eur(casBet)})</button><div class="mut sm" style="margin-top:8px">${M.d} 3 identiques : ${Object.entries(M.pay).map(([e,x])=>e+' ×'+nb(x)).join(' · ')}${M.jack?' · 👑 cagnotte':''}. Deux 🍒 : mise rendue. Rend ± 100 % en moyenne.</div></div>`}
+  else if(casG==='bj')h+=`<div class="card"><div id="bjzone">${bj?'':`<p class="sm">Approche-toi le plus possible de 21 sans dépasser. La banque tire jusqu’à 17. Blackjack ×2,5. Égalité : ta mise + la moitié.</p><button class="btn w" onclick="bjStart()">🃏 Distribuer (${eur(casBet)})</button>`}</div></div>`;
+  else if(casG==='bac')h+=`<div class="card"><div class="row" style="justify-content:center">${[['joueur','Joueur ×2,03'],['banque','Banque ×1,97'],['egal','Égalité ×10,5']].map(([k,l])=>`<button class="btn ${bac===k?'':'s'}" style="padding:6px 9px" onclick="bac='${k}';click();render()">${l}</button>`).join('')}</div><div id="baczone" style="margin-top:8px"></div><button class="btn w" style="margin-top:10px" onclick="bacPlay()">🎴 Distribuer (${eur(casBet)})</button><div class="mut sm" style="margin-top:6px">Le plus proche de 9 gagne. Vraies règles du tirage de la 3e carte ; gains calculés pour que ce soit équitable.</div></div>`;
+  else if(casG==='vp')h+=`<div class="card"><div id="vpzone">${vp?'':`<button class="btn w" onclick="vpDeal()">♠️ Distribuer 5 cartes (${eur(casBet)})</button>`}</div><div class="mut sm" style="margin-top:8px">Touche les cartes à garder, puis change les autres. ${VPPAY.map(x=>x[0]+' ×'+x[1]).join(' · ')}.</div></div>`;
+  else if(casG==='dice')h+=`<div class="card" style="text-align:center"><div id="dice" style="font-size:56px;line-height:1.2">⚀ ⚀ ⚀</div><div class="row" style="justify-content:center;margin-top:6px">${[['petit','Petit 3-10 ×2'],['grand','Grand 11-18 ×2'],['triple','Triple ×36']].map(([k,l])=>`<button class="btn ${dice===k?'':'s'}" style="padding:6px 9px" onclick="if(!casBusy){dice='${k}';click();render()}">${l}</button>`).join('')}</div><button class="btn w" style="margin-top:10px" onclick="diceRoll()">🎲 Lancer les dés (${eur(casBet)})</button></div>`;
+  else if(casG==='keno'){const L=st.kenoLast||[];h+=`<div class="card"><div class="mut sm">Choisis 5 numéros (${kenoSel.length}/5). 10 numéros sont tirés : 3 bons ×5 · 4 bons ×43 · 5 bons ×500.</div><div style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:8px">${Array.from({length:40},(_,i)=>i+1).map(n=>`<button onclick="kenoTog(${n})" style="aspect-ratio:1;border-radius:8px;border:2px solid ${L.includes(n)?'#ffd76b':'#ffffff22'};background:${kenoSel.includes(n)?'#ff9a1f':'#24402e'};color:#fff;font-weight:900;font-size:13px">${n}</button>`).join('')}</div><button class="btn w" style="margin-top:10px" onclick="kenoPlay()">🔢 Tirer (${eur(casBet)})</button></div>`}
+  else h+=`<div class="card" style="text-align:center">${scratch?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${scratch.cells.map((v,i)=>`<button onclick="scrOpen(${i})" style="height:70px;border-radius:12px;border:2px solid #c9a227;background:${scratch.open[i]?'#fff8e1':'repeating-linear-gradient(45deg,#9e9e9e,#9e9e9e 6px,#bdbdbd 6px,#bdbdbd 12px)'};font-size:22px;font-weight:900;color:#5a3a0a">${scratch.open[i]?'×'+nb(v):'🪙'}</button>`).join('')}</div>${scratch.done?`<button class="btn w" style="margin-top:10px" onclick="scrBuy()">🎟️ Nouveau ticket (${eur(casBet)})</button>`:'<div class="mut sm" style="margin-top:8px">Gratte les 6 cases : 3 fois le même multiplicateur = gagné !</div>'}`:`<p class="sm">Gratte 6 cases. Trois fois le même multiplicateur (jusqu’à ×1 000) et tu gagnes !</p><button class="btn w" onclick="scrBuy()">🎟️ Acheter un ticket (${eur(casBet)})</button>`}</div>`;
+  h+=`<div class="card" style="text-align:center;padding:10px"><div id="casmsg" class="sm">${casLast||'🍀 Bonne chance ! Tout se joue au hasard.'}</div></div>
+  <p class="mut sm">🎲 Aucune triche et aucun avantage pour le casino : chaque jeu rend ± 100 % des mises en moyenne. C’est toi ou le casino. Jeu interdit aux moins de 21 ans en Belgique ; dans la vraie vie, si jouer devient un problème, de l’aide gratuite existe (gamingcommission.be).</p>`;
+  if(bj)setTimeout(()=>bjDraw(),0);if(vp)setTimeout(()=>vpDraw(),0);return h}
 function sparkS(D,w,h){if(D.length<2)return'';const mn=Math.min(...D),mx=Math.max(...D),sx=w/(D.length-1),Y=v=>h-3-(v-mn)/((mx-mn)||1)*(h-6),up=D[D.length-1]>=D[0],c=up?'#4fdc7a':'#ff5d57';
   return`<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none" style="display:block"><polyline points="${D.map((v,i)=>`${(i*sx).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`}
 function rBourse(){const V=pv(),M=mk(),H=V.stk||{},val=stkVal(),cost=Object.values(H).reduce((a,h)=>a+h.c,0),gl=val-cost;
@@ -2387,7 +2453,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.21";
+var APPV="2026-11-05.22";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
