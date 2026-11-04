@@ -543,7 +543,7 @@ function decide(t){const J=JOBS[t.j];const me=t.bids.find(b=>b.me);
     if(c.gar){const fee=Math.max(150,Math.round(c.gar*.015));mv(-fee,'Garantie bancaire (cautionnement 5 %)','fix');log(`🏦 Ta banque émet une garantie de ${eur(c.gar)} pour le cautionnement (commission ${eur(fee)}).`,false)}
     if(c.caut){mv(-c.caut,'Cautionnement bloqué','buy');st.mCapex+=c.caut;log(`🏦 Cautionnement de ${eur(c.caut)} constitué (bloqué jusqu'à la fin du chantier).`,false)}
     st.contracts.push(c);log(`🎉 Marché attribué : ${J.ic} ${J.n} (${t.road}) pour ${eur(t.my.tot)} !`,false);kaching();
-    showModal(`<h3>🎉 Marché attribué !</h3><div class="mut sm">${t.buyer}<br>Réf. ${t.ref}</div><div class="hd" style="margin-top:8px"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div><h2>Procès-verbal d'ouverture des offres</h2>${tbl}
+    if(has('cond')||has('offre'))log(`🎉 Marché gagné : ${J.n} (${t.road}) pour ${eur(t.my.tot)}. ${has('cond')?'Benoît':'Ton chef d’équipe'} organise le chantier.`);else showModal(`<h3>🎉 Marché attribué !</h3><div class="mut sm">${t.buyer}<br>Réf. ${t.ref}</div><div class="hd" style="margin-top:8px"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div><h2>Procès-verbal d'ouverture des offres</h2>${tbl}
     <p>Ordre de commencer : <b>${dlong(startBy)}</b>.<br>Délai d'exécution : <b>${t.N} jours ouvrables</b>.${c.gar?`<br>Cautionnement : ${eur(c.gar)} (garantie bancaire).`:''}</p><div class="row"><button class="btn" onclick="closeM();startUI(${c.id})">Préparer le chantier</button><button class="btn s" onclick="closeM()">Plus tard</button></div>`);
   }else{st.stats.lost++;log(`❌ Marché attribué à ${w.n} (${eur(w.tot)}). ${me&&me.irr?'Ton offre a été écartée : '+me.irr+'.':''}`)}
 }
@@ -661,7 +661,7 @@ function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c)
   st.stats.spw++;st.refs[c.j]=(st.refs[c.j]||0)+1;
   invoice(rest,payDelay(Math.random()<.75?RI(25,30):RI(31,55)),`SPW — décompte final (${J.n})`);
   if(c.caut){invoice(c.caut/2,30,'Libération de 50 % du cautionnement (réception provisoire)');invoice(c.caut/2,365,'Libération du solde du cautionnement (réception définitive)');st.inv.slice(-2).forEach(v=>v.caut=1)}
-  showModal(`<h3>✅ Réception provisoire</h3><div class="hd"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${c.road} — ${c.town}</div></div></div><table style="margin-top:10px">
+  if(has('cond'))log(`✅ Réception provisoire : ${J.n} (${c.road}) terminé${late?' avec '+n+' j de retard':' dans les délais'}. Décompte final : ${eur(rest)}.`);else showModal(`<h3>✅ Réception provisoire</h3><div class="hd"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${c.road} — ${c.town}</div></div></div><table style="margin-top:10px">
   <tr><td>Montant du marché</td><td>${eur(c.price)}</td></tr><tr><td>États d'avancement déjà facturés</td><td>${eur(c.billed)}</td></tr>
   <tr><td>Délai : ${c.wd} / ${c.N} jours ouvrables</td><td>${late?'<span class="neg">'+n+' j de retard</span>':'✅'}</td></tr>
   ${fine?`<tr><td>Amende pour retard</td><td class="neg">-${eur(fine)}</td></tr>`:''}<tr><td><b>Décompte final</b> (délai légal : 30 jours)</td><td class="money">${eur(rest)}</td></tr>
@@ -1544,7 +1544,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.6";
+var APPV="2026-11-04.7";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
