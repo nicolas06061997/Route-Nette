@@ -992,8 +992,8 @@ const PRIV={
   campingcar:{c:'moto',n:'Camping-car (neuf)',ic:'🚐',p:78000,m:380,tmc:2500,dep:.1},
   quad:{c:'moto',n:'Quad (neuf)',ic:'🏁',p:11000,m:60,tmc:62,dep:.12},
   // Logement (prix moyens notaires Wallonie 2025)
-  appart:{c:'home',n:'Appartement en Wallonie (prix moyen)',ic:'🏢',p:206000,m:420,dep:-.03,home:1,hr:780},
-  maison:{c:'home',n:'Maison en Wallonie (prix moyen 2025)',ic:'🏠',p:270790,m:520,dep:-.04,home:1,hr:1050},
+  appart:{c:'home',n:'Appartement en Wallonie (prix moyen)',ic:'🏢',p:206300,m:420,dep:-.03,home:1,hr:850},
+  maison:{c:'home',n:'Maison en Wallonie (prix moyen 2025)',ic:'🏠',p:269550,m:520,dep:-.04,home:1,hr:1000},
   villa:{c:'home',n:'Villa 4 façades avec jardin',ic:'🏡',p:480000,m:850,dep:-.04,home:1,hr:1650},
   maitre:{c:'home',n:'Maison de maître rénovée',ic:'🏛️',p:690000,m:1100,dep:-.03,home:1,hr:2100},
   chateau:{c:'home',n:'Château en Wallonie (à entretenir)',ic:'🏰',p:1950000,m:6500,dep:-.02,home:1,hr:5500,hrn:'location pour événements et séminaires'},
@@ -1018,13 +1018,13 @@ const PRIV={
   f1:{c:'exp',n:'Week-end au Grand Prix de Spa-Francorchamps (paddock)',ic:'🏁',p:4900},
   ski:{c:'exp',n:'Semaine au ski dans les Alpes (famille de 4)',ic:'⛷️',p:5500},
   tomorrow:{c:'exp',n:'Week-end à Tomorrowland (2 pass + hôtel)',ic:'🎶',p:1900},
-  // Immobilier locatif : loyers moyens en Wallonie ; m = précompte immobilier, assurance, entretien, gestion
-  loc_app:{c:'loc',n:'Appartement à louer (Wallonie)',ic:'🏢',p:195000,m:260,rent:780,dep:-.03},
-  loc_kot:{c:'loc',n:'Kot étudiant à Louvain-la-Neuve',ic:'🎓',p:145000,m:150,rent:520,dep:-.03},
-  loc_mais:{c:'loc',n:'Maison à louer (Wallonie)',ic:'🏠',p:260000,m:330,rent:1050,dep:-.03},
-  loc_garage:{c:'loc',n:'Garage fermé à louer',ic:'🚪',p:32000,m:20,rent:95,dep:-.02},
-  loc_imm:{c:'loc',n:'Immeuble de rapport (4 appartements)',ic:'🏬',p:720000,m:1000,rent:3100,dep:-.03},
-  loc_cell:{c:'loc',n:'Cellule commerciale en centre-ville',ic:'🏪',p:340000,m:450,rent:1650,dep:-.02},
+  // Immobilier locatif : prix notaire.be 2025 (appartement 206 297 €, maison 269 551 €), loyers Federia (Wallonie ± 880-910 €/mois en 2025-2026), kots ± 480 €/mois à LLN ; m = précompte immobilier, assurance, entretien, gestion
+  loc_app:{c:'loc',n:'Appartement 2 chambres à louer (Wallonie)',ic:'🏢',p:206300,m:260,rent:850,dep:-.03},
+  loc_kot:{c:'loc',n:'Kot étudiant à Louvain-la-Neuve',ic:'🎓',p:145000,m:175,rent:480,dep:-.03},
+  loc_mais:{c:'loc',n:'Maison 3 chambres à louer (Wallonie)',ic:'🏠',p:269550,m:330,rent:1000,dep:-.03},
+  loc_garage:{c:'loc',n:'Garage fermé à louer',ic:'🚪',p:27000,m:20,rent:85,dep:-.02},
+  loc_imm:{c:'loc',n:'Immeuble de rapport (4 appartements)',ic:'🏬',p:690000,m:1000,rent:3300,dep:-.03},
+  loc_cell:{c:'loc',n:'Cellule commerciale en centre-ville',ic:'🏪',p:300000,m:450,rent:1500,dep:-.02},
   // Famille et vie de tous les jours (coûts mensuels moyens en Belgique)
   mariage:{c:'fam',n:'Mariage (cérémonie, salle, traiteur pour 100 personnes)',ic:'💍',p:22000,once:1},
   enfant:{c:'fam',n:'Un enfant (naissance, puis frais chaque mois moins les allocations familiales)',ic:'👶',p:3500,m:420,keep:1},
@@ -1707,7 +1707,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.14";
+var APPV="2026-11-04.15";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
