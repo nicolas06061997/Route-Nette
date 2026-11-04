@@ -17,6 +17,7 @@ L'utilisateur parle français et n'est pas développeur : réponses courtes, en 
 - Nouveau champ dans l'état : l'ajouter dans `defaults()` ; `migrate()` complète les vieilles sauvegardes. Monter `SCHEMA` si une conversion est nécessaire et l'écrire dans `migrate()`.
 - Ne jamais supprimer une clé de `EQ` ou `JOBS` sans prévoir le remboursement dans `migrate()`.
 - Code de sauvegarde (export/import) dans l'onglet Entreprise.
+- Sécurité des mises à jour : `load()` copie la sauvegarde brute dans `routenette-prev` à chaque ouverture (avant toute modification), essaie `SAVE`, puis `routenette-bak`, puis `routenette-prev` ; si `migrate()` plante, on charge quand même avec les valeurs par défaut ajoutées ; si rien n'est lisible, copie dans `routenette-rescue-<date>` et message 🛟 (jamais rien d'écrasé sans copie). Bouton « 🛟 Copie d'avant » (`restorePrev`) dans Réglages. « Mettre à jour » appelle `save()` avant de recharger. `navigator.storage.persist()` demande au navigateur de ne pas effacer les données. Nouveaux champs : toujours lus avec une valeur par défaut (`st.x||…`) pour que les vieilles parties marchent.
 
 ## Lancer
 `python3 -m http.server 8000` puis `http://localhost:8000/`. Pas de build.
