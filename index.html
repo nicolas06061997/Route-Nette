@@ -1234,6 +1234,17 @@ function spark(D,w,h){if(D.length<2)return'';const mn=Math.min(0,...D),mx=Math.m
 function bars(H,w,h){if(!H.length)return'<div class="mut sm">Le premier mois apparaîtra le 1er du mois prochain.</div>';const L=H.slice(-12),mx=Math.max(1,...L.map(x=>Math.max(x.prod,Math.abs(x.res)))),bw=w/L.length;
   return`<svg viewBox="0 0 ${w} ${h+16}" width="100%" height="${h+16}" style="display:block">${L.map((x,i)=>{const ph=x.prod/mx*(h/2-4),rh=Math.abs(x.res)/mx*(h/2-4),cx=i*bw;
     return`<rect x="${cx+bw*.15}" y="${h/2-ph}" width="${bw*.34}" height="${ph}" rx="2" fill="#4fb3ff"/><rect x="${cx+bw*.52}" y="${x.res>=0?h/2-rh:h/2}" width="${bw*.34}" height="${rh}" rx="2" fill="${x.res>=0?'#4fdc7a':'#ff5d57'}"/><text x="${cx+bw/2}" y="${h+12}" font-size="9" fill="#a3bcaa" text-anchor="middle">${MOIS[x.m].slice(0,3)}</text>`}).join('')}<line x1="0" x2="${w}" y1="${h/2}" y2="${h/2}" stroke="#ffffff33"/></svg>`}
+// Conseils du comptable : pourquoi on perd de l'argent
+function adviceCard(){const tips=[];const pay=payroll()*WDM,last=(st.mHist||[]).slice(-3),prod=last.length?last.reduce((a,x)=>a+x.prod,0)/last.length:0;
+  const office=st.workers.filter(w=>ROLES[w.r].cat!=='ouv').reduce((a,w)=>a+w.day,0)*WDM,field=st.workers.filter(w=>ROLES[w.r].cat==='ouv'&&!w.boss).length;
+  if(st.autoStaff===0)tips.push('🤖 <b>Équipes automatiques désactivées</b> : des chantiers peuvent rester sans personne. Active-les dans 👷 Équipe.');
+  if(st.chomEco===0&&field)tips.push('🏠 <b>Chômage temporaire désactivé</b> : tu paies plein pot les ouvriers sans chantier (surtout en hiver). Active-le dans 👷 Équipe.');
+  if(prod&&pay>prod*.75)tips.push(`💸 <b>Salaires trop lourds</b> : ${eur(pay)}/mois pour une production moyenne de ${eur(prod)}/mois. Une entreprise saine garde ses salaires sous ± 60 % de sa production.`);
+  if(office>pay*.35)tips.push(`🏢 <b>Bureau cher</b> : le personnel de bureau coûte ${eur(office)}/mois (${Math.round(office/pay*100)} % des salaires). Regarde sur leurs fiches ce qu'ils rapportent.`);
+  const idle=freeW().filter(w=>!w.boss).length;if(idle>=2&&isWork(st.day))tips.push(`💤 <b>${idle} ouvriers sans chantier</b> aujourd'hui. Il faut plus de travail (offres au SPW, Manon pour les petits boulots) ou moins de monde.`);
+  if(!st.tenders.some(t=>t.my&&t.status!=='done')&&st.adm.vca)tips.push('📑 <b>Aucune offre en cours au SPW</b> : les marchés publics rapportent beaucoup plus que les petits boulots.');
+  if(month()===12||month()<=2)tips.push('❄️ <b>C’est l’hiver</b> : moins de travail (pas de fauchage, de tonte, de marquage). C’est normal que ce soit plus dur ; le service d’hiver (déneigement) et l’élagage aident.');
+  if(!tips.length)return'';return`<div class="card acc" style="--ac:var(--ye)"><h3>🧮 Conseils de ton comptable</h3>${tips.map(t=>`<div class="sm" style="margin-top:8px">${t}</div>`).join('')}</div>`}
 function dashCard(){const lr=liveRes(),D=(st.dHist||[]).slice(-180),y=date(st.day).getFullYear();
   return`<div class="card acc" style="--ac:var(--bl)"><div class="row"><h3 style="flex:1">📈 En direct — ${MOIS[date(st.day).getMonth()]}</h3><span class="tag">${dstr(st.day)}</span></div>
   <div class="kpi" style="margin-top:10px"><div><span>Production du mois (travaux réalisés)</span><b style="color:#7fc8ff">${eur(st.mProd||0)}</b></div><div><span>Résultat du mois en direct</span><b class="${lr>=0?'money':'neg'}">${lr>=0?'+':''}${eur(lr)}</b></div></div>
@@ -1241,7 +1252,7 @@ function dashCard(){const lr=liveRes(),D=(st.dHist||[]).slice(-180),y=date(st.da
   <h2 style="margin-top:12px">Chaque mois : <span style="color:#4fb3ff">production</span> et <span style="color:#4fdc7a">résultat</span></h2>${bars(st.mHist||[],320,110)}
   <div class="mut sm" style="margin-top:6px">Chiffre d'affaires facturé en ${y} : <b>${eur((st.caY||{})[y]||0)}</b>. La production monte chaque jour de travail ; le résultat baisse avec les salaires, le carburant et les frais.</div></div>`}
 function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
-  let h=goalCard()+dashCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le ${dstr(st.found||0)} ${date(st.found||0).getFullYear()} · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
+  let h=goalCard()+adviceCard()+dashCard()+`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le ${dstr(st.found||0)} ${date(st.found||0).getFullYear()} · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
   <div class="kpi" style="margin-top:12px"><div><span>Compte en banque</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>Factures à recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires ${date(st.day).getFullYear()}</span><b>${eur((st.caY||{})[date(st.day).getFullYear()]||0)}</b></div><div><span>Chiffre d'affaires depuis la création</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers terminés</span><b>${st.stats.done}</b></div><div><span>Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div>${st.career?`<div class="mut sm" style="margin-top:10px">🧳 Ta carrière avec tes anciennes sociétés : ${eur(st.career.ca)} de chiffre d'affaires, ${nb(st.career.done)} chantiers, ${st.career.won} marchés gagnés. Tes références de chantiers te suivent.</div>`:''}</div>
   ${monNow()}${bilanCard()}${releve()}
   <h2>Démarches</h2><div class="card">${Object.keys(ADM).map(k=>{const a=ADM[k];return`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:20px">${a.ic}</span><div style="flex:1;min-width:0"><b>${a.n}</b><div class="mut sm">${a.d}</div></div>${st.adm[k]?'<span class="tag g">✅ Fait</span>':`<button class="btn" style="padding:7px 11px" ${st.cash<a.p||(k!=='bce'&&!st.adm.bce)?'disabled':''} onclick="buyAdm('${k}')">${eur(a.p)}</button>`}</div>`}).join('')}</div>
@@ -1544,7 +1555,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.7";
+var APPV="2026-11-04.8";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
