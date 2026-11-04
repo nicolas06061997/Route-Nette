@@ -924,22 +924,50 @@ function lawOpen(c,w){const why=[];if(Object.keys(c.own||{}).some(t=>wear(t)>70)
   if(why.length<2||Math.random()>.3)return;const claim=Math.round(R(8000,40000)*(1+why.length*.25)/500)*500;
   (st.law||(st.law=[])).push({id:st.nid++,w:w.n,why,claim,fault:why.length,st:'open',d:st.day,exp:st.day+45});
   log(`⚖️ ${w.n} a pris un avocat : il/elle t’attaque en justice pour l’accident (fautes de sécurité). Réponds dans 🦺 Chantiers.`)}
-function lawAct(id,a,ok){const L=st.law||[],x=L.find(y=>y.id===id);if(!x||x.st!=='open')return;const deal=Math.round(x.claim*.5/100)*100,fee=Math.round(R(3000,8000)/100)*100;
-  if(!ok){if(a==='deal')return ask(`Arrangement à l’amiable ?\nAvec : ${x.w}\nIl/elle réclame : ${eur(x.claim)}\nArrangement proposé : ${eur(deal)}\nC’est fini tout de suite, sans tribunal. Ta réputation baisse un peu.`,()=>lawAct(id,a,1),{ic:'🤝',ok:'Payer l’arrangement'});
-    return ask(`Aller au tribunal du travail ?\nAvocat : ${has('juriste')?'ta juriste s’en occupe (gratuit)':insOn('pj')?'payé par ta protection juridique':'± '+eur(fee)+' (payé maintenant)'}\nSi tu gagnes : tu ne paies rien de plus\nSi tu perds : ${eur(x.claim)} + frais de justice + amende pénale sociale\nTes chances dépendent de tes fautes : ${x.fault} faute(s) relevée(s).\nLe jugement tombe dans 3 à 6 mois.`,()=>lawAct(id,a,1),{ic:'⚖️',ok:'Prendre un avocat',danger:1})}
-  click();if(a==='deal'){if(st.cash<deal)return toastMsg(`Il faut ${eur(deal)}.`);mv(-deal,`Arrangement à l’amiable avec ${x.w}`,'other');st.rep=clamp(st.rep-1,0,100);x.st='done';x.res=`Arrangement à l’amiable : ${eur(deal)}`;log(`🤝 Arrangement à l’amiable avec ${x.w} : ${eur(deal)}. Affaire terminée.`)}
-  else{if(has('juriste')){log('⚖️ Me Caroline Leroy, ta juriste, défend l’entreprise.',false);rsAdd('jur',1);rsAdd('jurv',fee)}else if(insOn('pj'))log('⚖️ Ta protection juridique paie l’avocat.',false);else mv(-fee,`Avocat (procès de ${x.w})`,'other');x.st='court';x.v=st.day+RI(90,180);x.fee=fee;log(`⚖️ Ton avocat défend l’entreprise. Jugement prévu vers le ${dstr(x.v)} ${date(x.v).getFullYear()}.`)}
-  save();render()}
+// Avocats : du jeune généraliste pas cher au grand cabinet bruxellois. lv = niveau (1-5), sp = spécialités, fee = honoraires estimés d'un dossier
+const LAWY=[
+  {k:'jeune',n:'Me Kevin Dubois',t:'Jeune avocat généraliste (Namur)',ic:'🧑‍💼',lv:1,sp:[],fee:1500},
+  {k:'local',n:'Cabinet Lambert & Associés',t:'Petit cabinet de Charleroi',ic:'👨‍⚖️',lv:2,sp:['social','commercial'],fee:4000},
+  {k:'comm',n:'Me Laura Gilson',t:'Droit commercial et recouvrement (Liège)',ic:'👩‍💼',lv:2,sp:['commercial'],fee:3500},
+  {k:'social',n:'Me Sophie Renard',t:'Spécialiste en droit social (tribunal du travail)',ic:'👩‍⚖️',lv:3,sp:['social'],fee:7500},
+  {k:'penal',n:'Me Marc Collignon',t:'Droit pénal social et accidents du travail',ic:'👨‍⚖️',lv:3,sp:['social','penal'],fee:9000},
+  {k:'mp',n:'Cabinet Delvaux',t:'Droit des marchés publics (Conseil d’État)',ic:'🏛️',lv:3,sp:['mp'],fee:12000},
+  {k:'fisc',n:'Me Olivier Henrard',t:'Droit fiscal (ancien inspecteur des finances)',ic:'📊',lv:4,sp:['fiscal'],fee:15000},
+  {k:'top',n:'Grand cabinet de l’avenue Louise',t:'Bruxelles, toutes les spécialités, les meilleurs du pays',ic:'💼',lv:5,sp:['social','penal','mp','commercial','fiscal'],fee:38000}];
+const KIND={social:'droit social',mp:'marchés publics',fiscal:'droit fiscal',commercial:'droit commercial',penal:'droit pénal social'};
+const lawBonus=(k,kind)=>{const L=LAWY.find(x=>x.k===k);if(!L)return 0;return (L.lv-2)*.08+(L.sp.includes(kind)?.12:L.sp.length?-.05:-.03)};
+let lawCb=null;const lawN=k=>k==='juriste'?'Ta juriste Me Caroline Leroy':(LAWY.find(x=>x.k===k)||{n:'Ton avocat'}).n;
+function lawChoose(kind,base,title,cb){lawCb=cb;const pj=insOn('pj');showModal(`<h3>⚖️ Choisis ton avocat</h3><p class="mut sm">${title}<br>Spécialité utile : <b>${KIND[kind]}</b>. Un bon avocat spécialisé coûte cher mais gagne plus souvent.${pj?' Ta protection juridique rembourse jusqu’à 15 000 € d’honoraires.':''}</p>
+  ${LAWY.map(L=>{const ch=clamp(base+lawBonus(L.k,kind)+(has('juriste')?.1:0),.03,.95),pay=Math.max(0,L.fee-(pj?15000:0));return`<div class="card" style="padding:10px 12px"><div class="row" style="flex-wrap:nowrap"><div style="font-size:30px">${L.ic}</div><div style="flex:1;min-width:0"><b>${L.n}</b> <span style="color:#ffd76b">${'★'.repeat(L.lv)}${'☆'.repeat(5-L.lv)}</span><div class="mut sm">${L.t}${L.sp.includes(kind)?' · ✅ spécialiste':''}</div><div class="sm">Honoraires ${eur(L.fee)}${pj&&L.fee?` (tu paies ${eur(pay)})`:''} · chances ± <b class="${ch>=.5?'money':'neg'}">${Math.round(ch*100)} %</b></div></div><button class="btn ${L.sp.includes(kind)?'':'s'}" style="padding:7px 10px" ${st.cash<pay?'disabled':''} onclick="lawPick('${L.k}')">Choisir</button></div></div>`}).join('')}
+  ${has('juriste')?`<div class="card" style="padding:10px 12px;border-color:var(--gr)"><div class="row" style="flex-wrap:nowrap"><div style="font-size:30px">👩‍⚖️</div><div style="flex:1;min-width:0"><b>Ma juriste (Me Caroline Leroy)</b><div class="mut sm">Juriste d’entreprise salariée · gratuit, moins forte qu’un bon spécialiste</div><div class="sm">Gratuit · chances ± <b class="${base+.15>=.5?'money':'neg'}">${Math.round(clamp(base+.15,.03,.95)*100)} %</b></div></div><button class="btn s" style="padding:7px 10px" onclick="lawPick('juriste')">Choisir</button></div></div>`:''}
+  <button class="btn s w" onclick="closeM()">Annuler</button>`)}
+function lawPick(k){if(k==='juriste'){click();closeM();const cb=lawCb;lawCb=null;if(cb)cb(k);return}const L=LAWY.find(x=>x.k===k),pay=Math.max(0,L.fee-(insOn('pj')?15000:0));if(st.cash<pay)return toastMsg(`Il faut ${eur(pay)}.`);if(pay)mv(-pay,'Honoraires : '+L.n,'other');if(insOn('pj')&&L.fee)log(`⚖️ Ta protection juridique paie ${eur(Math.min(15000,L.fee))} d’honoraires.`,false);click();closeM();const cb=lawCb;lawCb=null;if(cb)cb(k)}
+function lawAct(id,a,ok){const L=st.law||[],x=L.find(y=>y.id===id);if(!x||x.st!=='open')return;const deal=Math.round(x.claim*(x.kind==='fisc'?1:.5)/100)*100;
+  if(a==='deal'){if(!ok)return ask(x.kind==='fisc'?`Payer le redressement fiscal ?\nMontant : ${eur(deal)}\nC’est fini tout de suite.`:`Arrangement à l’amiable ?\nAvec : ${x.w}\nIl/elle réclame : ${eur(x.claim)}\nArrangement proposé : ${eur(deal)}\nC’est fini tout de suite, sans tribunal. Ta réputation baisse un peu.`,()=>lawAct(id,a,1),{ic:'🤝',ok:'Payer'});
+    if(st.cash<deal)return toastMsg(`Il faut ${eur(deal)}.`);click();mv(-deal,x.kind==='fisc'?'Redressement fiscal payé':`Arrangement à l’amiable avec ${x.w}`,x.kind==='fisc'?'tax':'other');if(x.kind!=='fisc')st.rep=clamp(st.rep-1,0,100);x.st='done';x.res=`Réglé : ${eur(deal)}`;log(x.kind==='fisc'?`🧾 Redressement fiscal payé : ${eur(deal)}.`:`🤝 Arrangement à l’amiable avec ${x.w} : ${eur(deal)}. Affaire terminée.`);save();render();return}
+  const kind=x.kind==='fisc'?'fiscal':'social',base=x.kind==='fisc'?.35:clamp(.55-.15*x.fault,.05,.6);
+  lawChoose(kind,base,x.kind==='fisc'?`Contester le redressement fiscal de ${eur(x.claim)}.`:`Procès de ${x.w} (${x.fault} faute(s) de sécurité relevée(s)).`,k=>{x.st='court';x.lw=k;x.v=st.day+RI(90,180);log(`⚖️ ${lawN(k)} défend l’entreprise. Jugement vers le ${dstr(x.v)} ${date(x.v).getFullYear()}.`);save();render()})}
 function lawTick(){for(const x of st.law||[]){
-  if(x.st==='open'&&has('juriste')&&st.day>x.exp-30){x.st='court';x.v=st.day+RI(90,180);rsAdd('jur',1);rsAdd('jurv',5000);log(`⚖️ Ta juriste prend en charge le procès de ${x.w}.`,false)}
-  else if(x.st==='open'&&st.day>x.exp){x.st='court';x.v=st.day+RI(60,120);x.nodef=1;log(`⚖️ Tu n’as pas répondu : ${x.w} va au tribunal sans que tu sois défendu(e).`)}
-  else if(x.st==='court'&&st.day>=x.v){const pWin=x.nodef?.1:clamp(.8-.15*x.fault+(has('juriste')?.2:0),.15,.9);x.st='done';
+  if(x.st==='open'&&has('juriste')&&st.day>x.exp-30){x.st='court';x.lw='juriste';x.v=st.day+RI(90,180);rsAdd('jur',1);rsAdd('jurv',5000);log(`⚖️ Ta juriste prend en charge le dossier ${x.kind==='fisc'?'fiscal':'de '+x.w}.`,false)}
+  else if(x.st==='open'&&st.day>x.exp){x.st='court';x.v=st.day+RI(60,120);x.nodef=1;log(`⚖️ Tu n’as pas répondu : ${x.kind==='fisc'?'le redressement fiscal devient définitif':x.w+' va au tribunal sans que tu sois défendu(e)'}.`)}
+  else if(x.st==='court'&&st.day>=x.v){x.st='done';const kind=x.kind==='fisc'?'fiscal':'social';
+    const pWin=x.nodef?(x.kind==='fisc'?0:.1):clamp((x.kind==='fisc'?.35:.55-.15*x.fault)+(x.lw&&x.lw!=='juriste'?lawBonus(x.lw,kind):0)+(has('juriste')?(x.lw==='juriste'?.15:.1):0),.03,.95);
+    if(x.kind==='fisc'){if(Math.random()<pWin){const part=Math.round(x.claim*R(0,.3));if(part)mv(-part,'Redressement fiscal réduit','tax');x.res=`Contestation gagnée : ${eur(part)}`;log(`⚖️✅ Contrôle fiscal : ton avocat obtient presque tout. Tu ne paies que ${eur(part)} au lieu de ${eur(x.claim)}.`)}
+      else{const tot=Math.round(x.claim*1.2);mv(-tot,'Redressement fiscal + accroissement d’impôt (20 %)','tax');x.res=`Perdu : ${eur(tot)}`;log(`⚖️❌ Contrôle fiscal perdu : ${eur(tot)} (impôt + accroissement de 20 %).`)}continue}
     if(Math.random()<pWin){st.rep=clamp(st.rep+1,0,100);x.res='Procès gagné';log(`⚖️✅ Procès gagné contre ${x.w} : le tribunal estime que l’entreprise n’est pas responsable.`)}
     else{const amende=Math.round(R(800,8000)/100)*100,frais=insOn('pj')?0:Math.round(x.claim*.08),tot=Math.round(x.claim*(x.nodef?1.2:1))+frais+amende;mv(-tot,`Jugement : dommages et intérêts à ${x.w}, frais et amende pénale sociale`,'other');st.rep=clamp(st.rep-4,0,100);x.res=`Procès perdu : ${eur(tot)}`;
       log(`⚖️❌ Procès perdu contre ${x.w} : ${eur(tot)} (dommages et intérêts ${eur(x.claim*(x.nodef?1.2:1))}, indemnité de procédure ${eur(frais)}, amende pénale sociale ${eur(amende)}). Réputation -4.`)}}}
+  for(const r of st.rec||[])if(!r.done&&st.day>=r.v){r.done=1;const t=st.tenders.find(y=>y.id===r.id);if(!t){continue}
+    if(Math.random()<r.p){t.win=st.name;t.rec=0;log(`⚖️✅ Le Conseil d’État annule l’attribution à ${t.wN} : le marché ${JOBS[t.j].n} est pour toi !`);st.stats.lost=Math.max(0,st.stats.lost-1);awardMe(t)}else{t.rec=0;log(`⚖️❌ Recours rejeté par le Conseil d’État pour ${JOBS[t.j].n}.`)}}
   if(st.law&&st.law.length>20)st.law=st.law.filter(x=>x.st!=='done').concat(st.law.filter(x=>x.st==='done').slice(-10))}
-function lawCard(){const L=(st.law||[]).filter(x=>x.st!=='done');if(!L.length)return'';return`<h2>⚖️ Justice · ${L.length}</h2>`+L.map(x=>`<div class="card acc" style="--ac:var(--rd)"><b class="sm">⚖️ ${esc(x.w)} t’attaque en justice après son accident</b><div class="mut sm" style="margin-top:4px">Il/elle réclame <b>${eur(x.claim)}</b>. Ce qu’on te reproche : ${x.why.join(' ; ')}.</div>
-  ${x.st==='open'?`<div class="mut sm" style="margin-top:4px">Réponds avant le ${dstr(x.exp)}, sinon le procès a lieu sans toi.</div><div class="row" style="margin-top:8px"><button class="btn s" style="padding:7px 10px" onclick="lawAct(${x.id},'deal')">🤝 Arrangement (${eur(Math.round(x.claim*.5/100)*100)})</button><button class="btn" style="padding:7px 10px" onclick="lawAct(${x.id},'court')">⚖️ Prendre un avocat</button></div>`:`<div class="tags"><span class="tag o">⏳ Jugement vers le ${dstr(x.v)}</span>${x.nodef?'<span class="tag r">Pas défendu</span>':''}</div>`}</div>`).join('')}
+// recours en marchés publics (suspension d'extrême urgence au Conseil d'État, dans les 15 jours) : possible si ton offre était à moins de 4 % du gagnant
+function recEligible(t){if(!t.my||t.win===st.name||!t.lostD||t.recUsed||st.day-t.lostD>15)return false;const me=(t.bids||[]).find(b=>b.me);if(!me)return false;return me.irr==='offre anormalement basse non justifiée'||(!me.irr&&t.wTot&&me.tot<=t.wTot*1.04)}
+function recUI(id){const t=st.tenders.find(x=>x.id===id);if(!t||!recEligible(t))return toastMsg('Le délai de recours (15 jours) est dépassé.');
+  lawChoose('mp',.08,`Recours contre l’attribution du marché ${JOBS[t.j].n} (${t.road}) à ${t.wN}. Réponse du Conseil d’État en 3 à 6 semaines.`,k=>{t.recUsed=1;t.rec=1;const p=clamp(.08+(k==='juriste'?.15:lawBonus(k,'mp')+(has('juriste')?.1:0)),.02,.6);(st.rec||(st.rec=[])).push({id:t.id,k,v:st.day+RI(15,40),p});log(`⚖️ Recours introduit au Conseil d’État avec ${lawN(k)}.`);save();render()})}
+// contrôle fiscal (SRL) : le SPF Finances réclame un supplément d'impôt
+function taxAudit(){if(!st.srl||Math.random()>.008)return;const claim=Math.round(Math.max(5000,caRecent()*R(.003,.012))/100)*100;(st.law||(st.law=[])).push({id:st.nid++,kind:'fisc',w:'SPF Finances',why:['frais professionnels refusés','avantages en nature mal déclarés'].slice(0,RI(1,2)),claim,fault:1,st:'open',d:st.day,exp:st.day+45});log(`🧾 Contrôle fiscal : le SPF Finances réclame ${eur(claim)} d’impôt en plus. Réponds dans 🦺 Chantiers → Justice.`)}
+function lawCard(){const L=(st.law||[]).filter(x=>x.st!=='done');if(!L.length)return'';return`<h2>⚖️ Justice · ${L.length}</h2>`+L.map(x=>`<div class="card acc" style="--ac:var(--rd)"><b class="sm">${x.kind==='fisc'?`🧾 Contrôle fiscal : le SPF Finances réclame ${eur(x.claim)}`:`⚖️ ${esc(x.w)} t’attaque en justice après son accident`}</b><div class="mut sm" style="margin-top:4px">${x.kind==='fisc'?'Motif':'Il/elle réclame <b>'+eur(x.claim)+'</b>. Ce qu’on te reproche'} : ${x.why.join(' ; ')}.</div>
+  ${x.st==='open'?`<div class="mut sm" style="margin-top:4px">Réponds avant le ${dstr(x.exp)}${x.kind==='fisc'?', sinon le redressement devient définitif':', sinon le procès a lieu sans toi'}.</div><div class="row" style="margin-top:8px"><button class="btn s" style="padding:7px 10px" onclick="lawAct(${x.id},'deal')">${x.kind==='fisc'?'🧾 Payer '+eur(x.claim):'🤝 Arrangement ('+eur(Math.round(x.claim*.5/100)*100)+')'}</button><button class="btn" style="padding:7px 10px" onclick="lawAct(${x.id},'court')">⚖️ ${x.kind==='fisc'?'Contester':'Aller au tribunal'} avec un avocat</button></div>`:`<div class="tags"><span class="tag o">⏳ Jugement vers le ${dstr(x.v)}</span>${x.lw?`<span class="tag v">${x.lw==='juriste'?'Ta juriste':LAWY.find(y=>y.k===x.lw).n}</span>`:''}${x.nodef?'<span class="tag r">Pas défendu</span>':''}</div>`}</div>`).join('')}
 // contrôle qualité du SPW à la fin d'un marché public
 function spwCheck(c){if(Math.random()>.35)return;const sc=.2+(c.vd!==undefined?.3:0)+(has('prev')?.15:0)+(has('dirt')?.1:0)+(has('qhse')?.2:0)+Math.random()*.5;
   if(sc>.7){const b=Math.round(c.price*.01);mv(b,'Bonus qualité du SPW','in');st.rep=clamp(st.rep+2,0,100);log(`✅ Contrôle qualité du SPW : travail impeccable sur ${JOBS[c.j].n}. Bonus ${eur(b)}, réputation +2.`)}
@@ -1120,7 +1148,10 @@ function decide(t){const J=JOBS[t.j];const me=t.bids.find(b=>b.me);
   if(!w.me){const r=st.riv.find(x=>x.n===w.n);if(r){r.won++;r.ca+=w.tot;r.load.push(st.day+Math.round(t.N*1.5))}}
   if(!t.my)return;
   const tbl=pvTable(t);
-  if(w.me){st.stats.won++;confetti(200);
+  if(w.me){awardMe(t)
+  }else{st.stats.lost++;t.lostD=st.day;t.wTot=w.tot;t.wN=w.n;log(`❌ Marché attribué à ${w.n} (${eur(w.tot)}). ${me&&me.irr?'Ton offre a été écartée : '+me.irr+'.':''}${recEligible(t)?' Tu peux introduire un recours avec un avocat (🏛️ Marchés → Mes offres).':''}`)}
+}
+function awardMe(t){const J=JOBS[t.j];const tbl=pvTable(t);st.stats.won++;confetti(200);
     const startBy=addWork(st.day,t.proc==='po'?15:10);
     const c={id:st.nid++,j:t.j,q:t.am?Math.round(t.q/2):t.q,am:t.am||null,road:t.road,town:t.town,buyer:t.buyer,ref:t.ref,price:t.am?Math.round(t.my.tot/2):t.my.tot,prog:0,vis:0,N:t.N,wd:0,startBy,st:'wait',crew:[],own:{},billed:0,caut:0,gar:t.caut?Math.ceil(t.my.tot*.05/10)*10:0,xc:t.postes.slice(1,-1).reduce((a,p)=>a+p.q*p.c,0),seed:RI(1,99999),tap:{},nRef:t.nRef};
     if(c.gar){const fee=Math.max(150,Math.round(c.gar*.015));mv(-fee,'Garantie bancaire (cautionnement 5 %)','fix');log(`🏦 Ta banque émet une garantie de ${eur(c.gar)} pour le cautionnement (commission ${eur(fee)}).`,false)}
@@ -1128,7 +1159,6 @@ function decide(t){const J=JOBS[t.j];const me=t.bids.find(b=>b.me);
     st.contracts.push(c);log(`🎉 Marché attribué : ${J.ic} ${J.n} (${t.road}) pour ${eur(t.my.tot)} !`,false);kaching();
     if(has('cond')||has('offre'))log(`🎉 Marché gagné : ${J.n} (${t.road}) pour ${eur(t.my.tot)}. ${has('cond')?'Benoît':'Ton chef d’équipe'} organise le chantier.`);else showModal(`<h3>🎉 Marché attribué !</h3><div class="mut sm">${t.buyer}<br>Réf. ${t.ref}</div><div class="hd" style="margin-top:8px"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div><h2>Procès-verbal d'ouverture des offres</h2>${tbl}
     <p>Ordre de commencer : <b>${dlong(startBy)}</b>.<br>Délai d'exécution : <b>${t.N} jours ouvrables</b>.${c.gar?`<br>Cautionnement : ${eur(c.gar)} (garantie bancaire).`:''}</p><div class="row"><button class="btn" onclick="closeM();startUI(${c.id})">Préparer le chantier</button><button class="btn s" onclick="closeM()">Plus tard</button></div>`);
-  }else{st.stats.lost++;log(`❌ Marché attribué à ${w.n} (${eur(w.tot)}). ${me&&me.irr?'Ton offre a été écartée : '+me.irr+'.':''}`)}
 }
 function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr style="${b.irr?'opacity:.5':''}"><td>${t.win===b.n?'🏆 ':''}${b.me?'<b style="color:var(--or2)">'+esc(b.n)+'</b>':esc(b.n)}${b.irr&&t.status==='done'?'<div class="mut sm">'+b.irr+'</div>':''}</td><td>${eur2(b.tot)}</td></tr>`).join('')+'</table>'}
 
@@ -1179,7 +1209,7 @@ function tick(){ck('days');try{if(isWork(st.day+1))mkDay()}catch(e){}
   }
   for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);mv(v.amt,'Paiement : '+v.from,v.caut?'buy':'in');if(v.caut)st.mCapex-=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`);kaching()}
   for(const t of [...st.tenders]){if(t.status==='open'&&st.day>=t.bidEnd)openBids(t);if(t.status==='opened'&&st.day>=t.dec)decide(t)}
-  st.tenders=st.tenders.filter(t=>t.status!=='done'||(t.my&&st.day-t.dec<20));
+  st.tenders=st.tenders.filter(t=>t.status!=='done'||t.rec||(t.my&&st.day-t.dec<20));
   st.tenders=st.tenders.filter(t=>t.status!=='opened'||t.my||st.day-t.bidEnd<3);
   const open=st.tenders.filter(t=>t.status==='open').length;
   if(open<10&&Math.random()<.7)genTender();if(open<10&&Math.random()<.4)genTender();
@@ -1188,7 +1218,7 @@ function tick(){ck('days');try{if(isWork(st.day+1))mkDay()}catch(e){}
   if(!st.jobs.some(o=>!JOBS[o.j].need.length))genJob(month()===12||month()<=2&&Math.random()<.5?'p_neige':'p_dechets');
   if(x.getDay()===1)refreshCand();
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
-  events(work);decTick(work);try{wxUrgent();unionTick();lawTick();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
+  events(work);decTick(work);try{wxUrgent();unionTick();lawTick();if(date(st.day).getDate()===10)taxAudit();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
   if(st.cash<-overdraft()&&!st.over)rescue();
   dqTick();save();renderTick();
 }
@@ -2088,8 +2118,8 @@ function rAo(){let h=goalCard();const mine=st.tenders.filter(t=>t.my);
   else if(aoTab==='mes'){
     if(!mine.length)h+='<p class="mut">Tu n\'as encore remis aucune offre.</p>';
     for(const t of mine.slice().reverse()){const J=JOBS[t.j];const i=t.bids?t.bids.findIndex(b=>b.me):-1;
-      const stt=t.status==='open'?`<span class="tag o">Ouverture des offres le ${dstr(t.bidEnd)}</span>`:t.status==='opened'?`<span class="tag b">Classement provisoire : ${i+1}e / ${t.bids.length} · décision le ${dstr(t.dec)}</span>`:t.win===st.name?'<span class="tag g">🏆 Attribué à toi</span>':`<span class="tag r">Attribué à ${esc(t.win||'personne')}</span>`;
-      h+=`<div class="card acc" style="--ac:${J.ac}"><div class="mut sm">Réf. ${t.ref}</div>${jobHead(J,`${t.road} — ${t.town}`,`<b>${eur(t.my.tot)}</b>`)}<div class="tags">${stt}</div>${t.bids?`<h2>PV d'ouverture</h2>${pvTable(t)}`:`<button class="btn s" style="margin-top:10px" onclick="withdraw(${t.id})">Retirer mon offre</button>`}</div>`}}
+      const stt=t.status==='open'?`<span class="tag o">Ouverture des offres le ${dstr(t.bidEnd)}</span>`:t.status==='opened'?`<span class="tag b">Classement provisoire : ${i+1}e / ${t.bids.length} · décision le ${dstr(t.dec)}</span>`:t.win===st.name?'<span class="tag g">🏆 Attribué à toi</span>':`<span class="tag r">Attribué à ${esc(t.win||'personne')}</span>`+(t.rec?'<span class="tag o">⏳ Recours en cours au Conseil d’État</span>':'');
+      h+=`<div class="card acc" style="--ac:${J.ac}"><div class="mut sm">Réf. ${t.ref}</div>${jobHead(J,`${t.road} — ${t.town}`,`<b>${eur(t.my.tot)}</b>`)}<div class="tags">${stt}</div>${recEligible(t)?`<button class="btn" style="margin-top:10px" onclick="recUI(${t.id})">⚖️ Introduire un recours avec un avocat</button><div class="mut sm">Possible pendant 15 jours (jusqu’au ${dstr(t.lostD+15)}) : ton offre était très proche ou écartée à tort.</div>`:''}${t.bids?`<h2>PV d'ouverture</h2>${pvTable(t)}`:`<button class="btn s" style="margin-top:10px" onclick="withdraw(${t.id})">Retirer mon offre</button>`}</div>`}}
   else{h+=`<p class="mut sm" style="margin:0 4px 10px">Les autres entreprises remettent aussi offre. Elles ont leurs spécialités, leur taille et leurs prix.</p>`;
     const all=[...st.riv.map(r=>({...r,busy:r.load.filter(e=>e>st.day).length})),{n:st.name,me:1,sz:st.cls>=2?2:st.cls?1:0,rep:st.rep,won:st.stats.won,ca:st.stats.ca,busy:running().filter(c=>!JOBS[c.j].p).length,jobs:Object.keys(st.refs)}].sort((a,b)=>b.won-a.won||b.ca-a.ca);
     for(const r of all)h+=`<div class="card ${r.me?'acc':''}"><div class="row"><b style="flex:1;${r.me?'color:var(--or2)':''}">${esc(r.n)}</b><span class="tag">${['Petite','Moyenne','Grande'][r.sz]}</span></div><div class="tags"><span class="tag">${stars(r.rep)}</span><span class="tag g">🏆 ${r.won} marchés</span><span class="tag">${eur(r.ca)}</span><span class="tag o">🦺 ${r.busy} en cours</span></div><div class="mut sm" style="margin-top:6px">${(r.jobs||[]).map(j=>JOBS[j]?JOBS[j].ic:'').join(' ')}</div></div>`}
@@ -2581,7 +2611,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.27";
+var APPV="2026-11-05.28";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
