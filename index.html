@@ -1431,15 +1431,41 @@ function fire(id,ok){ok=ok||0;const w=st.workers.find(x=>x.id===id);if(!w||w.bos
 function trainPC(id){const w=st.workers.find(x=>x.id===id);if(!w||w.pc)return;if(st.cash<2900)return toastMsg('Il faut 2 900 € pour le permis C (auto-école + examen + CAP).');mv(-2900,'Permis C de '+w.n,'buy');w.pc=1;log(`🪪 ${w.n} a obtenu son permis C !`);save();render()}
 // Gammes de qualité : même machine, mais neuve (+10 % de travail, usure -10 %) ou haut de gamme (+20 %, usure -20 %)
 const TIERS={2:{n:'Neuve, dernière génération',ic:'⭐',f:1.8,sp:.10,us:.10},3:{n:'Haut de gamme (marque premium, toutes options)',ic:'💎',f:3,sp:.20,us:.20}};
+// Vrais modèles de marque pour les gammes (prix HTVA approximatifs : catalogues et annonces 2025-2026)
+const TM={
+  taillehaie:{2:['Stihl HS 82 R',760],3:['Stihl HSA 140 R sur batterie (avec batterie dorsale)',1450]},
+  souffleur:{2:['Stihl BR 700',880],3:['Stihl BR 800 C-E',1150]},
+  debrou:{2:['Stihl FS 491 C-EM',1320],3:['Stihl FS 561 C-EM',1680]},
+  tondeuse:{2:['Honda HRH 536 HX',2050],3:['Toro TurfMaster 76 cm',2900]},
+  trons:{2:['Stihl MS 400 C-M',1250],3:['Husqvarna 572 XP',1500]},
+  karcher:{2:['Kärcher HDS 8/18-4 C',6500],3:['Kärcher HDS 13/20-4 S',11000]},
+  plaque:{2:['Weber CF 2',2200],3:['Ammann APF 20/50',2900]},
+  remorque:{2:['Humbaur 1 300 kg basculante',2900],3:['Ifor Williams 2 700 kg basculante',5200]},
+  aspifeuilles:{2:['Billy Goat aspirateur tracté',9800],3:['Trilo S2 aspirateur de feuilles',16500]},
+  rogneuse:{2:['Stihl GH 370 S',13500],3:['Vermeer SC30TX',21000]},
+  broyeur:{2:['Timberwolf TW 230',19500],3:['Jensen A530',28000]},
+  van:{2:['Ford Transit plateau neuf',40000],3:['Mercedes Sprinter plateau neuf',52000]},
+  fourgon:{2:['Ford Transit 9 places neuf',42000],3:['Mercedes Sprinter 9 places neuf',55000]},
+  benne:{2:['Iveco Daily benne neuf',48000],3:['Mercedes Sprinter benne neuf',58000]},
+  benne19:{2:['DAF CF benne-grue (occasion récente)',95000],3:['Mercedes Arocs benne-grue neuf',165000]},
+  nacelle:{2:['Klubb K32 neuve',72000],3:['Ruthmann TBR 220 neuve',115000]},
+  tracteur:{2:['John Deere 6120M + épareuse neuve',150000],3:['Fendt 516 Vario + épareuse Rousseau',215000]},
+  pelle:{2:['Kubota KX057-6 neuve',68000],3:['Volvo ECR58 neuve',82000]},
+  chargeuse:{2:['Bobcat S70 neuve',39000],3:['Kubota R085 neuve',52000]},
+  tondap:{2:['Kubota F3090 neuve',32000],3:['John Deere 1580 TerrainCut neuve',42000]},
+  balayeuse:{2:['Hako Citymaster 1650 (occasion récente)',90000],3:['Bucher CityCat 2020 neuve',165000]},
+  hydro:{2:['Hydrocureuse Scania (occasion 2020)',180000],3:['Hydrocureuse Mercedes neuve',320000]}};
+const tierName=(k,tr)=>TM[k]&&TM[k][tr]?TM[k][tr][0]:TIERS[tr].n;
+const tierPrice=(k,tr)=>TM[k]&&TM[k][tr]?TM[k][tr][1]:Math.round(EQ[k].p*TIERS[tr].f/10)*10;
 const tq=k=>{const Q=st.tq||(st.tq={});return Q[k]||(Q[k]={2:0,3:0})};
 const tierShare=(k,f)=>{const n=st.eq[k]||0;if(!n)return 0;const q=tq(k);return Math.min(1,(q[2]*TIERS[2][f]+q[3]*TIERS[3][f])/n)};
 const qualWork=J=>J.need.reduce((m,t)=>m*(1+tierShare(t,'sp')),1);
-const eqVal=k=>{const q=(st.tq||{})[k]||{2:0,3:0};return EQ[k].p*((st.eq[k]||0)+q[2]*(TIERS[2].f-1)+q[3]*(TIERS[3].f-1))};
-function buyTier(t,tr,ok){const e=EQ[t],T=TIERS[tr],pr=Math.round(e.p*T.f/10)*10;if(st.cash<pr)return toastMsg(`Il manque ${eur(pr-st.cash)}.`);
-  if(!ok)return ask(`Acheter la version ${T.ic} ${T.n.toLowerCase()} ?\nMachine : ${e.n}\nPrix : ${eur(pr)} (au lieu de ${eur(e.p)})\nTravail : +${Math.round(T.sp*100)} % sur les chantiers qui l’utilisent\nUsure et carburant : -${Math.round(T.us*100)} %`,()=>buyTier(t,tr,1),{ic:T.ic,ok:'Acheter',img:photo('eq_'+t)});
-  mv(-pr,`Achat : ${e.n} (${T.n.toLowerCase()})`,'buy');st.mCapex+=pr;st.eq[t]=(st.eq[t]||0)+1;tq(t)[tr]++;log(`🛒 ${T.ic} Achat : ${e.ic} ${e.n} — ${T.n.toLowerCase()}`,false);kaching();goals();save();render()}
+const eqVal=k=>{const q=(st.tq||{})[k]||{2:0,3:0};return EQ[k].p*(st.eq[k]||0)+q[2]*(tierPrice(k,2)-EQ[k].p)+q[3]*(tierPrice(k,3)-EQ[k].p)};
+function buyTier(t,tr,ok){const e=EQ[t],T=TIERS[tr],pr=tierPrice(t,tr),nm=tierName(t,tr);if(st.cash<pr)return toastMsg(`Il manque ${eur(pr-st.cash)}.`);
+  if(!ok)return ask(`Acheter le modèle ${T.ic} ${tr===2?'pro':'haut de gamme'} ?\nModèle : ${nm}\nÀ la place de : ${e.n} (${eur(e.p)})\nPrix : ${eur(pr)} HTVA\nTravail : +${Math.round(T.sp*100)} % sur les chantiers qui l’utilisent\nUsure et carburant : -${Math.round(T.us*100)} %`,()=>buyTier(t,tr,1),{ic:T.ic,ok:'Acheter',img:photo('eq_'+t)});
+  mv(-pr,`Achat : ${nm}`,'buy');st.mCapex+=pr;st.eq[t]=(st.eq[t]||0)+1;tq(t)[tr]++;log(`🛒 ${T.ic} Achat : ${e.ic} ${nm}`,false);kaching();goals();save();render()}
 function buy(t){const e=EQ[t];if(st.cash<e.p)return toastMsg(`Pas assez d'argent : il manque ${eur(e.p-st.cash)}.`);mv(-e.p,'Achat : '+e.n,'buy');st.mCapex+=e.p;st.eq[t]=(st.eq[t]||0)+1;log(`🛒 Achat : ${e.ic} ${e.n}`,false);kaching();goals();save();render()}
-function sell(t,ok){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const q=tq(t),std=(st.eq[t]||0)-q[2]-q[3],tr=std>0?1:q[2]>0?2:3,v=Math.round(EQ[t].p*(tr===1?1:TIERS[tr].f)*.55);if(!ok)return ask(`Revendre ce matériel ?\nMachine : ${EQ[t].n}\nPrix d’achat : ${eur(EQ[t].p)}\nTu reçois (± 55 %) : ${eur(v)}`,()=>sell(t,1),{ic:EQ[t].ic||'🚜',ok:'Revendre',img:photo('eq_'+t)});st.eq[t]--;if(tr>1)q[tr]--;mv(v,'Revente : '+EQ[t].n,'buy');st.mCapex-=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
+function sell(t,ok){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const q=tq(t),std=(st.eq[t]||0)-q[2]-q[3],tr=std>0?1:q[2]>0?2:3,v=Math.round((tr===1?EQ[t].p:tierPrice(t,tr))*.55);if(!ok)return ask(`Revendre ce matériel ?\nMachine : ${EQ[t].n}\nPrix d’achat : ${eur(EQ[t].p)}\nTu reçois (± 55 %) : ${eur(v)}`,()=>sell(t,1),{ic:EQ[t].ic||'🚜',ok:'Revendre',img:photo('eq_'+t)});st.eq[t]--;if(tr>1)q[tr]--;mv(v,'Revente : '+EQ[t].n,'buy');st.mCapex-=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
 function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);mv(-a.p,a.n,'buy');st.adm[k]=1;log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
 function clsOk(u){return!!(st.adm.vca&&st.adm.rc)&&st.stats.ca>=u.ca&&ownW()>=u.w&&st.rep>=u.r&&st.cash>=u.c&&(!u.dir||u.dir.every(has))}
 function upCls(){const u=CLS[st.cls+1];if(!u||!clsOk(u))return;mv(-u.c,'Dossier d’agréation','buy');st.cls++;log(`🏅 Agréation ${u.n} (catégorie G — routes) : marchés de travaux ${u.max>=1e11?'sans limite de montant':`jusqu'à ${eur(u.max)}`} !`);kaching();goals();save();render()}
@@ -1821,9 +1847,9 @@ function rMt(){let h=goalCard()+siteCard()+`<h2>Matériel — prix HTVA</h2><p c
   for(const t of ks){const e=EQ[t],n=st.eq[t]||0,f=freeEq(t);const jobs=Object.values(JOBS).filter(J=>J.need.includes(t));
     h+=`<div class="card ${n?'acc':''}" style="--ac:var(--gr)">${photo('eq_'+t)}<div class="hd"><div class="ic" style="--ac2:${n?'#1d5232':'#24402e'}">${e.ic}</div><div style="flex:1;min-width:0"><h3>${e.n}</h3><div class="mut sm">${eur(e.p)} HTVA · usage ${eur(e.u)}/jour${e.veh?' · assurance + taxe '+(e.veh==='h'?'310':e.veh==='a'?'70':'160')+' €/mois':''}</div></div>${n?`<span class="tag g">×${n}</span>`:''}</div>
     <div class="tags">${jobs.slice(0,6).map(J=>`<span class="tag ${J.p?'':'b'}">${J.ic} ${J.n.split(' ').slice(0,3).join(' ')}</span>`).join('')}${jobs.length>6?`<span class="tag">+ ${jobs.length-6} autres métiers</span>`:''}</div>
-    ${n&&(tq(t)[2]||tq(t)[3])?`<div class="tags"><span class="tag">Standard ×${n-tq(t)[2]-tq(t)[3]}</span>${tq(t)[2]?`<span class="tag o">⭐ Neuve ×${tq(t)[2]}</span>`:''}${tq(t)[3]?`<span class="tag v">💎 Haut de gamme ×${tq(t)[3]}</span>`:''}<span class="tag g">+${Math.round(tierShare(t,'sp')*100)} % de travail</span></div>`:''}
+    ${n&&(tq(t)[2]||tq(t)[3])?`<div class="tags"><span class="tag">Standard ×${n-tq(t)[2]-tq(t)[3]}</span>${tq(t)[2]?`<span class="tag o">⭐ ${tierName(t,2)} ×${tq(t)[2]}</span>`:''}${tq(t)[3]?`<span class="tag v">💎 ${tierName(t,3)} ×${tq(t)[3]}</span>`:''}<span class="tag g">+${Math.round(tierShare(t,'sp')*100)} % de travail</span></div>`:''}
     <div class="row" style="margin-top:10px"><button class="btn" ${st.cash<e.p?'disabled':''} onclick="buy('${t}')">Acheter</button>${n?`<button class="btn s" onclick="sell('${t}')">Revendre</button><span class="mut sm">${f} libre(s)</span>`:''}</div>
-    <div class="row" style="margin-top:8px">${[2,3].map(tr=>`<button class="btn s" style="padding:7px 10px" ${st.cash<e.p*TIERS[tr].f?'disabled':''} onclick="buyTier('${t}',${tr})">${TIERS[tr].ic} ${tr===2?'Neuve':'Haut de gamme'} ${eur(Math.round(e.p*TIERS[tr].f/10)*10)} · +${Math.round(TIERS[tr].sp*100)} %</button>`).join('')}</div></div>`}
+    <div style="margin-top:10px;border-top:1px solid #ffffff14;padding-top:8px"><div class="mut sm" style="margin-bottom:6px">Meilleure qualité : plus cher, mais tes équipes travaillent plus vite et la machine s’use moins.</div>${[2,3].map(tr=>`<div class="row" style="flex-wrap:nowrap;margin-top:6px"><div style="flex:1;min-width:0"><b class="sm">${TIERS[tr].ic} ${tierName(t,tr)}</b><div class="mut sm">${eur(tierPrice(t,tr))} HTVA · +${Math.round(TIERS[tr].sp*100)} % de travail · usure -${Math.round(TIERS[tr].us*100)} %</div></div><button class="btn s" style="padding:7px 10px" ${st.cash<tierPrice(t,tr)?'disabled':''} onclick="buyTier('${t}',${tr})">Acheter</button></div>`).join('')}</div></div>`}
   }
   return h}
 function bilanCard(){const B=st.lastMon;if(!B)return'';const rows=Object.keys(CATN).filter(k=>B.M[k]).map(k=>`<tr><td>${CATN[k]}</td><td class="${B.M[k]>=0?'money':'neg'}">${B.M[k]>=0?'+':''}${eur(B.M[k])}</td></tr>`).join('');
@@ -2260,7 +2286,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.16";
+var APPV="2026-11-05.17";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
