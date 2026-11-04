@@ -1030,7 +1030,7 @@ function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr s
 function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
   if(w&&r<.12)return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl})}
-function tick(){ck('days');
+function tick(){ck('days');try{if(isWork(st.day+1))mkDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
@@ -1646,7 +1646,7 @@ function lifeEvents(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),has_=c=>own.fi
   E.push([`🎂 Anniversaire : cadeau de la famille`,0,mo===((st.nid%12)+1)?1:0]);
   E.push([`🍽️ Restaurant entre amis`,-Math.round(R(80,180)),.25]);
   for(const [t,a,pr] of E)if(Math.random()<pr){V.cash+=a;pEv(t+(a?` : ${a>0?'+':''}${eur(a)}`:''),a)}}
-function privMonth(){lifeEvents();const V=pv();let t=ownsHome()?850:1650;privInvest();for(const o of [...V.own]){const P=PRIV[o.k];if(!P)continue;t+=P.m||0;if(o.loan){const it=o.loan*MORT_RATE/12;t+=o.pay;o.loan=Math.max(0,Math.round(o.loan-(o.pay-it)));if(!o.loan){delete o.pay;pEv(`🏠 Crédit hypothécaire remboursé : ${P.n} est entièrement à toi !`)}}}
+function privMonth(){lifeEvents();try{mkMonth()}catch(e){}const V=pv();let t=ownsHome()?850:1650;privInvest();for(const o of [...V.own]){const P=PRIV[o.k];if(!P)continue;t+=P.m||0;if(o.loan){const it=o.loan*MORT_RATE/12;t+=o.pay;o.loan=Math.max(0,Math.round(o.loan-(o.pay-it)));if(!o.loan){delete o.pay;pEv(`🏠 Crédit hypothécaire remboursé : ${P.n} est entièrement à toi !`)}}}
   if(V.cash<0)t+=Math.round(-V.cash*.09/12);V.cash-=t;if(t)pEv(`🏡 Vie privée (${ownsHome()?'courses, énergie, voiture':'loyer, courses, énergie, voiture'}${V.own.length?', tes biens':''}${V.own.some(o=>o.loan)?', crédit':''}) : -${eur(t)}`,0);
   if(V.cash<-10000&&V.own.length){const o=V.own.slice().sort((a,b)=>pValue(b)-pValue(a))[0];const P=PRIV[o.k],v=pValue(o);V.own.splice(V.own.indexOf(o),1);V.cash+=v-(o.loan||0);pEv(`⚖️ Huissier : ${P.n} est saisi(e) et vendu(e) pour payer tes dettes privées.`)}}
 // Placements privés (rendements moyens réels, avec des hauts et des bas) et loyers
@@ -1654,6 +1654,53 @@ const INV={sav:{n:'Compte épargne réglementé',ic:'🐷',r:.015,v:0,d:'± 1,5 
   etf:{n:'ETF monde (actions, compte-titres)',ic:'📈',r:.07,v:.045,d:'± 7 %/an en moyenne, mais ça monte et ça descend. Taxe sur les opérations de bourse 0,12 %.'},
   gold:{n:'Or physique (lingots)',ic:'🥇',r:.05,v:.035,d:'± 5 %/an en moyenne, valeur refuge. Frais d’achat ± 3 %.'},
   pens:{n:'Épargne-pension',ic:'👴',r:.04,v:.01,d:'Maximum 1 050 € par an, et 30 % rendus en réduction d’impôt chaque année.'}};
+/* ---------- Bourse (vie privée) : vraies entreprises cotées, cours de départ approximatifs, évolution simulée ----------
+   Règles belges : taxe sur les opérations de bourse (TOB) 0,35 % (max 1 600 €), courtage 0,1 % (min. 2 €),
+   précompte mobilier 30 % sur les dividendes, taxe de 10 % sur les plus-values réalisées au-delà de 10 000 €/an (depuis 2026). */
+const STK=[
+  {k:'abi',n:'AB InBev',ic:'🍺',s:'Bières (Belgique)',p:55,v:.22,d:.06,y:.018,m:5},
+  {k:'kbc',n:'KBC Groupe',ic:'🏦',s:'Banque (Belgique)',p:92,v:.24,d:.07,y:.05,m:5},
+  {k:'colr',n:'Colruyt',ic:'🛒',s:'Supermarchés (Belgique)',p:38,v:.24,d:.03,y:.03,m:9},
+  {k:'avh',n:'Ackermans & van Haaren',ic:'⚓',s:'Holding, dragage DEME (Belgique)',p:215,v:.18,d:.07,y:.02,m:5},
+  {k:'elia',n:'Elia Group',ic:'⚡',s:'Réseau électrique (Belgique)',p:95,v:.2,d:.05,y:.02,m:6},
+  {k:'diet',n:'D’Ieteren Group',ic:'🚗',s:'Voitures, vitrage (Belgique)',p:170,v:.24,d:.07,y:.02,m:6},
+  {k:'ucb',n:'UCB',ic:'💊',s:'Médicaments (Belgique)',p:190,v:.3,d:.09,y:.007,m:5},
+  {k:'prox',n:'Proximus',ic:'📶',s:'Télécoms (Belgique)',p:7,v:.22,d:.0,y:.08,m:4},
+  {k:'vinci',n:'Vinci',ic:'🛣️',s:'Autoroutes, BTP (France)',p:120,v:.2,d:.07,y:.04,m:4},
+  {k:'eiff',n:'Eiffage',ic:'🏗️',s:'BTP, concessions (France)',p:110,v:.22,d:.07,y:.04,m:5},
+  {k:'bouy',n:'Bouygues (Colas)',ic:'🚧',s:'Routes, construction (France)',p:38,v:.22,d:.05,y:.05,m:5},
+  {k:'holc',n:'Holcim',ic:'🧱',s:'Ciment (Suisse)',p:80,v:.22,d:.07,y:.04,m:5},
+  {k:'deere',n:'Deere & Company',ic:'🚜',s:'Tracteurs (États-Unis)',p:440,v:.26,d:.08,y:.013,m:11},
+  {k:'kubota',n:'Kubota',ic:'🦾',s:'Mini-pelles, tondeuses (Japon)',p:12,v:.28,d:.05,y:.025,m:6},
+  {k:'volvo',n:'Volvo',ic:'🚛',s:'Camions (Suède)',p:25,v:.28,d:.07,y:.05,m:4},
+  {k:'asml',n:'ASML',ic:'💻',s:'Machines à puces (Pays-Bas)',p:700,v:.35,d:.12,y:.009,m:4},
+  {k:'apple',n:'Apple',ic:'🍎',s:'Technologie (États-Unis)',p:210,v:.3,d:.1,y:.005,m:2}];
+const mk=()=>{const M=st.mk||(st.mk={});for(const S of STK)if(!M[S.k])M[S.k]={p:S.p,h:[S.p]};return M};
+const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+function mkDay(){const M=mk();let shock=0;if(Math.random()<.0012){shock=-R(.12,.25);st.mkNewsD=st.day;st.mkNews=`📉 Krach boursier le ${dstr(st.day)} : toutes les actions chutent !`}else if(Math.random()<.0015){shock=R(.04,.08);st.mkNewsD=st.day;st.mkNews=`📈 Euphorie en bourse le ${dstr(st.day)} : tout monte !`}
+  for(const S of STK){const m=M[S.k];const r=S.d/252+S.v/Math.sqrt(252)*gauss()+shock*(.7+S.v);m.p=Math.max(.5,+(m.p*(1+r)).toFixed(2));m.h.push(m.p);if(m.h.length>130)m.h.shift()}}
+function mkMonth(){const V=pv(),H=V.stk||{},mo=month();for(const S of STK){const h=H[S.k];if(!h||!h.n||S.m!==mo)continue;const g=h.n*mk()[S.k].p*S.y;if(g<1)continue;const net=Math.round(g*.7);V.cash+=net;V.divT=(V.divT||0)+net;pEv(`💶 Dividende ${S.n} : +${eur(net)} (précompte 30 % retenu)`,net)}}
+const stkVal=()=>{const V=pv(),M=mk();return Object.entries(V.stk||{}).reduce((a,[k,h])=>a+(h.n||0)*(M[k]?M[k].p:0),0)};
+const fees=a=>Math.min(1600,a*.0035)+Math.max(2,a*.001);
+function stkBuy(k,amt){const V=pv(),S=STK.find(x=>x.k===k),p=mk()[k].p,n=Math.floor(amt/p);click();if(n<1)return toastMsg('Le montant est trop petit pour acheter une action.');
+  const cost=n*p,f=fees(cost);if(V.cash<cost+f)return toastMsg(`Il te faut ${eur(cost+f)} sur ton compte privé.`);
+  V.cash-=cost+f;const H=V.stk||(V.stk={}),h=H[k]||(H[k]={n:0,c:0});h.n+=n;h.c+=cost+f;pEv(`📈 Achat de ${n} action(s) ${S.n} à ${eur2(p)} (frais et TOB ${eur(f)})`,-(cost+f),false);save();render()}
+function stkSell(k,part){const V=pv(),S=STK.find(x=>x.k===k),h=(V.stk||{})[k];if(!h||!h.n)return;const n=part?Math.max(1,Math.floor(h.n*part)):h.n,p=mk()[k].p,gross=n*p,f=fees(gross),cb=h.c*n/h.n,gain=gross-f-cb;click();
+  const y=date(st.day).getFullYear(),G=V.cg||(V.cg={});const before=G[y]||0;G[y]=before+gain;const taxable=Math.max(0,G[y]-10000)-Math.max(0,before-10000),tax=gain>0?Math.round(Math.max(0,taxable)*.1):0;
+  V.cash+=gross-f-tax;h.n-=n;h.c-=cb;if(!h.n)delete V.stk[k];V.gainT=(V.gainT||0)+gain-tax;
+  pEv(`📉 Vente de ${n} action(s) ${S.n} à ${eur2(p)} : ${gain>=0?'gain':'perte'} ${eur(gain)}${tax?` (taxe plus-values ${eur(tax)})`:''}`,gross-f-tax,false);save();render()}
+function sparkS(D,w,h){if(D.length<2)return'';const mn=Math.min(...D),mx=Math.max(...D),sx=w/(D.length-1),Y=v=>h-3-(v-mn)/((mx-mn)||1)*(h-6),up=D[D.length-1]>=D[0],c=up?'#4fdc7a':'#ff5d57';
+  return`<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none" style="display:block"><polyline points="${D.map((v,i)=>`${(i*sx).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`}
+function rBourse(){const V=pv(),M=mk(),H=V.stk||{},val=stkVal(),cost=Object.values(H).reduce((a,h)=>a+h.c,0),gl=val-cost;
+  let h=`<div class="card pvh"><div class="kpi"><div><span>Tes actions</span><b>${eur(val)}</b></div><div><span>Gain / perte en cours</span><b class="${gl>=0?'money':'neg'}">${gl>=0?'+':''}${eur(gl)}</b></div><div><span>Compte privé</span><b class="money">${eur(V.cash)}</b></div><div><span>Dividendes reçus</span><b>${eur(V.divT||0)}</b></div></div>
+  <div class="mut sm" style="margin-top:8px">Vraies entreprises cotées. Cours de départ approximatifs, puis ils bougent comme en bourse (hauts, bas, parfois un krach). Frais réels : TOB 0,35 %, courtage 0,1 %, précompte 30 % sur les dividendes, taxe de 10 % sur les plus-values au-delà de 10 000 €/an.</div>${st.mkNews&&st.day-(st.mkNewsD||0)<60?`<div class="sm" style="margin-top:6px"><b>${st.mkNews}</b></div>`:''}</div>`;
+  const sorted=STK.slice().sort((a,b)=>((H[b.k]||{}).n?1:0)-((H[a.k]||{}).n?1:0));
+  for(const S of sorted){const m=M[S.k],hh=m.h,ch=hh.length>21?(m.p/hh[hh.length-22]-1)*100:0,own=H[S.k];
+    h+=`<div class="card" style="${own?'border-color:var(--vi)':''}"><div class="row" style="flex-wrap:nowrap"><div style="font-size:28px">${S.ic}</div><div style="flex:1;min-width:0"><b>${S.n}</b><div class="mut sm">${S.s} · dividende ± ${(S.y*100).toFixed(1).replace('.',',')} %</div></div><div style="text-align:right"><b>${eur2(m.p)}</b><div class="sm ${ch>=0?'money':'neg'}">${ch>=0?'▲':'▼'} ${Math.abs(ch).toFixed(1).replace('.',',')} % (1 mois)</div></div></div>
+    <div style="margin-top:6px">${sparkS(hh,320,46)}</div>
+    ${own?`<div class="tags"><span class="tag v">${own.n} action(s) = ${eur(own.n*m.p)}</span><span class="tag ${own.n*m.p>=own.c?'g':'r'}">${own.n*m.p>=own.c?'+':''}${eur(own.n*m.p-own.c)}</span></div>`:''}
+    <div class="row" style="margin-top:8px">${[1000,10000,100000].map(a=>`<button class="btn s" style="padding:6px 9px" ${V.cash<a?'disabled':''} onclick="stkBuy('${S.k}',${a})">+${nb(a)} €</button>`).join('')}${own?`<button class="btn s" style="padding:6px 9px" onclick="stkSell('${S.k}',.5)">Vendre ½</button><button class="btn s" style="padding:6px 9px" onclick="stkSell('${S.k}',0)">Tout vendre</button>`:''}</div></div>`}
+  return h}
 function privInvest(){const V=pv(),I=V.inv||(V.inv={sav:0,etf:0,gold:0,pens:0});let rent=0;
   for(const k in INV){const P=INV[k];if(!I[k])continue;const g=P.r/12+(P.v?(Math.random()*2-1)*P.v:0);const before=I[k];I[k]=Math.max(0,Math.round(I[k]*(1+g)));V.gain=(V.gain||0)+I[k]-before}
   for(const o of V.own){const P=PRIV[o.k];if(!P)continue;
@@ -1749,7 +1796,7 @@ function render(headOnly){
   if(nJob&&!st.contracts.length)$('[data-t=pb]').insertAdjacentHTML('beforeend',`<span class="bd">${nJob}</span>`);
   const pvOn=curTab==='pv';$('#priv').classList.toggle('on',pvOn);document.body.classList.toggle('pvmode',pvOn);
   if(pvOn){$('#phead').innerHTML=pHead();const sc=pScene();if(sc!==lastScene){$('#pscene').innerHTML=sc;lastScene=sc}
-    const pt=[['vie','🏡','Ma vie'],['biens','🏠','Mes biens'],['money','💶','Argent'],['shop','🛒','Acheter']].map(([k,i,l])=>`<button class="${pvSec===k?'on':''}" onclick="pvGo('${k}')"><b>${i}</b>${l}</button>`).join('');if($('#ptabs').innerHTML!==pt)$('#ptabs').innerHTML=pt}
+    const pt=[['vie','🏡','Ma vie'],['biens','🏠','Biens'],['money','💶','Argent'],['bourse','📈','Bourse'],['shop','🛒','Acheter']].map(([k,i,l])=>`<button class="${pvSec===k?'on':''}" onclick="pvGo('${k}')"><b>${i}</b>${l}</button>`).join('');if($('#ptabs').innerHTML!==pt)$('#ptabs').innerHTML=pt}
   if(headOnly===true)return;lastPaneT=performance.now();
   const P=pvOn?$('#ppane'):$('#pane'),y=P.scrollTop,key=curTab+aoTab+eqTab+(pvOn?pvSec:'');P.classList.toggle('enter',lastTab!==key);lastTab=key;const fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=({ch:rCh,pb:rPb,ao:rAo,eq:rEq,mt:rMt,bi:rBi,pv:rPv})[curTab]();P.scrollTop=y;
 }
@@ -1891,7 +1938,7 @@ function photo(k){let c=IMC[k];if(!IMG[k]||IMH[k])return'';if(c&&c.none&&Date.no
   return`<div class="ph"><img src="${c.src}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"><a class="phc" href="${c.page}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📷 ${esc(c.title)} — Wikipédia</a><button class="phx" onclick="hidePhoto('${k}')">✕ Pas la bonne photo</button></div>`}
 let pvTab='car',pvSec='vie';
 const LVL=[[-1e15,'Dans le rouge','😬'],[0,'Débutant','🙂'],[25000,'Ça roule','😎'],[100000,'Confortable','🛋️'],[300000,'Aisé','🥂'],[1e6,'Millionnaire','💎'],[5e6,'Grand patron','🏆'],[2e7,'Magnat','👑'],[1e8,'Empereur de la route','🌍'],[1e9,'Milliardaire','🚀']];
-const pvWorth=()=>{const V=pv();return V.own.filter(o=>PRIV[o.k]).reduce((a,o)=>a+pValue(o)-(o.loan||0),0)+Object.values(V.inv||{}).reduce((a,b)=>a+b,0)+V.cash};
+const pvWorth=()=>{const V=pv();return V.own.filter(o=>PRIV[o.k]).reduce((a,o)=>a+pValue(o)-(o.loan||0),0)+Object.values(V.inv||{}).reduce((a,b)=>a+b,0)+V.cash+(typeof stkVal==='function'?stkVal():0)};
 // budget du mois : mêmes postes que privMonth() + salaire et loyers
 function pvBudget(){const V=pv(),inc=[],out=[],G={};
   if(st.adm.bce&&patSal())inc.push(['💶 Ton salaire de patron (net)',patSal()]);
@@ -1914,6 +1961,7 @@ function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=pvWorth(),B=pvB
   const h0=myHome(),ic=c=>own.filter(o=>c.includes(PRIV[o.k].c)).map(o=>PRIV[o.k].ic),kids=own.filter(o=>o.k==='enfant').length,pets=own.filter(o=>o.k==='chien'||o.k==='chat').map(o=>PRIV[o.k].ic);
   const lou=own.filter(o=>rentOf(o)&&(!o.lou||o.louOk));
   let h='';
+  if(pvSec==='bourse')return rBourse();
   if(pvSec==='biens'){if(own.length){for(const [g,cs] of PGRP){const L=own.filter(o=>cs.includes(PRIV[o.k].c));if(!L.length)continue;h+=`<h2>${g} · ${L.length}</h2>`+L.map(ownCard).join('')}}
     else h+=`<div class="card"><h3>Tu ne possèdes encore rien</h3><p class="mut sm">Verse-toi un salaire, économise, puis va dans <b>🛒 Acheter</b> : une voiture, une maison… et plus tard un yacht.</p><button class="btn w" style="margin-top:8px" onclick="pvGo('shop')">Voir ce qu’on peut acheter</button></div>`;return h}
   if(pvSec==='vie'){
@@ -2286,7 +2334,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.17";
+var APPV="2026-11-05.18";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
