@@ -454,8 +454,11 @@ function genTender(forceJob,urgent){
   let V=proc==='fm'?R(6000,29500):proc==='pn'?R(30000,142000):R(143000,big?(st.cls>=1?1200000:450000):300000);
   // invitation : en faible montant et négociée, il faut être invité
   if(proc!=='po'){const pInv=.3+st.rep/140+(has('dirc')?.25:0)+(st.stats.spw>0?.1:0);if(!urgent&&Math.random()>pInv)return}
+  // montant maximum réaliste d'un lot pour ce type de travaux
+  const VMAX={aires:150000,panneaux:150000,invasives:200000,abattage:300000,glissieres:300000,avaloirs:300000,dechets:400000,balayage:400000,elagage:400000,debrous:500000,fosses:500000,fauchage:600000,marquage:600000,deneig:600000,nids:800000,glis_pose:1200000};
+  V=Math.min(V,VMAX[j]||400000);
   const q=Math.max(J.q0,Math.round(V/(trueUnit(j)*COEF)));
-  const nRef=Math.max(J.minW,Math.ceil(q/(J.rate*90)));
+  const nRef=Math.min(Math.max(J.minW,8),Math.max(J.minW,Math.ceil(q/(J.rate*90))));
   const N=Math.ceil(q/(J.rate*nRef)*R(1.25,1.5))+3;
   const B=pick(BUYERS);const postes=[];
   const tu=trueUnit(j);postes.push({d:J.main,u:J.un,q,ref:+(tu*COEF).toFixed(2),c:tu});
@@ -833,7 +836,12 @@ function autoAccept(){const L=st.jobs.filter(o=>!jobMiss(o).length).sort((a,b)=>
   for(const o of L){if(freeCount()<JOBS[o.j].minW)break;const n=st.contracts.length;acceptJob(o.id);if(modalOpen)closeM();if(st.contracts.length>n){rsAdd('plan',1);rsAdd('planv',o.price);log(`📞 Manon a accepté : ${JOBS[o.j].n} chez ${o.client} (${eur(o.price)}).`,false)}}}
 function autoStaff(){if(st.autoStaff===0)return;const L=st.contracts.filter(c=>c.st==='wait'||(c.st==='run'&&!c.crew.length)).sort((a,b)=>(JOBS[a.j].p?1:0)-(JOBS[b.j].p?1:0)||a.startBy-b.startBy);
   for(const c of L){const J=JOBS[c.j];const sel=pickFor(c);if(!crewOk(J,sel))continue;const p=eqPlan(c.j,c);if(p.miss.length)continue;
-    const was=c.st;c.own=p.own;c.rent=p.rent;c.crew=sel.map(w=>w.id);c.st='run';log(`▶ ${was==='wait'?'Chantier commencé':'Chantier relancé'} automatiquement : ${J.n} (${esc(c.road)}) avec ${sel.map(w=>w.n.split(' ')[0]).join(', ')}.`,false)}}
+    const was=c.st;c.own=p.own;c.rent=p.rent;c.crew=sel.map(w=>w.id);c.st='run';log(`▶ ${was==='wait'?'Chantier commencé':'Chantier relancé'} automatiquement : ${J.n} (${esc(c.road)}) avec ${sel.map(w=>w.n.split(' ')[0]).join(', ')}.`,false)}
+  // renforts : les ouvriers libres vont aider les marchés publics en retard ou trop lents (le plus urgent d'abord)
+  const need=c=>{const J=JOBS[c.j],crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean),pw=crew.reduce((a,w)=>a+w.sk,0)||.01;return (c.q-c.prog)/(J.rate*pw)-(c.N-c.wd)};
+  let free=freeW().filter(w=>!w.boss&&!(w.r==='etu'&&(w.hy||0)>=650));
+  const R2=running().filter(c=>c.crew.length&&!JOBS[c.j].p&&need(c)>0).sort((a,b)=>need(b)-need(a));
+  for(const c of R2){while(free.length&&c.crew.length<12&&need(c)>0){const w=free.shift();c.crew.push(w.id);log(`➕ ${w.n.split(' ')[0]} part en renfort sur ${JOBS[c.j].n} (${esc(c.road)}).`,false)}}}
 function startDraw(id){const c=st.contracts.find(x=>x.id===id),J=JOBS[c.j];const fw=freeW(c).sort((a,b)=>b.sk-a.sk);
   const sel=fw.filter(w=>pickSel.includes(w.id));const n=sel.length,p=eqPlan(c.j,c);const pw=sel.reduce((a,w)=>a+w.sk,0)*(sel.some(w=>w.r==='chef')?1.15:1);
   const days=pw?Math.ceil((c.q-c.prog)/(J.rate*pw)):'∞';const left=c.N-c.wd;const pcOk=(!J.pc||hasPC(sel))&&(!J.op||sel.some(w=>w.r===J.op))&&(!J.gr||sel.some(w=>w.r==='grimp'));
@@ -1473,7 +1481,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.2";
+var APPV="2026-11-04.3";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
