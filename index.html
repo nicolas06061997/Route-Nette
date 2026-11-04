@@ -817,7 +817,7 @@ const GOALS=[
   {k:'g15',t:'Agréation classe 2 : tu es une grande entreprise !',ok:()=>st.cls>=2}];
 // Confettis (au-dessus de tout)
 const fxc=$('#fx'),fg=fxc.getContext('2d');let conf=[];
-function confetti(n){const W=innerWidth,H=innerHeight;fxc.width=W;fxc.height=H;for(let i=0;i<(n||120);i++)conf.push({x:W/2+R(-60,60),y:H*.35,vx:R(-260,260),vy:R(-520,-180),r:R(3,6),c:pick(['#ffd23f','#ff9a1f','#4fdc7a','#4fb3ff','#ff5d57','#b48cff','#fff']),a:R(0,6),va:R(-10,10),l:R(1.6,2.6)});if(!confRun)confLoop(performance.now())}
+function confetti(n){if(document.hidden||conf.length>=250)return;n=Math.min(n||120,320-conf.length);const W=innerWidth,H=innerHeight;fxc.width=W;fxc.height=H;for(let i=0;i<n;i++)conf.push({x:W/2+R(-60,60),y:H*.35,vx:R(-260,260),vy:R(-520,-180),r:R(3,6),c:pick(['#ffd23f','#ff9a1f','#4fdc7a','#4fb3ff','#ff5d57','#b48cff','#fff']),a:R(0,6),va:R(-10,10),l:R(1.6,2.6)});if(!confRun)confLoop(performance.now())}
 let confRun=0;function confLoop(p){confRun=1;let last=p;(function f(n){const dt=Math.min(.05,(n-last)/1000);last=n;fg.clearRect(0,0,fxc.width,fxc.height);
   for(const q of conf){q.vy+=700*dt;q.vx*=.99;q.x+=q.vx*dt;q.y+=q.vy*dt;q.a+=q.va*dt;q.l-=dt;fg.save();fg.globalAlpha=Math.max(0,Math.min(1,q.l));fg.translate(q.x,q.y);fg.rotate(q.a);fg.fillStyle=q.c;fg.fillRect(-q.r,-q.r/2,q.r*2,q.r);fg.restore()}
   conf=conf.filter(q=>q.l>0&&q.y<fxc.height+20);if(conf.length)requestAnimationFrame(f);else{fg.clearRect(0,0,fxc.width,fxc.height);confRun=0}})(p)}
@@ -1242,7 +1242,9 @@ function adviceCard(){const tips=[];const pay=payroll()*WDM,last=(st.mHist||[]).
   if(prod&&pay>prod*.75)tips.push(`💸 <b>Salaires trop lourds</b> : ${eur(pay)}/mois pour une production moyenne de ${eur(prod)}/mois. Une entreprise saine garde ses salaires sous ± 60 % de sa production.`);
   if(office>pay*.35)tips.push(`🏢 <b>Bureau cher</b> : le personnel de bureau coûte ${eur(office)}/mois (${Math.round(office/pay*100)} % des salaires). Regarde sur leurs fiches ce qu'ils rapportent.`);
   const idle=freeW().filter(w=>!w.boss).length;if(idle>=2&&isWork(st.day))tips.push(`💤 <b>${idle} ouvriers sans chantier</b> aujourd'hui. Il faut plus de travail (offres au SPW, Manon pour les petits boulots) ou moins de monde.`);
-  if(!st.tenders.some(t=>t.my&&t.status!=='done')&&st.adm.vca)tips.push('📑 <b>Aucune offre en cours au SPW</b> : les marchés publics rapportent beaucoup plus que les petits boulots.');
+  if(!st.tenders.some(t=>t.my&&t.status!=='done')&&st.adm.vca){const op=st.tenders.filter(t=>t.status==='open'&&!t.my),okT=op.filter(t=>spwReq(t).every(x=>x.ok));
+    if(op.length&&!okT.length)tips.push(`📑 <b>Aucune offre en cours au SPW</b> : les ${op.length} marchés ouverts demandent quelque chose que tu n'as pas (agréation, matériel ou personnel). Ouvre 🏛️ Marchés pour voir ce qui manque.`);
+    else if(okT.length&&idle>=1)tips.push(`📑 <b>Aucune offre en cours au SPW</b> : ${okT.length} marché${okT.length>1?'s':''} ouvert${okT.length>1?'s':''} pour toi dans 🏛️ Marchés.${has('offre')?'':' Grégory (responsable des offres) peut les remettre à ta place.'}`)}
   if(month()===12||month()<=2)tips.push('❄️ <b>C’est l’hiver</b> : moins de travail (pas de fauchage, de tonte, de marquage). C’est normal que ce soit plus dur ; le service d’hiver (déneigement) et l’élagage aident.');
   if(!tips.length)return'';return`<div class="card acc" style="--ac:var(--ye)"><h3>🧮 Conseils de ton comptable</h3>${tips.map(t=>`<div class="sm" style="margin-top:8px">${t}</div>`).join('')}</div>`}
 function dashCard(){const lr=liveRes(),D=(st.dHist||[]).slice(-180),y=date(st.day).getFullYear();
@@ -1282,7 +1284,7 @@ function mkTex(){const mk=(w,h,f)=>{const c=document.createElement('canvas');c.w
 function rs(){const d=Math.min(2,devicePixelRatio||1);CW=cv.clientWidth;CH=cv.clientHeight;cv.width=Math.round(CW*d);cv.height=Math.round(CH*d);g.setTransform(d,0,0,d,0,0)}
 addEventListener('resize',rs);rs();mkTex();
 function hh(n){n=(n^61)^(n>>>16);n=n+(n<<3)|0;n^=n>>>4;n=Math.imul(n,0x27d4eb2d);n^=n>>>15;return(n>>>0)/4294967296}
-let coins=[];function coinPop(a){try{coins.push({a,t:0,n:Math.min(12,4+Math.floor(a/300))})}catch(e){}}
+let coins=[];function coinPop(a){try{if(document.hidden||coins.length>=4)return;coins.push({a,t:0,n:Math.min(12,4+Math.floor(a/300))})}catch(e){}}
 const SEG=34,LEN=4200;let cars=[],parts=[],flakes=[],camX=0,lastT=0,flash=0;
 const clouds=Array.from({length:7},(_,i)=>({x:i*190+R(0,120),y:R(.05,.3),s:R(.6,1.3)}));
 function selC(){const r=st.contracts.filter(c=>c.st==='run');return r.find(c=>c.id===st.sel)||r[0]||null}
@@ -1555,7 +1557,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.8";
+var APPV="2026-11-04.9";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
