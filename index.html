@@ -1695,6 +1695,12 @@ let casG='roul',casBet=100,casSel='rouge',casBusy=0,bj=null,casM='fruits',vp=nul
 const CASI=[
   {k:'spa',n:'Casino de Spa',ic:'🏛️',max:1e5,w:0,bg:'linear-gradient(160deg,#4a1030,#1f0d2e)',d:'Le plus vieux casino du monde (1763), dans les Ardennes.'},
   {k:'namur',n:'Casino de Namur',ic:'🏰',max:1e5,w:0,bg:'linear-gradient(160deg,#10304a,#0d1a2e)',d:'Au bord de la Meuse, au pied de la citadelle.'},
+  {k:'dinant',n:'Casino de Dinant',ic:'⛰️',max:1e5,w:0,bg:'linear-gradient(160deg,#2a3a10,#121d0b)',d:'Au pied des rochers, face à la collégiale et à la Meuse.'},
+  {k:'chaud',n:'Casino de Chaudfontaine',ic:'♨️',max:1e5,w:0,bg:'linear-gradient(160deg,#103a3a,#0b1d1d)',d:'Près de Liège, dans la ville des sources chaudes.'},
+  {k:'bxl',n:'Grand Casino Brussels (Viage)',ic:'🏙️',max:2.5e5,w:0,bg:'linear-gradient(160deg,#3a1010,#1d0b0b)',d:'En plein centre de Bruxelles, à deux pas de la Grand-Place.'},
+  {k:'ostende',n:'Casino Kursaal Ostende',ic:'⚓',max:2.5e5,w:0,bg:'linear-gradient(160deg,#10284a,#0b142a)',d:'Le grand Kursaal sur la digue de la mer du Nord.'},
+  {k:'blank',n:'Casino de Blankenberge',ic:'🏖️',max:1e5,w:0,bg:'linear-gradient(160deg,#4a3a10,#1d170b)',d:'Sur la digue de Blankenberge, à la Côte belge.'},
+  {k:'middel',n:'Casino de Middelkerke',ic:'🌅',max:1e5,w:0,bg:'linear-gradient(160deg,#4a1030,#1d0b17)',d:'Le casino tout neuf de Middelkerke, face à la mer.'},
   {k:'knokke',n:'Casino de Knokke',ic:'🌊',max:5e5,w:5e5,bg:'linear-gradient(160deg,#0f3d3a,#0b1f2a)',d:'Le casino chic de la Côte belge, avec ses fresques de Magritte.'},
   {k:'monaco',n:'Casino de Monte-Carlo',ic:'👑',max:5e6,w:5e6,bg:'linear-gradient(160deg,#5a3a0a,#2a1505)',d:'Le casino le plus célèbre du monde, à Monaco.'},
   {k:'vegas',n:'Bellagio, Las Vegas',ic:'🎆',max:5e7,w:5e7,bg:'linear-gradient(160deg,#3a0a5a,#120520)',d:'Les fontaines, les néons et les tables sans limite.'}];
@@ -2453,7 +2459,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.22";
+var APPV="2026-11-05.23";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
