@@ -713,6 +713,8 @@ function rptAct(id,a){const r=st.reports.find(x=>x.id===id);if(!r)return;const w
   save();render()}
 function unassign(w){for(const c of st.contracts){if(!c.crew.includes(w.id))continue;c.crew=c.crew.filter(i=>i!==w.id);const J=JOBS[c.j];const rest=c.crew.map(i=>st.workers.find(x=>x.id===i)).filter(Boolean);
   if(rest.length<J.minW||(J.pc&&!hasPC(rest))){c.crew=[];c.own={};c.rent={};log(`⏸ ${J.n} (${esc(c.road)}) est en pause : plus assez de monde. Remets une équipe dans 🦺 Chantiers.`)}}}
+function primeAll(){const G=st.reports.filter(r=>r.good&&!r.done&&st.workers.some(w=>w.id===r.wid));const t=G.length*250;if(!t)return;if(st.cash<t)return toastMsg(`Il faut ${eur(t)} sur le compte.`);for(const r of G){const w=st.workers.find(x=>x.id===r.wid);mv(-250,'Prime à '+w.n,'sal');w.mot=1;w.base=Math.min(1,w.base+.05);r.done='Prime de 250 € accordée'}st.workers.forEach(x=>{if(ROLES[x.r].cat==='ouv')x.mot=Math.min(1,x.mot+.03)});log(`🎁 ${G.length} primes versées (${eur(t)}). L'équipe est motivée !`);kaching();save();render()}
+function primeTeam(){const W=field().filter(w=>!w.boss);const t=W.length*250;if(!t)return;if(st.cash<t)return toastMsg(`Il faut ${eur(t)} sur le compte.`);if(!confirm(`Verser une prime de 250 € à ${W.length} ouvrier(s) ? Total : ${eur(t)}`))return;W.forEach(w=>{mv(-250,'Prime à '+w.n,'sal');w.mot=Math.min(1,w.mot+.25);w.base=Math.min(1,w.base+.02)});st.reports.forEach(r=>{if(r.good&&!r.done)r.done='Prime de 250 € accordée'});log(`🎁 Prime exceptionnelle versée à toute l'équipe : ${eur(t)}.`);kaching();save();render()}
 function dropW(w){unassign(w);st.workers.splice(st.workers.indexOf(w),1)}
 function pauseC(id){const c=st.contracts.find(x=>x.id===id);if(!c)return;c.crew=[];c.own={};c.rent={};closeM();log(`⏸ Chantier mis en pause : ${JOBS[c.j].n} (${esc(c.road)}).`,false);save();render()}
 function workDaysSince(d){let n=0;for(let k=d+1;k<=st.day;k++)if(isWork(k))n++;return n}
@@ -1075,9 +1077,16 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
   if(eqTab==='terrain'){h+=`<h2>Sur les chantiers (${field().length})</h2>`;field().forEach(w=>h+=card(w))}
   else if(eqTab==='rap'){const sup=has('gest')||field().some(w=>w.r==='chef');
     h+=`<p class="mut sm" style="margin:0 4px 10px">Quand ils passent sur chantier, ${sup?'tes contremaîtres et gestionnaires de chantier':'toi (et plus tard tes contremaîtres et gestionnaires de chantier)'} remarquent qui travaille et qui ne fait pas grand-chose. Sans encadrement, personne ne voit rien !</p>`;
-    const L=st.reports.slice(0,25);if(!L.length)h+='<div class="card"><p class="mut">Aucun rapport pour l’instant.</p></div>';
+    // en haut : les fautes graves encore licenciables (faute grave ou 2 avertissements, dans les 3 jours ouvrables), puis les autres à traiter, puis les primes, puis les dossiers clos
+    const gOk=r=>{const w=st.workers.find(x=>x.id===r.wid);return w&&!r.done&&!r.good&&(r.grave||w.warn>=2)&&workDaysSince(r.day)<=3};
+    const rk=r=>gOk(r)?0:!r.done&&!r.good?1:!r.done&&r.good?2:3;
+    const L=st.reports.slice(0,40).sort((a,b)=>rk(a)-rk(b)||b.day-a.day).slice(0,25);
+    const goods=st.reports.filter(r=>r.good&&!r.done&&st.workers.some(w=>w.id===r.wid));
+    if(goods.length)h+=`<div class="card acc" style="--ac:var(--gr)"><b>🌟 ${goods.length} ouvrier(s) méritent une prime</b><button class="btn g w" style="margin-top:8px" onclick="primeAll()">🎁 Verser toutes les primes (${goods.length} × 250 € = ${eur(goods.length*250)})</button></div>`;
+    h+=`<div class="card"><button class="btn s w" onclick="primeTeam()">🎁 Prime exceptionnelle à toute l'équipe de terrain (${field().filter(w=>!w.boss).length} × 250 €)</button><div class="mut sm" style="margin-top:4px">Tout le monde est plus motivé (et travaille donc plus vite).</div></div>`;
+    if(!L.length)h+='<div class="card"><p class="mut">Aucun rapport pour l’instant.</p></div>';
     for(const r of L){const w=st.workers.find(x=>x.id===r.wid);const nm=w?esc(w.n):'(a quitté l’entreprise)';
-      h+=`<div class="card acc" style="--ac:${r.good?'var(--gr)':r.grave?'var(--rd)':'var(--or)'}"><div class="mut sm">${dstr(r.day)} · ${esc(r.road)} · ${r.by==='Toi'?'vu par toi-même':'rapport de '+esc(r.by)+' ('+r.role+')'}</div><h3 style="margin-top:4px">${r.good?'🌟':r.grave?'🚨':'⚠️'} ${nm}</h3><p style="margin:6px 0">${w?esc(w.n.split(' ')[0]):'Il'} ${r.txt}.</p>
+      h+=`<div class="card acc" style="--ac:${r.good?'var(--gr)':r.grave?'var(--rd)':'var(--or)'}">${gOk(r)?'<div class="tag r" style="margin-bottom:6px">🚪 Licenciement pour motif grave possible (dossier solide)</div>':''}<div class="mut sm">${dstr(r.day)} · ${esc(r.road)} · ${r.by==='Toi'?'vu par toi-même':'rapport de '+esc(r.by)+' ('+r.role+')'}</div><h3 style="margin-top:4px">${r.good?'🌟':r.grave?'🚨':'⚠️'} ${nm}</h3><p style="margin:6px 0">${w?esc(w.n.split(' ')[0]):'Il'} ${r.txt}.</p>
       ${w&&!r.good?`<div class="tags"><span class="tag">${w.warn} avertissement(s)</span><span class="tag">Ancienneté ${Math.round((st.day-w.hd)/30.4)} mois</span>${r.grave?'<span class="tag r">Faute grave</span>':''}</div>`:''}
       ${r.done?`<div class="tags"><span class="tag g">✔ ${r.done}</span></div>`:w?(r.good?`<div class="row" style="margin-top:10px"><button class="btn g" onclick="rptAct(${r.id},'prime')">🎁 Prime de 250 €</button><button class="btn s" onclick="rptAct(${r.id},'ok')">👍 Le féliciter</button></div>`:
       `<div class="row" style="margin-top:10px"><button class="btn s" onclick="rptAct(${r.id},'talk')">🗣️ Recadrer</button><button class="btn" onclick="rptAct(${r.id},'warn')">⚠️ Avertissement écrit</button></div><div class="row" style="margin-top:8px"><button class="btn s" onclick="rptAct(${r.id},'fire')">📤 Licencier (préavis ${eur(preavisCost(w))})</button><button class="btn r" onclick="rptAct(${r.id},'grave')">🚪 Motif grave</button><button class="btn s" onclick="rptAct(${r.id},'ok')">Ignorer</button></div>`):''}</div>`}
@@ -1481,7 +1490,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.3";
+var APPV="2026-11-04.4";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
