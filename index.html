@@ -1346,7 +1346,7 @@ function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=pvWorth(),B=pvB
   <div class="mut sm" style="margin-top:4px">${st.srl?`Coût pour la société : <b>${eur(patronCost())}</b> brut (impôt + cotisations ± 45 %).${patronCost()*12>=45000?' ✅ Au moins 45 000 €/an : ta SRL paie 20 % d’impôt au lieu de 25 % sur ses premiers 100 000 €.':' Astuce réelle : à partir de 45 000 € brut par an (3 750 €/mois), ta SRL paie 20 % au lieu de 25 % d’impôt.'}`:'Tu es indépendant : c’est un prélèvement sur ton bénéfice, déjà taxé chaque mois.'}
   Ta vie de tous les jours coûte <b>${eur(ownsHome()?850:1650)}</b>/mois (${ownsHome()?'propriétaire : plus de loyer':'loyer, courses, énergie, voiture'})${privMonthly()?` + <b>${eur(privMonthly())}</b> pour tes biens`:''}.</div>
   <div class="row" style="margin-top:10px">${[0,1500,1800,2500,3500,5000,8000].map(v=>`<button class="btn ${patSal()===v?'':'s'}" style="padding:7px 10px" onclick="setSal(${v})">${v?nb(v)+' €':'Rien'}</button>`).join('')}</div>
-  <div class="row" style="margin-top:8px"><button class="mini" onclick="setSal(patSal()-100)">−</button><span class="mut sm">ajuster de 100 €</span><button class="mini" onclick="setSal(patSal()+100)">+</button></div></div>
+  <div class="row" style="margin-top:8px"><button class="mini" onclick="setSal(patSal()-1000)">−</button><span class="mut sm">ajuster de 1 000 €</span><button class="mini" onclick="setSal(patSal()+1000)">+</button></div></div>
   <h2>Verser un supplément (prime, dividende)</h2><div class="card"><div class="mut sm">${st.srl?'Ta société est une SRL : une rémunération de dirigeant est taxée (IPP + cotisations, ± 45 %). Un dividende subit un précompte mobilier de 30 %.':'Tu es indépendant en personne physique : le bénéfice est déjà taxé chaque mois, tu peux le prélever sans impôt en plus.'}<br>Compte de la société : <b>${eur(st.cash)}</b></div>
   <div class="row" style="margin-top:10px">${[1000,5000,20000,100000].map(a=>`<button class="btn s" style="padding:7px 10px" ${st.cash<a?'disabled':''} onclick="pTransfer(${a},'rem')">+${nb(a)} €</button>`).join('')}</div>
   ${st.srl?`<div class="row" style="margin-top:8px">${[5000,20000,100000].map(a=>`<button class="btn s" style="padding:7px 10px" ${st.cash<a?'disabled':''} onclick="pTransfer(${a},'div')">Dividende ${nb(a)} €</button>`).join('')}</div>`:''}</div>`;
@@ -1698,7 +1698,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.12";
+var APPV="2026-11-04.13";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
