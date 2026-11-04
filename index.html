@@ -1110,7 +1110,7 @@ function relaunch(){st.grp=[];st.ino={};st.fil={};st.xs=[];st.site='home';st.sit
   st.tenders.forEach(t=>{if(t.status==='open')t.my=null});st.tenders=st.tenders.filter(t=>t.status==='open');st.rep=clamp(st.rep-20,5,100);st.cash=0;st.mv=[];st.mon={};
   mv(3000,"Nouveau départ : tes économies",'in');st.mStart=st.cash;st.mCapex=0;st.mLoan=0;st.name=st.name.replace(/( \d+)?$/,m=>' '+((parseInt(m)||1)+1));
   log(`🔁 Nouvelle société : ${esc(st.name)}. Inscris-la à la BCE pour recommencer à facturer.`);closeM();refreshCand();save();render()}
-function rescue(){const n=(st.prj||0)+1;
+function rescue(){const cb=clawback();if(cb&&st.cash>=-overdraft())return;const n=(st.prj||0)+1;
   if(n>=3){st.over=true;speed=0;failUI();return}
   st.prj=n;const debt=Math.round(-st.cash)+5000;st.loan+=debt;mv(debt,'Réorganisation judiciaire : dettes transformées en crédit','loan');st.mLoan+=debt;st.rep=clamp(st.rep-10,0,100);speed=0;
   log(`⚖️ Réorganisation judiciaire n°${n} : tes dettes deviennent un crédit de ${eur(debt)}. Réputation -10.`,false);
@@ -1528,9 +1528,21 @@ const MORT_RATE=.033,MORT_Y=25;
 const patSal=()=>{const V=pv();if(V.sal===undefined)V.sal=1800;return V.sal};
 const patronCost=()=>st.adm&&st.adm.bce?Math.round(st.srl?patSal()/.55:patSal()):0;
 function paySalary(){if(!st.adm.bce)return;const net=patSal();if(!net)return;const cost=patronCost();const V=pv();
-  const room=st.cash+overdraft();if(room<cost){pEv(`⚠️ La société n'a pas pu te verser ton salaire (compte trop bas).`,0,true);log(`⚠️ La société n'a pas pu te verser ton salaire (${eur(net)}) : le compte est trop bas.`);return}
-  mv(-cost,st.srl?'Rémunération du dirigeant (toi)':'Ton salaire (prélèvement)',st.srl?'sal':'priv');if(!st.srl)st.mCapex+=cost;V.cash+=net;V.tr=(V.tr||0)+net;pEv(`💶 Ton salaire de ${eur(net)} est versé sur ton compte privé.`,0)}
-function setSal(v){pv().sal=Math.max(0,Math.round(v/50)*50);click();save();render()}
+  const room=st.cash+overdraft();if(cost>15000&&cost>canPay()){pEv(`⚠️ Salaire non versé : ta société doit garder 3 mois de charges (test de liquidité). Baisse ton salaire.`,0,true);log(`⚠️ Ton salaire de ${eur(net)} n'est pas versé : la société doit garder 3 mois de charges (test de liquidité).`);return}if(room<cost){pEv(`⚠️ La société n'a pas pu te verser ton salaire (compte trop bas).`,0,true);log(`⚠️ La société n'a pas pu te verser ton salaire (${eur(net)}) : le compte est trop bas.`);return}
+  mv(-cost,st.srl?'Rémunération du dirigeant (toi)':'Ton salaire (prélèvement)',st.srl?'sal':'priv');if(!st.srl)st.mCapex+=cost;V.cash+=net;V.tr=(V.tr||0)+net;outLog(cost,0);pEv(`💶 Ton salaire de ${eur(net)} est versé sur ton compte privé.`,0)}
+function setSal(v){pv().sal=Math.max(0,Math.min(100000,Math.round(v/50)*50));click();save();render()}
+// Test de liquidité (Code des sociétés, art. 5:143) : la société garde de quoi payer 3 mois de charges avant de verser plus au patron
+const reserve=()=>Math.round(3*(fixedM()+payroll()*WDM));
+const canPay=()=>Math.max(0,Math.round(st.cash-reserve()));
+const outLog=(a,x)=>{const V=pv();(V.outs||(V.outs=[])).push({d:st.day,a:Math.round(a),x:x?1:0});V.outs=V.outs.filter(o=>st.day-o.d<=200)};
+// Période suspecte (Code de droit économique, art. XX.111-112) : en cas de réorganisation ou de faillite, le tribunal récupère
+// les versements anormaux des 6 derniers mois ; un indépendant en personne physique répond des dettes avec ses biens privés.
+function clawback(){const V=pv();let r=0,why='';
+  if(st.srl){r=(V.outs||[]).filter(o=>st.day-o.d<=183).reduce((a,o)=>a+(o.x?o.a:Math.max(0,o.a-10000)),0);why='versements anormaux au patron pendant la période suspecte (6 mois)'}
+  else{r=Math.max(0,Math.round(-st.cash+5000));why='tu es indépendant en personne physique : tes biens privés répondent des dettes de l’entreprise'}
+  r=Math.min(r,Math.max(0,Math.round(V.cash)));
+  if(r<=0)return 0;V.cash-=r;V.outs=[];mv(r,'Récupéré sur ton compte privé par le tribunal','other');st.mCapex-=r;
+  pEv(`⚖️ Le tribunal reprend ${eur(r)} sur ton compte privé : ${why}.`,-r,true);log(`⚖️ Le tribunal récupère ${eur(r)} sur ton compte privé (${why}).`);return r}
 const pv=()=>st.priv||(st.priv={cash:0,own:[],tr:0});
 const ownsHome=()=>pv().own.some(o=>PRIV[o.k]&&PRIV[o.k].home&&!o.lou);
 const myHome=()=>pv().own.find(o=>PRIV[o.k]&&PRIV[o.k].home&&!o.lou);
@@ -1559,11 +1571,11 @@ function pBuy(k,loan,ok){const P=PRIV[k],V=pv();if(P.needHome&&!ownsHome())retur
 function pSell(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P0=PRIV[o.k];if(P0.sub){if(!ok)return ask(`Résilier ?\nAbonnement : ${P0.n}\nÉconomie : ${eur(P0.m)}/mois`,()=>pSell(id,1),{ic:P0.ic,ok:'Résilier'});V.own.splice(V.own.indexOf(o),1);pEv(`✂️ Résilié : ${P0.n}.`,0);save();render();return}if(P0.keep)return;const P=PRIV[o.k],v=pValue(o),fee=P.c==='home'?Math.round(v*.03):0,net=v-fee-(o.loan||0);
   if(!ok)return ask(`Vendre ${P.n.replace(/ \(.*$/,'')} ?\nAcheté : ${eur(o.price)}\nValeur aujourd’hui : ${eur(v)}${fee?`\nFrais d’agence (± 3 %) : ${eur(fee)}`:''}${o.loan?`\nRemboursement du crédit restant : ${eur(o.loan)}`:''}\nTu reçois : ${eur(net)}`,()=>pSell(id,1),{ic:P.ic,ok:'Vendre',img:photo(o.k)});
   V.own.splice(V.own.indexOf(o),1);V.cash+=net;pEv(`💰 Vendu : ${P.n} (${eur(net)}).`);save();render()}
-function pTransfer(a,kind){a=Math.round(a);if(a<=0||st.cash<a)return toastMsg('Pas assez d’argent sur le compte de la société.');const V=pv();let net=a,lbl='';
+function pTransfer(a,kind){a=Math.round(a);if(a<=0||st.cash<a)return toastMsg('Pas assez d’argent sur le compte de la société.');if(a>canPay())return toastMsg(`Test de liquidité : ta société doit garder 3 mois de charges (${eur(reserve())}). Tu peux verser au maximum ${eur(canPay())}.`);const V=pv();let net=a,lbl='';
   if(!st.srl){lbl='Prélèvement privé (bénéfice déjà taxé)';}
   else if(kind==='div'){net=Math.round(a*.7);lbl='Dividende (précompte mobilier 30 %)'}
   else{net=Math.round(a*.55);lbl='Rémunération de dirigeant (IPP + cotisations ± 45 %)'}
-  const ded=st.srl&&kind!=='div';mv(-a,lbl,ded?'sal':'priv');if(!ded)st.mCapex+=a;V.cash+=net;V.tr+=net;pEv(`🏦 ${eur(net)} versés sur ton compte privé (${lbl}).`,0);save();render()}
+  const ded=st.srl&&kind!=='div';mv(-a,lbl,ded?'sal':'priv');if(!ded)st.mCapex+=a;V.cash+=net;V.tr+=net;outLog(a,1);pEv(`🏦 ${eur(net)} versés sur ton compte privé (${lbl}).`,0);save();render()}
 // chaque 1er du mois : coûts de la vie privée et remboursements de crédit
 function lifeEvents(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),has_=c=>own.filter(o=>PRIV[o.k].c===c||o.k===c),mo=month(),E=[];
   const cars=own.filter(o=>['car','occ'].includes(PRIV[o.k].c)),kids=has_('enfant').length,pets=has_('chien').length+has_('chat').length,h=myHome(),rented=own.filter(o=>o.lou&&o.louOk);
@@ -1866,9 +1878,9 @@ function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=pvWorth(),B=pvB
   Ta vie de tous les jours coûte <b>${eur(ownsHome()?850:1650)}</b>/mois (${ownsHome()?'propriétaire : plus de loyer':'loyer, courses, énergie, voiture'})${privMonthly()?` + <b>${eur(privMonthly())}</b> pour tes biens`:''}.</div>
   <div class="row" style="margin-top:10px">${[0,1500,1800,2500,3500,5000,8000].map(v=>`<button class="btn ${patSal()===v?'':'s'}" style="padding:7px 10px" onclick="setSal(${v})">${v?nb(v)+' €':'Rien'}</button>`).join('')}</div>
   <div class="row" style="margin-top:8px"><button class="mini" onclick="setSal(patSal()-1000)">−</button><span class="mut sm">ajuster de 1 000 €</span><button class="mini" onclick="setSal(patSal()+1000)">+</button></div></div>
-  <h2>Verser un supplément (prime, dividende)</h2><div class="card"><div class="mut sm">${st.srl?'Ta société est une SRL : une rémunération de dirigeant est taxée (IPP + cotisations, ± 45 %). Un dividende subit un précompte mobilier de 30 %.':'Tu es indépendant en personne physique : le bénéfice est déjà taxé chaque mois, tu peux le prélever sans impôt en plus.'}<br>Compte de la société : <b>${eur(st.cash)}</b></div>
-  <div class="row" style="margin-top:10px">${[1000,5000,20000,100000].map(a=>`<button class="btn s" style="padding:7px 10px" ${st.cash<a?'disabled':''} onclick="pTransfer(${a},'rem')">+${nb(a)} €</button>`).join('')}</div>
-  ${st.srl?`<div class="row" style="margin-top:8px">${[5000,20000,100000].map(a=>`<button class="btn s" style="padding:7px 10px" ${st.cash<a?'disabled':''} onclick="pTransfer(${a},'div')">Dividende ${nb(a)} €</button>`).join('')}</div>`:''}</div>`;
+  <h2>Verser un supplément (prime, dividende)</h2><div class="card"><div class="mut sm">${st.srl?'Ta société est une SRL : une rémunération de dirigeant est taxée (IPP + cotisations, ± 45 %). Un dividende subit un précompte mobilier de 30 %.':'Tu es indépendant en personne physique : le bénéfice est déjà taxé chaque mois, tu peux le prélever sans impôt en plus.'}<br>Compte de la société : <b>${eur(st.cash)}</b><br>Maximum versable aujourd’hui : <b>${eur(canPay())}</b> (la société garde 3 mois de charges : test de liquidité). ⚖️ En cas de faillite, le tribunal récupère ce que tu t’es versé les 6 derniers mois.</div>
+  <div class="row" style="margin-top:10px">${[1000,5000,20000,100000].map(a=>`<button class="btn s" style="padding:7px 10px" ${canPay()<a?'disabled':''} onclick="pTransfer(${a},'rem')">+${nb(a)} €</button>`).join('')}</div>
+  ${st.srl?`<div class="row" style="margin-top:8px">${[5000,20000,100000].map(a=>`<button class="btn s" style="padding:7px 10px" ${canPay()<a?'disabled':''} onclick="pTransfer(${a},'div')">Dividende ${nb(a)} €</button>`).join('')}</div>`:''}</div>`;
   h+=`<h2>🎗️ Ta fondation · ${eur(st.fond||0)} donnés</h2><div class="card"><div class="mut sm">Ta fondation finance des pistes cyclables, la sécurité devant les écoles et la formation de jeunes. Réduction d’impôt de 45 % (plafonnée à 10 % de tes revenus). Ta réputation et l’image de ton entreprise dans les offres s’améliorent.</div><div class="row" style="margin-top:10px">${[10000,100000,1000000,5000000].map(a=>`<button class="btn s" style="padding:7px 10px" ${V.cash<a?'disabled':''} onclick="fondGive(${a})">${eur(a)}</button>`).join('')}</div></div>`;
   {const I=V.inv||{};const tot=Object.values(I).reduce((a,b)=>a+b,0);
    h+=`<h2>Tes placements · ${eur(tot)}</h2>`;for(const k in INV){const P=INV[k];h+=`<div class="card"><div class="hd"><div class="ic" style="--ac2:#2b3d52">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3><div class="mut sm">${P.d}</div></div><b style="font-size:17px">${eur(I[k]||0)}</b></div>
@@ -2219,7 +2231,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.13";
+var APPV="2026-11-05.14";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
