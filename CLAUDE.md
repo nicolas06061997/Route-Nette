@@ -11,6 +11,7 @@ L'utilisateur parle français et n'est pas développeur : réponses courtes, en 
    Mettre dans `notes` de `version.json` une phrase courte : elle s'affiche dans « Nouvelle mise à jour disponible ».
    Le service worker est enregistré en `sw.js?v=APPV` : son cache (`routenette-<version>`) change tout seul.
 2. Commit + push sur `main` ; GitHub Pages publie en 2-3 minutes.
+3. Republier aussi la copie artifact Claude du jeu : https://claude.ai/artifact/QGzYwWfBzCyefzCMDbT4yV (même `index.html`).
 
 ## Sauvegarde : ne JAMAIS faire perdre la progression
 - Clé `localStorage` `routenette-save` (+ copie `routenette-bak`). **Ne jamais renommer ces clés.**
