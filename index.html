@@ -421,9 +421,10 @@ function fixedList(){const L=[];
   if(va)L.push([`Assurance tracteur agricole (${va})`,va*70]);
   if(vl)L.push([`Assurance + taxe de circulation : ${vl} véhicule(s) léger(s)`,vl*160]);
   if(vh)L.push([`Assurance + taxe de circulation : ${vh} poids lourd(s)`,vh*310]);
-  {const S=SITES[siteK()],ov=Math.max(0,vehCount()-S.v);if(S.rent)L.push(['Loyer : '+S.n,S.rent]);if(S.m)L.push(['Entrepôt : précompte immobilier, assurance, énergie',S.m]);
-   if(st.siteLoan)L.push(['Crédit de l’entrepôt (intérêts + capital)',st.siteLoan.pay]);if(ov)L.push([`Parking en plus pour ${ov} véhicule(s) (pas assez de place)`,ov*(siteK()==='home'?350:220)]);
-   if(!S.off&&st.workers.some(w=>['bur','enc','dir'].includes(ROLES[w.r].cat)))L.push(['Location des bureaux',950])}
+  {const S=SITES[siteK()],ov=Math.max(0,vehCount()-siteCap());if(S.rent)L.push(['Loyer : '+S.n,S.rent]);if(S.m)L.push(['Entrepôt : précompte immobilier, assurance, énergie',S.m]);
+   if(st.siteLoan)L.push(['Crédit de l’entrepôt (intérêts + capital)',st.siteLoan.pay]);for(const x of xs()){const X=SITES[x.k];if(X.rent)L.push([`Loyer (dépôt n°${x.n}) : ${X.n}`,X.rent]);if(X.m)L.push([`Entrepôt n°${x.n} : précompte, assurance, énergie`,X.m]);if(x.loan)L.push([`Crédit de l’entrepôt n°${x.n}`,x.loan.pay])}
+   if(ov)L.push([`Parking en plus pour ${ov} véhicule(s) (pas assez de place)`,ov*parkRate()]);
+   if(!hasOff()&&st.workers.some(w=>['bur','enc','dir'].includes(ROLES[w.r].cat)))L.push(['Location des bureaux',950])}
   {const A=st.ads||{};for(const k in ADS)if(A[k]&&ADS[k].m)L.push(['Publicité : '+ADS[k].n,ADS[k].m])}
   if(st.loan)L.push(['Intérêts du prêt (5 %/an)',st.loan*.05/12]);
   return L}
@@ -440,10 +441,16 @@ const SITES={
   b3:{n:'Site complet 2 500 m² : ateliers, bureaux, station de lavage',ic:'🏗️',p:2450000,m:3900,v:60,off:1,fx:['atel','cuve','tri','lav'],d:'Le dépôt d’une grosse entreprise, avec tout l’équipement.'}};
 const SFX={atel:'🔧 Atelier : usure des machines -8 %',cuve:'⛽ Cuve de gasoil (achat en vrac) : carburant -7 %',tri:'♻️ Aire de tri : mise en décharge -25 %',lav:'🚿 Station de lavage : matériel propre, +1 réputation par chantier fini'};
 const siteK=()=>st.site||(st.site=vehCount()>6?'h2':vehCount()>=3?'h1':'home');
-const sfx=f=>(SITES[siteK()].fx||[]).includes(f);
+const xs=()=>st.xs||(st.xs=[]);
+const siteCap=()=>SITES[siteK()].v+xs().reduce((a,x)=>a+SITES[x.k].v,0);
+const parkRate=()=>siteK()==='home'&&!xs().length?350:220;
+const hasOff=()=>!!SITES[siteK()].off||xs().some(x=>SITES[x.k].off);
+const sfx=f=>(SITES[siteK()].fx||[]).includes(f)||xs().some(x=>(SITES[x.k].fx||[]).includes(f));
+const xVal=x=>{const S=SITES[x.k];return S.p?Math.round(S.p*Math.pow(1.02,(st.day-x.d)/365)):0};
 const SITE_RATE=.042,SITE_Y=15;
 const siteVal=()=>{const S=SITES[siteK()];return S.p?Math.round(S.p*Math.pow(1.02,(st.day-(st.siteD||0))/365)):0};
-function siteMonth(){const L=st.siteLoan;if(!L)return;const it=L.cap*SITE_RATE/12,capi=Math.min(L.cap,L.pay-it);L.cap=Math.round(L.cap-capi);st.mCapex+=capi;if(L.cap<=0){st.siteLoan=null;log('🏭 Crédit de l’entrepôt entièrement remboursé : il est à toi !')}}
+function loanStep(L){const it=L.cap*SITE_RATE/12,capi=Math.min(L.cap,L.pay-it);L.cap=Math.round(L.cap-capi);st.mCapex+=capi;return L.cap<=0}
+function siteMonth(){for(const x of xs())if(x.loan&&loanStep(x.loan)){x.loan=null;log(`🏭 Crédit de l’entrepôt n°${x.n} remboursé : il est à toi !`)}const L=st.siteLoan;if(!L)return;const it=L.cap*SITE_RATE/12,capi=Math.min(L.cap,L.pay-it);L.cap=Math.round(L.cap-capi);st.mCapex+=capi;if(L.cap<=0){st.siteLoan=null;log('🏭 Crédit de l’entrepôt entièrement remboursé : il est à toi !')}}
 function moveSite(k,loan,ok){const S=SITES[k],cur=siteK(),C=SITES[cur];if(k===cur)return;
   const fees=S.p?Math.round(S.p*.14):0,need=S.p?(loan?Math.round(S.p*.2)+fees:S.p+fees):0;
   const sale=C.p?Math.round(siteVal()*.97-(st.siteLoan?st.siteLoan.cap:0)):0,brk=C.rent?C.rent*3:0;
@@ -454,18 +461,30 @@ function moveSite(k,loan,ok){const S=SITES[k],cur=siteK(),C=SITES[cur];if(k===cu
   if(brk)mv(-brk,'Fin du bail du hangar (3 mois)','fix');
   if(S.p){mv(-need,'Achat : '+S.n,'buy');st.mCapex+=need;if(loan)st.siteLoan={cap:Math.round(S.p*.8),pay}}
   st.site=k;st.siteD=st.day;log(`${S.ic} Ton entreprise déménage : ${S.n} !`);confetti(160);kaching();save();closeM();render()}
-function siteUI(){const cur=siteK();let h=`<h3>🏭 Locaux de l’entreprise</h3><p class="mut sm">Louer, c’est simple. Acheter coûte cher au départ (droits d’enregistrement 12,5 %), mais l’entrepôt prend de la valeur et apporte de l’équipement.</p>`;
+function addSite(k,loan,ok){const S=SITES[k];const fees=S.p?Math.round(S.p*.14):0,need=S.p?(loan?Math.round(S.p*.2)+fees:S.p+fees):0;
+  if(S.p&&st.cash<need)return toastMsg(`Il faut ${eur(need)} sur le compte de la société.${loan?'':' Tu peux aussi prendre un crédit.'}`);
+  const pay=S.p&&loan?Math.round(S.p*.8*(SITE_RATE/12)/(1-Math.pow(1+SITE_RATE/12,-SITE_Y*12))):0,n=xs().reduce((a,x)=>Math.max(a,x.n),1)+1;
+  if(!ok)return ask(`Ouvrir un dépôt en plus ?\nDépôt n°${n} : ${S.n.replace(/ \(.*$/,'')}\nPlace en plus : ${S.v} véhicules\nPlace totale : ${siteCap()+S.v} véhicules\n${S.p?`Prix : ${eur(S.p)}\nDroits (12,5 %) + notaire : ${eur(fees)}\n${loan?`Apport (20 %) + frais : ${eur(need)}\nCrédit professionnel : ${eur(S.p*.8)}\nRemboursement : ${eur(pay)}/mois\n`:''}Charges : ${eur(S.m)}/mois\n`:''}${S.rent?`Loyer : ${eur(S.rent)}/mois\n`:''}Ton dépôt actuel reste ouvert : les deux comptent ensemble.`,()=>addSite(k,loan,1),{ic:S.ic,ok:S.p?(loan?'Acheter avec le crédit':'Acheter'):'Louer'});
+  if(S.p){mv(-need,`Achat : ${S.n} (dépôt n°${n})`,'buy');st.mCapex+=need}
+  xs().push({id:st.nid++,n,k,d:st.day,loan:loan&&S.p?{cap:Math.round(S.p*.8),pay}:null});log(`${S.ic} Nouveau dépôt n°${n} : ${S.n} !`);confetti(140);kaching();save();closeM();render()}
+function dropSite(id,ok){const x=xs().find(y=>y.id===id);if(!x)return;const S=SITES[x.k],val=xVal(x),sale=S.p?Math.round(val*.97):0,lc=x.loan?x.loan.cap:0,brk=S.rent?S.rent*3:0;
+  if(!ok)return ask(`${S.p?'Vendre':'Fermer'} le dépôt n°${x.n} ?\nDépôt : ${S.n.replace(/ \(.*$/,'')}\nPlace perdue : ${S.v} véhicules\n${S.p?`Prix de vente (frais d’agence 3 %) : ${eur(sale)}\n${lc?`Crédit restant à rembourser : ${eur(lc)}\n`:''}Tu reçois : ${eur(sale-lc)}\n`:`Fin du bail (3 mois de loyer) : ${eur(brk)}\n`}${vehCount()>siteCap()-S.v?`⚠️ Tes véhicules ne rentreront plus tous : ${vehCount()-(siteCap()-S.v)} garé(s) dehors à ${eur(parkRate())}/mois chacun.`:''}`,()=>dropSite(id,1),{ic:S.ic,ok:S.p?'Vendre':'Fermer',danger:1});
+  if(S.p){mv(sale,`Revente de l’entrepôt n°${x.n}`,'buy');st.mCapex-=sale;if(lc){mv(-lc,`Remboursement du crédit de l’entrepôt n°${x.n}`,'buy');st.mCapex+=lc}}
+  if(brk)mv(-brk,`Fin du bail du dépôt n°${x.n} (3 mois)`,'fix');xs().splice(xs().indexOf(x),1);log(`${S.ic} Dépôt n°${x.n} ${S.p?'vendu':'fermé'}.`,false);save();render()}
+function siteUI(){const cur=siteK();let h=`<h3>🏭 Locaux de l’entreprise</h3><p class="mut sm"><b>Déménager</b> remplace ton dépôt principal. <b>➕ En plus</b> ouvre un 2e, 3e… dépôt : les places s’additionnent. Louer, c’est simple. Acheter coûte cher au départ (droits d’enregistrement 12,5 %), mais l’entrepôt prend de la valeur et apporte de l’équipement.</p>`;
   for(const k in SITES){if(k==='home')continue;const S=SITES[k],is=k===cur,fees=S.p?Math.round(S.p*.14):0;
     h+=`<div class="card" style="${is?'border-color:var(--or)':''}"><div class="hd"><div class="ic">${S.ic}</div><div style="flex:1;min-width:0"><h3>${S.n}</h3><div class="mut sm">${S.d}</div></div></div>
     <div class="tags"><span class="tag b">🚚 ${S.v} véhicules</span>${S.rent?`<span class="tag">Loyer ${eur(S.rent)}/mois</span>`:''}${S.p?`<span class="tag">${eur(S.p)} + frais ${eur(fees)}</span><span class="tag">Charges ${eur(S.m)}/mois</span><span class="tag g">prend de la valeur</span>`:''}${S.off?'<span class="tag v">🏢 bureaux inclus</span>':''}</div>
     ${(S.fx||[]).map(f=>`<div class="sm" style="margin-top:5px">${SFX[f]}</div>`).join('')}
-    <div class="row" style="margin-top:10px">${is?'<span class="tag g">✅ Ton dépôt actuel</span>':S.p?`<button class="btn" onclick="moveSite('${k}',0)">Acheter</button><button class="btn s" onclick="moveSite('${k}',1)">🏦 Avec crédit (apport ${eur(S.p*.2+fees)})</button>`:`<button class="btn" onclick="moveSite('${k}',0)">Louer et déménager</button>`}</div></div>`}
+    <div class="row" style="margin-top:10px">${is?'<span class="tag g">✅ Ton dépôt principal</span>':S.p?`<button class="btn" onclick="moveSite('${k}',0)">Acheter</button><button class="btn s" onclick="moveSite('${k}',1)">🏦 Avec crédit (apport ${eur(S.p*.2+fees)})</button>`:`<button class="btn" onclick="moveSite('${k}',0)">Louer et déménager</button>`}</div>
+    <div class="row" style="margin-top:8px">${S.p?`<button class="btn s" onclick="addSite('${k}',0)">➕ Acheter en plus</button><button class="btn s" onclick="addSite('${k}',1)">➕ En plus avec crédit</button>`:`<button class="btn s" onclick="addSite('${k}',0)">➕ Louer en plus (garder mon dépôt)</button>`}</div></div>`}
   showModal(h+`<button class="btn s w" onclick="closeM()">Fermer</button>`)}
-function siteCard(){const k=siteK(),S=SITES[k],n=vehCount(),ov=Math.max(0,n-S.v);
-  return`<div class="card acc" style="--ac:var(--bl)"><div class="hd"><div class="ic" style="--ac2:#173f5e">${S.ic}</div><div style="flex:1;min-width:0"><div class="mut sm">Ton dépôt</div><h3>${S.n}</h3></div></div>
-  <div class="bar" style="margin-top:10px"><i style="width:${Math.min(100,n/S.v*100)}%;${ov?'background:var(--rd)':''}"></i></div><div class="mut sm" style="margin-top:4px">🚚 ${n} / ${S.v} véhicules${ov?` · <b style="color:#ffb3ad">${ov} garé(s) dehors : ${eur(ov*(k==='home'?350:220))}/mois</b>`:''}${S.p?` · vaut ${eur(siteVal())}`:''}${st.siteLoan?` · crédit restant ${eur(st.siteLoan.cap)}`:''}</div>
-  ${(S.fx||[]).map(f=>`<div class="sm" style="margin-top:4px">${SFX[f]}</div>`).join('')}
-  <button class="btn s" style="margin-top:10px" onclick="click();siteUI()">${k==='home'?'🏭 Louer ou acheter un entrepôt':'🏭 Changer de dépôt'}</button></div>`}
+function siteCard(){const k=siteK(),S=SITES[k],n=vehCount(),cap=siteCap(),ov=Math.max(0,n-cap),X=xs();
+  return`<div class="card acc" style="--ac:var(--bl)"><div class="hd"><div class="ic" style="--ac2:#173f5e">${S.ic}</div><div style="flex:1;min-width:0"><div class="mut sm">${X.length?'Dépôt principal (n°1)':'Ton dépôt'}</div><h3>${S.n}</h3></div></div>
+  <div class="bar" style="margin-top:10px"><i style="width:${Math.min(100,n/cap*100)}%;${ov?'background:var(--rd)':''}"></i></div><div class="mut sm" style="margin-top:4px">🚚 ${n} / ${cap} véhicules${X.length?' (tous tes dépôts)':''}${ov?` · <b style="color:#ffb3ad">${ov} garé(s) dehors : ${eur(ov*parkRate())}/mois</b>`:''}${S.p?` · vaut ${eur(siteVal())}`:''}${st.siteLoan?` · crédit restant ${eur(st.siteLoan.cap)}`:''}</div>
+  ${Object.keys(SFX).filter(f=>sfx(f)).map(f=>`<div class="sm" style="margin-top:4px">${SFX[f]}</div>`).join('')}
+  ${X.map(x=>{const Y=SITES[x.k];return`<div class="row" style="flex-wrap:nowrap;margin-top:8px;padding-top:8px;border-top:1px solid #ffffff14"><div style="font-size:26px">${Y.ic}</div><div style="flex:1;min-width:0"><b class="sm">Dépôt n°${x.n} : ${Y.n}</b><div class="mut sm">🚚 ${Y.v} places · ${Y.rent?eur(Y.rent)+'/mois':'vaut '+eur(xVal(x))}${x.loan?' · crédit '+eur(x.loan.cap):''}</div></div><button class="btn s" style="padding:6px 9px" onclick="dropSite(${x.id})">${Y.p?'Vendre':'Fermer'}</button></div>`}).join('')}
+  <button class="btn s" style="margin-top:10px" onclick="click();siteUI()">${k==='home'&&!X.length?'🏭 Louer ou acheter un entrepôt':'🏭 Changer ou ajouter un dépôt'}</button></div>`}
 /* ---------- Publicité : plus de demandes de petits boulots (tarifs moyens d'agences belges) ---------- */
 const ADS={
   web:{n:'Site internet + fiche Google',ic:'🌐',p:1900,m:25,b:.12,d:'Les clients te trouvent sur Google : +12 % de demandes.'},
@@ -674,7 +693,7 @@ function mv(a,t,cat,agg){a=Math.round(a*100)/100;st.cash+=a;if(cat==='in'&&a>0&&
   const L=st.mv||(st.mv=[]);if(agg&&L[0]&&L[0].d===st.day&&L[0].t===t)L[0].a+=a;else L.unshift({d:st.day,a,t});if(L.length>120)L.length=120}
 const CATN={aid:'🤝 Aides à l’emploi (ONSS, Forem)',in:'💶 Rentrées (clients, SPW)',sal:'💸 Salaires et personnel',fix:'🧾 Frais fixes et vie privée',use:'⛽ Carburant, usure, décharge',tax:'🏛️ Impôts et cotisations',buy:'🛒 Achats et investissements',loan:'🏦 Banque (prêts)',priv:'🏡 Versé sur ton compte privé',other:'⚠️ Amendes et imprévus'};
 function ippYear(x){x=Math.max(0,x-10910);let t=0;const B=[[15820,.25],[27920,.40],[48320,.45],[1e12,.50]];let lo=0;for(const[hi,r]of B){if(x>lo)t+=(Math.min(x,hi)-lo)*r;lo=hi}return t*1.075}
-function monthTax(mn){siteMonth();const amort=Object.keys(st.eq).reduce((a,k)=>a+EQ[k].p*st.eq[k],0)/60+(SITES[siteK()].p?SITES[siteK()].p*.7*.03/12:0);
+function monthTax(mn){siteMonth();const amort=Object.keys(st.eq).reduce((a,k)=>a+EQ[k].p*st.eq[k],0)/60+(SITES[siteK()].p?SITES[siteK()].p*.7*.03/12:0)+xs().reduce((a,x)=>a+(SITES[x.k].p||0)*.7*.03/12,0);
   const profit=st.cash-st.mStart-st.mLoan+st.mCapex-amort;let cot=0,imp=0;
   if(!st.srl&&st.stats.ca>=120000){st.srl=1;log('🏢 Sur conseil de ta fiduciaire, ton entreprise devient une SRL (société) : impôt des sociétés à 25 %.')}
   if(st.adm.bce){if(st.srl){cot=0;const red=patronCost()*12>=45000;imp=red?Math.min(Math.max(0,profit),8333)*.2+Math.max(0,profit-8333)*.25:Math.max(0,profit)*.25}else{cot=Math.min(1701,Math.max(297,.205*profit));const y=Math.max(0,profit-cot)*12;imp=ippYear(y)/12}}
@@ -1393,7 +1412,7 @@ function adviceCard(){const tips=[];const pay=payroll()*WDM,last=(st.mHist||[]).
   if(!st.tenders.some(t=>t.my&&t.status!=='done')&&st.adm.vca){const op=st.tenders.filter(t=>t.status==='open'&&!t.my),okT=op.filter(t=>spwReq(t).every(x=>x.ok));
     if(op.length&&!okT.length)tips.push(`📑 <b>Aucune offre en cours au SPW</b> : les ${op.length} marchés ouverts demandent quelque chose que tu n'as pas (agréation, matériel ou personnel). Ouvre 🏛️ Marchés pour voir ce qui manque.`);
     else if(okT.length&&idle>=1)tips.push(`📑 <b>Aucune offre en cours au SPW</b> : ${okT.length} marché${okT.length>1?'s':''} ouvert${okT.length>1?'s':''} pour toi dans 🏛️ Marchés.${has('offre')?'':' Grégory (responsable des offres) peut les remettre à ta place.'}`)}
-  {const S=SITES[siteK()],ov=vehCount()-S.v;if(ov>0)tips.push(`🅿️ <b>Dépôt trop petit</b> : ${ov} véhicule(s) garé(s) dehors pour ${eur(ov*(siteK()==='home'?350:220))}/mois. Un plus grand dépôt dans 🚜 Matériel serait peut-être moins cher.`)}
+  {const ov=vehCount()-siteCap();if(ov>0)tips.push(`🅿️ <b>Dépôts trop petits</b> : ${ov} véhicule(s) garé(s) dehors pour ${eur(ov*parkRate())}/mois. Un dépôt en plus (🚜 Matériel → ➕ En plus) serait peut-être moins cher.`)}
   if(month()===12||month()<=2)tips.push('❄️ <b>C’est l’hiver</b> : moins de travail (pas de fauchage, de tonte, de marquage). C’est normal que ce soit plus dur ; le service d’hiver (déneigement) et l’élagage aident.');
   if(!tips.length)return'';return`<div class="card acc" style="--ac:var(--ye)"><h3>🧮 Conseils de ton comptable</h3>${tips.map(t=>`<div class="sm" style="margin-top:8px">${t}</div>`).join('')}</div>`}
 function dashCard(){const lr=liveRes(),D=(st.dHist||[]).slice(-180),y=date(st.day).getFullYear();
@@ -1707,7 +1726,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.15";
+var APPV="2026-11-04.16";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
