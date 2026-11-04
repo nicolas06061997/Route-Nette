@@ -420,11 +420,64 @@ function fixedList(){const L=[];
   if(va)L.push([`Assurance tracteur agricole (${va})`,va*70]);
   if(vl)L.push([`Assurance + taxe de circulation : ${vl} véhicule(s) léger(s)`,vl*160]);
   if(vh)L.push([`Assurance + taxe de circulation : ${vh} poids lourd(s)`,vh*310]);
-  if(vehCount()>=3)L.push(['Location du hangar',1250]);
-  if(st.workers.some(w=>['bur','enc','dir'].includes(ROLES[w.r].cat)))L.push(['Location des bureaux',950]);
+  {const S=SITES[siteK()],ov=Math.max(0,vehCount()-S.v);if(S.rent)L.push(['Loyer : '+S.n,S.rent]);if(S.m)L.push(['Entrepôt : précompte immobilier, assurance, énergie',S.m]);
+   if(st.siteLoan)L.push(['Crédit de l’entrepôt (intérêts + capital)',st.siteLoan.pay]);if(ov)L.push([`Parking en plus pour ${ov} véhicule(s) (pas assez de place)`,ov*(siteK()==='home'?350:220)]);
+   if(!S.off&&st.workers.some(w=>['bur','enc','dir'].includes(ROLES[w.r].cat)))L.push(['Location des bureaux',950])}
+  {const A=st.ads||{};for(const k in ADS)if(A[k]&&ADS[k].m)L.push(['Publicité : '+ADS[k].n,ADS[k].m])}
   if(st.loan)L.push(['Intérêts du prêt (5 %/an)',st.loan*.05/12]);
   return L}
 const fixedM=()=>fixedList().reduce((a,x)=>a+x[1],0);
+
+/* ---------- Locaux de l'entreprise (louer ou acheter un entrepôt) ---------- */
+// prix d'annonces d'entrepôts en zoning wallon (± 600-1 000 €/m² bâti avec terrain) ; loyers ± 4-5 €/m²/mois
+const SITES={
+  home:{n:'Chez toi (garage et allée)',ic:'🏠',v:2,d:'Tu ranges le matériel chez toi. Au-delà de 2 véhicules, il faut louer du terrain (350 €/véhicule/mois).'},
+  h1:{n:'Hangar loué 300 m² + cour (zoning)',ic:'🏚️',rent:1250,v:6,d:'Un vrai dépôt, sans bureaux (bureaux loués à part si tu as du personnel de bureau).'},
+  h2:{n:'Hangar loué 800 m² + bureaux',ic:'🏢',rent:3400,v:14,off:1,d:'Grand hangar avec bureaux : plus de loyer de bureaux séparé.'},
+  b1:{n:'Entrepôt 400 m² à acheter (zoning de Fleurus)',ic:'🏭',p:345000,m:720,v:8,fx:['atel'],d:'À toi : il prend de la valeur. Petit atelier pour entretenir les machines.'},
+  b2:{n:'Entrepôt 1 000 m² + bureaux + cour 3 000 m²',ic:'🏭',p:980000,m:1650,v:20,off:1,fx:['atel','cuve','tri'],d:'Atelier, cuve de gasoil professionnelle et aire de tri des déchets.'},
+  b3:{n:'Site complet 2 500 m² : ateliers, bureaux, station de lavage',ic:'🏗️',p:2450000,m:3900,v:60,off:1,fx:['atel','cuve','tri','lav'],d:'Le dépôt d’une grosse entreprise, avec tout l’équipement.'}};
+const SFX={atel:'🔧 Atelier : usure des machines -8 %',cuve:'⛽ Cuve de gasoil (achat en vrac) : carburant -7 %',tri:'♻️ Aire de tri : mise en décharge -25 %',lav:'🚿 Station de lavage : matériel propre, +1 réputation par chantier fini'};
+const siteK=()=>st.site||(st.site=vehCount()>6?'h2':vehCount()>=3?'h1':'home');
+const sfx=f=>(SITES[siteK()].fx||[]).includes(f);
+const SITE_RATE=.042,SITE_Y=15;
+const siteVal=()=>{const S=SITES[siteK()];return S.p?Math.round(S.p*Math.pow(1.02,(st.day-(st.siteD||0))/365)):0};
+function siteMonth(){const L=st.siteLoan;if(!L)return;const it=L.cap*SITE_RATE/12,capi=Math.min(L.cap,L.pay-it);L.cap=Math.round(L.cap-capi);st.mCapex+=capi;if(L.cap<=0){st.siteLoan=null;log('🏭 Crédit de l’entrepôt entièrement remboursé : il est à toi !')}}
+function moveSite(k,loan,ok){const S=SITES[k],cur=siteK(),C=SITES[cur];if(k===cur)return;
+  const fees=S.p?Math.round(S.p*.14):0,need=S.p?(loan?Math.round(S.p*.2)+fees:S.p+fees):0;
+  const sale=C.p?Math.round(siteVal()*.97-(st.siteLoan?st.siteLoan.cap:0)):0,brk=C.rent?C.rent*3:0;
+  if(S.p&&st.cash+sale<need)return toastMsg(`Il faut ${eur(need)} sur le compte de la société.${loan?'':' Tu peux aussi prendre un crédit.'}`);
+  const pay=S.p&&loan?Math.round(S.p*.8*(SITE_RATE/12)/(1-Math.pow(1+SITE_RATE/12,-SITE_Y*12))):0;
+  if(!ok)return ask(`Déménager ?\nNouveau dépôt : ${S.n.replace(/ \(.*$/,'')}\nPlace : ${S.v} véhicules\n${S.p?`Prix : ${eur(S.p)}\nDroits (12,5 %) + notaire : ${eur(fees)}\n${loan?`Apport (20 %) + frais : ${eur(need)}\nCrédit professionnel : ${eur(S.p*.8)}\nRemboursement : ${eur(pay)}/mois\nDurée et taux : ${SITE_Y} ans à 4,2 %\n`:''}Charges : ${eur(S.m)}/mois\n`:''}${S.rent?`Loyer : ${eur(S.rent)}/mois\n`:''}${C.p?`Revente de ton entrepôt actuel : +${eur(sale)}\n`:''}${brk?`Fin du bail actuel (3 mois de loyer) : ${eur(brk)}\n`:''}${S.d}`,()=>moveSite(k,loan,1),{ic:S.ic,ok:S.p?(loan?'Acheter avec le crédit':'Acheter'):'Déménager'});
+  if(C.p){mv(sale+(st.siteLoan?st.siteLoan.cap:0),'Revente de l’entrepôt','buy');st.mCapex-=sale+(st.siteLoan?st.siteLoan.cap:0);if(st.siteLoan)mv(-st.siteLoan.cap,'Remboursement du crédit de l’entrepôt','buy'),st.mCapex+=st.siteLoan.cap;st.siteLoan=null}
+  if(brk)mv(-brk,'Fin du bail du hangar (3 mois)','fix');
+  if(S.p){mv(-need,'Achat : '+S.n,'buy');st.mCapex+=need;if(loan)st.siteLoan={cap:Math.round(S.p*.8),pay}}
+  st.site=k;st.siteD=st.day;log(`${S.ic} Ton entreprise déménage : ${S.n} !`);confetti(160);kaching();save();closeM();render()}
+function siteUI(){const cur=siteK();let h=`<h3>🏭 Locaux de l’entreprise</h3><p class="mut sm">Louer, c’est simple. Acheter coûte cher au départ (droits d’enregistrement 12,5 %), mais l’entrepôt prend de la valeur et apporte de l’équipement.</p>`;
+  for(const k in SITES){if(k==='home')continue;const S=SITES[k],is=k===cur,fees=S.p?Math.round(S.p*.14):0;
+    h+=`<div class="card" style="${is?'border-color:var(--or)':''}"><div class="hd"><div class="ic">${S.ic}</div><div style="flex:1;min-width:0"><h3>${S.n}</h3><div class="mut sm">${S.d}</div></div></div>
+    <div class="tags"><span class="tag b">🚚 ${S.v} véhicules</span>${S.rent?`<span class="tag">Loyer ${eur(S.rent)}/mois</span>`:''}${S.p?`<span class="tag">${eur(S.p)} + frais ${eur(fees)}</span><span class="tag">Charges ${eur(S.m)}/mois</span><span class="tag g">prend de la valeur</span>`:''}${S.off?'<span class="tag v">🏢 bureaux inclus</span>':''}</div>
+    ${(S.fx||[]).map(f=>`<div class="sm" style="margin-top:5px">${SFX[f]}</div>`).join('')}
+    <div class="row" style="margin-top:10px">${is?'<span class="tag g">✅ Ton dépôt actuel</span>':S.p?`<button class="btn" onclick="moveSite('${k}',0)">Acheter</button><button class="btn s" onclick="moveSite('${k}',1)">🏦 Avec crédit (apport ${eur(S.p*.2+fees)})</button>`:`<button class="btn" onclick="moveSite('${k}',0)">Louer et déménager</button>`}</div></div>`}
+  showModal(h+`<button class="btn s w" onclick="closeM()">Fermer</button>`)}
+function siteCard(){const k=siteK(),S=SITES[k],n=vehCount(),ov=Math.max(0,n-S.v);
+  return`<div class="card acc" style="--ac:var(--bl)"><div class="hd"><div class="ic" style="--ac2:#173f5e">${S.ic}</div><div style="flex:1;min-width:0"><div class="mut sm">Ton dépôt</div><h3>${S.n}</h3></div></div>
+  <div class="bar" style="margin-top:10px"><i style="width:${Math.min(100,n/S.v*100)}%;${ov?'background:var(--rd)':''}"></i></div><div class="mut sm" style="margin-top:4px">🚚 ${n} / ${S.v} véhicules${ov?` · <b style="color:#ffb3ad">${ov} garé(s) dehors : ${eur(ov*(k==='home'?350:220))}/mois</b>`:''}${S.p?` · vaut ${eur(siteVal())}`:''}${st.siteLoan?` · crédit restant ${eur(st.siteLoan.cap)}`:''}</div>
+  ${(S.fx||[]).map(f=>`<div class="sm" style="margin-top:4px">${SFX[f]}</div>`).join('')}
+  <button class="btn s" style="margin-top:10px" onclick="click();siteUI()">${k==='home'?'🏭 Louer ou acheter un entrepôt':'🏭 Changer de dépôt'}</button></div>`}
+/* ---------- Publicité : plus de demandes de petits boulots (tarifs moyens d'agences belges) ---------- */
+const ADS={
+  web:{n:'Site internet + fiche Google',ic:'🌐',p:1900,m:25,b:.12,d:'Les clients te trouvent sur Google : +12 % de demandes.'},
+  lettr:{n:'Lettrage des véhicules (logo, téléphone)',ic:'🚐',p:1400,m:0,b:.08,d:'Ta camionnette devient une pub qui roule : +8 % de demandes.'},
+  gads:{n:'Publicité Google Ads et Facebook',ic:'📣',p:0,m:350,b:.15,d:'Budget mensuel, résiliable : +15 % de demandes.'},
+  toutes:{n:'Annonces dans les « toutes-boîtes » de ta région',ic:'📰',p:0,m:180,b:.07,d:'Les personnes âgées appellent pour leur haie : +7 % de demandes.'}};
+const adBoost=()=>{const A=st.ads||{};let b=0;for(const k in ADS)if(A[k])b+=ADS[k].b;return b};
+function adToggle(k){const A=st.ads||(st.ads={}),P=ADS[k];click();
+  if(A[k]){if(P.p)return toastMsg('Déjà payé : ça reste à toi.');delete A[k];log(`✂️ Publicité arrêtée : ${P.n}.`,false);save();render();return}
+  if(k==='lettr'&&!st.eq.van)return toastMsg('Il te faut d’abord une camionnette.');
+  if(P.p&&st.cash<P.p)return toastMsg(`Il faut ${eur(P.p)} sur le compte.`);
+  if(P.p){mv(-P.p,'Publicité : '+P.n,'other')}A[k]=st.day;log(`${P.ic} ${P.n} : c’est parti !`,false);kaching();save();render()}
+function adCard(){const A=st.ads||{};return`<h2>📣 Trouver plus de clients</h2><div class="card">${Object.keys(ADS).map(k=>{const P=ADS[k];return`<div class="row" style="flex-wrap:nowrap;padding:7px 0;border-bottom:1px solid #ffffff10"><div style="font-size:24px">${P.ic}</div><div style="flex:1;min-width:0"><b class="sm">${P.n}</b><div class="mut sm">${P.d} ${P.p?eur(P.p)+' une fois':''}${P.p&&P.m?' + ':''}${P.m?eur(P.m)+'/mois':''}</div></div><button class="btn ${A[k]?'g':'s'}" style="padding:7px 10px" onclick="adToggle('${k}')">${A[k]?(P.p?'✅':'Actif'):'Activer'}</button></div>`}).join('')}</div>`}
 
 /* ---------- Petits boulots privés ---------- */
 function genJob(force){const m=month();const ok=PJ.filter(k=>inSeason(JOBS[k],m));const j=force||pick(ok),J=JOBS[j];
@@ -587,14 +640,14 @@ function tick(){
     // congés du bâtiment : les ouvriers sont en vacances, mais le patron peut travailler
     if(conge&&!c.crew.some(i=>{const w=st.workers.find(x=>x.id===i);return w&&w.boss}))continue;
     if(!c.crew.length){if(!conge)c.wd++;continue}
-    if(!conge)c.wd++;let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;let rc=0;for(const t in c.rent||{})rc+=(RENT[t]||0)+EQ[t].u;if(rc)mv(-rc,'Location de matériel','use',1);if(has('meca')){rsAdd('meca',eqc*.1);eqc*=.9}mv(-(eqc+(J.p?(st.eq.van?0:14):40)),'Carburant et usure','use',1);
+    if(!conge)c.wd++;let eqc=0;for(const t in c.own)eqc+=c.own[t]*EQ[t].u;let rc=0;for(const t in c.rent||{})rc+=(RENT[t]||0)+EQ[t].u;if(rc)mv(-rc,'Location de matériel','use',1);if(has('meca')){rsAdd('meca',eqc*.1);eqc*=.9}if(sfx('atel'))eqc*=.92;if(sfx('cuve'))eqc*=.93;mv(-(eqc+(J.p?(st.eq.van?0:14):40)),'Carburant et usure','use',1);
     const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(w=>w&&(!conge||w.boss)&&!(w.r==='etu'&&(w.hy||0)>=650));
     crew.forEach(w=>{if(w.r==='etu')w.hy=(w.hy||0)+7.6});
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF*(has('cond')&&!J.p&&c.wd>c.N*(c.prog/c.q)?1.1:1);
     const wfj=J.allw?1:J.dry&&WX[st.wx].k!=='sun'&&WX[st.wx].k!=='cloud'?0:wf;const gb=J.gr&&crew.some(w=>w.r==='grimp')||c.j==='elagage'&&crew.some(w=>w.r==='grimp')?1.1:1;
     const pw=crew.reduce((a,w)=>a+w.sk*(w.mot??1),0);const dp=Math.min(c.q-c.prog,J.rate*pw*wfj*boost*gb);c.prog+=dp;observe(c,crew);
     {const val=dp/c.q*c.price;st.mProd=(st.mProd||0)+val;crew.forEach(w=>{const s=w.s||(w.s={d:0,rev:0,cost:0});s.d++;s.rev+=pw?val*w.sk*(w.mot??1)/pw:0});if(has('dirt'))rsAdd('dirt',val*.08/1.08)}
-    if(c.xc)mv(-c.xc*dp/c.q,'Mise en décharge','use',1);
+    if(c.xc)mv(-c.xc*dp/c.q*(sfx('tri')?.75:1),'Mise en décharge','use',1);
     crew.forEach(w=>{w.sk=Math.min(1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
     if(c.prog>=c.q-1e-6)finish(c);
   }
@@ -605,7 +658,7 @@ function tick(){
   const open=st.tenders.filter(t=>t.status==='open').length;
   if(open<10&&Math.random()<.7)genTender();if(open<10&&Math.random()<.4)genTender();
   st.jobs=st.jobs.filter(o=>o.until>=st.day);
-  if(st.jobs.length<3+3*Math.min(8,field().length)&&Math.random()<.5+st.rep/150+field().length*.08)genJob();if(field().length>2&&Math.random()<.3)genJob();
+  if(st.jobs.length<3+3*Math.min(8,field().length)&&Math.random()<(.5+st.rep/150+field().length*.08)*(1+adBoost()))genJob();if(adBoost()&&Math.random()<adBoost()*.5)genJob();if(field().length>2&&Math.random()<.3)genJob();
   if(!st.jobs.some(o=>!JOBS[o.j].need.length))genJob(month()===12||month()<=2&&Math.random()<.5?'p_neige':'p_dechets');
   if(x.getDay()===1)refreshCand();
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
@@ -619,7 +672,7 @@ function mv(a,t,cat,agg){a=Math.round(a*100)/100;st.cash+=a;if(cat==='in'&&a>0&&
   const L=st.mv||(st.mv=[]);if(agg&&L[0]&&L[0].d===st.day&&L[0].t===t)L[0].a+=a;else L.unshift({d:st.day,a,t});if(L.length>120)L.length=120}
 const CATN={aid:'🤝 Aides à l’emploi (ONSS, Forem)',in:'💶 Rentrées (clients, SPW)',sal:'💸 Salaires et personnel',fix:'🧾 Frais fixes et vie privée',use:'⛽ Carburant, usure, décharge',tax:'🏛️ Impôts et cotisations',buy:'🛒 Achats et investissements',loan:'🏦 Banque (prêts)',priv:'🏡 Versé sur ton compte privé',other:'⚠️ Amendes et imprévus'};
 function ippYear(x){x=Math.max(0,x-10910);let t=0;const B=[[15820,.25],[27920,.40],[48320,.45],[1e12,.50]];let lo=0;for(const[hi,r]of B){if(x>lo)t+=(Math.min(x,hi)-lo)*r;lo=hi}return t*1.075}
-function monthTax(mn){const amort=Object.keys(st.eq).reduce((a,k)=>a+EQ[k].p*st.eq[k],0)/60;
+function monthTax(mn){siteMonth();const amort=Object.keys(st.eq).reduce((a,k)=>a+EQ[k].p*st.eq[k],0)/60+(SITES[siteK()].p?SITES[siteK()].p*.7*.03/12:0);
   const profit=st.cash-st.mStart-st.mLoan+st.mCapex-amort;let cot=0,imp=0;
   if(!st.srl&&st.stats.ca>=120000){st.srl=1;log('🏢 Sur conseil de ta fiduciaire, ton entreprise devient une SRL (société) : impôt des sociétés à 25 %.')}
   if(st.adm.bce){if(st.srl){cot=0;const red=patronCost()*12>=45000;imp=red?Math.min(Math.max(0,profit),8333)*.2+Math.max(0,profit-8333)*.25:Math.max(0,profit)*.25}else{cot=Math.min(1701,Math.max(297,.205*profit));const y=Math.max(0,profit-cot)*12;imp=ippYear(y)/12}}
@@ -659,7 +712,7 @@ function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c)
   let rest=c.price-c.billed-fine,msg='';
   let dr=J.p?(late?-2:st.rep<40?RI(1,2):0):(late?-RI(3,6):RI(2,4)+(c.price>100000?2:0));
   if(!J.p&&Math.random()<(1.25-avg)*.5&&!crew.some(w=>w.r==='chef')){dr-=2;msg=' Le fonctionnaire dirigeant a demandé des retouches avant la réception.'}
-  st.rep=clamp(st.rep+dr,0,100);st.stats.done++;confetti(J.p?60:160);st.stats.ca+=c.price-fine;{const y=date(st.day).getFullYear(),Y=st.caY||(st.caY={});Y[y]=(Y[y]||0)+c.price-fine}if(st.sel===c.id)st.sel=null;
+  st.rep=clamp(st.rep+dr+(sfx('lav')?1:0),0,100);st.stats.done++;confetti(J.p?60:160);st.stats.ca+=c.price-fine;{const y=date(st.day).getFullYear(),Y=st.caY||(st.caY={});Y[y]=(Y[y]||0)+c.price-fine}if(st.sel===c.id)st.sel=null;
   if(J.p){
     if(c.ct==='part'&&Math.random()<.7){mv(rest,'Paiement : '+c.road,'in');st.stats.earned+=rest;kaching();log(`✅ ${J.n} chez ${c.road} terminé : payé tout de suite +${eur(rest)} ${late?'(en retard, réduction de 10 %)':''}`)}
     else{const d=payDelay(c.ct==='com'?30:c.ct==='pro'?RI(20,35):RI(8,15));invoice(rest,d,c.road);log(`✅ ${J.n} chez ${c.road} terminé : facture de ${eur(rest)}, payée dans ${d} jours.`)}
@@ -1140,7 +1193,7 @@ function rPb(){let h=goalCard()+`<h2>Petits boulots — particuliers, commerces,
     h+=`<div class="card acc" style="--ac:${J.ac};${miss.length?'opacity:.62':''}">${jobHead(J,`${o.client} · ${ctl} — ${o.town}`,`<span class="tag g" style="font-size:15px">${eur(o.price)}</span>`)}
     <div class="tags"><span class="tag">${nb(o.q)} ${J.un}</span><span class="tag">⏱ ${o.dur} jours</span><span class="tag">${o.ct==='part'?'💶 payé à la fin':o.ct==='com'?'📄 payé à 30 jours':'📄 facture 15-30 jours'}</span><span class="tag">Jusqu'au ${dstr(o.until)}</span></div>
     <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:freeCount()<JOBS[o.j].minW?`<button class="btn w s" disabled>⏳ ${field().length>1?'Plus assez de monde de libre ('+Math.max(0,freeCount())+' / '+JOBS[o.j].minW+')':'Occupé : termine d’abord ton chantier en cours'}</button>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
-  return h+(L.length?'':'<p class="mut">Pas de demande aujourd’hui. Reviens demain !</p>')}
+  return h+(L.length?'':'<p class="mut">Pas de demande aujourd’hui. Reviens demain !</p>')+(st.adm.bce?adCard():'')}
 function rAo(){let h=goalCard();const mine=st.tenders.filter(t=>t.my);
   h+=seg(aoTab,[['pub','📢 Publiés'],['mes',`📨 Mes offres (${mine.length})`],['riv','⚔️ Concurrents']],'aoTab');
   const acc=st.adm.bce&&st.adm.rc&&st.adm.vca;
@@ -1199,7 +1252,7 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
     st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd">${avatar(w,52)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${ROLES[w.r].n} · ${eur(monthly(w))}/mois</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div>${ROLES[w.r].d?`<div class="mut sm" style="margin-top:6px">${ROLES[w.r].d}</div>`:''}<button class="btn w" style="margin-top:10px" onclick="cvUI('cand',${i})">📄 Voir le CV</button></div>`);
     if(!st.cand.length)h+='<p class="mut">Plus de candidats cette semaine. Nouveaux CV lundi !</p>'}
   return h}
-function rMt(){let h=goalCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
+function rMt(){let h=goalCard()+siteCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
   // regroupés par type : du petit matériel aux véhicules, et du moins cher au plus cher dans chaque groupe
   const EQG=[['🚚 Véhicules',['van','benne','benne19','nacelle','hydro','balayeuse']],['🚜 Engins et machines',['tracteur','pelle','broyeur','traceuse','saleuse','batteuse']],['🚧 Signalisation et remorques',['fleche','signal','remorque']]];
   const inG=new Set(EQG.flatMap(g=>g[1]));EQG.push(['🧰 Petit matériel',Object.keys(EQ).filter(k=>!inG.has(k))]);EQG.reverse();
@@ -1331,6 +1384,7 @@ function adviceCard(){const tips=[];const pay=payroll()*WDM,last=(st.mHist||[]).
   if(!st.tenders.some(t=>t.my&&t.status!=='done')&&st.adm.vca){const op=st.tenders.filter(t=>t.status==='open'&&!t.my),okT=op.filter(t=>spwReq(t).every(x=>x.ok));
     if(op.length&&!okT.length)tips.push(`📑 <b>Aucune offre en cours au SPW</b> : les ${op.length} marchés ouverts demandent quelque chose que tu n'as pas (agréation, matériel ou personnel). Ouvre 🏛️ Marchés pour voir ce qui manque.`);
     else if(okT.length&&idle>=1)tips.push(`📑 <b>Aucune offre en cours au SPW</b> : ${okT.length} marché${okT.length>1?'s':''} ouvert${okT.length>1?'s':''} pour toi dans 🏛️ Marchés.${has('offre')?'':' Grégory (responsable des offres) peut les remettre à ta place.'}`)}
+  {const S=SITES[siteK()],ov=vehCount()-S.v;if(ov>0)tips.push(`🅿️ <b>Dépôt trop petit</b> : ${ov} véhicule(s) garé(s) dehors pour ${eur(ov*(siteK()==='home'?350:220))}/mois. Un plus grand dépôt dans 🚜 Matériel serait peut-être moins cher.`)}
   if(month()===12||month()<=2)tips.push('❄️ <b>C’est l’hiver</b> : moins de travail (pas de fauchage, de tonte, de marquage). C’est normal que ce soit plus dur ; le service d’hiver (déneigement) et l’élagage aident.');
   if(!tips.length)return'';return`<div class="card acc" style="--ac:var(--ye)"><h3>🧮 Conseils de ton comptable</h3>${tips.map(t=>`<div class="sm" style="margin-top:8px">${t}</div>`).join('')}</div>`}
 function dashCard(){const lr=liveRes(),D=(st.dHist||[]).slice(-180),y=date(st.day).getFullYear();
@@ -1587,10 +1641,11 @@ function draw(t){
   }else{
     // dépôt / maison quand il n'y a pas de chantier
     const bx=CW*.08;
-    if(!st.adm.bce||vehCount()===0){house(bx+50,CH*.98,1.6,'#efe6d6','#a5442f');rr(bx+90,CH*.98-34,46,34,2,'#d9d0bf');rect(bx+94,CH*.98-28,38,28,'#8a8f96');for(let k=0;k<5;k++)rect(bx+94,CH*.98-27+k*5.5,38,1,'#7a7f86')}
-    else{rr(bx,CH*.98-64,150,64,3,'#9aa7b3');poly([bx-6,CH*.98-64,bx+75,CH*.98-86,bx+156,CH*.98-64],'#6c7a88');rect(bx+20,CH*.98-46,60,46,'#59646f');for(let k=0;k<8;k++)rect(bx+20,CH*.98-45+k*5.7,60,1.2,'#4b555f');
-      rr(bx+90,CH*.98-56,52,16,3,'#ff8a1c');g.fillStyle='#2a1600';g.font='900 8px Nunito,sans-serif';g.fillText(st.name.slice(0,12).toUpperCase(),bx+94,CH*.98-45)}
-    let px=bx+250;const order=['hydro','tracteur','balayeuse','nacelle','van','fleche'];
+    const sk=st.adm.bce?siteK():'home',SC={home:1,h1:1,h2:1.3,b1:1.15,b2:1.5,b3:1.85}[sk]||1;
+    if(!st.adm.bce||(vehCount()===0&&sk==='home')){house(bx+50,CH*.98,1.6,'#efe6d6','#a5442f');rr(bx+90,CH*.98-34,46,34,2,'#d9d0bf');rect(bx+94,CH*.98-28,38,28,'#8a8f96');for(let k=0;k<5;k++)rect(bx+94,CH*.98-27+k*5.5,38,1,'#7a7f86')}
+    else{g.save();g.translate(bx,CH*.98);g.scale(SC,Math.min(SC,1.15));g.translate(-bx,-CH*.98);rr(bx,CH*.98-64,150,64,3,sk[0]==='b'?'#b7a58e':'#9aa7b3');poly([bx-6,CH*.98-64,bx+75,CH*.98-86,bx+156,CH*.98-64],'#6c7a88');rect(bx+20,CH*.98-46,60,46,'#59646f');for(let k=0;k<8;k++)rect(bx+20,CH*.98-45+k*5.7,60,1.2,'#4b555f');
+      rr(bx+90,CH*.98-56,52,16,3,'#ff8a1c');g.fillStyle='#2a1600';g.font='900 8px Nunito,sans-serif';g.fillText(st.name.slice(0,12).toUpperCase(),bx+94,CH*.98-45);g.restore()}
+    let px=bx+100+150*SC;const order=['hydro','tracteur','balayeuse','nacelle','van','fleche'];
     for(const k of order)for(let n=0;n<Math.min(2,st.eq[k]||0);n++){if(px>CW-30)break;const y=CH*.98;
       if(k==='van'){van(px,y,t,0);px+=95}else if(k==='tracteur'){tractor(px+20,y,t,y,1);px+=110}else if(k==='balayeuse'){sweeper(px,y,t);px+=95}else if(k==='nacelle'){nacelleTruck(px,y,t,px+10,y-70);px+=110}else if(k==='hydro'){hydroTruck(px,y,t,px-70,y);px+=110}else{arrowTrailer(px,y,t);px+=60}}
     {const mc=pv().own.map(o=>PRIV[o.k]).filter(P=>P&&(P.c==='car'||P.c==='occ')).sort((a,b)=>b.p-a.p)[0];if(mc){WROT=0;car(CW-50,CH*.98,mc.col||'#888',0,1.25)}else if(px===bx+250)oldcar(px+20,CH*.98,t,st.eq.remorque?1:0)}
@@ -1643,7 +1698,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.11";
+var APPV="2026-11-04.12";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
