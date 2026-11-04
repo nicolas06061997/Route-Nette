@@ -1973,7 +1973,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.6";
+var APPV="2026-11-05.7";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
@@ -1982,6 +1982,8 @@ function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){
  fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
   if(!j||!j.v||j.v===APPV){if(man)say("Le jeu est à jour ✓ (version "+APPV+")");return}
   try{save()}catch(x){}
+  // pas encore en train de jouer (écran « Jouer ») : on installe la nouvelle version tout de suite, une seule fois
+  try{if(typeof playing!=="undefined"&&!playing&&sessionStorage.getItem("rn-auto")!==j.v){sessionStorage.setItem("rn-auto",j.v);location.reload();return}}catch(x){}
   document.getElementById("updn").textContent=(j.notes||"")+" Ta progression est conservée.";document.getElementById("ins").classList.remove("on");document.getElementById("upd").classList.add("on")}).catch(function(){if(man)say("Pas de connexion internet")})}
 (function(){try{var o=localStorage.getItem("routenette-v");localStorage.setItem("routenette-v",APPV);if(o&&o!==APPV)setTimeout(function(){say("Jeu mis à jour ✓ Ta progression est intacte.")},800)}catch(x){}})();
 chkV();setInterval(chkV,30*60000);
