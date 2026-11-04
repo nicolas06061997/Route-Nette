@@ -270,6 +270,7 @@ const ROLES={
   prev:{n:'Conseiller en prévention (niveau II)',ic:'⛑️',cat:'enc',day:300,who:'Laurence Dethier',need:15,d:'Sécurité au travail : assurance accidents du travail à 3 % au lieu de 4 %, moins d’accidents.'},
   cond:{n:'Conducteur de travaux principal',ic:'🗺️',cat:'enc',day:300,who:'Benoît Gillard',d:'Surveille tous les chantiers : déplace les ouvriers des petits boulots et des chantiers en avance vers les marchés publics en retard. Les chantiers en retard avancent 10 % plus vite.'},
   offre:{n:'Responsable des offres (marchés publics)',ic:'📑',cat:'bur',day:320,who:'Grégory Lemaire',d:'Lit les avis de marché et remet lui-même les offres quand ton entreprise remplit les conditions et a assez de monde, au coefficient de prix que tu choisis.'},
+  form:{n:'Formateur interne (mi-temps)',ic:'🎓',cat:'bur',day:140,who:'Jean-Luc Dethier',d:'Tous les 5 à 6 mois, il forme un de tes ouvriers (le moins formé d’abord) : +6 % d’efficacité et un certificat. Après 2 formations, un ouvrier de cat. 1 devient qualifié (cat. 3) — mais son salaire augmente aussi.'},
   plan:{n:'Chargée de clientèle et planning',ic:'📞',cat:'bur',day:180,who:'Manon Lecocq',d:'Répond aux clients et accepte elle-même les petits boulots rentables dès qu’une équipe est libre (le matériel doit être à toi).'},
   dirc:{n:'Directeur commercial',ic:'📈',cat:'dir',day:370,who:'Thierry Collard',need:10,d:'Plus d’invitations aux marchés, +3 offres en même temps, meilleure note technique.'}
 };
@@ -630,6 +631,7 @@ function tick(){
   if(x.getDate()===1&&x.getMonth()===0)st.workers.forEach(w=>{if(w.r==='etu')w.hy=0});
   const run=running(),over=Math.max(0,mgmtLoad()-mgmtCap()),mgF=over>0?.75:1;
   if(work&&has('plan'))autoAccept();
+  if(has('form')){if(!st.formNext)st.formNext=st.day+RI(150,180);if(work&&st.day>=st.formNext){trainOne();st.formNext=st.day+RI(150,180)}}else if(st.formNext)delete st.formNext;
   if(work)autoStaff();if(work&&has('cond'))condRebalance();if(has('offre'))autoBid();
   for(const c of [...st.contracts]){const J=JOBS[c.j];
     if(c.st==='wait'&&!J.p&&!c.md&&st.day>=c.startBy-4){c.md=1;log(`🚨 Mise en demeure du SPW : commence « ${J.n} » (${esc(c.road)}) avant le ${dstr(c.startBy)}, sinon le marché sera résilié avec une pénalité de ${eur(c.price*.05)}. Libère des ouvriers dans 🦺 Chantiers.`)}
@@ -783,8 +785,8 @@ function pauseC(id){const c=st.contracts.find(x=>x.id===id);if(!c)return;c.crew=
 function workDaysSince(d){let n=0;for(let k=d+1;k<=st.day;k++)if(isWork(k))n++;return n}
 // Statistiques réelles de chaque personne : ce qu'elle produit, ce qu'elle coûte, ce qu'elle apporte
 function staffStat(w){const s=w.s||{d:0,rev:0,cost:0},R=st.rs||{},m=Math.max(1,(st.day-(w.hd||0))/30.4);let L=[];
-  if(ROLES[w.r].cat==='ouv'){const net=s.rev-s.cost;L.push(`🗓️ ${s.d} jour(s) sur chantier`,`💶 a produit ${eur(s.rev)}`);if(!w.boss)L.push(`💸 a coûté ${eur(s.cost)}`,`<b class="${net>=0?'money':'neg'}">${net>=0?'rapporte':'perd'} ${eur(Math.abs(net))}</b>`);if(s.d)L.push(`${eur(s.rev/s.d)} par jour`)}
-  else{const x={aide:`💶 ${eur(R.aide||0)} facturés et encaissés 10 jours plus tôt`,gest:`📋 ${nb(R.gest||0)} chantier-jours suivis en plus`,secr:`📨 ${nb(R.off||0)} offres remises en plus`,metreur:`📐 ${nb(R.metreur||0)} offres chiffrées au prix de revient exact`,compta:`💰 ${eur(R.compta||0)} de fiduciaire économisés`,rh:`🙋 ${nb(R.rh||0)} candidats en plus trouvés`,dirt:`🛠️ ${eur(R.dirt||0)} de production en plus (+8 %)`,daf:`🏦 capacité de prêt doublée : ${eur(loanMax())}`,dirc:`📈 ${nb(R.off||0)} offres remises en plus`,plan:`📞 ${nb(R.plan||0)} petits boulots acceptés pour ${eur(R.planv||0)}`,offre:`📑 ${nb(R.offre||0)} offres remises tout seul`,cond:`🗺️ ${nb(R.cond||0)} ouvriers déplacés vers les chantiers en retard`,meca:`🔧 ${eur(R.meca||0)} de pannes et d’usure économisés`,prev:`⛑️ ${eur(R.prev||0)} d’assurance économisés`}[w.r];if(x)L.push(x);L.push(`💸 a coûté ${eur(s.cost)}`)}
+  if(ROLES[w.r].cat==='ouv'){const net=s.rev-s.cost;if((w.cert||[]).length)L.push(...w.cert.map(c=>'🎓 '+c.slice(c.indexOf(' ')+1)));L.push(`🗓️ ${s.d} jour(s) sur chantier`,`💶 a produit ${eur(s.rev)}`);if(!w.boss)L.push(`💸 a coûté ${eur(s.cost)}`,`<b class="${net>=0?'money':'neg'}">${net>=0?'rapporte':'perd'} ${eur(Math.abs(net))}</b>`);if(s.d)L.push(`${eur(s.rev/s.d)} par jour`)}
+  else{const x={aide:`💶 ${eur(R.aide||0)} facturés et encaissés 10 jours plus tôt`,gest:`📋 ${nb(R.gest||0)} chantier-jours suivis en plus`,secr:`📨 ${nb(R.off||0)} offres remises en plus`,metreur:`📐 ${nb(R.metreur||0)} offres chiffrées au prix de revient exact`,compta:`💰 ${eur(R.compta||0)} de fiduciaire économisés`,rh:`🙋 ${nb(R.rh||0)} candidats en plus trouvés`,dirt:`🛠️ ${eur(R.dirt||0)} de production en plus (+8 %)`,daf:`🏦 capacité de prêt doublée : ${eur(loanMax())}`,dirc:`📈 ${nb(R.off||0)} offres remises en plus`,form:`🎓 ${nb(R.form||0)} formation(s) données${st.formNext?' · prochaine vers le '+dstr(st.formNext):''}`,plan:`📞 ${nb(R.plan||0)} petits boulots acceptés pour ${eur(R.planv||0)}`,offre:`📑 ${nb(R.offre||0)} offres remises tout seul`,cond:`🗺️ ${nb(R.cond||0)} ouvriers déplacés vers les chantiers en retard`,meca:`🔧 ${eur(R.meca||0)} de pannes et d’usure économisés`,prev:`⛑️ ${eur(R.prev||0)} d’assurance économisés`}[w.r];if(x)L.push(x);L.push(`💸 a coûté ${eur(s.cost)}`)}
   return`<div class="tags" style="margin-top:6px">${L.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`}
 const behav=w=>w.boss||w.seen===undefined?null:w.seen<.55?['🔴 À surveiller','r']:w.seen<.72?['🟠 Moyen','o']:['🟢 Sérieux','g'];
 
@@ -897,6 +899,13 @@ function pickFor(c,onlyFree){const J=JOBS[c.j];const fw=freeW(c).filter(w=>!(w.r
 const crewOk=(J,sel)=>sel.length>=J.minW&&(!J.pc||hasPC(sel))&&(!J.op||sel.some(w=>w.r===J.op))&&(!J.gr||sel.some(w=>w.r==='grimp'));
 // chaque jour ouvrable : relance les chantiers en pause et commence les chantiers en attente dès que l'équipe est libre
 // Manon accepte les petits boulots, les plus rentables d'abord, tant qu'il reste du monde de libre
+// Formateur : un ouvrier formé tous les 5-6 mois (formations sectorielles réelles, payées par le fonds de formation du secteur)
+const CERTS=['🌿 Débroussaillage et fauchage avancés','🚧 Signalisation de chantier sur voirie','🪚 Tronçonneuse et sécurité en élagage','🦺 VCA – sécurité sur chantier','🚜 Conduite de tracteur et d’épareuse','⛑️ Secouriste d’entreprise','♻️ Propreté publique et tri des déchets'];
+function trainOne(){const W=field().filter(w=>!w.boss&&w.r!=='etu');if(!W.length)return log('🎓 Jean-Luc n’a personne à former : engage des ouvriers.',false);
+  W.sort((a,b)=>(a.cert||[]).length-(b.cert||[]).length||a.sk-b.sk);const w=W[0],C=CERTS.filter(c=>!(w.cert||[]).includes(c)),c=pick(C.length?C:CERTS);
+  (w.cert||(w.cert=[])).push(c);const old=w.sk;w.sk=+Math.min(1.5,w.sk+.06).toFixed(2);w.mot=Math.min(1,(w.mot||0)+.15);let promo='';
+  if(w.r==='man'&&w.cert.length>=2){w.r='qual';w.day=Math.max(w.day,Math.round(ROLES.qual.day*R(.98,1.03)));promo=` ${w.n.split(' ')[0]} devient ${isF(w.n)?'ouvrière qualifiée':'ouvrier qualifié'} (cat. 3) : son coût passe à ${eur(w.day)}/jour.`}
+  rsAdd('form',1);log(`🎓 Jean-Luc a formé ${w.n} : « ${c.slice(c.indexOf(' ')+1)} ». Efficacité ${Math.round(old*100)} % → ${Math.round(w.sk*100)} %.${promo}`)}
 function autoAccept(){const L=st.jobs.filter(o=>!jobMiss(o).length).sort((a,b)=>b.price/Math.max(1,b.q/JOBS[b.j].rate)-a.price/Math.max(1,a.q/JOBS[a.j].rate));
   for(const o of L){if(freeCount()<JOBS[o.j].minW)break;const n=st.contracts.length;acceptJob(o.id);if(modalOpen)closeM();if(st.contracts.length>n){rsAdd('plan',1);rsAdd('planv',o.price);log(`📞 Manon a accepté : ${JOBS[o.j].n} chez ${o.client} (${eur(o.price)}).`,false)}}}
 // avance d'un chantier : jours nécessaires − jours restants (> 0 = en retard)
@@ -1245,7 +1254,7 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
   else if(eqTab==='bureau'){const office=st.workers.filter(w=>ROLES[w.r].cat!=='ouv');
     h+=`<h2>Encadrement, bureau et direction</h2>`;if(!office.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, factures, chantiers. Toi seul, tu peux suivre 2 chantiers et 2 offres en même temps.</p>';office.forEach(w=>h+=card(w));
     h+=`<h2>Postes à pourvoir</h2>`;
-    for(const r of['aide','plan','offre','cond','gest','secr','metreur','compta','rh','meca','prev','dirt','daf','dirc']){const R0=ROLES[r];if(!R0.multi&&has(r))continue;const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
+    for(const r of['aide','plan','offre','cond','gest','secr','metreur','compta','rh','meca','prev','form','dirt','daf','dirc']){const R0=ROLES[r];if(!R0.multi&&has(r))continue;const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
       h+=`<div class="card" style="${lock?'opacity:.6':''}"><div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(R0.day*WDM)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>
       <button class="btn w" style="margin-top:10px" ${lock?'disabled':''} onclick="cvUI('role','${r}')">${R0.need&&ownW()<R0.need?`🔒 À partir de ${R0.need} personnes`:R0.multi&&has(r)?'📄 CV d’un gestionnaire de plus':'📄 Voir le CV'}</button></div>`}}
   else{h+=`<h2>Candidats (nouveaux chaque lundi${has('rh')?', trouvés par Sophie':''})</h2><p class="mut sm" style="margin:0 4px 10px">Coût employeur : salaire brut (barèmes 2026 de la commission paritaire 145.04 — parcs et jardins, 16,00 à 18,87 €/h brut) + ONSS + pécules de vacances. Pour engager, il faut de quoi payer un mois.</p>`;
@@ -1698,7 +1707,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.13";
+var APPV="2026-11-04.14";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
