@@ -142,6 +142,7 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
 .pvbar,.pvbud{height:8px;border-radius:6px;background:#0f1f15;margin:10px 0 4px;overflow:hidden}.pvbar i,.pvbud i{display:block;height:100%;background:linear-gradient(90deg,var(--or),var(--or2));border-radius:6px}
 .pvrow{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #ffffff14}.pvrow span{font-size:12px;font-weight:800;color:var(--mut);width:58px;flex:none}.emo{font-size:24px;letter-spacing:2px;line-height:1.25;word-break:break-all}
 .pvev{padding:5px 0;border-bottom:1px solid #ffffff10}.pvev:last-child{border:0}.pvo{padding-top:12px;padding-bottom:12px}
+.ask h3{font-size:19px;line-height:1.2}.askh{display:flex;align-items:center;gap:12px;margin-bottom:10px}.askic{font-size:40px;line-height:1;flex:none}.askr{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #ffffff14;font-size:14px}.askr span{color:var(--mut)}.askr b{text-align:right}.askp{font-size:14px;color:var(--mut);margin:8px 0 0;line-height:1.4}.askw{background:#5c3a0e;color:#ffd79a;border-radius:10px;padding:9px 11px;margin-top:10px;font-size:13.5px;font-weight:700;line-height:1.35}.ask .ph,.ask img{border-radius:12px;margin-bottom:10px}.ask img{max-height:190px;width:100%;object-fit:cover}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}.chips button{background:#0f1f15;border:1px solid var(--line);color:var(--mut);font:800 13px Nunito,sans-serif;padding:7px 11px;border-radius:999px}.chips button.on{background:var(--card2);color:var(--or2);border-color:var(--or)}
 .seg{display:flex;gap:4px;background:#0f1f15;border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:12px}
 .seg button{flex:1;background:none;border:0;color:var(--mut);font:800 13px Nunito,sans-serif;padding:8px 4px;border-radius:10px}
@@ -704,16 +705,16 @@ function observe(c,crew){const chef=crew.find(w=>w.r==='chef'),boss=crew.find(w=
       st.reports.unshift({id:st.nid++,wid:w.id,cid:c.id,day:st.day,by:who.boss?'Toi':who.n.split(' ')[0],role:who.boss?'patron':ROLES[who.r].n.toLowerCase(),txt:'fait un excellent travail et motive toute l’équipe',good:1,road:c.road,done:0});log(`🌟 ${w.n.split(' ')[0]} fait du super boulot sur ${esc(c.road)}.`)}
   }
   if(st.reports.length>40)st.reports.length=40}
-function rptAct(id,a){const r=st.reports.find(x=>x.id===id);if(!r)return;const w=st.workers.find(x=>x.id===r.wid);if(!w){r.done='parti';render();return}const fn=w.n.split(' ')[0];click();
+function rptAct(id,a,ok){const r=st.reports.find(x=>x.id===id);if(!r)return;const w=st.workers.find(x=>x.id===r.wid);if(!w){r.done='parti';render();return}const fn=w.n.split(' ')[0];click();
   if(a==='talk'){w.mot=Math.min(1,w.mot+.12);r.done='Recadré oralement';log(`🗣️ Tu as recadré ${fn}.`,false)}
   else if(a==='warn'){w.warn++;w.mot=Math.min(1,w.mot+.3);if(w.warn>=2&&Math.random()<.5)w.base=Math.min(1,w.base+.15);r.done=`Avertissement écrit n°${w.warn}`;log(`⚠️ Avertissement écrit n°${w.warn} envoyé à ${w.n} (recommandé).`)}
   else if(a==='prime'){if(st.cash<250)return toastMsg('Il faut 250 €.');mv(-250,'Prime à '+w.n,'sal');w.mot=1;w.base=Math.min(1,w.base+.05);r.done='Prime de 250 € accordée';log(`🎁 Prime de 250 € pour ${w.n}. Toute l'équipe est motivée !`);st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv')x.mot=Math.min(1,x.mot+.03)})}
   else if(a==='fire'){
-    const p=preavisCost(w);if(!confirm(`Licencier ${w.n} avec préavis ?\nAncienneté : ${Math.round((st.day-w.hd)/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(p)}`))return;
+    const p=preavisCost(w);if(!ok)return ask(`Licencier ${w.n} avec préavis ?\nAncienneté : ${Math.round((st.day-w.hd)/30.4)} mois\nPréavis : ${preavisW(w)} semaine(s)\nCoût du préavis : ${eur(p)}`,()=>rptAct(id,a,1),{ic:'📤',ok:'Licencier',danger:1});
     mv(-p,'Préavis de '+w.n,'sal');dropW(w);r.done='Licencié avec préavis';log(`📤 ${w.n} est licencié (indemnité de préavis ${eur(p)}).`)}
-  else if(a==='grave'){const wd=workDaysSince(r.day);const ok=(r.grave||w.warn>=2)&&wd<=3;
-    if(!confirm(`Licencier ${w.n} pour motif grave, sans préavis ?\n${ok?'Le dossier est solide.':'⚠️ Attention : le dossier est faible ('+(wd>3?'plus de 3 jours ouvrables depuis les faits':'pas de faute grave ni 2 avertissements')+'). Il risque d’aller au tribunal du travail.'}`))return;
-    dropW(w);if(ok){r.done='Licencié pour motif grave';log(`🚪 ${w.n} est licencié pour motif grave.`)}
+  else if(a==='grave'){const wd=workDaysSince(r.day);const okD=(r.grave||w.warn>=2)&&wd<=3;
+    if(!ok)return ask(`Licencier ${w.n} pour motif grave, sans préavis ?\n${okD?'Le dossier est solide.':'⚠️ Attention : le dossier est faible ('+(wd>3?'plus de 3 jours ouvrables depuis les faits':'pas de faute grave ni 2 avertissements')+'). Il risque d’aller au tribunal du travail.'}`,()=>rptAct(id,a,1),{ic:'🚪',ok:'Licencier pour motif grave',danger:1});
+    dropW(w);if(okD){r.done='Licencié pour motif grave';log(`🚪 ${w.n} est licencié pour motif grave.`)}
     else{const p=preavisCost(w)+Math.round(w.day*5*3*R(1,4));mv(-p,'Tribunal du travail','other');st.rep=clamp(st.rep-3,0,100);r.done='Tribunal du travail : condamné';log(`⚖️ ${w.n} conteste au tribunal du travail : tu es condamné à payer ${eur(p)} (préavis + licenciement déraisonnable). Réputation -3.`)}}
   else{r.done=r.good?'Félicité':'Classé sans suite';if(r.good)w.mot=Math.min(1,w.mot+.05)}
   st.workers.forEach(x=>{if(x!==w&&ROLES[x.r].cat==='ouv'&&(a==='warn'||a==='fire'||a==='grave'))x.mot=Math.min(1,x.mot+.02)});
@@ -721,7 +722,7 @@ function rptAct(id,a){const r=st.reports.find(x=>x.id===id);if(!r)return;const w
 function unassign(w){for(const c of st.contracts){if(!c.crew.includes(w.id))continue;c.crew=c.crew.filter(i=>i!==w.id);const J=JOBS[c.j];const rest=c.crew.map(i=>st.workers.find(x=>x.id===i)).filter(Boolean);
   if(rest.length<J.minW||(J.pc&&!hasPC(rest))){c.crew=[];c.own={};c.rent={};log(`⏸ ${J.n} (${esc(c.road)}) est en pause : plus assez de monde. Remets une équipe dans 🦺 Chantiers.`)}}}
 function primeAll(){const G=st.reports.filter(r=>r.good&&!r.done&&st.workers.some(w=>w.id===r.wid));const t=G.length*250;if(!t)return;if(st.cash<t)return toastMsg(`Il faut ${eur(t)} sur le compte.`);for(const r of G){const w=st.workers.find(x=>x.id===r.wid);mv(-250,'Prime à '+w.n,'sal');w.mot=1;w.base=Math.min(1,w.base+.05);r.done='Prime de 250 € accordée'}st.workers.forEach(x=>{if(ROLES[x.r].cat==='ouv')x.mot=Math.min(1,x.mot+.03)});log(`🎁 ${G.length} primes versées (${eur(t)}). L'équipe est motivée !`);kaching();save();render()}
-function primeTeam(){const W=field().filter(w=>!w.boss);const t=W.length*250;if(!t)return;if(st.cash<t)return toastMsg(`Il faut ${eur(t)} sur le compte.`);if(!confirm(`Verser une prime de 250 € à ${W.length} ouvrier(s) ? Total : ${eur(t)}`))return;W.forEach(w=>{mv(-250,'Prime à '+w.n,'sal');w.mot=Math.min(1,w.mot+.25);w.base=Math.min(1,w.base+.02)});st.reports.forEach(r=>{if(r.good&&!r.done)r.done='Prime de 250 € accordée'});log(`🎁 Prime exceptionnelle versée à toute l'équipe : ${eur(t)}.`);kaching();save();render()}
+function primeTeam(ok){const W=field().filter(w=>!w.boss);const t=W.length*250;if(!t)return;if(st.cash<t)return toastMsg(`Il faut ${eur(t)} sur le compte.`);if(!ok)return ask(`Verser une prime à toute l’équipe ?\nOuvriers : ${W.length}\nPrime : 250 € chacun\nTotal : ${eur(t)}`,()=>primeTeam(1),{ic:'🎁',ok:'Verser la prime'});W.forEach(w=>{mv(-250,'Prime à '+w.n,'sal');w.mot=Math.min(1,w.mot+.25);w.base=Math.min(1,w.base+.02)});st.reports.forEach(r=>{if(r.good&&!r.done)r.done='Prime de 250 € accordée'});log(`🎁 Prime exceptionnelle versée à toute l'équipe : ${eur(t)}.`);kaching();save();render()}
 // un rapport sur quelqu'un qui a quitté l'entreprise est classé automatiquement
 function cleanReports(){for(const r of st.reports)if(!r.done&&!st.workers.some(w=>w.id===r.wid))r.done='A quitté l’entreprise'}
 function dropW(w){unassign(w);st.workers.splice(st.workers.indexOf(w),1)}
@@ -885,11 +886,11 @@ function hireRole(r){const R0=ROLES[r];if(!st.adm.bce)return;if(!R0.multi&&has(r
   const day=R0.day;if(st.cash<day*WDM)return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(day*WDM)}).`);
   const n=nextName(r);
   st.workers.push({id:st.nid++,n,r,sk:1,day,pc:0,skin:RI(0,SKIN.length-1),base:1,mot:1,hd:st.day,warn:0});log(`${R0.ic} ${n} rejoint ${esc(st.name)} : ${R0.n}.`);kaching();goals();save();render()}
-function fire(id){const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;const onC=st.contracts.find(c=>c.st==='run'&&c.crew.includes(id));if(onC&&!confirm(`${w.n} travaille sur « ${JOBS[onC.j].n} ». Si l'équipe devient trop petite, ce chantier sera mis en pause. Continuer ?`))return;
-  const pre=preavisCost(w);if(!confirm(`Licencier ${w.n} ?\nAncienneté : ${Math.round((st.day-(w.hd||0))/30.4)} mois → ${preavisW(w)} semaine(s) de préavis payées : ${eur(pre)}`))return;mv(-pre,'Préavis de '+w.n,'sal');dropW(w);log(`📤 ${w.n} est licencié (préavis ${eur(pre)}).`,false);save();render()}
+function fire(id,ok){ok=ok||0;const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;const onC=st.contracts.find(c=>c.st==='run'&&c.crew.includes(id));if(onC&&ok<1)return ask(`${w.n} est sur un chantier\n${w.n.split(' ')[0]} travaille sur « ${JOBS[onC.j].n} ».\n⚠️ Si l'équipe devient trop petite, ce chantier sera mis en pause.`,()=>fire(id,1),{ic:'🦺',ok:'Continuer'});
+  const pre=preavisCost(w);if(ok<2)return ask(`Licencier ${w.n} ?\nAncienneté : ${Math.round((st.day-(w.hd||0))/30.4)} mois\nPréavis : ${preavisW(w)} semaine(s)\nCoût du préavis : ${eur(pre)}`,()=>fire(id,2),{ic:'📤',ok:'Licencier',danger:1});mv(-pre,'Préavis de '+w.n,'sal');dropW(w);log(`📤 ${w.n} est licencié (préavis ${eur(pre)}).`,false);save();render()}
 function trainPC(id){const w=st.workers.find(x=>x.id===id);if(!w||w.pc)return;if(st.cash<2900)return toastMsg('Il faut 2 900 € pour le permis C (auto-école + examen + CAP).');mv(-2900,'Permis C de '+w.n,'buy');w.pc=1;log(`🪪 ${w.n} a obtenu son permis C !`);save();render()}
 function buy(t){const e=EQ[t];if(st.cash<e.p)return toastMsg(`Pas assez d'argent : il manque ${eur(e.p-st.cash)}.`);mv(-e.p,'Achat : '+e.n,'buy');st.mCapex+=e.p;st.eq[t]=(st.eq[t]||0)+1;log(`🛒 Achat : ${e.ic} ${e.n}`,false);kaching();goals();save();render()}
-function sell(t){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const v=Math.round(EQ[t].p*.55);if(!confirm(`Revendre ${EQ[t].n} pour ${eur(v)} ?`))return;st.eq[t]--;mv(v,'Revente : '+EQ[t].n,'buy');st.mCapex-=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
+function sell(t,ok){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const v=Math.round(EQ[t].p*.55);if(!ok)return ask(`Revendre ce matériel ?\nMachine : ${EQ[t].n}\nPrix d’achat : ${eur(EQ[t].p)}\nTu reçois (± 55 %) : ${eur(v)}`,()=>sell(t,1),{ic:EQ[t].ic||'🚜',ok:'Revendre',img:photo('eq_'+t)});st.eq[t]--;mv(v,'Revente : '+EQ[t].n,'buy');st.mCapex-=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
 function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);mv(-a.p,a.n,'buy');st.adm[k]=1;log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
 function clsOk(u){return!!(st.adm.vca&&st.adm.rc)&&st.stats.ca>=u.ca&&ownW()>=u.w&&st.rep>=u.r&&st.cash>=u.c&&(!u.dir||u.dir.every(has))}
 function upCls(){const u=CLS[st.cls+1];if(!u||!clsOk(u))return;mv(-u.c,'Dossier d’agréation','buy');st.cls++;log(`🏅 Agréation ${u.n} (catégorie G — routes) : marchés de travaux jusqu'à ${eur(u.max)} !`);kaching();goals();save();render()}
@@ -986,13 +987,13 @@ const ownsHome=()=>pv().own.some(o=>PRIV[o.k]&&PRIV[o.k].home&&!o.lou);
 const myHome=()=>pv().own.find(o=>PRIV[o.k]&&PRIV[o.k].home&&!o.lou);
 // loyer d'un bien : immeuble de rapport (P.rent) ou logement mis en location (P.hr), indexé chaque année
 function rentOf(o){const P=PRIV[o.k];if(!P)return 0;const r=P.rent||(o.lou?P.hr:0);return r?Math.round(r*(o.ix||1)):0}
-function pRent(id){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=PRIV[o.k];if(!P||!P.hr)return;click();
+function pRent(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=PRIV[o.k];if(!P||!P.hr)return;click();
   if(!o.lou){const only=P.home&&myHome()===o;
-    if(!confirm(`Mettre en location : ${P.n} ?\n\nLoyer : ${eur(Math.round(P.hr*(o.ix||1)))}/mois${P.hrn?' ('+P.hrn+')':''}.\nUne agence trouve un locataire en ± 1 mois.\nBail de 9 ans : pour le récupérer, il faut un préavis de 6 mois (occupation personnelle).${only?'\n\n⚠️ C’est ta seule maison : tu devras louer ailleurs (ta vie courante repasse de 850 à 1 650 €/mois).':''}`))return;
+    if(!ok)return ask(`Mettre en location ?\nBien : ${P.n.replace(/ \(.*$/,'')}\nLoyer : ${eur(Math.round(P.hr*(o.ix||1)))}/mois\nCharges (toujours pour toi) : ${eur(P.m)}/mois\nLocataire trouvé : en ± 1 mois\nBail : 9 ans\n${P.hrn?'C’est une '+P.hrn+'. ':''}Pour récupérer le bien, il faut envoyer un préavis de 6 mois au locataire (occupation personnelle).${only?'\n⚠️ C’est ta seule maison : tu devras louer ailleurs. Ta vie courante repasse de 850 à 1 650 €/mois.':''}`,()=>pRent(id,1),{ic:'🔑',ok:'Mettre en location',img:photo(o.k)});
     o.lou=1;o.louFrom=st.day+30;delete o.louEnd;delete o.louOk;pEv(`🔑 ${P.n} : mis en location, l’agence cherche un locataire.`)}
   else if(o.louEnd){return toastMsg(`Préavis en cours : le locataire part le ${dstr(o.louEnd)} ${date(o.louEnd).getFullYear()}.`)}
   else if(st.day<o.louFrom){delete o.lou;delete o.louFrom;pEv(`🏠 ${P.n} : location annulée, pas encore de locataire.`)}
-  else{if(!confirm(`Récupérer ${P.n} ?\n\nTu envoies un préavis de 6 mois à ton locataire (occupation personnelle). Il paie son loyer jusqu’à son départ.`))return;o.louEnd=st.day+182;pEv(`📨 Préavis envoyé au locataire de ${P.n} : départ le ${dstr(o.louEnd)} ${date(o.louEnd).getFullYear()}.`)}
+  else{if(!ok)return ask(`Récupérer ton bien ?\nBien : ${P.n.replace(/ \(.*$/,'')}\nPréavis : 6 mois\nDépart du locataire : ${dstr(st.day+182)} ${date(st.day+182).getFullYear()}\nTu envoies un préavis par recommandé (occupation personnelle). Le locataire paie son loyer jusqu’à son départ.`,()=>pRent(id,1),{ic:'📨',ok:'Envoyer le préavis'});o.louEnd=st.day+182;pEv(`📨 Préavis envoyé au locataire de ${P.n} : départ le ${dstr(o.louEnd)} ${date(o.louEnd).getFullYear()}.`)}
   save();render()}
 // journal de la vie privée
 function pEv(t,a){const V=pv();(V.ev||(V.ev=[])).unshift({d:st.day,t,a:a||0});if(V.ev.length>15)V.ev.length=15;log(t,false)}
@@ -1000,14 +1001,14 @@ function pValue(o){const P=PRIV[o.k],y=(st.day-o.day)/365;if(!P||P.c==='exp'||P.
 function buyFees(k,loan){const P=PRIV[k];if(P.c==='loc')return Math.round(P.p*.125)+Math.round(2500+P.p*.01);if(P.c==='home'){const first=P.home&&!ownsHome();return Math.round(P.p*(first?.03:.125))+Math.round(2500+P.p*.01)}return P.tmc||0}
 function mortPay(capital){const r=MORT_RATE/12,n=MORT_Y*12;return capital*r/(1-Math.pow(1+r,-n))}
 function privMonthly(){let t=0;for(const o of pv().own){const P=PRIV[o.k];if(P&&P.m)t+=P.m;if(o.loan)t+=o.pay}return Math.round(t)}
-function pBuy(k,loan){const P=PRIV[k],V=pv();if(P.needHome&&!ownsHome())return toastMsg('Il te faut d’abord une maison.');
+function pBuy(k,loan,ok){const P=PRIV[k],V=pv();if(P.needHome&&!ownsHome())return toastMsg('Il te faut d’abord une maison.');
   const fee=buyFees(k),need=loan?Math.round(P.p*.2)+fee:P.p+fee;
   if(V.cash<need)return toastMsg(`Il te faut ${eur(need)} sur ton compte privé (tu as ${eur(V.cash)}).${loan?'':' Pour une maison, tu peux aussi prendre un crédit hypothécaire.'}`);
-  if(!confirm(`${P.n}\nPrix : ${eur(P.p)}${fee?`\n${P.c==='home'?'Droits d’enregistrement + notaire':'Taxe de mise en circulation'} : ${eur(fee)}`:''}${loan?`\nApport (20 %) : ${eur(P.p*.2)}\nCrédit hypothécaire : ${eur(P.p*.8)} sur ${MORT_Y} ans à ${(MORT_RATE*100).toFixed(1)} % → ${eur(mortPay(P.p*.8))}/mois`:''}${P.m?`\nCoûts chaque mois : ${eur(P.m)}`:''}\n\nConfirmer l’achat ?`))return;
+  if(!ok)return ask(`${P.n}\nPrix : ${eur(P.p)}${fee?`\n${P.c==='home'?'Droits d’enregistrement + notaire':'Taxe de mise en circulation'} : ${eur(fee)}`:''}${loan?`\nApport (20 %) : ${eur(P.p*.2)}\nCrédit hypothécaire : ${eur(P.p*.8)}\nRemboursement : ${eur(mortPay(P.p*.8))}/mois\nDurée et taux : ${MORT_Y} ans à ${(MORT_RATE*100).toFixed(1).replace('.',',')} %`:''}${P.m?`\nCoûts chaque mois : ${eur(P.m)}`:''}\nSur ton compte privé : ${eur(V.cash)}\nAprès l’achat : ${eur(V.cash-need)}`,()=>pBuy(k,loan,1),{ic:P.ic,ok:P.c==='exp'?'Réserver':loan?'Acheter avec le crédit':'Acheter',img:photo(k)});
   V.cash-=need;if(k==='mariage')V.wed=st.day||1;if(P.c!=='exp'&&!P.once){const o={id:st.nid++,k,day:st.day,price:P.p,used:P.c==='occ'};if(loan){o.loan=Math.round(P.p*.8);o.pay=Math.round(mortPay(P.p*.8))}V.own.push(o)}
   log(`${P.ic} ${P.c==='exp'?'Profite bien : ':'Achat : '}${P.n}${loan?' (avec crédit hypothécaire)':''}.`);confetti(P.p>100000?180:80);snd(880,.1,'triangle',.06);save();render()}
-function pSell(id){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P0=PRIV[o.k];if(P0.sub){if(!confirm(`Résilier : ${P0.n} ?`))return;V.own.splice(V.own.indexOf(o),1);log(`✂️ Résilié : ${P0.n}.`,false);save();render();return}if(P0.keep)return;const P=PRIV[o.k],v=pValue(o),fee=P.c==='home'?Math.round(v*.03):0,net=v-fee-(o.loan||0);
-  if(!confirm(`Vendre ${P.n} ?\nValeur aujourd’hui : ${eur(v)}${fee?`\nFrais d’agence (± 3 %) : ${eur(fee)}`:''}${o.loan?`\nRemboursement du crédit restant : ${eur(o.loan)}`:''}\nTu reçois : ${eur(net)}`))return;
+function pSell(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P0=PRIV[o.k];if(P0.sub){if(!ok)return ask(`Résilier ?\nAbonnement : ${P0.n}\nÉconomie : ${eur(P0.m)}/mois`,()=>pSell(id,1),{ic:P0.ic,ok:'Résilier'});V.own.splice(V.own.indexOf(o),1);log(`✂️ Résilié : ${P0.n}.`,false);save();render();return}if(P0.keep)return;const P=PRIV[o.k],v=pValue(o),fee=P.c==='home'?Math.round(v*.03):0,net=v-fee-(o.loan||0);
+  if(!ok)return ask(`Vendre ${P.n.replace(/ \(.*$/,'')} ?\nAcheté : ${eur(o.price)}\nValeur aujourd’hui : ${eur(v)}${fee?`\nFrais d’agence (± 3 %) : ${eur(fee)}`:''}${o.loan?`\nRemboursement du crédit restant : ${eur(o.loan)}`:''}\nTu reçois : ${eur(net)}`,()=>pSell(id,1),{ic:P.ic,ok:'Vendre',img:photo(o.k)});
   V.own.splice(V.own.indexOf(o),1);V.cash+=net;log(`💰 Vendu : ${P.n} (${eur(net)}).`);save();render()}
 function pTransfer(a,kind){a=Math.round(a);if(a<=0||st.cash<a)return toastMsg('Pas assez d’argent sur le compte de la société.');const V=pv();let net=a,lbl='';
   if(!st.srl){lbl='Prélèvement privé (bénéfice déjà taxé)';}
@@ -1060,7 +1061,7 @@ const loanMax=()=>st.adm.bce?Math.round((20000+caRecent()*.3)*(has('compta')?1.5
 function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?"La banque refuse : montant maximum atteint. Fais plus de chiffre d'affaires.":"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;mv(5000,'Prêt bancaire','loan');st.mLoan+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;mv(-5000,'Remboursement du prêt','loan');st.mLoan-=5000}save();render()}
 function rename(){showModal(`<h3>Nom de ta société</h3><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">Enregistrer</button>`)}
 function setName(){const v=$('#nm').value.trim().replace(/[<>&"]/g,'');if(v)st.name=v;closeM();save();render()}
-function restart(force){if(!force&&!confirm('Tout effacer et recommencer une nouvelle entreprise ?'))return;try{localStorage.removeItem(SAVE);localStorage.removeItem(BAK)}catch(e){}location.reload()}
+function restart(force){if(!force)return ask('Tout effacer ?\n⚠️ Ton entreprise, ta vie privée et toute ta progression seront supprimées pour recommencer à zéro.',()=>restart(1),{ic:'🗑️',ok:'Tout effacer',danger:1});try{localStorage.removeItem(SAVE);localStorage.removeItem(BAK)}catch(e){}location.reload()}
 function exportSave(){const code=btoa(unescape(encodeURIComponent(JSON.stringify(st))));showModal(`<h3>💾 Code de sauvegarde</h3><p class="mut">Garde ce code (dans tes notes ou par message) pour retrouver ta partie sur un autre GSM.</p><textarea id="sv" rows="5" readonly>${code}</textarea><p></p><div class="row"><button class="btn" onclick="copySave()">Copier</button><button class="btn s" onclick="closeM()">Fermer</button></div>`)}
 function copySave(){const t=$('#sv');t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(()=>toastMsg('Code copié ✓')).catch(()=>{try{document.execCommand('copy');toastMsg('Code copié ✓')}catch(e){}})}
 function importUI(){showModal(`<h3>📥 Charger une sauvegarde</h3><p class="mut">Colle ici ton code de sauvegarde. Ta partie actuelle sera remplacée.</p><textarea id="sv" rows="5"></textarea><p></p><div class="row"><button class="btn" onclick="importGo()">Charger</button><button class="btn s" onclick="closeM()">Annuler</button></div>`)}
@@ -1076,6 +1077,13 @@ if(!st){st=defaults();st.riv=newRivals();for(let i=0;i<14;i++)genTender();genJob
    ===================================================================== */
 let curTab='ch',aoTab='pub',eqTab='terrain',speed=1,modalOpen=false,playing=false;
 function showModal(h){$('#mbox').innerHTML=h;$('#modal').classList.add('on');modalOpen=true}
+let askCb=null;
+// fenêtre de confirmation du jeu (remplace la fenêtre grise du navigateur) : 1re ligne = titre, « libellé : valeur » = ligne de tableau, ⚠️ = avertissement
+function ask(txt,yes,o){o=o||{};const L=String(txt).split('\n'),t=L.shift();let b='';
+  for(const x of L){if(!x.trim()||/^(Confirmer|Continuer)[^:]*\?$/.test(x.trim()))continue;const m=x.match(/^(.+?) : (.+)$/);
+    if(/^⚠️/.test(x))b+=`<div class="askw">${esc(x)}</div>`;else if(m&&m[1].length<42&&m[2].length<42)b+=`<div class="askr"><span>${esc(m[1])}</span><b>${esc(m[2])}</b></div>`;else b+=`<p class="askp">${esc(x)}</p>`}
+  askCb=yes;showModal(`<div class="ask">${o.img||''}<div class="askh">${o.ic?`<div class="askic">${o.ic}</div>`:''}<h3>${esc(t)}</h3></div>${b}<div class="row" style="margin-top:16px;flex-wrap:nowrap"><button class="btn s" style="flex:1" onclick="askCb=null;closeM()">Annuler</button><button class="btn ${o.danger?'r':'g'}" style="flex:1.5" onclick="askYes()">${o.ok||'Confirmer'}</button></div></div>`)}
+function askYes(){const f=askCb;askCb=null;closeM();if(f)f()}
 function closeM(){$('#modal').classList.remove('on');modalOpen=false}
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!st.over)closeM()});
 function tab(t){curTab=t;$('#pane').scrollTop=0;render()}
@@ -1635,7 +1643,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.10";
+var APPV="2026-11-04.11";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
