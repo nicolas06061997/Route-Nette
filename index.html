@@ -516,7 +516,7 @@ function euMonth(){for(const k in fil()){const F=fil()[k],C=EU[k];F.m++;const L=
     if(F.cash<0){const inj=-F.cash+Math.round(fix*.5);mv(-inj,'Apport en capital : filiale '+C.n,'buy');st.mCapex+=inj;F.inv+=inj;F.cash+=inj;log(`${C.f} La filiale ${C.n} manque d’argent : la société belge lui verse ${eur(inj)}.`,false)}}}
 function euDiv(k){const F=fil()[k],C=EU[k];const a=Math.round(F.cash-EU[k].fix*.5);click();if(a<1000)return toastMsg('La filiale doit garder de quoi payer ses frais du mois.');
   F.cash-=a;F.div+=a;mv(a,'Dividende de la filiale '+C.n+' (exonéré : RDT)','in');st.mCapex-=a;log(`${C.f} Dividende rapatrié de ${C.n} : +${eur(a)} (pas d’impôt en plus : directive mère-filiale).`);kaching();save();render()}
-function euUp(k,ok){const F=fil()[k],C=EU[k];if(F.lv>=3)return;const c=Math.round(C.setup*.7*F.lv);if(st.cash<c)return toastMsg(`Il faut ${eur(c)} sur le compte de la société.`);
+function euUp(k,ok){const F=fil()[k],C=EU[k];if(F.lv>=3)return;if(F.m<18)return toastMsg(`Attends que la filiale tourne à plein (démarrage 100 %, encore ${18-F.m} mois) avant de l’agrandir.`);const c=Math.round(C.setup*.7*F.lv);if(st.cash<c)return toastMsg(`Il faut ${eur(c)} sur le compte de la société.`);
   if(!ok)return ask(`Agrandir la filiale ${C.n} ?\nInvestissement : ${eur(c)}\nNiveau : ${F.lv} → ${F.lv+1}\nChiffre d’affaires possible : ×${F.lv===1?'1,7':'2,5 (au lieu de 1,7)'}\nNouveaux frais fixes : ${eur(C.fix*(F.lv===1?1.45:2))}/mois\nUn 2e dépôt, plus de machines et une nouvelle équipe dans le pays.`,()=>euUp(k,1),{ic:C.f,ok:'Agrandir'});
   mv(-c,`Agrandissement de la filiale ${C.n}`,'buy');st.mCapex+=c;F.inv+=c;F.lv++;log(`${C.f} La filiale ${C.n} passe au niveau ${F.lv} !`);confetti(150);save();render()}
 function euVal(k){const F=fil()[k],y=F.hist.reduce((a,b)=>a+b,0)*(12/Math.max(1,F.hist.length));return Math.max(Math.round(F.inv*.25),Math.round(y*5))+Math.max(0,F.cash)}
@@ -535,8 +535,9 @@ function euCard(){const F=fil(),ks=Object.keys(F);if(!ks.length&&caRecent()<5000
   for(const k of ks){const C=EU[k],f=F[k],L=f.last;const ramp=Math.min(100,Math.round(Math.max(.08,Math.min(1,(f.m)/17))*100));
     h+=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #ffffff14"><div class="row" style="flex-wrap:nowrap"><div style="font-size:30px">${C.f}</div><div style="flex:1;min-width:0"><b>${C.n}</b> <span class="tag v">niv. ${f.lv}</span><div class="mut sm">${f.m} mois · démarrage ${ramp} %</div></div></div>
     <div class="tags">${L?`<span class="tag b">CA du mois ${eur(L.rv)}</span><span class="tag ${L.net>=0?'g':'r'}">Résultat ${L.net>=0?'+':''}${eur(L.net)}</span>`:'<span class="tag">1er bilan le 1er du mois</span>'}<span class="tag">Caisse ${eur(f.cash)}</span><span class="tag">Investi ${eur(f.inv)}</span>${f.div?`<span class="tag g">Dividendes reçus ${eur(f.div)}</span>`:''}</div>
+    ${(()=>{const Lv=f.lv,pot=C.pot*(Lv===1?1:Lv===2?1.7:2.5),fx=C.fix*(Lv===1?1:Lv===2?1.45:2),full=Math.round(pot*(1-C.var)-fx),netF=Math.round(full*(full>0?1-C.tax:1));return`<div class="sm" style="margin-top:6px">${f.m<18?`⏳ En démarrage : normal de perdre de l’argent. À pleine vitesse (dans ± ${18-f.m} mois) : <b class="${netF>=0?'money':'neg'}">${netF>=0?'+':''}${eur(netF)}/mois</b> après impôt.`:`🎯 À pleine vitesse : ± <b class="${netF>=0?'money':'neg'}">${netF>=0?'+':''}${eur(netF)}/mois</b> après impôt (selon la saison).`}</div>`})()}
     ${L&&L.ev?`<div class="mut sm" style="margin-top:4px">📰 ${L.ev}</div>`:''}
-    <div class="row" style="margin-top:8px"><button class="btn s" style="padding:6px 9px" ${f.cash-C.fix*.5>=1000?'':'disabled'} onclick="euDiv('${k}')">💶 Rapatrier ${eur(Math.max(0,f.cash-C.fix*.5))}</button>${f.lv<3?`<button class="btn s" style="padding:6px 9px" onclick="euUp('${k}')">⬆️ Agrandir (${eur(C.setup*.7*f.lv)})</button>`:''}<button class="btn s" style="padding:6px 9px" onclick="euSell('${k}')">Vendre (${eur(euVal(k))})</button></div></div>`}
+    <div class="row" style="margin-top:8px"><button class="btn s" style="padding:6px 9px" ${f.cash-C.fix*.5>=1000?'':'disabled'} onclick="euDiv('${k}')">💶 Rapatrier ${eur(Math.max(0,f.cash-C.fix*.5))}</button>${f.lv<3?`<button class="btn s" style="padding:6px 9px" ${f.m<18?'disabled':''} onclick="euUp('${k}')">⬆️ Agrandir (${eur(C.setup*.7*f.lv)})</button>`:''}<button class="btn s" style="padding:6px 9px" onclick="euSell('${k}')">Vendre (${eur(euVal(k))})</button></div></div>`}
   return h+`<button class="btn s" style="margin-top:10px" onclick="click();euUI()">🌍 ${ks.length?'Ouvrir dans un autre pays':'Voir les pays'}</button></div>`}
 /* ---------- Publicité : plus de demandes de petits boulots (tarifs moyens d'agences belges) ---------- */
 const ADS={
@@ -950,7 +951,7 @@ const GOALS=[
   {k:'g15',t:'Agréation classe 2 : tu es une grande entreprise !',ok:()=>st.cls>=2}];
 // Confettis (au-dessus de tout)
 const fxc=$('#fx'),fg=fxc.getContext('2d');let conf=[];
-function confetti(n){if(document.hidden||conf.length>=250)return;n=Math.min(n||120,320-conf.length);const W=innerWidth,H=innerHeight;fxc.width=W;fxc.height=H;for(let i=0;i<n;i++)conf.push({x:W/2+R(-60,60),y:H*.35,vx:R(-260,260),vy:R(-520,-180),r:R(3,6),c:pick(['#ffd23f','#ff9a1f','#4fdc7a','#4fb3ff','#ff5d57','#b48cff','#fff']),a:R(0,6),va:R(-10,10),l:R(1.6,2.6)});if(!confRun)confLoop(performance.now())}
+let confT=0;function confetti(n){const now=performance.now();if(document.hidden||conf.length||(typeof speed!=='undefined'&&speed>=3&&!modalOpen)||now-confT<8000)return;confT=now;n=Math.min(n||120,160);const W=innerWidth,H=innerHeight;if(fxc.width!==W||fxc.height!==H){fxc.width=W;fxc.height=H}for(let i=0;i<n;i++)conf.push({x:W/2+R(-60,60),y:H*.35,vx:R(-260,260),vy:R(-520,-180),r:R(3,6),c:pick(['#ffd23f','#ff9a1f','#4fdc7a','#4fb3ff','#ff5d57','#b48cff','#fff']),a:R(0,6),va:R(-10,10),l:R(1.6,2.6)});if(!confRun)confLoop(performance.now())}
 let confRun=0;function confLoop(p){confRun=1;let last=p;(function f(n){const dt=Math.min(.05,(n-last)/1000);last=n;fg.clearRect(0,0,fxc.width,fxc.height);
   for(const q of conf){q.vy+=700*dt;q.vx*=.99;q.x+=q.vx*dt;q.y+=q.vy*dt;q.a+=q.va*dt;q.l-=dt;fg.save();fg.globalAlpha=Math.max(0,Math.min(1,q.l));fg.translate(q.x,q.y);fg.rotate(q.a);fg.fillStyle=q.c;fg.fillRect(-q.r,-q.r/2,q.r*2,q.r);fg.restore()}
   conf=conf.filter(q=>q.l>0&&q.y<fxc.height+20);if(conf.length)requestAnimationFrame(f);else{fg.clearRect(0,0,fxc.width,fxc.height);confRun=0}})(p)}
@@ -1779,7 +1780,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-04.19";
+var APPV="2026-11-04.20";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
