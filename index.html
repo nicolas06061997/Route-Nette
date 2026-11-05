@@ -295,6 +295,7 @@ const ROLES={
   etu:{n:'Étudiant jobiste',ic:'🎒',cat:'ouv',day:132,sk:[.6,.8],d:'Pas cher (cotisation de solidarité réduite), mais moins efficace. Maximum 650 heures par an : la règle belge des jobistes.'},
   man:{n:'Ouvrier jardinier (cat. 1)',ic:'👷',cat:'ouv',day:225,sk:[.85,1.05]},
   qual:{n:'Ouvrier jardinier qualifié (cat. 3)',ic:'👷',cat:'ouv',day:246,sk:[1.05,1.25]},
+  ramas:{n:'Ramasseur de déchets (propreté publique)',ic:'🗑️',cat:'ouv',day:222,sk:[.85,1.05],d:'Spécialiste de la propreté : +15 % sur le ramassage de déchets, les poubelles et les aires de repos.'},
   chauf:{n:'Chauffeur poids lourd (permis C)',ic:'🚛',cat:'ouv',day:265,sk:[.95,1.2],pc:1},
   chef:{n:"Contremaître / chef d'équipe",ic:'🦺',cat:'ouv',day:291,sk:[1.15,1.35],d:"Dans une équipe : +15 % de travail et moins de remarques du SPW."},
   aide:{n:'Aide-comptable',ic:'🧮',cat:'bur',day:183,who:'Angélique Mawet',d:"Factures envoyées à temps : tu es payé 10 jours plus vite. Indispensable dès 6 personnes."},
@@ -1166,7 +1167,7 @@ function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr s
 function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
   if(w&&r<.12)return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl})}
-function tick(){ck('days');if(!st.jp&&st.workers){st.jp=1;const w=mkW('qual');Object.assign(w,{n:'Jason Pougin',sk:2,leg:1,pc:1,base:1,mot:1,hd:st.day});st.workers.push(w);log('⭐ Jason Pougin rejoint ton équipe : un ouvrier légendaire à 200 % d’efficacité !')}try{if(isWork(st.day+1))mkDay()}catch(e){}
+function tick(){ck('days');if(st.jp===1){st.jp=2;const j=st.workers.find(x=>x.leg&&x.n==='Jason Pougin');if(j)j.r='ramas'}if(!st.jp&&st.workers){st.jp=2;const w=mkW('ramas');Object.assign(w,{n:'Jason Pougin',sk:2,leg:1,pc:1,base:1,mot:1,hd:st.day});st.workers.push(w);log('⭐ Jason Pougin rejoint ton équipe : un ouvrier légendaire à 200 % d’efficacité !')}try{if(isWork(st.day+1))mkDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
@@ -1200,7 +1201,7 @@ function tick(){ck('days');if(!st.jp&&st.workers){st.jp=1;const w=mkW('qual');Ob
     const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(w=>w&&!(w.off>st.day)&&(!conge||w.boss)&&!(w.r==='etu'&&(w.hy||0)>=650));
     crew.forEach(w=>{if(w.r==='etu')w.hy=(w.hy||0)+7.6});
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF*(has('cond')&&!J.p&&c.wd>c.N*(c.prog/c.q)?1.1:1)*inoWork(J)*(c.vb>st.day?c.vf||1:1)*qualWork(J);
-    const wfj=J.allw?1:J.dry&&WX[st.wx].k!=='sun'&&WX[st.wx].k!=='cloud'?0:wf;const gb=J.gr&&crew.some(w=>w.r==='grimp')||c.j==='elagage'&&crew.some(w=>w.r==='grimp')?1.1:1;
+    const wfj=J.allw?1:J.dry&&WX[st.wx].k!=='sun'&&WX[st.wx].k!=='cloud'?0:wf;const gb=J.gr&&crew.some(w=>w.r==='grimp')||c.j==='elagage'&&crew.some(w=>w.r==='grimp')?1.1:['p_dechets','dechets','poubelles','aires'].includes(c.j)&&crew.some(w=>w.r==='ramas')?1.15:1;
     const pw=crew.reduce((a,w)=>a+w.sk*(w.mot??1)*(w.boss?bossF():1),0);const stop=(c.pz>st.day)||(st.strike>st.day&&!J.p);const dp=stop?0:Math.min(c.q-c.prog,J.rate*pw*wfj*boost*gb*awayF());c.prog+=dp;observe(c,crew);
     {const val=dp/c.q*c.price;st.mProd=(st.mProd||0)+val;ck('prod',val);crew.forEach(w=>{const s=w.s||(w.s={d:0,rev:0,cost:0});s.d++;s.rev+=pw?val*w.sk*(w.mot??1)/pw:0});if(has('dirt'))rsAdd('dirt',val*.08/1.08)}
     if(c.xc)mv(-c.xc*dp/c.q*(sfx('tri')?.75:1)*(ino('compost')?.6:1),'Mise en décharge','use',1);
@@ -1414,7 +1415,7 @@ function tryHire(kind,ix){const why=hireBlock(kind,ix);if(why){const m=$('#cvmsg
 function interview(ix){const w=st.cand[ix];if(!w)return;const right=Math.random()<.75,lz=(w.base??1)<.62;const say=(right?lz:!lz)?pick(['😕 Pas très motivé, regarde souvent son GSM.','😕 Répond vaguement, semble chercher surtout un salaire.','😕 Arrivé en retard à l’entretien.']):pick(['🙂 Motivé, pose de bonnes questions sur le travail.','🙂 Poignée de main franche, a l’air sérieux.','🙂 Connaît le métier, parle de ses anciens chantiers avec passion.']);
   w.itv=say;save();cvUI('cand',ix)}
 const rsAdd=(k,v)=>{const R=st.rs||(st.rs={});R[k]=(R[k]||0)+v};
-function refreshCand(){const n=has('rh')?7:4;if(has('rh'))rsAdd('rh',3);st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.2?'etu':r<.52?'man':r<.7?'qual':r<.8?'chauf':r<.88?'engin':r<.94?'grimp':'chef'))}}
+function refreshCand(){const n=has('rh')?7:4;if(has('rh'))rsAdd('rh',3);st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.2?'etu':r<.45?'man':r<.52?'ramas':r<.7?'qual':r<.8?'chauf':r<.88?'engin':r<.94?'grimp':'chef'))}}
 const GOALS=[
   {k:'g0',t:"Inscris ton entreprise à la BCE (📊 Entreprise)",ok:()=>!!st.adm.bce},
   {k:'g1',t:'Termine ton premier petit boulot',ok:()=>st.stats.done>=1},
@@ -2611,7 +2612,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.29";
+var APPV="2026-11-05.30";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
