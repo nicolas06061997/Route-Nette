@@ -1167,7 +1167,7 @@ function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr s
 function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
   if(w&&r<.12)return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl})}
-function tick(){ck('days');if(st.jp===1){st.jp=2;const j=st.workers.find(x=>x.leg&&x.n==='Jason Pougin');if(j)j.r='ramas'}if(!st.jp&&st.workers){st.jp=2;const w=mkW('ramas');Object.assign(w,{n:'Jason Pougin',sk:2,leg:1,pc:1,base:1,mot:1,hd:st.day});st.workers.push(w);log('⭐ Jason Pougin rejoint ton équipe : un ouvrier légendaire à 200 % d’efficacité !')}try{if(isWork(st.day+1))mkDay()}catch(e){}
+function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
@@ -1415,7 +1415,8 @@ function tryHire(kind,ix){const why=hireBlock(kind,ix);if(why){const m=$('#cvmsg
 function interview(ix){const w=st.cand[ix];if(!w)return;const right=Math.random()<.75,lz=(w.base??1)<.62;const say=(right?lz:!lz)?pick(['😕 Pas très motivé, regarde souvent son GSM.','😕 Répond vaguement, semble chercher surtout un salaire.','😕 Arrivé en retard à l’entretien.']):pick(['🙂 Motivé, pose de bonnes questions sur le travail.','🙂 Poignée de main franche, a l’air sérieux.','🙂 Connaît le métier, parle de ses anciens chantiers avec passion.']);
   w.itv=say;save();cvUI('cand',ix)}
 const rsAdd=(k,v)=>{const R=st.rs||(st.rs={});R[k]=(R[k]||0)+v};
-function refreshCand(){const n=has('rh')?7:4;if(has('rh'))rsAdd('rh',3);st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.2?'etu':r<.45?'man':r<.52?'ramas':r<.7?'qual':r<.8?'chauf':r<.88?'engin':r<.94?'grimp':'chef'))}}
+function jasonW(){const w=mkW('ramas');return Object.assign(w,{n:'Jason Pougin',sk:2,leg:1,pc:1,base:1,mot:1})}
+function refreshCand(){const n=has('rh')?7:4;if(has('rh'))rsAdd('rh',3);st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.2?'etu':r<.45?'man':r<.52?'ramas':r<.7?'qual':r<.8?'chauf':r<.88?'engin':r<.94?'grimp':'chef'))};if(!st.workers.some(w=>w.leg)&&Math.random()<.05)st.cand.unshift(jasonW())}
 const GOALS=[
   {k:'g0',t:"Inscris ton entreprise à la BCE (📊 Entreprise)",ok:()=>!!st.adm.bce},
   {k:'g1',t:'Termine ton premier petit boulot',ok:()=>st.stats.done>=1},
@@ -2612,7 +2613,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.30";
+var APPV="2026-11-05.31";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
