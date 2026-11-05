@@ -877,7 +877,7 @@ const DECT=[
   {k:'riverain',ic:'😠',ok:()=>running().some(c=>c.crew.length),mk:()=>({t:'Un riverain se plaint du bruit de tes machines dès 7 h du matin.'}),
     o:[['Commencer à 8 h',d=>{st.rep=clamp(st.rep+1,0,100)}],['C’est autorisé : on continue',d=>{if(Math.random()<.4)st.rep=clamp(st.rep-2,0,100)}]],def:1},
   {k:'fonds',ic:'🎓',ok:()=>field().filter(w=>!w.boss).length>2,mk:()=>({t:'Le fonds de formation du secteur propose une formation gratuite « débroussailleuse en sécurité » pour 2 ouvriers.'}),
-    o:[['Inscrire 2 ouvriers',d=>{field().filter(w=>!w.boss).sort(()=>Math.random()-.5).slice(0,2).forEach(w=>{w.sk=Math.min(1.5,+(w.sk+.03).toFixed(2))});log('🎓 2 ouvriers formés : +3 % d’efficacité.')}],['Pas maintenant',d=>{}]],def:1},
+    o:[['Inscrire 2 ouvriers',d=>{field().filter(w=>!w.boss).sort(()=>Math.random()-.5).slice(0,2).forEach(w=>{w.sk=Math.min(w.leg?2:1.5,+(w.sk+.03).toFixed(2))});log('🎓 2 ouvriers formés : +3 % d’efficacité.')}],['Pas maintenant',d=>{}]],def:1},
   {k:'gasoil',ic:'⛽',ok:()=>st.cash>30000&&vehCount()>2&&!st.fuelD,mk:()=>({t:'Ton fournisseur de gasoil propose 8 % de remise si tu payes 20 000 € d’avance pour 3 mois.'}),
     o:[['Accepter',d=>{mv(-20000,'Gasoil payé d’avance (3 mois)','use');st.fuelD=st.day+90}],['Refuser',d=>{}]],def:1},
   {k:'stagiaire',ic:'🎒',ok:()=>st.adm.bce,mk:()=>({t:'Une école d’horticulture te demande de prendre un stagiaire pendant un mois (gratuit).'}),
@@ -1166,7 +1166,7 @@ function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr s
 function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
   if(w&&r<.12)return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl})}
-function tick(){ck('days');try{if(isWork(st.day+1))mkDay()}catch(e){}
+function tick(){ck('days');if(!st.jp&&st.workers){st.jp=1;const w=mkW('qual');Object.assign(w,{n:'Jason Pougin',sk:2,leg:1,pc:1,base:1,mot:1,hd:st.day});st.workers.push(w);log('⭐ Jason Pougin rejoint ton équipe : un ouvrier légendaire à 200 % d’efficacité !')}try{if(isWork(st.day+1))mkDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
@@ -1204,7 +1204,7 @@ function tick(){ck('days');try{if(isWork(st.day+1))mkDay()}catch(e){}
     const pw=crew.reduce((a,w)=>a+w.sk*(w.mot??1)*(w.boss?bossF():1),0);const stop=(c.pz>st.day)||(st.strike>st.day&&!J.p);const dp=stop?0:Math.min(c.q-c.prog,J.rate*pw*wfj*boost*gb*awayF());c.prog+=dp;observe(c,crew);
     {const val=dp/c.q*c.price;st.mProd=(st.mProd||0)+val;ck('prod',val);crew.forEach(w=>{const s=w.s||(w.s={d:0,rev:0,cost:0});s.d++;s.rev+=pw?val*w.sk*(w.mot??1)/pw:0});if(has('dirt'))rsAdd('dirt',val*.08/1.08)}
     if(c.xc)mv(-c.xc*dp/c.q*(sfx('tri')?.75:1)*(ino('compost')?.6:1),'Mise en décharge','use',1);
-    crew.forEach(w=>{w.sk=Math.min(1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
+    crew.forEach(w=>{w.sk=Math.min(w.leg?2:1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
     if(c.prog>=c.q-1e-6)finish(c);
   }
   for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);mv(v.amt,'Paiement : '+v.from,v.caut?'buy':'in');if(v.caut)st.mCapex-=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`);kaching()}
@@ -1517,7 +1517,7 @@ const crewOk=(J,sel)=>sel.length>=J.minW&&(!J.pc||hasPC(sel))&&(!J.op||sel.some(
 const CERTS=['🌿 Débroussaillage et fauchage avancés','🚧 Signalisation de chantier sur voirie','🪚 Tronçonneuse et sécurité en élagage','🦺 VCA – sécurité sur chantier','🚜 Conduite de tracteur et d’épareuse','⛑️ Secouriste d’entreprise','♻️ Propreté publique et tri des déchets'];
 function trainOne(by){by=by||'Jean-Luc';const W=field().filter(w=>!w.boss&&w.r!=='etu');if(!W.length)return log(`🎓 ${by} n’a personne à former : engage des ouvriers.`,false);
   W.sort((a,b)=>(a.cert||[]).length-(b.cert||[]).length||a.sk-b.sk);const w=W[0],C=CERTS.filter(c=>!(w.cert||[]).includes(c)),c=pick(C.length?C:CERTS);
-  (w.cert||(w.cert=[])).push(c);const old=w.sk;w.sk=+Math.min(1.5,w.sk+.06).toFixed(2);w.mot=Math.min(1,(w.mot||0)+.15);let promo='';
+  (w.cert||(w.cert=[])).push(c);const old=w.sk;w.sk=+Math.min(w.leg?2:1.5,w.sk+.06).toFixed(2);w.mot=Math.min(1,(w.mot||0)+.15);let promo='';
   if(w.r==='man'&&w.cert.length>=2){w.r='qual';w.day=Math.max(w.day,Math.round(ROLES.qual.day*R(.98,1.03)));promo=` ${w.n.split(' ')[0]} devient ${isF(w.n)?'ouvrière qualifiée':'ouvrier qualifié'} (cat. 3) : son coût passe à ${eur(w.day)}/jour.`}
   rsAdd('form',1);log(`🎓 ${by} a formé ${w.n} : « ${c.slice(c.indexOf(' ')+1)} ». Efficacité ${Math.round(old*100)} % → ${Math.round(w.sk*100)} %.${promo}`)}
 function autoAccept(){const L=st.jobs.filter(o=>!jobMiss(o).length).sort((a,b)=>b.price/Math.max(1,b.q/JOBS[b.j].rate)-a.price/Math.max(1,a.q/JOBS[a.j].rate));
@@ -2611,7 +2611,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.28";
+var APPV="2026-11-05.29";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
