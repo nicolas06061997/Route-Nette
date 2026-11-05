@@ -1416,7 +1416,7 @@ function interview(ix){const w=st.cand[ix];if(!w)return;const right=Math.random(
   w.itv=say;save();cvUI('cand',ix)}
 const rsAdd=(k,v)=>{const R=st.rs||(st.rs={});R[k]=(R[k]||0)+v};
 function jasonW(){const w=mkW('ramas');return Object.assign(w,{n:'Jason Pougin',sk:2,leg:1,pc:1,base:1,mot:1})}
-function refreshCand(){const n=has('rh')?7:4;if(has('rh'))rsAdd('rh',3);st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.2?'etu':r<.45?'man':r<.52?'ramas':r<.7?'qual':r<.8?'chauf':r<.88?'engin':r<.94?'grimp':'chef'))};if(!st.workers.some(w=>w.leg)&&Math.random()<.05)st.cand.unshift(jasonW())}
+function refreshCand(){const n=has('rh')?7:4;if(has('rh'))rsAdd('rh',3);st.cand=[];for(let i=0;i<n;i++){const r=Math.random();st.cand.push(mkW(r<.2?'etu':r<.45?'man':r<.52?'ramas':r<.7?'qual':r<.8?'chauf':r<.88?'engin':r<.94?'grimp':'chef'))};if(Math.random()<.05)st.cand.splice(RI(0,st.cand.length-1),0,jasonW())}
 const GOALS=[
   {k:'g0',t:"Inscris ton entreprise à la BCE (📊 Entreprise)",ok:()=>!!st.adm.bce},
   {k:'g1',t:'Termine ton premier petit boulot',ok:()=>st.stats.done>=1},
@@ -2613,7 +2613,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.31";
+var APPV="2026-11-05.32";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
