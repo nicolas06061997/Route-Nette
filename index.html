@@ -79,7 +79,7 @@ button{font-family:inherit}
 #cash.up{animation:cup .6s}#cash.down{animation:cdown .6s}
 @keyframes cup{30%{transform:scale(1.12);box-shadow:0 0 18px rgba(79,220,122,.8)}}
 @keyframes cdown{30%{transform:scale(.94);box-shadow:0 0 18px rgba(255,93,87,.7)}}
-.pvmode .fly,.tymode .fly{display:none}
+.pvmode .fly{display:none}
 .fly{position:fixed;z-index:70;font:900 16px Nunito,sans-serif;pointer-events:none;text-shadow:0 2px 6px rgba(0,0,0,.6);animation:fly 1.3s ease-out forwards}
 @keyframes fly{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-38px)}}
 #logo{position:relative}
@@ -133,17 +133,6 @@ nav .bd{position:absolute;top:1px;right:calc(50% - 22px);background:var(--rd);co
 .ps-fam{left:36%;bottom:34px;font-size:24px;letter-spacing:1px}
 .ps-cars{left:4%;right:4%;bottom:2px;text-align:right;font-size:28px;letter-spacing:2px;white-space:nowrap;overflow:hidden}
 .ps-tag{left:10px;top:10px;background:#0008;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800;color:#fff}
-/* --- Vue tycoon du dépôt --- */
-#tyc{position:fixed;top:0;bottom:0;left:0;right:0;max-width:760px;margin:auto;z-index:30;display:none;flex-direction:column;background:#10231a}
-#tyc.on{display:flex;animation:pvin .28s ease-out}
-#tyhead{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;background:linear-gradient(180deg,#24442f,#17301f);border-bottom:1px solid #ffffff1a}
-#tycash{background:#1f3a29;border:1px solid #6fd08c66;border-radius:14px;padding:6px 9px;font-weight:900;font-size:15px;color:#bff3cd;white-space:nowrap}#tycash.neg{color:#ffb3ad}
-#tycv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#tyzoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}#tyzoom button{width:38px;height:38px;border-radius:12px;border:1px solid #ffffff33;background:#000a;color:#fff;font:900 20px Nunito,sans-serif}
-#tyinfo{display:flex;gap:6px;flex-wrap:wrap;padding:6px 10px;background:#132a1c;border-top:1px solid #ffffff14;font-size:12px;font-weight:800}#tyinfo span{background:#ffffff12;border-radius:999px;padding:3px 8px}
-#tybar{display:flex;overflow-x:auto;gap:4px;padding:6px 6px calc(env(safe-area-inset-bottom) + 6px);background:#0d1c13;border-top:1px solid #ffffff1a;-webkit-overflow-scrolling:touch}
-#tybar button{flex:none;min-width:66px;background:#ffffff0d;border:1px solid #ffffff1f;border-radius:12px;color:var(--tx);font:800 10.5px Nunito,sans-serif;padding:5px 4px;display:flex;flex-direction:column;align-items:center;gap:1px}
-#tybar button b{font-size:22px;line-height:1.1}#tybar button i{font-style:normal;opacity:.6;font-size:9.5px}#tybar button.on{background:#2d5a3b;border-color:#ffc46b;color:#ffc46b}
 /* --- Fenêtres --- */
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:flex-end;justify-content:center;z-index:40;}
 #modal.on{display:flex}
@@ -207,7 +196,6 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
   <button data-t="pv"><b>🏡</b>Privé</button>
 </nav>
 <div id="priv"><header id="phead"></header><div id="pscene"></div><main id="ppane"></main><nav id="ptabs"></nav></div>
-<div id="tyc"><header id="tyhead"></header><div style="position:relative;flex:1;min-height:0"><canvas id="tycv"></canvas><div id="tyzoom"><button onclick="tyZoom(1.25)">＋</button><button onclick="tyZoom(.8)">－</button></div></div><div id="tyinfo"></div><nav id="tybar"></nav></div>
 <div id="modal"><div class="box" id="mbox"></div></div>
 <div id="toast"></div>
 <canvas id="fx"></canvas>
@@ -524,7 +512,7 @@ const payroll=()=>st.workers.reduce((a,w)=>a+w.day,0);
 // charge d'encadrement : un chantier public = 1, un petit boulot privé = 1/3 (petit, simple, souvent seul)
 const mgmtLoad=()=>Math.round(running().filter(c=>c.crew.length).reduce((a,c)=>a+(JOBS[c.j].p?1/3:1),0)*10)/10;
 const mgmtCap=()=>2+3*cnt('gest')+(has('dirt')?1:0);
-const offerCap=()=>tyN('bur')+2+(has('secr')?3:0)+(has('metreur')?2:0)+(has('dirc')?3:0)+(typeof ino==='function'&&ino('ia')?4:0);
+const offerCap=()=>2+(has('secr')?3:0)+(has('metreur')?2:0)+(has('dirc')?3:0)+(typeof ino==='function'&&ino('ia')?4:0);
 const running=()=>st.contracts.filter(c=>c.st==='run');
 const myOffers=()=>st.tenders.filter(t=>t.my&&t.status!=='done').length;
 const payDelay=base=>Math.max(5,base-(has('aide')?10:0)+(!has('aide')&&ownW()>=6?15:0));
@@ -563,32 +551,12 @@ const SITES={
 const SFX={atel:'🔧 Atelier : usure des machines -8 %',cuve:'⛽ Cuve de gasoil (achat en vrac) : carburant -7 %',tri:'♻️ Aire de tri : mise en décharge -25 %',lav:'🚿 Station de lavage : matériel propre, +1 réputation par chantier fini'};
 const siteK=()=>st.site||(st.site=vehCount()>6?'h2':vehCount()>=3?'h1':'home');
 const xs=()=>st.xs||(st.xs=[]);
-const siteCap=()=>SITES[siteK()].v+xs().reduce((a,x)=>a+SITES[x.k].v,0)+tyN('park')*2+tyN('garage')*5;
+const siteCap=()=>SITES[siteK()].v+xs().reduce((a,x)=>a+SITES[x.k].v,0);
 function siteAlloc(){let n=vehCount();const L=[{key:'main',v:SITES[siteK()].v}].concat(xs().slice().sort((a,b)=>SITES[b.k].v-SITES[a.k].v).map(x=>({key:x.id,v:SITES[x.k].v})));const A={};
   for(const d of L){const t=Math.min(n,d.v);A[d.key]=t;n-=t}A.out=n;return A}
 const parkRate=()=>siteK()==='home'&&!xs().length?350:220;
 const hasOff=()=>!!SITES[siteK()].off||xs().some(x=>SITES[x.k].off);
-const sfx=f=>(SITES[siteK()].fx||[]).includes(f)||xs().some(x=>(SITES[x.k].fx||[]).includes(f))||tyL().some(b=>TYB[b.k].fx===f);
-// ---------- Vue tycoon : bâtiments construits sur le terrain du dépôt principal (st.ty.b = [{k,i,j,d}]) ----------
-const TYB={
-  park:{n:'2 places de parking asphaltées',ic:'🅿️',s:1,p:6500,max:30,h:1,c:'#454b52',d:'+2 places pour tes véhicules.'},
-  garage:{n:'Hangar métallique couvert 200 m²',ic:'🏚️',s:2,p:68000,max:6,h:24,c:'#7b8794',d:'+5 places couvertes, usure des machines -2 % par hangar.'},
-  atel:{n:'Atelier mécanique',ic:'🔧',s:2,p:52000,max:1,h:20,c:'#94603f',fx:'atel',d:'Usure des machines -8 %.'},
-  cuve:{n:'Cuve de gasoil 10 000 L double paroi',ic:'⛽',s:1,p:16500,max:1,h:13,c:'#d1a52a',fx:'cuve',d:'Achat en vrac : carburant -7 %.'},
-  tri:{n:'Aire de tri (dalle béton + bennes)',ic:'♻️',s:2,p:27000,max:1,h:5,c:'#4f8d4b',fx:'tri',d:'Mise en décharge -25 %.'},
-  lav:{n:'Station de lavage + séparateur d’hydrocarbures',ic:'🚿',s:2,p:38000,max:1,h:12,c:'#3d82c8',fx:'lav',d:'+1 réputation par chantier fini.'},
-  bur:{n:'Bureaux modulaires',ic:'🏢',s:2,p:42000,max:3,h:19,c:'#ddd6c6',d:'+1 offre aux marchés publics en même temps.'},
-  vest:{n:'Vestiaires et réfectoire',ic:'🍽️',s:1,p:24000,max:3,h:13,c:'#b8735b',d:'Tes ouvriers sont plus motivés.'},
-  sol:{n:'Panneaux solaires 50 kWc',ic:'☀️',s:1,p:46000,max:8,h:4,c:'#1f3f75',d:'± 800 €/mois d’électricité économisée ou revendue (remboursé en ± 5 ans).'},
-  sel:{n:'Dôme à sel 500 t',ic:'🧂',s:2,p:95000,max:1,h:22,c:'#ececec',d:'+10 % de travail sur le service d’hiver (salage, déneigement).'},
-  arbre:{n:'Arbre et espace vert',ic:'🌳',s:1,p:350,max:60,h:0,c:'#2f7a3a',d:'Décor : ton dépôt est plus joli.'}};
-const TYG={home:5,h1:8,h2:10,b1:9,b2:12,b3:16};
-function tyG(){return (TYG[siteK()]||8)+2*Math.min(3,xs().length)}
-function tyL(){const T=st&&st.ty;if(!T||!T.b)return[];const G=tyG();return T.b.filter(b=>TYB[b.k]&&b.i+TYB[b.k].s<=G&&b.j+TYB[b.k].s<=G)}
-function tyN(k){return tyL().filter(b=>b.k===k).length}
-function tyWork(c){return tyN('sel')&&/deneig/.test(c.j)?1.1:1}
-function tyMonth(){const n=tyN('sol');if(n)mv(800*n,`Panneaux solaires du dépôt (${n} × 50 kWc)`,'in')}
-
+const sfx=f=>(SITES[siteK()].fx||[]).includes(f)||xs().some(x=>(SITES[x.k].fx||[]).includes(f));
 const xVal=x=>{const S=SITES[x.k];return S.p?Math.round(S.p*Math.pow(1.02,(st.day-x.d)/365)):0};
 const SITE_RATE=.042,SITE_Y=15;
 const siteVal=()=>{const S=SITES[siteK()];return S.p?Math.round(S.p*Math.pow(1.02,(st.day-(st.siteD||0))/365)):0};
@@ -626,7 +594,7 @@ function siteUI(mode){if(mode)siteMode=mode;const cur=siteK(),add=siteMode==='ad
       :is?'<span class="tag g">✅ Ton dépôt principal</span>':S.p?`<button class="btn" onclick="moveSite('${k}',0)">Acheter et déménager</button><button class="btn s" onclick="moveSite('${k}',1)">🏦 Avec crédit (apport ${eur(S.p*.2+fees)})</button>`:`<button class="btn" onclick="moveSite('${k}',0)">Louer et déménager</button>`}</div></div>`}
   showModal(h+`<button class="btn s w" onclick="closeM()">Fermer</button>`)}
 function siteCard(){const k=siteK(),S=SITES[k],n=vehCount(),cap=siteCap(),ov=Math.max(0,n-cap),X=xs(),AL=siteAlloc();
-  return`<button class="btn w" style="margin-bottom:10px;font-size:15px" onclick="tyOpen()">🏗️ Construire mon dépôt (vue tycoon)${st.ty&&st.ty.b&&st.ty.b.length?` · ${st.ty.b.length} bâtiment(s)`:''}</button><div class="card acc" style="--ac:var(--bl)"><div class="hd"><div class="ic" style="--ac2:#173f5e">${S.ic}</div><div style="flex:1;min-width:0"><div class="mut sm">${X.length?'Dépôt principal (n°1)':'Ton dépôt'}</div><h3>${S.n}</h3></div></div>${X.length?`<div class="tags"><span class="tag ${AL.main>=S.v?'o':'b'}">🚚 ${AL.main} / ${S.v} ici${AL.main>=S.v?' · plein':''}</span></div>`:''}
+  return`<div class="card acc" style="--ac:var(--bl)"><div class="hd"><div class="ic" style="--ac2:#173f5e">${S.ic}</div><div style="flex:1;min-width:0"><div class="mut sm">${X.length?'Dépôt principal (n°1)':'Ton dépôt'}</div><h3>${S.n}</h3></div></div>${X.length?`<div class="tags"><span class="tag ${AL.main>=S.v?'o':'b'}">🚚 ${AL.main} / ${S.v} ici${AL.main>=S.v?' · plein':''}</span></div>`:''}
   <div class="bar" style="margin-top:10px"><i style="width:${Math.min(100,n/cap*100)}%;${ov?'background:var(--rd)':''}"></i></div><div class="mut sm" style="margin-top:4px">🚚 ${n} / ${cap} véhicules${X.length?' (tous tes dépôts) — quand un dépôt est plein, les véhicules vont tout seuls dans le suivant':''}${ov?` · <b style="color:#ffb3ad">${ov} garé(s) dehors : ${eur(ov*parkRate())}/mois</b>`:''}${S.p?` · vaut ${eur(siteVal())}`:''}${st.siteLoan?` · crédit restant ${eur(st.siteLoan.cap)}`:''}</div>
   ${Object.keys(SFX).filter(f=>sfx(f)).map(f=>`<div class="sm" style="margin-top:4px">${SFX[f]}</div>`).join('')}
   ${X.map(x=>{const Y=SITES[x.k];return`<div class="row" style="flex-wrap:nowrap;margin-top:8px;padding-top:8px;border-top:1px solid #ffffff14"><div style="font-size:26px">${Y.ic}</div><div style="flex:1;min-width:0"><b class="sm">Dépôt n°${x.n} : ${Y.n}</b><div class="mut sm"><b style="color:${AL[x.id]>=Y.v?'var(--or2)':'var(--tx)'}">🚚 ${AL[x.id]||0} / ${Y.v}${AL[x.id]>=Y.v?' · plein':''}</b> · ${Y.rent?eur(Y.rent)+'/mois':'vaut '+eur(xVal(x))}${x.loan?' · crédit '+eur(x.loan.cap):''}</div></div><button class="btn s" style="padding:6px 9px" onclick="dropSite(${x.id})">${Y.p?'Vendre':'Fermer'}</button></div>`}).join('')}
@@ -930,7 +898,7 @@ function decCard(){const D=st.dec||[];if(!D.length)return'';return`<h2>📬 Déc
 /* ---------- Vraie vie : usure et pannes, urgences météo, syndicats, accidents, contrôles du SPW, sous-traitance, associations,
    famille, santé du patron, voyages, collections, paris sportifs, défis entre amis ---------- */
 const wear=k=>{const W=st.wear||(st.wear={});return W[k]||0};
-function wearUse(t,c){const W=st.wear||(st.wear={}),n=Math.max(1,st.eq[t]||1);W[t]=Math.min(100,(W[t]||0)+.35*(1-tierShare(t,'us'))*(has('meca')?.7:1)*(1-.02*Math.min(6,tyN('garage')))/n);
+function wearUse(t,c){const W=st.wear||(st.wear={}),n=Math.max(1,st.eq[t]||1);W[t]=Math.min(100,(W[t]||0)+.35*(1-tierShare(t,'us'))*(has('meca')?.7:1)/n);
   if(W[t]>70&&!(c.pz>st.day)&&Math.random()<(W[t]-70)/1500*(has('flotte')?.5:1)){const full=Math.round(EQ[t].p*R(.03,.08)),cost=insOn('bris')?Math.min(250,full):full;mv(-cost,'Panne : '+EQ[t].n+(insOn('bris')?' (assurance bris de machines, franchise)':''),'fix');c.pz=st.day+RI(1,3);log(`💥 Panne sur le chantier : ${EQ[t].ic} ${EQ[t].n} (usure ${Math.round(W[t])} %). Réparation ${eur(cost)}, chantier arrêté ${c.pz-st.day} jour(s). Pense aux révisions dans 🚜 Matériel !`)}}
 function revise(t,ok){const w=wear(t);if(w<5)return toastMsg('Cette machine est comme neuve.');const cost=Math.round(EQ[t].p*.04*(st.eq[t]||1)*w/100)+50;
   if(!ok)return ask(`Faire réviser ?\nMachines : ${EQ[t].n} ×${st.eq[t]||1}\nUsure : ${Math.round(w)} %\nPrix de la révision : ${eur(cost)}\nAu-delà de 70 % d’usure, les pannes arrivent sur les chantiers.`,()=>revise(t,1),{ic:'🔧',ok:'Faire réviser'});
@@ -1205,7 +1173,7 @@ function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.worke
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
     if(st.salAcc){mv(-st.salAcc,'Salaires du mois','sal');log(`💸 Salaires de ${MOIS[(x.getMonth()+11)%12]} payés : -${eur(st.salAcc)}`);st.salAcc=0}
     {const pm=(x.getMonth()+11)%12,py=x.getMonth()?x.getFullYear():x.getFullYear()-1;const H=st.mHist||(st.mHist=[]);H.push({m:pm,y:py,prod:Math.round(st.mProd||0),res:Math.round(liveRes())});if(H.length>36)H.shift();st.mProd=0}
-    payAids();paySalary();euMonth();grpMonth();tyMonth();monthTax(MOIS[(x.getMonth()+11)%12]);privMonth();
+    payAids();paySalary();euMonth();grpMonth();monthTax(MOIS[(x.getMonth()+11)%12]);privMonth();
     for(const c of running()){const J=JOBS[c.j];if(J.p)continue;const due=c.price*c.prog/c.q-c.billed;if(due>50){c.billed+=due;invoice(due,payDelay(Math.random()<.75?RI(25,30):RI(31,55)),`${c.buyer?c.buyer.split('—')[1]||'SPW':'SPW'} — état d'avancement`);log(`📄 État d'avancement envoyé (${J.n}) : ${eur(due)}`,false)}}}
   // salaires du jour (chômage temporaire pour intempéries : les ouvriers sont payés par l'ONEM)
   // chômage temporaire pour manque de travail (ouvriers) : l'ONEM paie, l'employeur ne verse qu'un supplément ; max 4 semaines de suite, puis une semaine de travail
@@ -1232,12 +1200,12 @@ function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.worke
     if(!conge)c.wd++;let eqc=0;for(const t in c.own){eqc+=c.own[t]*EQ[t].u*(1-tierShare(t,'us'));wearUse(t,c)}let rc=0;for(const t in c.rent||{})rc+=(RENT[t]||0)+EQ[t].u;if(rc)mv(-rc,'Location de matériel','use',1);if(has('meca')){rsAdd('meca',eqc*.1);eqc*=.9}if(sfx('atel'))eqc*=.92;if(sfx('cuve'))eqc*=.93;if(ino('elec'))eqc*=.95;if(ino('ecam'))eqc*=.8;mv(-(eqc+(J.p?(st.eq.van?0:14):40)),'Carburant et usure','use',1);
     const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(w=>w&&!(w.off>st.day)&&(!conge||w.boss)&&!(w.r==='etu'&&(w.hy||0)>=650));
     crew.forEach(w=>{if(w.r==='etu')w.hy=(w.hy||0)+7.6});
-    const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF*(has('cond')&&!J.p&&c.wd>c.N*(c.prog/c.q)?1.1:1)*inoWork(J)*(c.vb>st.day?c.vf||1:1)*qualWork(J)*tyWork(c);
+    const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF*(has('cond')&&!J.p&&c.wd>c.N*(c.prog/c.q)?1.1:1)*inoWork(J)*(c.vb>st.day?c.vf||1:1)*qualWork(J);
     const wfj=J.allw?1:J.dry&&WX[st.wx].k!=='sun'&&WX[st.wx].k!=='cloud'?0:wf;const gb=J.gr&&crew.some(w=>w.r==='grimp')||c.j==='elagage'&&crew.some(w=>w.r==='grimp')?1.1:['p_dechets','dechets','poubelles','aires'].includes(c.j)&&crew.some(w=>w.r==='ramas')?1.15:1;
     const pw=crew.reduce((a,w)=>a+w.sk*(w.mot??1)*(w.boss?bossF():1),0);const stop=(c.pz>st.day)||(st.strike>st.day&&!J.p);const dp=stop?0:Math.min(c.q-c.prog,J.rate*pw*wfj*boost*gb*awayF());c.prog+=dp;observe(c,crew);
     {const val=dp/c.q*c.price;st.mProd=(st.mProd||0)+val;ck('prod',val);crew.forEach(w=>{const s=w.s||(w.s={d:0,rev:0,cost:0});s.d++;s.rev+=pw?val*w.sk*(w.mot??1)/pw:0});if(has('dirt'))rsAdd('dirt',val*.08/1.08)}
     if(c.xc)mv(-c.xc*dp/c.q*(sfx('tri')?.75:1)*(ino('compost')?.6:1),'Mise en décharge','use',1);
-    crew.forEach(w=>{w.sk=Math.min(w.leg?2:1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+tyN('vest')*.0015+R(-.01,.01),.2,1)}});
+    crew.forEach(w=>{w.sk=Math.min(w.leg?2:1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
     if(c.prog>=c.q-1e-6)finish(c);
   }
   for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);mv(v.amt,'Paiement : '+v.from,v.caut?'buy':'in');if(v.caut)st.mCapex-=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`);kaching()}
@@ -2100,7 +2068,6 @@ function render(headOnly){
   cleanReports();const nR=st.reports.filter(r=>!r.done).length;if(nR)$('[data-t=eq]').insertAdjacentHTML('beforeend',`<span class="bd">${nR}</span>`);
   if(nWait)$('[data-t=ch]').insertAdjacentHTML('beforeend',`<span class="bd">${nWait}</span>`);
   if(nJob&&!st.contracts.length)$('[data-t=pb]').insertAdjacentHTML('beforeend',`<span class="bd">${nJob}</span>`);
-  if(tyOn)tyHead();
   const pvOn=curTab==='pv';$('#priv').classList.toggle('on',pvOn);document.body.classList.toggle('pvmode',pvOn);
   if(pvOn){$('#phead').innerHTML=pHead();const sc=pScene();if(sc!==lastScene){$('#pscene').innerHTML=sc;lastScene=sc}
     const pt=[['vie','🏡','Ma vie'],['biens','🏠','Biens'],['money','💶','Argent'],['bourse','📈','Bourse'],['casino','🎰','Casino'],['shop','🛒','Acheter']].map(([k,i,l])=>`<button class="${pvSec===k?'on':''}" onclick="pvGo('${k}')"><b>${i}</b>${l}</button>`).join('');if($('#ptabs').innerHTML!==pt)$('#ptabs').innerHTML=pt}
@@ -2632,85 +2599,9 @@ cv.addEventListener('pointerdown',e=>{const c=selC();if(!c)return;const b=cv.get
   if(wx<tx-10||wx>tx+CW*.45)return;const i=Math.floor(wx/SEG);if(c.tap[i])return;c.tap[i]=1;const J=JOBS[c.j];c.prog=Math.min(c.q,c.prog+c.q*(J.p?0.012:0.0015));ck('tap');
   parts.push({x:wx,y:y-6,vx:0,vy:-50,l:1,gr:30,txt:'+1 👍'});for(let k=0;k<8;k++)parts.push({x:wx,y,vx:R(-70,70),vy:R(-110,-30),l:.6,c:pick(['#ffd23f','#ff9a1f','#fff']),r:2});snd(900+Math.random()*300,.05,'triangle',.04)});
 
-/* ---------- Vue tycoon : mon dépôt en 3D isométrique ---------- */
-let tyOn=0,tySel='',tyGhost=null,tyZ=1,tyPX=0,tyPY=0,tyPeople=[],tyCars=[],tyDrag=null,tyCW=0,tyCH=0;
-const tyc=document.getElementById('tycv'),tg=tyc.getContext('2d');
-function tyOpen(){if(!st.ty)st.ty={b:[]};tyOn=1;tySel='';$('#tyc').classList.add('on');document.body.classList.add('tymode');click();tyRs();tyUI()}
-function tyClose(){tyOn=0;tySel='';tyGhost=null;$('#tyc').classList.remove('on');document.body.classList.remove('tymode');click();render()}
-function tyRs(){const d=Math.min(2,devicePixelRatio||1);tyCW=tyc.clientWidth;tyCH=tyc.clientHeight;tyc.width=Math.round(tyCW*d);tyc.height=Math.round(tyCH*d);tg.setTransform(d,0,0,d,0,0)}
-function tyHead(){if(!tyOn)return;const cap=siteCap(),n=vehCount();$('#tyhead').innerHTML=`<button class="pback" onclick="tyClose()">← Entreprise</button><div style="flex:1;min-width:0"><b style="font-size:15px">🏗️ Mon dépôt</b><div class="mut sm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${SITES[siteK()].n.replace(/ \(.*$/,'')} · terrain ${tyG()}×${tyG()}</div></div><div id="tycash" class="${st.cash<0?'neg':''}">${eur(st.cash)}</div>`;
-  $('#tyinfo').innerHTML=`<span>🚚 ${n}/${cap} places</span>${tyN('bur')?`<span>📑 +${tyN('bur')} offre(s)</span>`:''}${tyN('sol')?`<span>☀️ +${eur(800*tyN('sol'))}/mois</span>`:''}${tyN('vest')?`<span>💪 motivation +</span>`:''}${tyN('garage')?`<span>🔧 usure -${2*Math.min(6,tyN('garage'))} %</span>`:''}${['atel','cuve','tri','lav'].filter(f=>sfx(f)).map(f=>`<span>${TYB[f].ic}</span>`).join('')}${tyN('sel')?'<span>🧂 hiver +10 %</span>':''}<span>🌳 ${tyN('arbre')}</span>`}
-function tyUI(){tyHead();$('#tybar').innerHTML=`<button class="${tySel?'':'on'}" onclick="tyPick('')"><b>👆</b>Regarder</button>`+Object.keys(TYB).map(k=>{const B=TYB[k],n=tyN(k),full=n>=B.max;return`<button class="${tySel===k?'on':''}" ${full?'style="opacity:.45"':''} onclick="tyPick('${k}')"><b>${B.ic}</b>${eur(B.p).replace(/\s?€/,' €')}<i>${n}/${B.max}</i></button>`}).join('')}
-function tyPick(k){click();if(k&&tyN(k)>=TYB[k].max){toastMsg(`Maximum ${TYB[k].max} × ${TYB[k].n}.`);return}tySel=k;tyUI();if(k)toastMsg(`${TYB[k].ic} ${TYB[k].n} : touche une case libre du terrain. ${TYB[k].d}`)}
-function tyA(){const G=tyG();return Math.min(tyCW/(2*G+2),(tyCH-40)/(G+3))*tyZ}
-function tyO(){const G=tyG(),a=tyA();return[tyCW/2+tyPX,(tyCH-(G+1)*a)/2+a*.6+tyPY]}
-function tyS(i,j){const a=tyA(),[ox,oy]=tyO();return[ox+(i-j)*a,oy+(i+j)*a/2]}
-function tyCell(x,y){const a=tyA(),[ox,oy]=tyO(),u=(x-ox)/a,v=(y-oy)/(a/2);return[Math.floor((u+v)/2),Math.floor((v-u)/2)]}
-function tyAt(i,j){return tyL().find(b=>i>=b.i&&i<b.i+TYB[b.k].s&&j>=b.j&&j<b.j+TYB[b.k].s)}
-function tyFree(k,i,j){const G=tyG(),s=TYB[k].s;if(i<0||j<0||i+s>G||j+s>G)return false;for(let x=i;x<i+s;x++)for(let y=j;y<j+s;y++)if(tyAt(x,y))return false;const gi=Math.floor(G/2);if(j+s>=G&&gi>=i&&gi<i+s)return false;return true}
-function tyBuild(k,i,j,ok){const B=TYB[k];if(!tyFree(k,i,j))return toastMsg('Pas de place ici : choisis une case libre (pas devant l’entrée).');if(tyN(k)>=B.max)return toastMsg(`Maximum ${B.max}.`);if(st.cash<B.p)return toastMsg(`Il faut ${eur(B.p)} sur le compte de la société.`);
-  if(!ok){tyGhost={k,i,j};return ask(`Construire ?\n${B.ic} ${B.n}\nPrix : ${eur(B.p)}\nEffet : ${B.d}${B.fx&&sfx(B.fx)?'\n⚠️ Ton dépôt a déjà cet équipement : l’effet ne s’ajoute pas.':''}`,()=>tyBuild(k,i,j,1),{ic:B.ic,ok:'Construire'})}
-  tyGhost=null;mv(-B.p,'Construction au dépôt : '+B.n,'buy');st.mCapex+=B.p;st.ty.b.push({k,i,j,d:st.day});(st.ty.tot=(st.ty.tot||0)+B.p);log(`🏗️ ${B.ic} ${B.n} construit au dépôt.`,false);kaching();if(B.s>1)confetti(60);
-  for(let q=0;q<10;q++)tyFx.push({i:i+B.s/2,j:j+B.s/2,h:0,vx:R(-1,1),vy:R(-1,1),vh:R(1,3),l:1});if(tyN(k)>=B.max)tySel='';save();tyUI();render()}
-let tyFx=[];
-function tyInfo(b){const B=TYB[b.k];tyGhost=null;showModal(`<h3>${B.ic} ${B.n}</h3><p class="mut sm">Construit le ${dstr(b.d)} ${date(b.d).getFullYear()} · ${eur(B.p)}</p><div class="card"><div class="sm">${B.d}</div>${b.k==='park'||b.k==='garage'?`<div class="sm" style="margin-top:6px">🚚 Places au total : <b>${siteCap()}</b> (${vehCount()} véhicules)</div>`:''}</div>
-  <button class="btn r w" onclick="tyDemo(${st.ty.b.indexOf(b)})">🧨 Démolir (rien n’est remboursé)</button><p></p><button class="btn s w" onclick="closeM()">Fermer</button>`)}
-function tyDemo(x,ok){const b=st.ty.b[x];if(!b)return;const B=TYB[b.k];if(!ok)return ask(`Démolir ?\n${B.ic} ${B.n}\n⚠️ Rien n’est remboursé.`,()=>tyDemo(x,1),{ic:'🧨',ok:'Démolir',danger:1});st.ty.b.splice(x,1);log(`🧨 ${B.n} démoli.`,false);closeM();save();tyUI();render()}
-tyc.addEventListener('pointerdown',e=>{const r=tyc.getBoundingClientRect();tyDrag={x:e.clientX,y:e.clientY,px:tyPX,py:tyPY,m:0,rx:e.clientX-r.left,ry:e.clientY-r.top}});
-tyc.addEventListener('pointermove',e=>{if(!tyDrag)return;const dx=e.clientX-tyDrag.x,dy=e.clientY-tyDrag.y;if(Math.abs(dx)+Math.abs(dy)>8)tyDrag.m=1;if(tyDrag.m){tyPX=tyDrag.px+dx;tyPY=tyDrag.py+dy}});
-tyc.addEventListener('pointerup',e=>{const d=tyDrag;tyDrag=null;if(!d||d.m)return;const[i,j]=tyCell(d.rx,d.ry);
-  if(tySel){const s=TYB[tySel].s;tyBuild(tySel,s>1?i-1+(i===0?1:0):i,s>1?j-1+(j===0?1:0):j);return}const b=tyAt(i,j);if(b){click();tyInfo(b)}});
-function tyZoom(f){tyZ=clamp(tyZ*f,.7,3);if(tyZ<=1){tyPX*=.5;tyPY*=.5}click()}
-function tyBox(i,j,s,h,col,a){const[x0,y0]=tyS(i,j),[x1,y1]=tyS(i+s,j),[x2,y2]=tyS(i+s,j+s),[x3,y3]=tyS(i,j+s),H=h*a/14;
-  const sh=(c,f)=>{const n=parseInt(c.slice(1),16);let r=(n>>16)&255,g=(n>>8)&255,b=n&255;r=Math.min(255,r*f|0);g=Math.min(255,g*f|0);b=Math.min(255,b*f|0);return`rgb(${r},${g},${b})`};
-  tg.fillStyle='rgba(0,0,0,.25)';tg.beginPath();tg.moveTo(x1+H*.6,y1);tg.lineTo(x2+H*.6,y2+H*.25);tg.lineTo(x3,y3);tg.lineTo(x2,y2);tg.closePath();tg.fill();
-  if(H>0){tg.fillStyle=sh(col,.62);tg.beginPath();tg.moveTo(x3,y3);tg.lineTo(x2,y2);tg.lineTo(x2,y2-H);tg.lineTo(x3,y3-H);tg.closePath();tg.fill();
-    tg.fillStyle=sh(col,.8);tg.beginPath();tg.moveTo(x2,y2);tg.lineTo(x1,y1);tg.lineTo(x1,y1-H);tg.lineTo(x2,y2-H);tg.closePath();tg.fill()}
-  tg.fillStyle=sh(col,1.08);tg.beginPath();tg.moveTo(x0,y0-H);tg.lineTo(x1,y1-H);tg.lineTo(x2,y2-H);tg.lineTo(x3,y3-H);tg.closePath();tg.fill();tg.strokeStyle='rgba(0,0,0,.25)';tg.lineWidth=1;tg.stroke();return[(x0+x2)/2,(y0+y2)/2-H]}
-function tyEmo(t,x,y,sz){tg.font=`${Math.max(8,sz)|0}px sans-serif`;tg.textAlign='center';tg.textBaseline='middle';tg.fillText(t,x,y)}
-function tyTile(i,j,c){const P=[tyS(i,j),tyS(i+1,j),tyS(i+1,j+1),tyS(i,j+1)];tg.fillStyle=c;tg.beginPath();tg.moveTo(...P[0]);for(const p of P.slice(1))tg.lineTo(...p);tg.closePath();tg.fill()}
-function tyDraw(t){if(!tyOn)return;if(tyc.clientWidth!==tyCW||tyc.clientHeight!==tyCH)tyRs();const G=tyG(),a=tyA(),m=date(st.day).getMonth(),wx=WX[st.wx].k,win=m===11||m<2;
-  if(!modalOpen&&tyGhost)tyGhost=null;
-  const sky=tg.createLinearGradient(0,0,0,tyCH);sky.addColorStop(0,wx==='rain'||wx==='storm'?'#55646e':'#8fc6e8');sky.addColorStop(1,win?'#c9d6cf':'#9fd08c');tg.fillStyle=sky;tg.fillRect(0,0,tyCW,tyCH);
-  // terrain autour, route et trottoir
-  for(let i=-3;i<G+3;i++)for(let j=-3;j<G+3;j++){if(i>=0&&j>=0&&i<G&&j<G)continue;tyTile(i,j,j===G||j===G+1?'#3b3f44':((i+j)&1?(win?'#cfdccd':'#7dbb63'):(win?'#c3d2c1':'#74b25b')))}
-  for(let i=-3;i<G+3;i++){const[x,y]=tyS(i+.5,G+1);tg.fillStyle='#f5f2c9';tg.fillRect(x-a*.25,y-1,a*.5,2)}
-  // terrain du dépôt (béton + graviers)
-  for(let i=0;i<G;i++)for(let j=0;j<G;j++)tyTile(i,j,(i+j)&1?'#a8a294':'#b1ab9c');
-  // clôture
-  tg.strokeStyle='#3d4a3f';tg.lineWidth=Math.max(1,a/10);tg.beginPath();const c0=tyS(0,0),c1=tyS(G,0),c2=tyS(G,G),c3=tyS(0,G),gi=Math.floor(G/2),ga=tyS(gi,G),gb=tyS(gi+1,G);
-  tg.moveTo(ga[0],ga[1]-a*.4);tg.lineTo(c3[0],c3[1]-a*.4);tg.lineTo(c0[0],c0[1]-a*.4);tg.lineTo(c1[0],c1[1]-a*.4);tg.lineTo(c2[0],c2[1]-a*.4);tg.lineTo(gb[0],gb[1]-a*.4);tg.stroke();
-  tyEmo('🚧',ga[0]-a*.2,ga[1]-a*.5,a*.7);
-  // bâtiments triés de l'arrière vers l'avant
-  const L=tyL().slice();if(tyGhost)L.push({...tyGhost,ghost:1});L.sort((p,q)=>(p.i+p.j+TYB[p.k].s)-(q.i+q.j+TYB[q.k].s));
-  const parkedAll=Math.max(0,vehCount()-running().filter(c=>c.crew.length).length);let parked=Math.min(parkedAll,tyN('park')*2),gpark=parkedAll-parked;const vic=['🚐','🛻','🚚','🚜','🚛'];
-  for(const b of L){const B=TYB[b.k];tg.globalAlpha=b.ghost?.6:1;
-    if(b.k==='arbre'){const[x,y]=tyS(b.i+.5,b.j+.5);tg.fillStyle='rgba(0,0,0,.25)';tg.beginPath();tg.ellipse(x,y,a*.45,a*.2,0,0,7);tg.fill();tyEmo(win?'🌲':'🌳',x,y-a*.45,a*1.1)}
-    else if(b.k==='park'){tyTile(b.i,b.j,'#454b52');const[x,y]=tyS(b.i+.5,b.j+.5);tg.strokeStyle='#fff';tg.lineWidth=1;tg.beginPath();tg.moveTo(...tyS(b.i+.5,b.j));tg.lineTo(...tyS(b.i+.5,b.j+1));tg.stroke();
-      for(let q=0;q<2&&parked>0;q++,parked--)tyEmo(vic[(b.i*3+b.j+q)%vic.length],x+(q?a*.32:-a*.32),y-a*.12,a*.62);if(b.ghost)tyEmo('🅿️',x,y,a*.6)}
-    else{const[x,y]=tyBox(b.i,b.j,B.s,B.h,B.c,a);
-      if(b.k==='sol'){tg.strokeStyle='#8fb3e8';tg.lineWidth=1;for(let q=1;q<4;q++){tg.beginPath();tg.moveTo(...tyS(b.i+q/4,b.j).map((v,ix)=>ix?v-B.h*a/14:v));tg.lineTo(...tyS(b.i+q/4,b.j+1).map((v,ix)=>ix?v-B.h*a/14:v));tg.stroke()}}
-      tyEmo(B.ic,x,y-(B.h?a*.35:0),a*(B.s>1?1.1:.7));if(b.k==='garage'){const k=Math.min(5,gpark);gpark-=k;if(k){tg.fillStyle='#000a';tg.fillRect(x-a*.45,y+a*.25,a*.9,a*.42);tyEmo('🚚'+k,x,y+a*.46,a*.36)}}
-      if(b.k==='lav'&&running().length&&Math.sin(t*2)>0)tyEmo('💦',x+a*.5,y,a*.5);if((b.k==='atel')&&running().length)tyEmo(Math.sin(t*6)>0?'✨':'🔩',x+a*.6,y+a*.1,a*.4);if(b.k==='sol'&&wx==='sun')tyEmo('⚡',x,y-a*.8+Math.sin(t*3)*3,a*.35)}
-    tg.globalAlpha=1}
-  if(gpark>0){const[x,y]=tyS(gi+.5,G-.5);tyEmo('🚚 '+gpark+' dehors',x,y-a*.2,a*.45)}
-  // ouvriers qui se promènent dans le dépôt
-  const nP=Math.min(14,freeW().length);while(tyPeople.length<nP)tyPeople.push({i:gi+.5,j:G-.5,ti:R(.5,G-.5),tj:R(.5,G-.5),c:pick(['#ff9a1f','#ffd23f','#ff6b3d'])});tyPeople.length=nP;
-  for(const p of tyPeople){const di=p.ti-p.i,dj=p.tj-p.j,dd=Math.hypot(di,dj);if(dd<.1){p.ti=R(.3,G-.3);p.tj=R(.3,G-.3)}else{p.i+=di/dd*.012;p.j+=dj/dd*.012}
-    const[x,y]=tyS(p.i,p.j),bob=Math.abs(Math.sin(t*8+p.ti))*a*.06;tg.fillStyle='rgba(0,0,0,.3)';tg.beginPath();tg.ellipse(x,y,a*.14,a*.06,0,0,7);tg.fill();tg.fillStyle='#2b3550';tg.fillRect(x-a*.06,y-a*.22-bob,a*.12,a*.2);tg.fillStyle=p.c;tg.fillRect(x-a*.09,y-a*.42-bob,a*.18,a*.22);tg.fillStyle='#f1c7a1';tg.beginPath();tg.arc(x,y-a*.5-bob,a*.08,0,7);tg.fill()}
-  // camions qui partent vers les chantiers et la circulation
-  const nC=Math.min(6,running().filter(c=>c.crew.length).length)+2;while(tyCars.length<nC)tyCars.push({u:R(-3,G+3),v:R(.6,1.4)*(Math.random()<.5?1:-1),e:pick(['🚚','🚐','🚛','🚗','🚙','🛻'])});tyCars.length=nC;
-  for(const c of tyCars){c.u+=c.v*.03;if(c.u>G+3)c.u=-3;if(c.u<-3)c.u=G+3;const[x,y]=tyS(c.u,G+(c.v>0?.55:1.45));tg.save();tg.translate(x,y-a*.25);if(c.v>0)tg.scale(-1,1);tyEmo(c.e,0,0,a*.8);tg.restore()}
-  // météo
-  if(wx==='rain'||wx==='storm'){tg.strokeStyle='rgba(220,235,255,.55)';tg.lineWidth=1;tg.beginPath();for(let q=0;q<70;q++){const x=(q*97+t*60)%tyCW,y=(q*53+t*420)%tyCH;tg.moveTo(x,y);tg.lineTo(x-3,y+9)}tg.stroke()}
-  if(wx==='snow'){tg.fillStyle='#fff';for(let q=0;q<60;q++){const x=(q*97+Math.sin(t+q)*20)%tyCW,y=(q*53+t*40)%tyCH;tg.fillRect(x,y,2,2)}}
-  // poussière de construction
-  tyFx=tyFx.filter(f=>f.l>0);for(const f of tyFx){f.i+=f.vx*.02;f.j+=f.vy*.02;f.h+=f.vh*.02;f.l-=.02;const[x,y]=tyS(f.i,f.j);tg.globalAlpha=f.l;tyEmo('💨',x,y-f.h*a,a*.5);tg.globalAlpha=1}
-  if(tySel){tg.fillStyle='#000a';tg.fillRect(8,8,tyCW-16,26);tg.fillStyle='#fff';tg.font='800 12px Nunito,sans-serif';tg.textAlign='center';tg.fillText(`${TYB[tySel].ic} Touche une case libre pour construire · ${eur(TYB[tySel].p)}`,tyCW/2,22)}}
-
 /* ---------- Boucle ---------- */
 const SPD=[0,4500,1800,600];let acc=0,prevT=performance.now();
-function loop(now){const dt=Math.min(250,now-prevT);prevT=now;if(playing&&!modalOpen&&speed&&!st.over){acc+=dt;if(acc>=SPD[speed]){acc=0;tick()}}if(tyOn)tyDraw(now/1000);else draw(now/1000);requestAnimationFrame(loop)}
+function loop(now){const dt=Math.min(250,now-prevT);prevT=now;if(playing&&!modalOpen&&speed&&!st.over){acc+=dt;if(acc>=SPD[speed]){acc=0;tick()}}draw(now/1000);requestAnimationFrame(loop)}
 render();
 function fullScreen(){try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).then(()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(e){}setTimeout(rs,300)}).catch(()=>{});else if(d.webkitRequestFullscreen)d.webkitRequestFullscreen()}catch(e){}}
 addEventListener('scroll',()=>{if(scrollY)scrollTo(0,0)});
@@ -2722,7 +2613,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.33";
+var APPV="2026-11-05.32";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
