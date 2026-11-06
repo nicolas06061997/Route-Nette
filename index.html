@@ -623,17 +623,6 @@ const EU={
   pl:{n:'Pologne',f:'🇵🇱',tax:.19,setup:320000,fix:18000,pot:95000,var:.70,d:'Main-d’œuvre moins chère et impôt à 19 %, mais petits contrats.'}};
 const fil=()=>st.fil||(st.fil={});
 function euReq(){return[[st.srl,'Être une SRL (société)'],[caRecent()>=1500000,`Chiffre d’affaires d’au moins 1 500 000 € sur un an (${eur(caRecent())})`],[st.rep>=60,`Réputation d’au moins 60 (${st.rep})`],[has('daf'),'Un directeur administratif et financier (DAF)']]}
-function euOpen(k,ok){const C=EU[k];if(fil()[k])return;if(!euReq().every(x=>x[0]))return toastMsg('Conditions pas encore remplies.');
-  if(st.cash<C.setup)return toastMsg(`Il faut ${eur(C.setup)} sur le compte de la société.`);
-  if(!ok)return ask(`Créer une filiale : ${C.n} ?\nInvestissement de départ : ${eur(C.setup)}\nFrais fixes : ${eur(C.fix)}/mois\nImpôt des sociétés : ${(C.tax*100).toFixed(C.tax*100%1?2:0).replace('.',',')} %\nPleine vitesse : après ± 18 mois\nAvocat, notaire, capital, dépôt, machines, recrutement et directeur local. Les premiers mois, la filiale perd de l’argent : la société belge comble les pertes.\n⚠️ Rien n’est garanti : une filiale mal partie peut coûter très cher.`,()=>euOpen(k,1),{ic:C.f,ok:'Créer la filiale',danger:1});
-  mv(-C.setup,'Création de la filiale '+C.n,'buy');st.mCapex+=C.setup;fil()[k]={d:st.day,lv:1,inv:C.setup,cash:Math.round(C.setup*.12),m:0,last:null,hist:[],div:0,tot:0};
-  log(`${C.f} Ta filiale ${C.n} est créée ! Le directeur local recrute ses premières équipes.`);confetti(200);kaching();save();closeM();render()}
-function euMonth(){for(const k in fil()){const F=fil()[k],C=EU[k];F.m++;const L=F.lv,pot=C.pot*(L===1?1:L===2?1.7:2.5),fix=C.fix*(L===1?1:L===2?1.45:2),ramp=Math.max(.08,Math.min(1,(F.m-1)/17));
-    const mo=month(),sea=mo===12||mo<=2?.7:mo>=4&&mo<=9?1.12:1;let ev='';let rv=pot*ramp*sea*R(.8,1.2);
-    const r=Math.random();if(F.m>3&&r<.06){rv*=1.35;ev=pick(['gros contrat gagné auprès d’une région','nouveau client : une autoroute privée','contrat d’urgence après des tempêtes'])}else if(F.m>3&&r<.12){rv*=.65;ev=pick(['grève dans le secteur','un gros client paie en retard','chantier perdu face à un concurrent local'])}
-    rv=Math.round(rv);const ebt=Math.round(rv*(1-C.var)-fix),tax=ebt>0?Math.round(ebt*C.tax):0,net=ebt-tax;F.cash+=net;F.tot+=net;F.last={rv,ebt,tax,net,ev};F.hist.push(net);if(F.hist.length>12)F.hist.shift();
-    if(ev)log(`${C.f} Filiale ${C.n} : ${ev}.`,false);
-    if(F.cash<0){const inj=-F.cash+Math.round(fix*.5);mv(-inj,'Apport en capital : filiale '+C.n,'buy');st.mCapex+=inj;F.inv+=inj;F.cash+=inj;log(`${C.f} La filiale ${C.n} manque d’argent : la société belge lui verse ${eur(inj)}.`,false)}}}
 function euDiv(k){const F=fil()[k],C=EU[k];const a=Math.round(F.cash-EU[k].fix*.5);click();if(a<1000)return toastMsg('La filiale doit garder de quoi payer ses frais du mois.');
   F.cash-=a;F.div+=a;mv(a,'Dividende de la filiale '+C.n+' (exonéré : RDT)','in');st.mCapex-=a;log(`${C.f} Dividende rapatrié de ${C.n} : +${eur(a)} (pas d’impôt en plus : directive mère-filiale).`);kaching();save();render()}
 function euUp(k,ok){const F=fil()[k],C=EU[k];if(F.lv>=3)return;if(F.m<18)return toastMsg(`Attends que la filiale tourne à plein (démarrage 100 %, encore ${18-F.m} mois) avant de l’agrandir.`);const c=Math.round(C.setup*.7*F.lv);if(st.cash<c)return toastMsg(`Il faut ${eur(c)} sur le compte de la société.`);
@@ -650,15 +639,6 @@ function euUI(){const ok=euReq().every(x=>x[0]);let h=`<h3>🌍 Ouvrir une filia
     <div class="tags"><span class="tag">Départ ${eur(C.setup)}</span><span class="tag">Frais ${eur(C.fix)}/mois</span><span class="tag">Impôt ${(C.tax*100).toFixed(C.tax*100%1?2:0).replace('.',',')} %</span><span class="tag ${full>0?'g':'r'}">± ${eur(full)}/mois avant impôt à pleine vitesse</span></div>
     <div class="row" style="margin-top:10px">${F?'<span class="tag g">✅ Ta filiale</span>':`<button class="btn" ${ok&&st.cash>=C.setup?'':'disabled'} onclick="euOpen('${k}')">Créer la filiale</button>`}</div></div>`}
   showModal(h+'<p class="mut sm">Chiffres estimés à partir des coûts réels d’implantation (création, dépôt, machines, salaires locaux) et des impôts des sociétés 2025 de chaque pays.</p><button class="btn s w" onclick="closeM()">Fermer</button>')}
-function euCard(){const F=fil(),ks=Object.keys(F);if(!ks.length&&caRecent()<500000)return'';
-  let h=`<div class="card acc" style="--ac:var(--vi)"><div class="hd"><div class="ic" style="--ac2:#3d2c66">🌍</div><div style="flex:1;min-width:0"><h3>Filiales en Europe</h3><div class="mut sm">${ks.length?ks.map(k=>EU[k].f).join(' ')+' · '+ks.length+' pays':'Développe ton entreprise à l’étranger (gros investissement).'}</div></div></div>`;
-  for(const k of ks){const C=EU[k],f=F[k],L=f.last;const ramp=Math.min(100,Math.round(Math.max(.08,Math.min(1,(f.m)/17))*100));
-    h+=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #ffffff14"><div class="row" style="flex-wrap:nowrap"><div style="font-size:30px">${C.f}</div><div style="flex:1;min-width:0"><b>${C.n}</b> <span class="tag v">niv. ${f.lv}</span><div class="mut sm">${f.m} mois · démarrage ${ramp} %</div></div></div>
-    <div class="tags">${L?`<span class="tag b">CA du mois ${eur(L.rv)}</span><span class="tag ${L.net>=0?'g':'r'}">Résultat ${L.net>=0?'+':''}${eur(L.net)}</span>`:'<span class="tag">1er bilan le 1er du mois</span>'}<span class="tag">Caisse ${eur(f.cash)}</span><span class="tag">Investi ${eur(f.inv)}</span>${f.div?`<span class="tag g">Dividendes reçus ${eur(f.div)}</span>`:''}</div>
-    ${(()=>{const Lv=f.lv,pot=C.pot*(Lv===1?1:Lv===2?1.7:2.5),fx=C.fix*(Lv===1?1:Lv===2?1.45:2),full=Math.round(pot*(1-C.var)-fx),netF=Math.round(full*(full>0?1-C.tax:1));return`<div class="sm" style="margin-top:6px">${f.m<18?`⏳ En démarrage : normal de perdre de l’argent. À pleine vitesse (dans ± ${18-f.m} mois) : <b class="${netF>=0?'money':'neg'}">${netF>=0?'+':''}${eur(netF)}/mois</b> après impôt.`:`🎯 À pleine vitesse : ± <b class="${netF>=0?'money':'neg'}">${netF>=0?'+':''}${eur(netF)}/mois</b> après impôt (selon la saison).`}</div>`})()}
-    ${L&&L.ev?`<div class="mut sm" style="margin-top:4px">📰 ${L.ev}</div>`:''}
-    <div class="row" style="margin-top:8px"><button class="btn s" style="padding:6px 9px" ${f.cash-C.fix*.5>=1000?'':'disabled'} onclick="euDiv('${k}')">💶 Rapatrier ${eur(Math.max(0,f.cash-C.fix*.5))}</button>${f.lv<3?`<button class="btn s" style="padding:6px 9px" ${f.m<18?'disabled':''} onclick="euUp('${k}')">⬆️ Agrandir (${eur(C.setup*.7*f.lv)})</button>`:''}<button class="btn s" style="padding:6px 9px" onclick="euSell('${k}')">Vendre (${eur(euVal(k))})</button></div></div>`}
-  return h+`<button class="btn s" style="margin-top:10px" onclick="click();euUI()">🌍 ${ks.length?'Ouvrir dans un autre pays':'Voir les pays'}</button></div>`}
 /* ---------- Fin de partie : innovation, rachats, bourse, fondation ---------- */
 // Projets d'innovation (coûts estimés de projets réels du secteur) ; lv = classe d'agréation minimum
 const INNO=[
@@ -906,6 +886,96 @@ function decTick(work){const D=st.dec||(st.dec=[]);
 function decAct(id,i){const D=st.dec||[],d=D.find(x=>x.id===id);if(!d)return;const T=DECT.find(x=>x.k===d.k);D.splice(D.indexOf(d),1);click();try{T.o[i][1](d)}catch(e){}
   ck('dec');addXP(15);log(`📬 ${T.ic} Ta décision : ${T.o[i][0]}.`,false);save();render()}
 function decCard(){const D=st.dec||[];if(!D.length)return'';return`<h2>📬 Décisions du patron · ${D.length}</h2>`+D.map(d=>{const T=DECT.find(x=>x.k===d.k);if(!T)return'';return`<div class="card acc" style="--ac:var(--or)"><div class="sm"><b>${T.ic} ${esc(d.t)}</b></div><div class="mut sm" style="margin-top:3px">Réponds avant le ${dstr(d.exp)}, sinon : « ${T.o[T.def][0]} »</div><div class="row" style="margin-top:8px">${T.o.map((o,i)=>`<button class="btn ${i===0?'':'s'}" style="padding:7px 10px" onclick="decAct(${d.id},${i})">${o[0]}</button>`).join('')}</div></div>`}).join('')}
+/* ---------- Filiales v2 : directeur choisi, réputation locale, part de marché, décisions par pays, fiche et carte ---------- */
+// Types de directeur : rv = chiffre d'affaires, fix = frais fixes, bad/good = fréquence des mauvais/bons coups, rl = réputation locale gagnée par mois, ramp = mois de démarrage
+const EUDT={p:{n:'Prudent',ic:'🛡️',d:'Peu de risques et une bonne image locale, mais une croissance plus lente.',rv:.95,fix:1,bad:.5,good:.8,rl:1},
+  a:{n:'Ambitieux',ic:'🚀',d:'Grosse croissance et démarrage plus rapide (12 mois), mais il prend des risques qui coûtent parfois cher.',rv:1.2,fix:1.05,bad:1.8,good:1.6,rl:0,ramp:12},
+  e:{n:'Économe',ic:'🪙',d:'Frais fixes 20 % plus bas, mais il décroche moins de nouveaux contrats.',rv:.92,fix:.8,bad:1,good:.8,rl:0},
+  n:{n:'Directeur d’origine',ic:'👔',d:'Le directeur nommé à la création de la filiale (ancienne version du jeu).',rv:1,fix:1,bad:1,good:1,rl:0}};
+const EUNM={fr:[['Julien','Moreau'],['Claire','Lefebvre'],['Nicolas','Fontaine'],['Sophie','Garnier'],['Antoine','Roussel']],lu:[['Marc','Schmit'],['Anne','Weber'],['Paul','Hoffmann'],['Carole','Wagner'],['Luc','Muller']],
+  nl:[['Joost','de Vries'],['Sanne','Bakker'],['Pieter','Jansen'],['Eva','Visser'],['Ruud','Smit']],de:[['Thomas','Becker'],['Katrin','Schulz'],['Stefan','Wolf'],['Julia','Neumann'],['Markus','Braun']],
+  es:[['Javier','García'],['Lucía','Martínez'],['Carlos','López'],['Elena','Sánchez'],['Pablo','Romero']],pl:[['Piotr','Nowak'],['Anna','Kowalska'],['Tomasz','Wiśniewski'],['Magda','Wójcik'],['Marek','Zieliński']]};
+const EUMKT={fr:60e6,lu:25e6,nl:80e6,de:120e6,es:50e6,pl:40e6}; // marché annuel accessible estimé pour une filiale régionale
+const EUPOS={be:[150,92],nl:[166,50],lu:[186,124],de:[232,88],fr:[110,150],es:[62,200],pl:[292,70]};
+let euCands=null;
+const euD=F=>EUDT[(F.dir&&F.dir.t)||'n'];
+const euRL=F=>F.rl??40;
+function euGen(k){const P=[...EUNM[k]].sort(()=>Math.random()-.5);return['p','a','e'].sort(()=>Math.random()-.5).map((t,i)=>({n:P[i][0]+' '+P[i][1],t,sk:+R(.9,1.15).toFixed(2),age:RI(38,58),xp:RI(8,25)}))}
+function euDirCard(k,c,i,mode){const D=EUDT[c.t],C=EU[k];return`<div class="card"><div class="hd">${avatar({n:c.n,r:'daf',skin:strHash(c.n)%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${esc(c.n)}</h3><div class="mut sm">${c.age} ans · ${c.xp} ans d’expérience dans le secteur</div></div></div>
+  <div class="tags"><span class="tag v">${D.ic} ${D.n}</span><span class="tag ${c.sk>=1.05?'g':''}">Compétence ${Math.round(c.sk*100)} %</span></div><div class="mut sm" style="margin-top:6px">${D.d}</div>
+  <button class="btn w" style="margin-top:10px" onclick="${mode==='open'?`euCreate('${k}',${i})`:`euSwap('${k}',${i})`}">${mode==='open'?`Choisir et créer la filiale (${eur(C.setup)})`:`Engager (indemnités ${eur(euSwapCost(k))})`}</button></div>`}
+function euOpen(k){const C=EU[k];if(fil()[k])return;if(!euReq().every(x=>x[0]))return toastMsg('Conditions pas encore remplies.');if(st.cash<C.setup)return toastMsg(`Il faut ${eur(C.setup)} sur le compte de la société.`);click();
+  euCands=euGen(k);showModal(`<h3>${C.f} Choisis le directeur de ta filiale</h3><p class="mut sm">${C.n} · investissement ${eur(C.setup)} · frais ${eur(C.fix)}/mois. C’est lui qui dirige la filiale au quotidien : son caractère change tout.</p>`+euCands.map((c,i)=>euDirCard(k,c,i,'open')).join('')+`<p class="mut sm">⚠️ Les premiers mois, la filiale perd de l’argent : la société belge comble les pertes. Rien n’est garanti.</p><button class="btn s w" onclick="euUI()">← Retour aux pays</button>`)}
+function euCreate(k,i){const C=EU[k],c=euCands&&euCands[i];if(!c||fil()[k])return;if(st.cash<C.setup)return toastMsg(`Il faut ${eur(C.setup)} sur le compte de la société.`);
+  mv(-C.setup,'Création de la filiale '+C.n,'buy');st.mCapex+=C.setup;fil()[k]={d:st.day,lv:1,inv:C.setup,cash:Math.round(C.setup*.12),m:0,last:null,hist:[],div:0,tot:0,dir:c,rl:35,mods:[],fixP:1,rvh:[]};euCands=null;
+  log(`${C.f} Ta filiale ${C.n} est créée ! ${c.n} (${EUDT[c.t].n.toLowerCase()}) recrute les premières équipes.`);confetti(200);kaching();goals();save();closeM();render()}
+const euSwapCost=k=>Math.round(EU[k].fix*1.5);
+function euDirUI(k){const F=fil()[k];if(!F)return;click();euCands=euGen(k);showModal(`<h3>${EU[k].f} Changer de directeur</h3><p class="mut sm">Le directeur actuel, ${esc((F.dir&&F.dir.n)||'le directeur d’origine')}, part avec ses indemnités (${eur(euSwapCost(k))}, payées par la filiale). Pendant 2 mois de transition, le chiffre d’affaires baisse de 15 %.</p>`+euCands.map((c,i)=>euDirCard(k,c,i,'swap')).join('')+`<button class="btn s w" onclick="euFiche('${k}')">← Garder le directeur actuel</button>`)}
+function euSwap(k,i){const F=fil()[k],c=euCands&&euCands[i];if(!F||!c)return;F.cash-=euSwapCost(k);F.dir=c;F.tr=2;euCands=null;log(`${EU[k].f} ${c.n} devient directeur de la filiale ${EU[k].n} (${EUDT[c.t].n.toLowerCase()}).`);save();render();euFiche(k)}
+// effets temporaires (mods) et permanents (fixP) sur une filiale
+const euMod=(F,rv,fix,n,t)=>{(F.mods||(F.mods=[])).push({rv,fix,n,t})};
+const euRlAdd=(F,v)=>{F.rl=clamp(euRL(F)+v,0,100)};
+function euMonth(){for(const k in fil()){const F=fil()[k],C=EU[k],D=euD(F),sk=(F.dir&&F.dir.sk)||1;F.m++;const L=F.lv,rp=D.ramp||17;
+    let mR=1,mF=1;for(const m of F.mods||[]){mR*=m.rv;mF*=m.fix}
+    const pot=C.pot*(L===1?1:L===2?1.7:2.5),fix=Math.round(C.fix*(L===1?1:L===2?1.45:2)*D.fix*(F.fixP||1)*mF),ramp=Math.max(.08,Math.min(1,(F.m-1)/rp));
+    const mo=month(),sea=mo===12||mo<=2?.7:mo>=4&&mo<=9?1.12:1;let ev='';let rv=pot*ramp*sea*R(.8,1.2)*D.rv*sk*(.9+euRL(F)/500)*mR*((F.tr||0)>0?.85:1);
+    const r=Math.random();if(F.m>3&&r<.06*D.good){rv*=1.35;euRlAdd(F,2);ev=pick(['gros contrat gagné auprès d’une région','nouveau client : une autoroute privée','contrat d’urgence après des tempêtes'])}else if(F.m>3&&r<.06*(D.good+D.bad)){rv*=.65;euRlAdd(F,-3);ev=pick(['grève dans le secteur','un gros client paie en retard','chantier perdu face à un concurrent local'])}
+    if(D===EUDT.a&&F.m>3&&Math.random()<.04){const loss=Math.round(fix*1.5);F.cash-=loss;euRlAdd(F,-4);ev=(ev?ev+' ; ':'')+`${(F.dir&&F.dir.n)||'le directeur'} a pris un contrat trop risqué : perte de ${eur(loss)}`}
+    rv=Math.round(rv);const ebt=Math.round(rv*(1-C.var)-fix),tax=ebt>0?Math.round(ebt*C.tax):0,net=ebt-tax;F.cash+=net;F.tot+=net;F.last={rv,ebt,tax,net,ev};F.hist.push(net);if(F.hist.length>12)F.hist.shift();
+    (F.rvh||(F.rvh=[])).push(rv);if(F.rvh.length>12)F.rvh.shift();
+    euRlAdd(F,D.rl+(F.m>6&&net>0?.5:0));if(F.tr)F.tr--;F.mods=(F.mods||[]).filter(m=>--m.n>0);
+    if(ev)log(`${C.f} Filiale ${C.n} : ${ev}.`,false);
+    // une décision à prendre dans ce pays
+    const DD=st.dec||(st.dec=[]);if(F.m>2&&!DD.some(d=>d.f===k)&&Math.random()<.2){const T=pick(EUDEC.filter(x=>x.c===k||x.c==='*'));if(T){DD.push({id:st.nid++,k:T.k,exp:st.day+45,f:k,t:`${C.f} ${C.n} — ${T.t}`});log(`📬 ${C.f} Décision à prendre pour ta filiale ${C.n} (🏆 Entreprise → Empire).`)}}
+    if(F.cash<0){const inj=-F.cash+Math.round(fix*.5);mv(-inj,'Apport en capital : filiale '+C.n,'buy');st.mCapex+=inj;F.inv+=inj;F.cash+=inj;log(`${C.f} La filiale ${C.n} manque d’argent : la société belge lui verse ${eur(inj)}.`,false)}}}
+// décisions propres à chaque pays (c = pays, '*' = tous) ; d.f = clé de la filiale
+const euF=d=>fil()[d.f];
+const EUDEC=[
+  {k:'eu_fr_greve',c:'fr',ic:'🇫🇷',t:'Grève nationale des transports : tes équipes n’arrivent plus sur les chantiers.',o:[['Payer des heures sup et des navettes',d=>{const F=euF(d);if(F){F.cash-=Math.round(EU.fr.fix*.6);euRlAdd(F,3)}}],['Laisser les chantiers à l’arrêt',d=>{const F=euF(d);if(F){euMod(F,.65,1,1,'Grève : chantiers à l’arrêt');euRlAdd(F,-2)}}]],def:1},
+  {k:'eu_fr_urssaf',c:'fr',ic:'🇫🇷',t:'L’URSSAF annonce un contrôle des cotisations sociales.',o:[['Payer un expert-comptable pour préparer le dossier',d=>{const F=euF(d);if(F)F.cash-=18000}],['Faire confiance au directeur',d=>{const F=euF(d);if(F&&Math.random()<.45){F.cash-=Math.round(R(40000,120000));log('🇫🇷 Contrôle URSSAF : redressement pour la filiale française.')}}]],def:1},
+  {k:'eu_de_din',c:'de',ic:'🇩🇪',t:'Une nouvelle norme DIN impose du matériel de signalisation plus moderne.',o:[['Investir dans le nouveau matériel',d=>{const F=euF(d);if(F){F.cash-=Math.round(EU.de.setup*.12);euMod(F,1.12,1,6,'Matériel aux normes : +12 %')}}],['Attendre',d=>{const F=euF(d);if(F)euMod(F,.8,1,3,'Pas aux normes : −20 %')}]],def:1},
+  {k:'eu_de_plan',c:'de',ic:'🇩🇪',t:'Le gouvernement fédéral lance un énorme plan d’investissement dans les routes.',o:[['Embaucher une équipe en plus',d=>{const F=euF(d);if(F)euMod(F,1.3,1.15,6,'Plan fédéral : +30 %')}],['Rester à la taille actuelle',d=>{}]],def:1},
+  {k:'eu_nl_rws',c:'nl',ic:'🇳🇱',t:'Rijkswaterstaat lance un contrat géant d’entretien des digues et autoroutes.',o:[['Offre agressive (60 % de chances)',d=>{const F=euF(d);if(F){if(Math.random()<.6){euMod(F,1.45,1.1,6,'Contrat Rijkswaterstaat : +45 %');euRlAdd(F,5);log('🇳🇱 Contrat Rijkswaterstaat gagné !')}else log('🇳🇱 Contrat Rijkswaterstaat perdu.')}}],['Offre normale (30 %)',d=>{const F=euF(d);if(F){if(Math.random()<.3){euMod(F,1.35,1,6,'Contrat Rijkswaterstaat : +35 %');euRlAdd(F,5);log('🇳🇱 Contrat Rijkswaterstaat gagné !')}else log('🇳🇱 Contrat Rijkswaterstaat perdu.')}}],['Ne pas répondre',d=>{}]],def:2},
+  {k:'eu_nl_prix',c:'nl',ic:'🇳🇱',t:'Un concurrent néerlandais casse les prix pour te prendre tes clients.',o:[['Baisser tes prix aussi',d=>{const F=euF(d);if(F)euMod(F,.9,1,4,'Guerre des prix : −10 %')}],['Tenir tes prix',d=>{const F=euF(d);if(F){euMod(F,.8,1,3,'Clients partis : −20 %');euRlAdd(F,1)}}]],def:1},
+  {k:'eu_lu_prem',c:'lu',ic:'🇱🇺',t:'Une commune très riche veut un contrat d’entretien « premium » avec du matériel haut de gamme.',o:[['Acheter le matériel haut de gamme',d=>{const F=euF(d);if(F){F.cash-=Math.round(EU.lu.setup*.15);euMod(F,1.25,1,12,'Contrat premium : +25 %');euRlAdd(F,4)}}],['Refuser',d=>{}]],def:1},
+  {k:'eu_lu_smic',c:'lu',ic:'🇱🇺',t:'Le salaire social minimum luxembourgeois augmente.',o:[['Augmenter tes prix (risque de perdre un client)',d=>{const F=euF(d);if(F&&Math.random()<.4)euMod(F,.85,1,4,'Client perdu : −15 %')}],['Absorber la hausse',d=>{const F=euF(d);if(F)F.fixP=(F.fixP||1)*1.05}]],def:1},
+  {k:'eu_es_cani',c:'es',ic:'🇪🇸',t:'Canicule : plus de 40 °C l’après-midi sur les chantiers.',o:[['Passer au travail de nuit',d=>{const F=euF(d);if(F){euMod(F,1,1.1,2,'Travail de nuit : frais +10 %');euRlAdd(F,2)}}],['Mettre les chantiers en pause',d=>{const F=euF(d);if(F)euMod(F,.6,1,1,'Canicule : chantiers en pause')}]],def:1},
+  {k:'eu_es_feder',c:'es',ic:'🇪🇸',t:'Des fonds européens (FEDER) financent la rénovation des routes rurales.',o:[['Monter un dossier (12 000 €, 70 % de chances)',d=>{const F=euF(d);if(F){F.cash-=12000;if(Math.random()<.7){euMod(F,1.35,1,8,'Fonds européens : +35 %');log('🇪🇸 Dossier FEDER accepté !')}else log('🇪🇸 Dossier FEDER refusé.')}}],['Laisser passer',d=>{}]],def:1},
+  {k:'eu_pl_ue',c:'pl',ic:'🇵🇱',t:'La Pologne reçoit d’énormes fonds européens pour ses routes.',o:[['Agrandir l’équipe',d=>{const F=euF(d);if(F){F.cash-=Math.round(EU.pl.setup*.15);euMod(F,1.4,1.1,9,'Fonds européens : +40 %')}}],['Rester prudent',d=>{}]],def:1},
+  {k:'eu_pl_exode',c:'pl',ic:'🇵🇱',t:'Tes meilleurs ouvriers polonais partent travailler en Allemagne, mieux payés.',o:[['Augmenter les salaires',d=>{const F=euF(d);if(F){F.fixP=(F.fixP||1)*1.08;euRlAdd(F,2)}}],['Les laisser partir',d=>{const F=euF(d);if(F)euMod(F,.75,1,4,'Ouvriers partis : −25 %')}]],def:1},
+  {k:'eu_mkt',c:'*',ic:'📣',t:'Ton directeur demande un budget publicité et salons professionnels.',o:[['Accepter (25 000 €)',d=>{const F=euF(d);if(F){F.cash-=25000;euRlAdd(F,8);euMod(F,1.08,1,6,'Publicité : +8 %')}}],['Refuser',d=>{}]],def:1},
+  {k:'eu_rach',c:'*',ic:'🤝',t:'Un petit concurrent local est à vendre.',o:[['Le racheter (prix ± 1 an de frais fixes)',d=>{const F=euF(d);if(F){const c=Math.round(EU[d.f].fix*12);F.cash-=c;F.inv+=c;F.fixP=(F.fixP||1)*1.05;euMod(F,1.2,1,24,'Concurrent racheté : +20 %');euRlAdd(F,4)}}],['Pas intéressé',d=>{}]],def:1},
+  {k:'eu_acc',c:'*',ic:'🚑',t:'Accident grave sur un chantier de ta filiale : la presse locale en parle.',o:[['Communiquer et indemniser (30 000 €)',d=>{const F=euF(d);if(F){F.cash-=30000;euRlAdd(F,2)}}],['Laisser l’assurance gérer',d=>{const F=euF(d);if(F)euRlAdd(F,-10)}]],def:1}];
+DECT.push(...EUDEC.map(x=>({k:x.k,ic:x.ic,ok:()=>false,mk:()=>({t:''}),o:x.o,def:x.def})));
+const euShare=(k,F)=>Math.min(99,(F.rvh||[]).reduce((a,b)=>a+b,0)*(12/Math.max(1,(F.rvh||[]).length))/EUMKT[k]*100);
+function euMap(){const F=fil();let s=`<svg viewBox="0 0 340 230" width="100%" style="display:block;margin-top:8px"><rect x="4" y="4" width="332" height="222" rx="18" fill="#12241b" stroke="#2c4d37"/>
+  <path d="M40 210 Q30 150 80 130 Q90 90 120 70 Q150 30 200 30 Q260 25 320 45 Q330 120 300 150 Q250 170 220 175 Q180 200 120 190 Q90 215 40 210Z" fill="#1f3b29" opacity=".7"/>`;
+  const [bx,by]=EUPOS.be;for(const k in EU)if(F[k]){const[x,y]=EUPOS[k];s+=`<line x1="${bx}" y1="${by}" x2="${x}" y2="${y}" stroke="#ff9a1f" stroke-width="2.5" stroke-dasharray="6 5" opacity=".8"/>`}
+  s+=`<circle cx="${bx}" cy="${by}" r="17" fill="#ff9a1f"/><text x="${bx}" y="${by+7}" font-size="18" text-anchor="middle">🇧🇪</text>`;
+  for(const k in EU){const[x,y]=EUPOS[k],o=!!F[k],dec=(st.dec||[]).some(d=>d.f===k);s+=`<g style="cursor:pointer" onclick="${o?`euFiche('${k}')`:'click();euUI()'}" opacity="${o?1:.45}"><circle cx="${x}" cy="${y}" r="${o?17:14}" fill="${o?'#2fb35a':'#2c4d37'}" stroke="${o?'#4fdc7a':'#3d5c47'}" stroke-width="2"/><text x="${x}" y="${y+6}" font-size="${o?17:14}" text-anchor="middle">${EU[k].f}</text>${dec?`<circle cx="${x+13}" cy="${y-13}" r="7" fill="#ff5d57"/><text x="${x+13}" y="${y-9}" font-size="9" fill="#fff" text-anchor="middle" font-weight="900">!</text>`:''}${o?`<text x="${x}" y="${y+30}" font-size="10" fill="#a3bcaa" text-anchor="middle" font-weight="800">niv. ${F[k].lv}</text>`:''}</g>`}
+  return s+'</svg>'}
+function euDecAct(id,i,k){decAct(id,i);if(fil()[k])euFiche(k);else closeM()}
+function euFiche(k){const F=fil()[k],C=EU[k];if(!F)return;const D=euD(F),L=F.last,dir=F.dir||{n:'Directeur d’origine',t:'n',sk:1},ramp=Math.min(100,Math.round(Math.max(.08,Math.min(1,F.m/(D.ramp||17)))*100)),sh=euShare(k,F),rl=Math.round(euRL(F));
+  const Lv=F.lv,pot=C.pot*(Lv===1?1:Lv===2?1.7:2.5),fx=C.fix*(Lv===1?1:Lv===2?1.45:2)*D.fix*(F.fixP||1),full=Math.round(pot*D.rv*(dir.sk||1)*(.9+rl/500)*(1-C.var)-fx),netF=Math.round(full*(full>0?1-C.tax:1));
+  const decs=(st.dec||[]).filter(d=>d.f===k);
+  let h=`<div class="hd"><div style="font-size:44px;line-height:1;margin-right:10px">${C.f}</div><div style="flex:1;min-width:0"><h3>${C.n}</h3><div class="mut sm">Niveau ${F.lv} · ${F.m} mois · démarrage ${ramp} %</div></div></div>`;
+  for(const d of decs){const T=DECT.find(x=>x.k===d.k);if(!T)continue;h+=`<div class="card acc" style="--ac:var(--or);margin-top:10px"><b class="sm">📬 ${esc(d.t.replace(/^.*? — /,''))}</b><div class="mut sm" style="margin-top:3px">Réponds avant le ${dstr(d.exp)}, sinon : « ${T.o[T.def][0]} »</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${T.o.map((o,i)=>`<button class="btn ${i===0?'':'s'}" style="padding:8px 10px" onclick="euDecAct(${d.id},${i},'${k}')">${o[0]}</button>`).join('')}</div></div>`}
+  h+=`<div class="kpi" style="margin-top:10px"><div><span>CA du mois</span><b>${L?eur(L.rv):'—'}</b></div><div><span>Résultat du mois</span><b class="${L&&L.net<0?'neg':'money'}">${L?(L.net>=0?'+':'')+eur(L.net):'—'}</b></div><div><span>Caisse de la filiale</span><b>${eur(F.cash)}</b></div><div><span>Part de marché</span><b>${sh<.1?'< 0,1':nb1(sh)} %</b></div></div>
+  <div class="card" style="margin-top:10px"><div class="row"><span style="flex:1">⭐ Réputation locale</span><b>${rl} / 100</b></div><div style="height:10px;border-radius:6px;background:var(--card2);overflow:hidden;margin-top:6px"><div style="height:100%;width:${rl}%;background:linear-gradient(90deg,var(--or),var(--ye))"></div></div>
+  <div class="mut sm" style="margin-top:6px">Une bonne réputation fait gagner plus de contrats (jusqu’à +10 % de chiffre d’affaires).</div></div>
+  <div class="card"><div class="mut sm">Résultat des 12 derniers mois</div>${F.hist.length>1?spark(F.hist,300,70):'<div class="mut sm">La courbe apparaîtra après 2 mois.</div>'}
+  <div class="sm" style="margin-top:6px">${F.m<(D.ramp||17)?`⏳ En démarrage. À pleine vitesse : ± <b class="${netF>=0?'money':'neg'}">${netF>=0?'+':''}${eur(netF)}/mois</b> après impôt.`:`🎯 À pleine vitesse : ± <b class="${netF>=0?'money':'neg'}">${netF>=0?'+':''}${eur(netF)}/mois</b> après impôt (selon la saison).`}</div></div>
+  ${(F.mods||[]).length?`<div class="tags">${F.mods.map(m=>`<span class="tag ${m.rv>=1&&m.fix<=1?'g':m.rv<1?'r':'o'}">${esc(m.t)} · ${m.n} mois</span>`).join('')}</div>`:''}
+  ${L&&L.ev?`<div class="mut sm" style="margin-top:6px">📰 ${esc(L.ev)}</div>`:''}
+  <h2>Directeur</h2><div class="card"><div class="hd">${avatar({n:dir.n,r:'daf',skin:strHash(dir.n)%SKIN.length},48)}<div style="flex:1;min-width:0"><h3>${esc(dir.n)}</h3><div class="mut sm">${D.ic} ${D.n}${dir.t!=='n'?' · compétence '+Math.round((dir.sk||1)*100)+' %':''}${(F.tr||0)>0?' · en transition':''}</div></div></div><div class="mut sm" style="margin-top:6px">${D.d}</div><button class="btn s w" style="margin-top:8px" onclick="euDirUI('${k}')">🔁 Changer de directeur (${eur(euSwapCost(k))})</button></div>
+  <h2>Argent</h2><div class="tags"><span class="tag">Investi ${eur(F.inv)}</span><span class="tag g">Dividendes reçus ${eur(F.div)}</span><span class="tag">Bénéfice total ${eur(F.tot)}</span></div>
+  <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px"><button class="btn" ${F.cash-C.fix*.5>=1000?'':'disabled'} onclick="euDiv('${k}');euFiche('${k}')">💶 Rapatrier ${eur(Math.max(0,F.cash-C.fix*.5))}</button>${F.lv<3?`<button class="btn s" ${F.m<18?'disabled':''} onclick="euUp('${k}')">⬆️ Agrandir (${eur(C.setup*.7*F.lv)})${F.m<18?' · après 18 mois':''}</button>`:''}<button class="btn s" onclick="euSell('${k}')">Vendre (${eur(euVal(k))})</button><button class="btn s" onclick="closeM()">Fermer</button></div>`;
+  showModal(h)}
+function euCard(){const F=fil(),ks=Object.keys(F);if(!ks.length&&caRecent()<500000)return'';
+  let h=`<div class="card acc" style="--ac:var(--vi)"><div class="hd"><div class="ic" style="--ac2:#3d2c66">🌍</div><div style="flex:1;min-width:0"><h3>Filiales en Europe</h3><div class="mut sm">${ks.length?ks.length+' pays · touche un drapeau pour voir sa fiche':'Développe ton entreprise à l’étranger (gros investissement).'}</div></div></div>${euMap()}`;
+  for(const k of ks){const C=EU[k],f=F[k],L=f.last,D=euD(f),dec=(st.dec||[]).some(d=>d.f===k);
+    h+=`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);cursor:pointer" onclick="euFiche('${k}')"><span style="font-size:26px">${C.f}</span><div style="flex:1;min-width:0"><b>${C.n.split(' (')[0]}</b> <span class="tag v">niv. ${f.lv}</span>${dec?' <span class="tag r">📬 décision</span>':''}<div class="mut sm">${D.ic} ${esc((f.dir&&f.dir.n)||D.n)} · ⭐ ${Math.round(euRL(f))}</div></div><b class="${L&&L.net<0?'neg':'money'}" style="white-space:nowrap">${L?(L.net>=0?'+':'')+eur(L.net):'—'}</b></div>`}
+  return h+`<button class="btn s" style="margin-top:10px" onclick="click();euUI()">🌍 ${ks.length?'Ouvrir dans un autre pays':'Voir les pays'}</button></div>`}
 /* ---------- Vraie vie : usure et pannes, urgences météo, syndicats, accidents, contrôles du SPW, sous-traitance, associations,
    famille, santé du patron, voyages, collections, paris sportifs, défis entre amis ---------- */
 const wear=k=>{const W=st.wear||(st.wear={});return W[k]||0};
@@ -1509,6 +1579,9 @@ const GOALS=[
   {k:'h46',t:'100 intérimaires en même temps',ok:()=>st.workers.reduce((a,w)=>a+(w.it?1:0),0)>=100},
   {k:'h47',t:'Engage 10 intérimaires en CDI',ok:()=>((st.ck||{}).itcdi||0)>=10},
   {k:'h48',t:'Rachète l’agence d’intérim',ok:()=>itOwn()},
+  {k:'h49',t:'Filiales dans 3 pays',ok:()=>Object.keys(st.fil||{}).length>=3},
+  {k:'h50',t:'Présent dans les 6 pays d’Europe',ok:()=>Object.keys(st.fil||{}).length>=6},
+  {k:'h51',t:'Une filiale avec 80 de réputation locale',ok:()=>Object.values(st.fil||{}).some(f=>(f.rl??40)>=80)},
   {k:'h40',t:'Niveau de carrière 100 : légende absolue',ok:()=>crr().lv>=100}];
 // Confettis (au-dessus de tout)
 const fxc=$('#fx'),fg=fxc.getContext('2d');let conf=[];
@@ -2799,7 +2872,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-05.38";
+var APPV="2026-11-06.1";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
