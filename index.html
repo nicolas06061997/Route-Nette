@@ -2494,7 +2494,7 @@ const loanMax=()=>st.adm.bce?Math.round((20000+caRecent()*.3)*(has('compta')?1.5
 function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?"La banque refuse : montant maximum atteint. Fais plus de chiffre d'affaires.":"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;mv(5000,'Prêt bancaire','loan');st.mLoan+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;mv(-5000,'Remboursement du prêt','loan');st.mLoan-=5000}save();render()}
 function rename(){showModal(`<h3>Nom de ta société</h3><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">Enregistrer</button>`)}
 function setName(){const v=$('#nm').value.trim().replace(/[<>&"]/g,'');if(v)st.name=v;closeM();save();render();if(pendFr){const o=pendFr;pendFr=null;setTimeout(()=>addFriend(o,1),400)}}
-function restart(force){if(!force)return ask('Tout effacer ?\n⚠️ Ton entreprise, ta vie privée et toute ta progression seront supprimées pour recommencer à zéro.',()=>restart(1),{ic:'🗑️',ok:'Tout effacer',danger:1});NOSAVE=1;try{localStorage.removeItem(SAVE);localStorage.removeItem(BAK)}catch(e){}location.reload()}
+function restart(force){if(!force)return ask('Tout effacer ?\n⚠️ Ton entreprise, ta vie privée et toute ta progression seront supprimées pour recommencer à zéro.',()=>restart(1),{ic:'🗑️',ok:'Tout effacer',danger:1});NOSAVE=1;try{const old=localStorage.getItem(SAVE)||localStorage.getItem(PREV);if(old)localStorage.setItem('routenette-trash',old);/* copie hors du chargement, au cas où */localStorage.removeItem(SAVE);localStorage.removeItem(BAK);localStorage.removeItem(PREV)}catch(e){}location.reload()}
 function exportSave(){const code=btoa(unescape(encodeURIComponent(JSON.stringify(st))));showModal(`<h3>💾 Code de sauvegarde</h3><p class="mut">Garde ce code (dans tes notes ou par message) pour retrouver ta partie sur un autre GSM.</p><textarea id="sv" rows="5" readonly>${code}</textarea><p></p><div class="row"><button class="btn" onclick="copySave()">Copier</button><button class="btn s" onclick="closeM()">Fermer</button></div>`)}
 function copySave(){const t=$('#sv');t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(()=>toastMsg('Code copié ✓')).catch(()=>{try{document.execCommand('copy');toastMsg('Code copié ✓')}catch(e){}})}
 function importUI(){showModal(`<h3>📥 Charger une sauvegarde</h3><p class="mut">Colle ici ton code de sauvegarde. Ta partie actuelle sera remplacée.</p><textarea id="sv" rows="5"></textarea><p></p><div class="row"><button class="btn" onclick="importGo()">Charger</button><button class="btn s" onclick="closeM()">Annuler</button></div>`)}
@@ -3295,7 +3295,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-07.4";
+var APPV="2026-11-07.5";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
