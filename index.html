@@ -487,7 +487,10 @@ function restorePrev(ok){let s=null;try{s=JSON.parse(localStorage.getItem(PREV))
   if(!ok)return ask(`Revenir à la copie d’avant ?\nEntreprise : ${String(s.name||'').slice(0,40)}\nArgent : ${eur(s.cash||0)}\nC’est ta partie telle qu’elle était quand tu as ouvert le jeu la dernière fois. À utiliser seulement si une mise à jour a causé un problème.`,()=>restorePrev(1),{ic:'🛟',ok:'Revenir à cette copie'});
   try{st=migrate(s);save();closeM();render();toastMsg('Copie restaurée ✓')}catch(e){toastMsg('Impossible de restaurer cette copie.')}}
 let lastSave=0,savePend=0,NOSAVE=0;
-function save(force){if(NOSAVE||!st)return;if(TICKING&&!force)return;const now=Date.now();if(!force&&now-lastSave<1500){savePend=1;return}lastSave=now;savePend=0;try{const j=JSON.stringify(st);localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j)}catch(e){}}
+function save(force){if(NOSAVE||!st)return;if(TICKING&&!force)return;const now=Date.now();if(!force&&now-lastSave<1500){savePend=1;return}lastSave=now;savePend=0;let j;try{j=JSON.stringify(st);localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j);saveErr=0}catch(e){
+    // mémoire pleine : on libère la place prise par le cache des photos et la copie bak, puis on réessaie
+    try{localStorage.removeItem('rn-img3');localStorage.removeItem(BAK);if(j)localStorage.setItem(SAVE,j);saveErr=0}catch(e2){if(!saveErr){saveErr=1;try{toastMsg('⚠️ Sauvegarde impossible : la mémoire du navigateur est pleine. Exporte ta partie (Entreprise → Plus).')}catch(e3){}}}}}
+let saveErr=0;
 setInterval(()=>{if(savePend)save(1)},2000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 addEventListener('visibilitychange',()=>{if(document.hidden&&st){save(1);if(typeof speed!=='undefined'&&speed){speed=0;pausedAway=1;try{render()}catch(e){}}}else if(typeof pausedAway!=='undefined'&&pausedAway){pausedAway=0;setTimeout(()=>toastMsg('⏸ Jeu en pause pendant ton absence. Appuie sur ▶ pour reprendre.'),300)}});
@@ -1396,7 +1399,7 @@ function monthTax(mn){siteMonth();const amort=Object.keys(st.eq).reduce((a,k)=>a
 function failUI(){showModal(`<h3>💀 Faillite</h3><p>C'est la 3e fois que <b>${esc(st.name)}</b> ne peut plus payer ses dettes. Le tribunal de l'entreprise prononce la <b>faillite</b> : le curateur vend tes machines, ton personnel est licencié, tes chantiers sont repris par d'autres.</p>
   <div class="card"><b>🔁 Relancer une nouvelle société</b><div class="mut sm" style="margin-top:4px">Tu repars avec 3 000 € d'économies, sans machine ni personnel. Tu gardes ton expérience : tes références de chantiers, ton chiffre d'affaires passé, tes objectifs atteints et ton efficacité. Réputation -20.</div><button class="btn w" style="margin-top:10px" onclick="relaunch()">Relancer une nouvelle société</button></div>
   <button class="btn s w" style="margin-top:6px" onclick="restart()">Tout recommencer à zéro</button>`)}
-function relaunch(){st.grp=[];st.acn=[];st.aco=[];st.bigEv=null;st.hold=null;st.itAg=null;st.itq=[];st.itAcc=0;st.ino={};st.fil={};st.xs=[];st.site='home';st.siteLoan=null;st.ipo=null;st.ads={};st.riv=newRivals();const C=st.career||(st.career={won:0,lost:0,done:0,ca:0,spw:0,earned:0});for(const k in st.stats)C[k]=(C[k]||0)+st.stats[k];st.stats={won:0,lost:0,done:0,ca:0,spw:0,earned:0};st.caY={};st.found=st.day+1;const boss=st.workers.find(w=>w.boss);st.workers=[boss];boss.mot=1;st.eq={};st.contracts=[];st.inv=[];st.reports=[];st.adm={};st.cls=0;st.loan=0;st.salAcc=0;st.prj=0;st.over=false;st.srl=0;
+function relaunch(){st.grp=[];st.acn=[];st.aco=[];st.bigEv=null;st.hold=null;st.itAg=null;st.itq=[];st.itAcc=0;st.ino={};st.fil={};st.xs=[];st.site='home';st.siteLoan=null;st.ipo=null;st.ads={};st.mega=null;st.tq={};st.wear={};st.useD={};st.rentD={};st.strike=0;st.dec=[];st.law=[];st.rec=[];st.liq=[];st.mProd=0;st.itS=0;st.itB=0;st.srlD=0;st.riv=newRivals();const C=st.career||(st.career={won:0,lost:0,done:0,ca:0,spw:0,earned:0});for(const k in st.stats)C[k]=(C[k]||0)+st.stats[k];st.stats={won:0,lost:0,done:0,ca:0,spw:0,earned:0};st.caY={};st.found=st.day+1;const boss=st.workers.find(w=>w.boss);st.workers=[boss];boss.mot=1;st.eq={};st.contracts=[];st.inv=[];st.reports=[];st.adm={};st.cls=0;st.loan=0;st.salAcc=0;st.prj=0;st.over=false;st.srl=0;
   st.tenders.forEach(t=>{if(t.status==='open')t.my=null});st.tenders=st.tenders.filter(t=>t.status==='open');st.rep=clamp(st.rep-20,5,100);st.cash=0;st.mv=[];st.mon={};
   mv(3000,"Nouveau départ : tes économies",'in');st.mStart=st.cash;st.mCapex=0;st.mLoan=0;st.name=st.name.replace(/( \d+)?$/,m=>' '+((parseInt(m)||1)+1));
   log(`🔁 Nouvelle société : ${esc(st.name)}. Inscris-la à la BCE pour recommencer à facturer.`);closeM();refreshCand();save();render()}
@@ -2244,7 +2247,7 @@ const ownsHome=()=>pv().own.some(o=>PRIV[o.k]&&PRIV[o.k].home&&!o.lou);
 const myHome=()=>pv().own.find(o=>PRIV[o.k]&&PRIV[o.k].home&&!o.lou);
 // loyer d'un bien : immeuble de rapport (P.rent) ou logement mis en location (P.hr), indexé chaque année
 function rentOf(o){const P=PRIV[o.k];if(!P)return 0;const r=P.rent||(o.lou?P.hr:0);return r?Math.round(r*(o.ix||1)):0}
-function pRent(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=PRIV[o.k];if(!P||!P.hr)return;click();
+function pRent(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=PRIV[o.k];if(!P||!P.hr)return;if(o.rw&&!o.lou)return toastMsg('Attends la fin des travaux pour louer.');click();
   if(!o.lou){const only=P.home&&myHome()===o;
     if(!ok)return ask(`Mettre en location ?\nBien : ${P.n.replace(/ \(.*$/,'')}\nLoyer : ${eur(Math.round(P.hr*(o.ix||1)))}/mois\nCharges (toujours pour toi) : ${eur(P.m)}/mois\nLocataire trouvé : en ± 1 mois\nBail : 9 ans\n${P.hrn?'C’est une '+P.hrn+'. ':''}Pour récupérer le bien, il faut envoyer un préavis de 6 mois au locataire (occupation personnelle).${only?'\n⚠️ C’est ta seule maison : tu devras louer ailleurs. Ta vie courante repasse de 850 à 1 650 €/mois.':''}`,()=>pRent(id,1),{ic:'🔑',ok:'Mettre en location',img:photo(o.k)});
     o.lou=1;o.louFrom=st.day+30;delete o.louEnd;delete o.louOk;pEv(`🔑 ${P.n} : mis en location, l’agence cherche un locataire.`)}
@@ -2326,7 +2329,7 @@ function mkDay(){const M=mk();let shock=0;if(Math.random()<.0012){shock=-R(.12,.
 function mkMonth(){const V=pv(),H=V.stk||{},mo=month();for(const S of STK){const h=H[S.k];if(!h||!h.n||S.m!==mo)continue;const g=h.n*mk()[S.k].p*S.y;if(g<1)continue;const net=Math.round(g*.7);V.cash+=net;V.divT=(V.divT||0)+net;pEv(`💶 Dividende ${S.n} : +${eur(net)} (précompte 30 % retenu)`,net)}}
 const stkVal=()=>{const V=pv(),M=mk();return Object.entries(V.stk||{}).reduce((a,[k,h])=>a+(h.n||0)*(M[k]?M[k].p:0),0)};
 const fees=a=>Math.min(1600,a*.0035)+Math.max(2,a*.001);
-function stkBuy(k,amt){const V=pv(),S=STK.find(x=>x.k===k),p=mk()[k].p,n=Math.floor(amt/p);click();if(n<1)return toastMsg('Le montant est trop petit pour acheter une action.');
+function stkBuy(k,amt){const V=pv(),S=STK.find(x=>x.k===k),p=mk()[k].p;let n=Math.floor(amt/p);if(n*p+fees(n*p)>V.cash)n=Math.floor((V.cash-fees(V.cash))/p);click();if(n<1)return toastMsg('Le montant est trop petit pour acheter une action.');
   const cost=n*p,f=fees(cost);if(V.cash<cost+f)return toastMsg(`Il te faut ${eur(cost+f)} sur ton compte privé.`);
   V.cash-=cost+f;const H=V.stk||(V.stk={}),h=H[k]||(H[k]={n:0,c:0});h.n+=n;h.c+=cost+f;pEv(`📈 Achat de ${n} action(s) ${S.n} à ${eur2(p)} (frais et TOB ${eur(f)})`,-(cost+f),false);save();render()}
 function stkSell(k,part){const V=pv(),S=STK.find(x=>x.k===k),h=(V.stk||{})[k];if(!h||!h.n)return;const n=part?Math.max(1,Math.floor(h.n*part)):h.n,p=mk()[k].p,gross=n*p,f=fees(gross),cb=h.c*n/h.n,gain=gross-f-cb;click();
@@ -2468,7 +2471,7 @@ function rBourse(){const V=pv(),M=mk(),H=V.stk||{},val=stkVal(),cost=Object.valu
     h+=`<div class="card" style="${own?'border-color:var(--vi)':''}"><div class="row" style="flex-wrap:nowrap"><div style="font-size:28px">${S.ic}</div><div style="flex:1;min-width:0"><b>${S.n}</b><div class="mut sm">${S.s} · dividende ± ${(S.y*100).toFixed(1).replace('.',',')} %</div></div><div style="text-align:right"><b>${eur2(m.p)}</b><div class="sm ${ch>=0?'money':'neg'}">${ch>=0?'▲':'▼'} ${Math.abs(ch).toFixed(1).replace('.',',')} % (1 mois)</div></div></div>
     <div style="margin-top:6px">${sparkS(hh,320,46)}</div>
     ${own?`<div class="tags"><span class="tag v">${own.n} action(s) = ${eur(own.n*m.p)}</span><span class="tag ${own.n*m.p>=own.c?'g':'r'}">${own.n*m.p>=own.c?'+':''}${eur(own.n*m.p-own.c)}</span></div>`:''}
-    <div class="row" style="margin-top:8px">${[1000,10000,100000].map(a=>`<button class="btn s" style="padding:6px 9px" ${V.cash<a?'disabled':''} onclick="stkBuy('${S.k}',${a})">+${nb(a)} €</button>`).join('')}${own?`<button class="btn s" style="padding:6px 9px" onclick="stkSell('${S.k}',.5)">Vendre ½</button><button class="btn s" style="padding:6px 9px" onclick="stkSell('${S.k}',0)">Tout vendre</button>`:''}</div></div>`}
+    <div class="row" style="margin-top:8px">${[1000,10000,100000,...(V.cash>=1e6?[1e6]:[]),...(V.cash>=1e7?[1e7]:[])].map(a=>`<button class="btn s" style="padding:6px 9px" ${V.cash<a?'disabled':''} onclick="stkBuy('${S.k}',${a})">+${a>=1e6?(a/1e6)+' M':nb(a)} €</button>`).join('')}${own?`<button class="btn s" style="padding:6px 9px" onclick="stkSell('${S.k}',.5)">Vendre ½</button><button class="btn s" style="padding:6px 9px" onclick="stkSell('${S.k}',0)">Tout vendre</button>`:''}</div></div>`}
   return h}
 function privInvest(){const V=pv(),I=V.inv||(V.inv={sav:0,etf:0,gold:0,pens:0});let rent=0;
   for(const k in INV){const P=INV[k];if(!I[k])continue;const g=P.r/12+(P.v?(Math.random()*2-1)*P.v:0);const before=I[k];I[k]=Math.max(0,Math.round(I[k]*(1+g)));V.gain=(V.gain||0)+I[k]-before}
@@ -2872,7 +2875,7 @@ function repMonth(){const V=pv();const r=V.rp??20;if(r>20)st.rep=clamp(st.rep+(r
 function repCard(){const V=pv(),r=Math.round(V.rp??20);return`<h2>⭐ Ta réputation personnelle · ${r} / 100</h2><div class="card"><div style="height:8px;border-radius:5px;background:var(--card2);overflow:hidden"><div style="height:100%;width:${r}%;background:linear-gradient(90deg,var(--or),var(--ye))"></div></div><div class="mut sm" style="margin-top:6px">Plus tu es connu(e) et apprécié(e), plus ton entreprise gagne en réputation chaque mois. Elle baisse doucement si tu ne fais rien.</div>
   ${PREP.map(A=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);margin-top:6px"><span style="font-size:22px">${A.ic}</span><div style="flex:1;min-width:0"><b class="sm">${A.n}</b><div class="mut" style="font-size:12px">${A.d}</div></div><button class="btn s" style="padding:6px 9px;font-size:12px" ${V.cash<A.c||(A.k==='tv'&&V.tvY===date(st.day).getFullYear())?'disabled':''} onclick="repAct('${A.k}')">${A.c?eur(A.c):'Gratuit'}</button></div>`).join('')}</div>`}
 // rénovation d'une maison achetée à rénover
-function flipGo(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o||o.rv||o.rw)return;if(V.cash<60000)return toastMsg('Il faut 60 000 € pour les travaux.');
+function flipGo(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o||o.rv||o.rw)return;if(o.lou)return toastMsg('Récupère d’abord la maison (elle est louée).');if(V.cash<60000)return toastMsg('Il faut 60 000 € pour les travaux.');
   if(!ok)return ask(`Rénover la maison ?\nTravaux (toiture, châssis, électricité, cuisine) : 60 000 €\nDurée : ± 4 mois\nValeur après travaux : ± ${eur(pValue(o)*1.75)}`,()=>flipGo(id,1),{ic:'🔨',ok:'Lancer les travaux'});
   V.cash-=60000;o.rw=st.day+120;pEv('🔨 Travaux de rénovation lancés (± 4 mois).',0);save();render();pBien(id)}
 function flipMonth(){const V=pv();for(const o of V.own)if(o.rw&&st.day>=o.rw){delete o.rw;o.rv=1;pEv(`🏡 Rénovation terminée : ${PRIV[o.k].n} vaut maintenant ${eur(pValue(o))}. Tu peux la revendre ou la louer.`,0,true)}}
@@ -3292,7 +3295,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-07.3";
+var APPV="2026-11-07.4";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
