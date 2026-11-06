@@ -1361,7 +1361,7 @@ function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.worke
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
   events(work);decTick(work);try{itDaily(work,x)}catch(e){}try{wxUrgent();unionTick();lawTick();achatNeed();if(date(st.day).getDay()===1)achatTick();if(date(st.day).getDate()===10)taxAudit();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
   if(st.cash<-overdraft()&&!st.over)rescue();
-  try{tipTick()}catch(e){}dqTick();save();renderTick();
+  dqTick();save();renderTick();
 }
 // Bénéfice du mois (trésorerie + investissements − amortissements) → cotisations sociales et impôts
 // Mouvement sur le compte en banque (relevé + bilan du mois)
@@ -1897,20 +1897,6 @@ DECT.push({k:'riv_poach',ic:'🎣',ok:()=>false,mk:()=>({t:''}),o:[['Augmenter s
 function rankCard(){(st.riv||[]).forEach(rivP);const me={n:st.name,ca:Math.round(caRecent()),me:1};const L=[...(st.riv||[]).map(r=>({n:r.n,ca:rivCA(r),r})),me].sort((a,b)=>b.ca-a.ca);const pos=L.indexOf(me)+1;
   return`<div class="card acc" style="--ac:var(--ye)"><h3>🏆 Classement des entreprises wallonnes</h3><div class="mut sm">Tu es <b>${pos}${pos===1?'er':'e'}</b> sur ${L.length} (chiffre d’affaires sur un an, estimé pour les concurrents).</div>
   ${L.slice(0,Math.max(8,pos)).map((x,i)=>`<div class="row sm" style="padding:6px 0;border-top:1px solid var(--line);${x.me?'background:#ff9a1f22;border-radius:8px;padding-left:6px':''}"><b style="width:26px">${i+1}.</b><span style="flex:1;min-width:0">${x.me?'⭐ <b>'+esc(x.n)+'</b> (toi)':`${RSTY[x.r.sty][0]} ${esc(x.n)}<div class="mut" style="font-size:11px">${esc(x.r.boss)} · ${RSTY[x.r.sty][1]}</div>`}</span><b>${eur(x.ca)}</b></div>`).join('')}</div>`}
-// Astuces : expliquées une seule fois quand une fonction se débloque
-const TIPS=[{k:'ouv',c:()=>fieldOwn().length>=2,ic:'👷',t:'Ton premier ouvrier',d:'Les « équipes automatiques » (👷 Équipe) envoient tes ouvriers libres sur les chantiers. Quand il n’y a pas de travail, le chômage temporaire t’évite de payer plein pot.'},
-  {k:'vca',c:()=>!!st.adm.vca,ic:'🏛️',t:'Les marchés publics sont ouverts',d:'Avec la VCA, tu peux répondre aux marchés du SPW (🏛️ Marchés). Remplis le métré, choisis ton prix, et regarde le PV d’ouverture : le moins cher gagne souvent.'},
-  {k:'aide',c:()=>ownW()>=6&&!has('aide'),ic:'🧮',t:'Pense à l’aide-comptable',d:'À partir de 6 personnes, sans aide-comptable, tes factures partent en retard : tu es payé 15 jours plus tard. Engage-la dans 👷 Équipe → 🏢 Bureau.'},
-  {k:'rap',c:()=>(st.reports||[]).length>0,ic:'📋',t:'Les rapports de chantier',d:'Tes chefs remarquent qui travaille bien ou mal (👷 Équipe → 📋 Rapports). Prime, recadrage, avertissement… ou engage un chef du personnel pour s’en occuper.'},
-  {k:'cls',c:()=>st.cls>=1,ic:'🏅',t:'Tu es agréé',d:'L’agréation te donne accès aux gros marchés de travaux. Pour monter de classe, regarde la « Prochaine étape » dans 📊 Entreprise → Résumé.'},
-  {k:'acn',c:()=>acO().length>0,ic:'📝',t:'Contrats d’entretien',d:'Un client te propose un contrat d’un à trois ans (🧰 Boulots). Un passage par mois, payé à chaque fois : un revenu régulier. Fais-le à temps pour qu’il renouvelle.'},
-  {k:'it',c:()=>st.workers.some(w=>w.it),ic:'🦺',t:'L’intérim',d:'Les intérimaires coûtent plus cher, mais sans préavis : parfait pour les pics de travail. Ceux qui n’ont plus de chantier retournent à l’agence. Les meilleurs peuvent signer un CDI.'},
-  {k:'srl',c:()=>!!st.srl,ic:'🏢',t:'Ta société (SRL)',d:'Ta SRL paie l’impôt des sociétés, et tu te verses un salaire ou des dividendes (🏡 Privé). Plus tard, elle pourra ouvrir des filiales en Europe.'},
-  {k:'eu',c:()=>caRecent()>=1500000&&!!st.srl,ic:'🌍',t:'Les filiales en Europe',d:'Tu peux créer une filiale à l’étranger (📊 Entreprise → 🏆 Empire). Choisis bien ton directeur : prudent, ambitieux ou économe.'},
-  {k:'ag',c:()=>ownW()>=200,ic:'🏢',t:'200 employés !',d:'Tu peux maintenant racheter l’agence d’intérim (👷 Équipe → 🦺 Intérim) : intérimaires au prix coûtant et bénéfice chaque mois.'}];
-function tipTick(){if(typeof playing==='undefined'||!playing||modalOpen)return;if(!st.tips){st.tips={};for(const t of TIPS)try{if(t.c())st.tips[t.k]=1}catch(e){}return}
-  for(const t of TIPS){if(st.tips[t.k])continue;let ok=false;try{ok=t.c()}catch(e){}if(!ok)continue;st.tips[t.k]=1;speed=0;showModal(`<div style="text-align:center;font-size:52px;line-height:1.1">${t.ic}</div><h3 style="text-align:center">💡 ${t.t}</h3><p style="margin:10px 0">${t.d}</p><button class="btn w" onclick="closeM()">Compris !</button><p class="mut sm" style="text-align:center;margin-top:8px">Toutes les astuces : 📊 Entreprise → ⚙️ Plus</p>`);return}}
-function tipsList(){return`<h2>💡 Astuces</h2><div class="card">${TIPS.map(t=>`<div style="padding:6px 0;border-top:1px solid var(--line)"><b class="sm">${t.ic} ${t.t}</b>${(st.tips||{})[t.k]?`<div class="mut sm">${t.d}</div>`:'<div class="mut sm">🔒 Se débloquera plus tard.</div>'}</div>`).join('')}</div>`}
 // Centre de notifications : tout ce qui attend une réponse
 function notifs(){const L=[];
   for(const d of st.dec||[]){const T=DECT.find(x=>x.k===d.k);if(T)L.push({ic:T.ic,t:d.t,go:d.f?`euFiche('${d.f}')`:`closeM();tab('ch')`})}
@@ -2731,7 +2717,7 @@ function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
   <div class="row" style="margin-top:10px"><button class="btn s" onclick="chkV(1)">🔄 Vérifier les mises à jour</button><button class="btn s" onclick="fullScreen()">⛶ Plein écran</button></div><p class="mut sm">Ta partie est enregistrée sur ce GSM et reste intacte après chaque mise à jour. Version <span id="ver2"></span></p>
   <button class="btn r" onclick="restart()">Recommencer une nouvelle entreprise</button></div>
   <h2>Journal</h2><div class="card log">${st.log.slice(0,40).map(l=>`<div><span class="mut">${dstr(l.d)}</span> — ${l.t}</div>`).join('')||'<span class="mut">Rien encore.</span>'}</div>
-    <h2>Objectifs</h2><div class="card">${GOALS.map(g=>`<div style="padding:3px 0">${st.goals[g.k]?'✅':'⬜'} ${g.t}</div>`).join('')}</div>`+tipsList();
+    <h2>Objectifs</h2><div class="card">${GOALS.map(g=>`<div style="padding:3px 0">${st.goals[g.k]?'✅':'⬜'} ${g.t}</div>`).join('')}</div>`;
   else h+=bigEvCard()+bizSum();
   setTimeout(()=>{const v=$('#ver2');if(v)v.textContent=window.APPV||''},0);
   return h}
@@ -3024,7 +3010,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-06.3";
+var APPV="2026-11-06.4";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
