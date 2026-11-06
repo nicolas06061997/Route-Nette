@@ -221,7 +221,7 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
   <path d="M256 120 L320 330 H192Z" fill="#ff7a00"/><path d="M234 192 H278 L288 225 H224Z" fill="#fff"/><path d="M213 262 H299 L309 295 H203Z" fill="#fff"/>
   <rect x="168" y="322" width="176" height="26" rx="8" fill="#ff7a00"/>
 </g></defs></svg>
-<div id="upd"><div><b>🎉 Nouvelle mise à jour disponible</b><small id="updn"></small></div><button class="btn" onclick="try{save()}catch(e){}location.reload()">Mettre à jour</button></div>
+<div id="upd"><div><b>🎉 Nouvelle mise à jour disponible</b><small id="updn"></small></div><button class="btn" onclick="try{save(1)}catch(e){}location.reload()">Mettre à jour</button></div>
 <div id="ins"><div><b>📲 Installer Route Nette</b><small id="insm"></small></div><button class="btn" id="insb" onclick="doIns()">Installer</button><button class="x" onclick="insLater()" aria-label="Plus tard">✕</button></div>
 <script>
 'use strict';
@@ -486,11 +486,13 @@ function load(){let raw=null;try{raw=localStorage.getItem(SAVE);
 function restorePrev(ok){let s=null;try{s=JSON.parse(localStorage.getItem(PREV))}catch(e){}if(!s||!s.workers)return toastMsg('Pas de copie disponible.');
   if(!ok)return ask(`Revenir à la copie d’avant ?\nEntreprise : ${String(s.name||'').slice(0,40)}\nArgent : ${eur(s.cash||0)}\nC’est ta partie telle qu’elle était quand tu as ouvert le jeu la dernière fois. À utiliser seulement si une mise à jour a causé un problème.`,()=>restorePrev(1),{ic:'🛟',ok:'Revenir à cette copie'});
   try{st=migrate(s);save();closeM();render();toastMsg('Copie restaurée ✓')}catch(e){toastMsg('Impossible de restaurer cette copie.')}}
-function save(){try{const j=JSON.stringify(st);localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j)}catch(e){}}
+let lastSave=0,savePend=0,NOSAVE=0;
+function save(force){if(NOSAVE||!st)return;if(TICKING&&!force)return;const now=Date.now();if(!force&&now-lastSave<1500){savePend=1;return}lastSave=now;savePend=0;try{const j=JSON.stringify(st);localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j)}catch(e){}}
+setInterval(()=>{if(savePend)save(1)},2000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-addEventListener('visibilitychange',()=>{if(document.hidden&&st){save();if(typeof speed!=='undefined'&&speed){speed=0;pausedAway=1;try{render()}catch(e){}}}else if(typeof pausedAway!=='undefined'&&pausedAway){pausedAway=0;setTimeout(()=>toastMsg('⏸ Jeu en pause pendant ton absence. Appuie sur ▶ pour reprendre.'),300)}});
+addEventListener('visibilitychange',()=>{if(document.hidden&&st){save(1);if(typeof speed!=='undefined'&&speed){speed=0;pausedAway=1;try{render()}catch(e){}}}else if(typeof pausedAway!=='undefined'&&pausedAway){pausedAway=0;setTimeout(()=>toastMsg('⏸ Jeu en pause pendant ton absence. Appuie sur ▶ pour reprendre.'),300)}});
 var pausedAway=0;
-addEventListener('pagehide',()=>{if(st)save()});
+addEventListener('pagehide',()=>{if(st)save(1)});
 
 /* ---------- Calendrier belge ---------- */
 const date=d=>new Date(2027,2,1+d);
@@ -511,7 +513,8 @@ function addWork(d,n){let k=d;while(n>0){k++;if(isWork(k))n--}return k}
 function log(t,toast){st.log.unshift({d:st.day,t});if(st.log.length>100)st.log.length=100;if(toast!==false)toastMsg(t,1)}
 function toastMsg(t,ev){const T=$('#toast');const imp=/^(💶|🎉|🏆|🏅|❌|⚖️|🚨|💀|⚠️|🏛️|📊|🚫|⏸|🎊|📂)/u.test(t)||/Il faut|manque|Pas assez|refuse|d'abord|Code|copié|installé|à jour|connexion/.test(t);const N=ev?(st&&st.ntf||'imp'):'all';if(N==='off'&&!/Il faut|manque|Pas assez|refuse|d'abord/.test(t))return;if(N==='imp'&&!imp)return;while(T.children.length>=2)T.firstChild.remove();const d=document.createElement('div');d.innerHTML=t;if(/^(💶|🎉|✅|🏆|🏅|🌟|🎁|👍)/u.test(t))d.className='good';else if(/^(❌|⚖️|🔧|🚨|⚠️|💀|😠|📮|🚗|🤒)/u.test(t))d.className='bad';T.appendChild(d);setTimeout(()=>{d.style.opacity=0},2400);setTimeout(()=>d.remove(),2800)}
 let AC=null;
-function snd(f,d,type,v,delay){if(!st||!st.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),gn=AC.createGain();o.type=type||'sine';o.frequency.value=f;o.connect(gn);gn.connect(AC.destination);const t=AC.currentTime+(delay||0);gn.gain.setValueAtTime(v||.06,t);gn.gain.exponentialRampToValueAtTime(.0001,t+(d||.12));o.start(t);o.stop(t+(d||.12)+.02)}catch(e){}}
+let sndT=0;
+function snd(f,d,type,v,delay){if(!st||!st.snd)return;if(!delay){const n=performance.now();if(n-sndT<120)return;sndT=n}try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),gn=AC.createGain();o.type=type||'sine';o.frequency.value=f;o.connect(gn);gn.connect(AC.destination);const t=AC.currentTime+(delay||0);gn.gain.setValueAtTime(v||.06,t);gn.gain.exponentialRampToValueAtTime(.0001,t+(d||.12));o.start(t);o.stop(t+(d||.12)+.02)}catch(e){}}
 const kaching=()=>{snd(880,.08,'triangle',.07);snd(1320,.2,'triangle',.07,.08)};
 const click=()=>snd(520,.05,'square',.03);
 const esc=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
@@ -1055,7 +1058,7 @@ function unionTick(){const x=date(st.day),emp=fieldOwn().filter(w=>!w.boss);if(!
 // accidents de chantier
 function accidentTick(){if(has('qhse'))for(const c of running())if(!JOBS[c.j].p&&c.crew.length&&(c.vd===undefined||st.day-c.vd>=15)){c.vd=st.day;c.vf=Math.max(c.vf||1,1.06);c.vb=st.day+15;rsAdd('qhse',1)}
   if(has('flotte'))for(const k in st.wear||{})if(st.eq[k]>0&&st.wear[k]>60){const cost=Math.round(EQ[k].p*.04*(st.eq[k]||1)*st.wear[k]/100)+50;mv(-cost,'Révision par le chef d’atelier : '+EQ[k].n,'fix');st.wear[k]=0;rsAdd('flotte',1)}
-  for(const c of running()){if(!c.crew.length)continue;const p=(c.crew.some(i=>{const x=st.workers.find(y=>y.id===i);return x&&x.r==='signal'})?.5:1)*.0003*(has('qhse')?.7:1)*c.crew.length*(has('prev')?.6:1)*(c.vd!==undefined&&st.day-c.vd<30?.6:1);if(Math.random()>p)continue;
+  for(const c of running()){if(!c.crew.length)continue;const p=(c.crew.some(i=>{const x=wById(i);return x&&x.r==='signal'})?.5:1)*.0003*(has('qhse')?.7:1)*c.crew.length*(has('prev')?.6:1)*(c.vd!==undefined&&st.day-c.vd<30?.6:1);if(Math.random()>p)continue;
   const w=st.workers.find(x=>x.id===pick(c.crew));if(!w||w.boss)continue;w.off=st.day+Math.round(RI(5,30)*(insOn('hosp')?.7:1));if(w.it){c.crew=c.crew.filter(i=>i!==w.id);log(`🚑 Accident du travail : ${w.n} (intérimaire) est blessé(e) sur ${JOBS[c.j].n}. C’est l’assurance de l’agence d’intérim qui paie, ton bonus-malus ne bouge pas.`);continue}st.atR=Math.min(.08,(st.atR===undefined?.04:st.atR)+.003);st.lastAcc=st.day;c.crew=c.crew.filter(i=>i!==w.id);const k=RI(800,4000);mv(-k,'Accident du travail (franchise, jours non couverts)','other');st.rep=clamp(st.rep-1,0,100);
   log(`🚑 Accident du travail : ${w.n} est blessé(e) sur le chantier ${JOBS[c.j].n} et absent(e) jusqu’au ${dstr(w.off)}. Déclaration à l’assurance faite. ${has('prev')?'':'Un conseiller en prévention et des visites de chantier réduisent les accidents.'}`);try{lawOpen(c,w)}catch(e){}}}
 // Procès après un accident : seulement si le patron a fait des fautes de sécurité (loi sur les accidents du travail, art. 46 :
@@ -1111,7 +1114,7 @@ function taxAudit(){if(!st.srl||Math.random()>.008)return;const claim=Math.round
 function lawCard(){const L=(st.law||[]).filter(x=>x.st!=='done');if(!L.length)return'';return`<h2>⚖️ Justice · ${L.length}</h2>`+L.map(x=>`<div class="card acc" style="--ac:var(--rd)"><b class="sm">${x.kind==='fisc'?`🧾 Contrôle fiscal : le SPF Finances réclame ${eur(x.claim)}`:`⚖️ ${esc(x.w)} t’attaque en justice après son accident`}</b><div class="mut sm" style="margin-top:4px">${x.kind==='fisc'?'Motif':'Il/elle réclame <b>'+eur(x.claim)+'</b>. Ce qu’on te reproche'} : ${x.why.join(' ; ')}.</div>
   ${x.st==='open'?`<div class="mut sm" style="margin-top:4px">Réponds avant le ${dstr(x.exp)}${x.kind==='fisc'?', sinon le redressement devient définitif':', sinon le procès a lieu sans toi'}.</div><div class="row" style="margin-top:8px"><button class="btn s" style="padding:7px 10px" onclick="lawAct(${x.id},'deal')">${x.kind==='fisc'?'🧾 Payer '+eur(x.claim):'🤝 Arrangement ('+eur(Math.round(x.claim*.5/100)*100)+')'}</button><button class="btn" style="padding:7px 10px" onclick="lawAct(${x.id},'court')">⚖️ ${x.kind==='fisc'?'Contester':'Aller au tribunal'} avec un avocat</button></div>`:`<div class="tags"><span class="tag o">⏳ Jugement vers le ${dstr(x.v)}</span>${x.lw?`<span class="tag v">${x.lw==='juriste'?'Ta juriste':LAWY.find(y=>y.k===x.lw).n}</span>`:''}${x.nodef?'<span class="tag r">Pas défendu</span>':''}</div>`}</div>`).join('')}
 // contrôle qualité du SPW à la fin d'un marché public
-function spwCheck(c){if(Math.random()>.35)return;const sc=(['marquage','marq_auto'].includes(c.j)&&c.crew.some(i=>{const x=st.workers.find(y=>y.id===i);return x&&x.r==='peintre'})?.15:0)+.2+(c.vd!==undefined?.3:0)+(has('prev')?.15:0)+(has('dirt')?.1:0)+(has('qhse')?.2:0)+Math.random()*.5;
+function spwCheck(c){if(Math.random()>.35)return;const sc=(['marquage','marq_auto'].includes(c.j)&&c.crew.some(i=>{const x=wById(i);return x&&x.r==='peintre'})?.15:0)+.2+(c.vd!==undefined?.3:0)+(has('prev')?.15:0)+(has('dirt')?.1:0)+(has('qhse')?.2:0)+Math.random()*.5;
   if(sc>.7){const b=Math.round(c.price*.01);mv(b,'Bonus qualité du SPW','in');st.rep=clamp(st.rep+2,0,100);log(`✅ Contrôle qualité du SPW : travail impeccable sur ${JOBS[c.j].n}. Bonus ${eur(b)}, réputation +2.`)}
   else if(sc<.3){const f=Math.round(c.price*.02);mv(-f,'Réfaction pour malfaçons (SPW)','other');st.rep=clamp(st.rep-2,0,100);log(`⚠️ Contrôle qualité du SPW : malfaçons sur ${JOBS[c.j].n}. Réfaction de ${eur(f)}, réputation -2. Les visites de chantier aident !`)}}
 // sous-traitance : une autre entreprise fait 30 % du chantier tout de suite (un peu plus cher, mais pas de retard)
@@ -1184,15 +1187,15 @@ function inSeason(J,m){if(!J.mo)return true;const[a,b]=J.mo;return a<=b?(m>=a&&m
 function jobMiss(o){const J=JOBS[o.j];const r=[];if(!st.adm.bce)r.push('🧾 Inscription BCE');J.need.forEach(t=>{if(!(st.eq[t]>0))r.push(EQ[t].ic+' '+EQ[t].n+' ('+eur(EQ[t].p)+')')});return r}
 // personnes encore disponibles (sans compter celles réservées pour des chantiers acceptés mais pas commencés)
 function freeCount(){return freeW().length-st.contracts.filter(c=>c.st==='wait').reduce((a,c)=>a+JOBS[c.j].minW,0)}
-function acceptJob(id){const o=st.jobs.find(x=>x.id===id);if(!o||jobMiss(o).length)return;if(freeCount()<JOBS[o.j].minW)return toastMsg('⏳ Tout le monde est déjà sur un chantier. Termine d’abord le travail en cours.');click();
+function acceptJob(id,FW){const o=st.jobs.find(x=>x.id===id);if(!o||jobMiss(o).length)return;if(!FW&&freeCount()<JOBS[o.j].minW)return toastMsg('⏳ Tout le monde est déjà sur un chantier. Termine d’abord le travail en cours.');click();
   st.jobs.splice(st.jobs.indexOf(o),1);
   const N=Math.max(2,o.dur-2);
   const c={id:st.nid++,j:o.j,q:o.q,road:o.client,ct:o.ct,town:o.town,price:o.price,prog:0,vis:0,N,wd:0,startBy:st.day+3,st:'wait',crew:[],own:{},billed:0,caut:0,seed:RI(1,99999),tap:{},nRef:1};
   st.contracts.push(c);save();
   // on lance tout de suite avec l'équipe libre la plus efficace ; la fenêtre ne s'ouvre que s'il manque quelqu'un ou du matériel
-  const J=JOBS[c.j],fw=freeW(c).sort((a,b)=>b.sk-a.sk),p=eqPlan(c.j,c);
-  if(fw.length>=J.minW&&!p.miss.length){pickSel=fw.slice(0,J.minW).map(w=>w.id);c.own=p.own;c.rent=p.rent;c.crew=[...pickSel];c.st='run';st.sel=c.id;
-    log(`🦺 C'est parti chez ${c.road} : ${J.n} (${c.crew.map(i=>st.workers.find(w=>w.id===i).n.split(' ')[0]).join(', ')}).`);snd(440,.08,'square',.04);snd(660,.12,'square',.04,.08);save();render()}
+  const J=JOBS[c.j],fw=FW||freeW(c).sort((a,b)=>b.sk-a.sk),p=eqPlan(c.j,c);
+  if(fw.length>=J.minW&&!p.miss.length){pickSel=fw.slice(0,J.minW).map(w=>w.id);if(FW)FW.splice(0,J.minW);c.own=p.own;c.rent=p.rent;c.crew=[...pickSel];c.st='run';st.sel=c.id;
+    log(`🦺 C'est parti chez ${c.road} : ${J.n} (${c.crew.map(i=>{const w=wById(i)||st.workers.find(x=>x.id===i);return w?w.n.split(' ')[0]:''}).join(', ')}).`,!FW);snd(440,.08,'square',.04);snd(660,.12,'square',.04,.08);save();render()}
   else startUI(c.id)}
 
 /* ---------- Marchés publics ---------- */
@@ -1225,7 +1228,12 @@ function genTender(forceJob,urgent){
     bidEnd,dec,status:'open',my:null,bids:null,cls:clsFor(est,J.nat),caut:est>50000,urgent:!!urgent,noise:R(-.15,.15)});
 }
 // Sélection qualitative et conditions pour remettre offre
-function spwReq(t){const J=JOBS[t.j];const r=[];const fw=field();
+const SPWC=new Map();
+// listes longues affichées par paquets (bouton « Voir plus »)
+const PG={};const pgN=(k,d)=>PG[k]||d;
+const pgBtn=(k,d,shown,total)=>shown<total?`<button class="btn s w" style="margin:4px 0 12px" onclick="PG['${k}']=${shown}+${d};click();render()">Voir ${Math.min(d,total-shown)} de plus (${total-shown} restant${total-shown>1?'s':''})</button>`:'';
+function spwReq(t){if(SPWC.has(t.id))return SPWC.get(t.id);const r=spwReq0(t);SPWC.set(t.id,r);return r}
+function spwReq0(t){const J=JOBS[t.j];const r=[];const fw=field();
   r.push({ok:!!st.adm.bce,tx:'🧾 BCE'});r.push({ok:!!st.adm.rc,tx:'🛡️ RC pro'});r.push({ok:!!st.adm.vca,tx:'🦺 VCA'});
   r.push({ok:st.cash>=0,tx:'📄 ONSS et impôts en ordre'});
   if(t.cls>0)r.push({ok:st.cls>=t.cls||(!!t.am&&st.cls>=t.cls-1),tx:`🏅 Agréation ${CLS[t.cls].n.toLowerCase()}`});
@@ -1308,7 +1316,10 @@ function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr s
 function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
   if(w&&r<(evOn('hiver')?.32:.12))return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);let late=Math.max(0,delay-30);if(late&&has('recouv')){const d2=Math.round(late*.3);rsAdd('recd',late-d2);delay=30+d2;late=d2}st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl,late})}
-function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}
+let TICKING=0,WBI=null;
+const wById=id=>(WBI||(WBI=new Map(st.workers.map(w=>[w.id,w])))).get(id);
+function tick(){TICKING=1;WBI=null;GESTC=null;SPWC.clear();try{tick0()}finally{TICKING=0;WBI=null}save();renderTick()}
+function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
@@ -1340,7 +1351,7 @@ function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.worke
     if(conge&&!c.crew.some(i=>{const w=st.workers.find(x=>x.id===i);return w&&w.boss}))continue;
     if(!c.crew.length){if(!conge)c.wd++;continue}
     if(!conge)c.wd++;let eqc=0;for(const t in c.own){eqc+=c.own[t]*EQ[t].u*(1-tierShare(t,'us'));wearUse(t,c)}let rc=0;for(const t in c.rent||{}){rc+=(RENT[t]||0)+EQ[t].u;const RD=st.rentD||(st.rentD={});RD[t]=(RD[t]||0)+1}if(rc)mv(-rc,'Location de matériel','use',1);if(has('meca')){rsAdd('meca',eqc*.1);eqc*=.9}if(sfx('atel'))eqc*=.92;if(sfx('cuve'))eqc*=.93;if(ino('elec'))eqc*=.95;if(ino('ecam'))eqc*=.8;if(has('achat')){rsAdd('achv',eqc*.05);eqc*=.95}if(st.mega){if(indOn('enrob'))eqc*=.92;if(indOn('gar'))eqc*=.85}mv(-(eqc+(J.p?(st.eq.van?0:14):40))*evF('f'),'Carburant et usure','use',1);
-    const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(w=>w&&!(w.off>st.day)&&(!conge||w.boss)&&!(w.r==='etu'&&(w.hy||0)>=650));
+    const crew=c.crew.map(wById).filter(w=>w&&!(w.off>st.day)&&(!conge||w.boss)&&!(w.r==='etu'&&(w.hy||0)>=650));
     crew.forEach(w=>{if(w.r==='etu')w.hy=(w.hy||0)+7.6});
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF*(has('cond')&&!J.p&&c.wd>c.N*(c.prog/c.q)?1.1:1)*inoWork(J)*(c.vb>st.day?c.vf||1:1)*qualWork(J);
     const wfj=J.allw?1:J.dry&&WX[st.wx].k!=='sun'&&WX[st.wx].k!=='cloud'?0:wf;const gb=J.gr&&crew.some(w=>w.r==='grimp')||c.j==='elagage'&&crew.some(w=>w.r==='grimp')?1.1:['p_dechets','dechets','poubelles','aires'].includes(c.j)&&crew.some(w=>w.r==='ramas')?1.15:1;
@@ -1363,7 +1374,7 @@ function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.worke
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
   events(work);decTick(work);try{itDaily(work,x)}catch(e){}try{wxUrgent();unionTick();lawTick();achatNeed();if(date(st.day).getDay()===1)achatTick();if(date(st.day).getDate()===10)taxAudit();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
   if(st.cash<-overdraft()&&!st.over)rescue();
-  dqTick();save();renderTick();
+  dqTick();
 }
 // Bénéfice du mois (trésorerie + investissements − amortissements) → cotisations sociales et impôts
 // Mouvement sur le compte en banque (relevé + bilan du mois)
@@ -1445,7 +1456,8 @@ const preavisCost=w=>Math.round(preavisW(w)*5*w.day);
 const FAUTES=[['passe beaucoup de temps sur son GSM',0],['fait des pauses beaucoup trop longues',0],['arrive en retard le matin',0],["attend qu'on lui dise quoi faire et travaille très lentement",0],['passe son temps dans la camionnette',0],
   ['ne porte pas ses EPI (gilet, casque) au bord de la route malgré les consignes',1],["a été vu en train de boire de l'alcool sur le chantier",1],['a quitté le chantier sans prévenir',1]];
 // Le contremaître, le patron ou un gestionnaire de chantier remarque qui travaille mal
-function observe(c,crew){const chef=crew.find(w=>w.r==='chef'),boss=crew.find(w=>w.boss);const g=st.workers.filter(w=>w.r==='gest');
+let GESTC=null;
+function observe(c,crew){const chef=crew.find(w=>w.r==='chef'),boss=crew.find(w=>w.boss);const g=TICKING?(GESTC||(GESTC=st.workers.filter(w=>w.r==='gest'))):st.workers.filter(w=>w.r==='gest');
   for(const w of crew){if(w.boss||w.r==='chef'&&w===chef)continue;
     let who=null;if(chef&&Math.random()<.18)who=chef;else if(boss&&Math.random()<.14)who=boss;else if(g.length&&Math.random()<.06*g.length)who=pick(g);
     if(!who)continue;w.seen=w.mot;
@@ -1689,23 +1701,23 @@ function trainOne(by){by=by||'Jean-Luc';const W=fieldOwn().filter(w=>!w.boss&&w.
   if(w.r==='man'&&w.cert.length>=2){w.r='qual';w.day=Math.max(w.day,Math.round(ROLES.qual.day*R(.98,1.03)));promo=` ${w.n.split(' ')[0]} devient ${isF(w.n)?'ouvrière qualifiée':'ouvrier qualifié'} (cat. 3) : son coût passe à ${eur(w.day)}/jour.`}
   rsAdd('form',1);log(`🎓 ${by} a formé ${w.n} : « ${c.slice(c.indexOf(' ')+1)} ». Efficacité ${Math.round(old*100)} % → ${Math.round(w.sk*100)} %.${promo}`)}
 function autoAccept(){const L=st.jobs.filter(o=>!jobMiss(o).length).sort((a,b)=>b.price/Math.max(1,b.q/JOBS[b.j].rate)-a.price/Math.max(1,a.q/JOBS[a.j].rate));
-  for(const o of L){if(freeCount()<JOBS[o.j].minW)break;const n=st.contracts.length;acceptJob(o.id);if(modalOpen)closeM();if(st.contracts.length>n){rsAdd('plan',1);rsAdd('planv',o.price);log(`📞 Manon a accepté : ${JOBS[o.j].n} chez ${o.client} (${eur(o.price)}).`,false)}}}
+  if(!L.length)return;const FW=freeW().sort((a,b)=>b.sk-a.sk);let wait=st.contracts.filter(c=>c.st==='wait').reduce((a,c)=>a+JOBS[c.j].minW,0);
+  for(const o of L){if(FW.length-wait<JOBS[o.j].minW)break;const n=st.contracts.length;acceptJob(o.id,FW);if(modalOpen)closeM();if(st.contracts.length>n){const c=st.contracts[st.contracts.length-1];if(c.st==='wait')wait+=JOBS[c.j].minW;rsAdd('plan',1);rsAdd('planv',o.price);log(`📞 Manon a accepté : ${JOBS[o.j].n} chez ${o.client} (${eur(o.price)}).`,false)}}}
 // avance d'un chantier : jours nécessaires − jours restants (> 0 = en retard)
-function lateBy(c){const J=JOBS[c.j],crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean),pw=crew.reduce((a,w)=>a+w.sk,0)||.01;return (c.q-c.prog)/(J.rate*pw)-(c.N-c.wd)}
+function lateBy(c){const J=JOBS[c.j],crew=c.crew.map(wById).filter(Boolean),pw=crew.reduce((a,w)=>a+w.sk,0)||.01;return (c.q-c.prog)/(J.rate*pw)-(c.N-c.wd)}
 // Benoît : prend du monde sur les petits boulots et les chantiers en avance pour renforcer les marchés publics en retard
 function condRebalance(){const late=running().filter(c=>c.crew.length&&!JOBS[c.j].p&&lateBy(c)>0).sort((a,b)=>lateBy(b)-lateBy(a));if(!late.length)return;
   const donors=running().filter(c=>c.crew.length>JOBS[c.j].minW&&(JOBS[c.j].p||lateBy(c)<-5));let moved=0;
   for(const c of late){for(const d of donors){while(d.crew.length>JOBS[d.j].minW&&lateBy(c)>0&&c.crew.length<Math.max(12,c.nRef||0)){const J=JOBS[d.j];const id=d.crew.find(i=>{const w=st.workers.find(x=>x.id===i);return w&&!w.boss&&!(J.pc&&w.pc&&d.crew.filter(k=>{const v=st.workers.find(x=>x.id===k);return v&&v.pc}).length<2)&&!(J.op&&w.r===J.op)&&!(J.gr&&w.r==='grimp')});if(!id)break;d.crew.splice(d.crew.indexOf(id),1);c.crew.push(id);moved++}}}
   if(moved){rsAdd('cond',moved);log(`🗺️ Benoît a déplacé ${moved} ouvrier(s) vers les marchés publics en retard.`,false)}}
 // Grégory : remet les offres tout seul (conditions remplies, assez de monde, au coefficient choisi)
-function autoBid(){const coef=st.offCoef||1.35;for(const t of st.tenders){if(t.status!=='open'||t.my||myOffers()>=offerCap())continue;if(!spwReq(t).every(x=>x.ok))continue;
-  const busyN=running().reduce((a,c)=>a+(JOBS[c.j].p?0:c.crew.length),0)+st.contracts.filter(c=>c.st==='wait').reduce((a,c)=>a+JOBS[c.j].minW,0)+st.tenders.filter(x=>x.my&&x.status!=='done').reduce((a,x)=>a+JOBS[x.j].minW,0);
-  if(busyN+JOBS[t.j].minW>field().length)continue;const pu=t.postes.map(p=>+(seenCost(t,p)*coef).toFixed(2));t.my={pu,tot:Math.round(bidTotal(pu,t)*100)/100,day:st.day};rsAdd('offre',1);ck('bid');rsAdd('off',myOffers()>2?1:0);log(`📑 Grégory a remis offre : ${JOBS[t.j].n} (${t.road}) pour ${eur(t.my.tot)}.`,false)}}
+function autoBid(){const coef=st.offCoef||1.35;let busyN=running().reduce((a,c)=>a+(JOBS[c.j].p?0:c.crew.length),0)+st.contracts.filter(c=>c.st==='wait').reduce((a,c)=>a+JOBS[c.j].minW,0)+st.tenders.filter(x=>x.my&&x.status!=='done').reduce((a,x)=>a+JOBS[x.j].minW,0),nOff=myOffers();const fl=field().length,cap=offerCap();
+  for(const t of st.tenders){if(t.status!=='open'||t.my||nOff>=cap)continue;if(busyN+JOBS[t.j].minW>fl)continue;if(!spwReq(t).every(x=>x.ok))continue;busyN+=JOBS[t.j].minW;nOff++;const pu=t.postes.map(p=>+(seenCost(t,p)*coef).toFixed(2));t.my={pu,tot:Math.round(bidTotal(pu,t)*100)/100,day:st.day};rsAdd('offre',1);ck('bid');rsAdd('off',myOffers()>2?1:0);log(`📑 Grégory a remis offre : ${JOBS[t.j].n} (${t.road}) pour ${eur(t.my.tot)}.`,false)}}
 function autoStaff(){if(st.autoStaff===0)return;const L=st.contracts.filter(c=>c.st==='wait'||(c.st==='run'&&!c.crew.length)).sort((a,b)=>(JOBS[a.j].p?1:0)-(JOBS[b.j].p?1:0)||a.startBy-b.startBy);
   for(const c of L){const J=JOBS[c.j];const sel=pickFor(c);if(!crewOk(J,sel))continue;const p=eqPlan(c.j,c);if(p.miss.length)continue;
     const was=c.st;c.own=p.own;c.rent=p.rent;c.crew=sel.map(w=>w.id);c.st='run';log(`▶ ${was==='wait'?'Chantier commencé':'Chantier relancé'} automatiquement : ${J.n} (${esc(c.road)}) avec ${sel.map(w=>w.n.split(' ')[0]).join(', ')}.`,false)}
   // renforts : les ouvriers libres vont aider les marchés publics en retard ou trop lents (le plus urgent d'abord)
-  const need=c=>{const J=JOBS[c.j],crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean),pw=crew.reduce((a,w)=>a+w.sk,0)||.01;return (c.q-c.prog)/(J.rate*pw)-(c.N-c.wd)};
+  const need=c=>{const J=JOBS[c.j],crew=c.crew.map(wById).filter(Boolean),pw=crew.reduce((a,w)=>a+w.sk,0)||.01;return (c.q-c.prog)/(J.rate*pw)-(c.N-c.wd)};
   let free=freeW().filter(w=>!w.boss&&!(w.r==='etu'&&(w.hy||0)>=650));
   const R2=running().filter(c=>c.crew.length&&!JOBS[c.j].p&&need(c)>0).sort((a,b)=>need(b)-need(a));
   for(const c of R2){while(free.length&&c.crew.length<Math.max(12,c.nRef||0)&&need(c)>0){const w=free.shift();c.crew.push(w.id);log(`➕ ${w.n.split(' ')[0]} part en renfort sur ${JOBS[c.j].n} (${esc(c.road)}).`,false)}}}
@@ -1847,9 +1859,9 @@ function rIt(){const L=itList(),busy=new Map();st.contracts.forEach(c=>c.st==='r
   h+=`<h2>En mission (${nb(L.length)})</h2>`;if(!L.length)h+='<div class="card"><p class="mut">Aucun intérimaire pour le moment.</p></div>';
   else{h+=`<div class="row" style="margin-bottom:8px"><button class="btn s" style="flex:1" onclick="itBackAll(1)">↩️ Rendre ceux sans chantier</button><button class="btn s" style="flex:1" onclick="itBackAll(0)">↩️ Tout rendre</button></div><div class="card">`;
     const S=[...L].sort((a,b)=>(b.it.prop===1)-(a.it.prop===1)||(has('recru')?itStars(b)-itStars(a):0)||b.sk-a.sk);
-    for(const w of S.slice(0,80)){const c=busy.get(w.id),fl=itFeel(w);const note=has('recru')?(itSeen(w)?`<span style="color:${itStars(w)<=2?'var(--rd)':'var(--ye)'}">${starTx(itStars(w))}</span>`:'<span class="mut sm">en évaluation</span>'):`<span class="tag ${fl[1]}">${fl[0]}</span>`;
+    const nIt=Math.min(S.length,pgN('it',40));for(const w of S.slice(0,nIt)){const c=busy.get(w.id),fl=itFeel(w);const note=has('recru')?(itSeen(w)?`<span style="color:${itStars(w)<=2?'var(--rd)':'var(--ye)'}">${starTx(itStars(w))}</span>`:'<span class="mut sm">en évaluation</span>'):`<span class="tag ${fl[1]}">${fl[0]}</span>`;
       h+=`<div style="padding:7px 0;border-top:1px solid var(--line)"><div class="row"><span style="flex:1;min-width:0">${ROLES[w.r].ic} <b>${esc(w.n)}</b> <span class="mut sm">${st.day-w.it.d} j</span></span>${note}</div><div class="row" style="margin-top:4px"><span class="mut sm" style="flex:1">${c?'🦺 '+esc(JOBS[c.j].n.split(' ').slice(0,3).join(' ')):'💤 Libre'} · ${eur(w.day)}/j${w.warn?' · ⚠️ '+w.warn:''}</span><button class="btn s" style="padding:5px 8px;font-size:12px" onclick="cvUI('w',${w.id})">📄</button><button class="btn g" style="padding:5px 8px;font-size:12px" onclick="itHire(${w.id})">✍️ CDI</button><button class="btn s" style="padding:5px 8px;font-size:12px" onclick="itBack(${w.id})">↩️</button></div></div>`}
-    if(L.length>80)h+=`<p class="mut sm">+ ${nb(L.length-80)} autres intérimaires.</p>`;h+='</div>'}
+    h+='</div>'+pgBtn('it',40,nIt,S.length)+'<div>';h+='</div>'}
   // rachat de l'agence
   h+=`<h2>🏢 Racheter l’agence d’intérim</h2>`;
   if(!own){const A=AGN[0],lock=ownW()<200;h+=`<div class="card" style="${lock?'opacity:.7':''}"><h3>${A.n}</h3><div class="tags"><span class="tag o">${eur(A.p)}</span><span class="tag">± ${nb(A.pl)} intérimaires placés</span><span class="tag g">± ${eur(A.pl*300*WDM*12*.04)}/an de bénéfice</span></div>
@@ -2479,7 +2491,7 @@ const loanMax=()=>st.adm.bce?Math.round((20000+caRecent()*.3)*(has('compta')?1.5
 function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?"La banque refuse : montant maximum atteint. Fais plus de chiffre d'affaires.":"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;mv(5000,'Prêt bancaire','loan');st.mLoan+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;mv(-5000,'Remboursement du prêt','loan');st.mLoan-=5000}save();render()}
 function rename(){showModal(`<h3>Nom de ta société</h3><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">Enregistrer</button>`)}
 function setName(){const v=$('#nm').value.trim().replace(/[<>&"]/g,'');if(v)st.name=v;closeM();save();render();if(pendFr){const o=pendFr;pendFr=null;setTimeout(()=>addFriend(o,1),400)}}
-function restart(force){if(!force)return ask('Tout effacer ?\n⚠️ Ton entreprise, ta vie privée et toute ta progression seront supprimées pour recommencer à zéro.',()=>restart(1),{ic:'🗑️',ok:'Tout effacer',danger:1});try{localStorage.removeItem(SAVE);localStorage.removeItem(BAK)}catch(e){}location.reload()}
+function restart(force){if(!force)return ask('Tout effacer ?\n⚠️ Ton entreprise, ta vie privée et toute ta progression seront supprimées pour recommencer à zéro.',()=>restart(1),{ic:'🗑️',ok:'Tout effacer',danger:1});NOSAVE=1;try{localStorage.removeItem(SAVE);localStorage.removeItem(BAK)}catch(e){}location.reload()}
 function exportSave(){const code=btoa(unescape(encodeURIComponent(JSON.stringify(st))));showModal(`<h3>💾 Code de sauvegarde</h3><p class="mut">Garde ce code (dans tes notes ou par message) pour retrouver ta partie sur un autre GSM.</p><textarea id="sv" rows="5" readonly>${code}</textarea><p></p><div class="row"><button class="btn" onclick="copySave()">Copier</button><button class="btn s" onclick="closeM()">Fermer</button></div>`)}
 function copySave(){const t=$('#sv');t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(()=>toastMsg('Code copié ✓')).catch(()=>{try{document.execCommand('copy');toastMsg('Code copié ✓')}catch(e){}})}
 function importUI(){showModal(`<h3>📥 Charger une sauvegarde</h3><p class="mut">Colle ici ton code de sauvegarde. Ta partie actuelle sera remplacée.</p><textarea id="sv" rows="5"></textarea><p></p><div class="row"><button class="btn" onclick="importGo()">Charger</button><button class="btn s" onclick="closeM()">Annuler</button></div>`)}
@@ -2539,7 +2551,7 @@ function cashFx(){const el=$('#cash');if(shownCash===null){shownCash=st.cash;el.
 let lastTab=null;
 // pendant le jeu rapide, la liste (surtout l'Équipe avec ses portraits) n'est redessinée que toutes les 0,8 à 1,5 s : plus fluide sur téléphone
 let lastPaneT=0;function renderTick(){if(curTab==='pv'&&pvSec==='casino')return render(true);const now=performance.now(),gap=speed>=3?1500:speed===2?800:0;render(gap&&now-lastPaneT<gap&&!modalOpen)}
-function render(headOnly){
+function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();
   cashFx();$('#cash').classList.toggle('neg',st.cash<0);try{const nN=notifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0)}catch(e){}
   $('#tname').textContent=st.name;$('#lt').textContent=st.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'RN';{const n=Object.keys(st.goals).length;$('#lvl').textContent=n+1;$('#logo').style.setProperty('--lv',Math.round(n/GOALS.length*100)+'%')}
   $('#tsub').textContent=`${stars(st.rep)} ${Math.round(st.rep)} · ${st.cls?CLS[st.cls].n:st.adm.bce?'Entreprise inscrite':'Pas encore inscrit'} · ${ownW()} pers.`;
@@ -2567,7 +2579,8 @@ function rCh(){let h=goalCard()+workCard()+dqCard()+decCard()+lawCard();const cs
   {const idle=freeW().filter(w=>!w.boss&&isWork(st.day)&&!((w.ce||0)>0&&(w.ce||0)<20&&st.chomEco!==0));if(idle.length){const c=idle.reduce((a,w)=>a+w.day,0);h+=`<div class="card acc" style="--ac:var(--or)"><b>💤 ${idle.length} personne(s) sans chantier aujourd'hui</b><div class="mut sm" style="margin-top:4px">${idle.map(w=>esc(w.n.split(' ')[0])).join(', ')} : tu paies quand même ${eur(c)} par jour (${eur(c*WDM)} par mois). Mets-les sur un chantier (🧰 Boulots) ou réfléchis à t'en séparer.</div></div>`}}
   const run=running();if(run.length)h+=`<div class="row mut sm" style="margin:0 4px 8px"><span>📋 Encadrement : ${nb1(mgmtLoad())} / ${mgmtCap()}</span>${mgmtLoad()>mgmtCap()?'<span class="tag r">saturé : -25 %</span>':''}<span style="margin-left:auto">💸 Salaires du mois : ${eur(st.salAcc)}</span></div>`;
   const firstRun=run[0];
-  for(const c of cs){const J=JOBS[c.j],pc=c.prog/c.q*100,left=c.N-c.wd;
+  const csO=[...cs.filter(c=>c.id===st.sel),...cs.filter(c=>c.id!==st.sel&&(c.st!=='run'||!c.crew.length)),...cs.filter(c=>c.id!==st.sel&&c.st==='run'&&c.crew.length)],nCh=Math.min(csO.length,pgN('ch',25));
+  for(const c of csO.slice(0,nCh)){const J=JOBS[c.j],pc=c.prog/c.q*100,left=c.N-c.wd;
     h+=`<div class="card acc" style="--ac:${J.ac}">${jobHead(J,`${esc(c.road)} — ${c.town}`,`<span class="tag ${J.p?'g':'o'}">${J.p?eur(c.price):'Public'}</span>`)}`;
     if(c.st==='wait')h+=`<div class="tags"><span class="tag o">${J.p?'À commencer avant le':'Ordre de commencer :'} ${dstr(c.startBy)}</span>${c.ref?`<span class="tag">Réf. ${c.ref}</span>`:''}</div><p style="margin:10px 0 0"><button class="btn w" onclick="startUI(${c.id})">🦺 Préparer le chantier</button></p>`;
     else{const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);const shown=st.sel===c.id||(!cs.some(x=>x.id===st.sel&&x.st==='run')&&firstRun===c);
@@ -2575,15 +2588,17 @@ function rCh(){let h=goalCard()+workCard()+dqCard()+decCard()+lawCard();const cs
       h+=`<div class="bar"><i style="width:${pc}%"></i></div><div class="row mut sm"><span>${nb(c.prog)} / ${nb(c.q)} ${J.un} · ${pc.toFixed(0)} %</span><span style="margin-left:auto" class="${left<0?'neg':''}">${left>=0?'⏱ '+left+' j ouvrables':'⚠️ RETARD '+(-left)+' j'}</span></div>
       <div class="mut sm" style="margin-top:4px">👷 ${crew.map(w=>esc(w.n.split(' ')[0])).join(', ')}${J.p?'':' · '+eur(c.price)+' · facturé '+eur(c.billed)}</div><div class="row" style="margin-top:10px"><button class="btn s" onclick="st.sel=${c.id};render()">${shown?'👁 À l’écran':'👁 Regarder'}</button><button class="btn s" onclick="startUI(${c.id})">👷 Équipe</button>${c.st==='run'&&c.crew.length?`<button class="btn ${c.vd===undefined||st.day-c.vd>=15?'':'s'}" onclick="visitUI(${c.id})">🔍 Visiter${c.vb>st.day?' ✓':''}</button>`:''}${!J.p&&!c.sub&&c.prog<c.q*.7?`<button class="btn s" onclick="subK(${c.id})">🤝 Sous-traiter 30 %</button>`:''}</div>${c.pz>st.day?`<div class="tags"><span class="tag r">💥 En panne jusqu’au ${dstr(c.pz)}</span></div>`:''}${st.strike>st.day&&!J.p?`<div class="tags"><span class="tag r">✊ Grève jusqu’au ${dstr(st.strike)}</span></div>`:''}${c.am?`<div class="tags"><span class="tag v">🤝 Avec ${esc(c.am)}</span></div>`:''}${shown&&c.st==='run'?'<div class="mut sm" style="margin-top:6px">👆 Touche le chantier à l’écran (devant tes ouvriers) pour donner un coup de main.</div>':''}`}
     h+='</div>'}
+  h+=pgBtn('ch',25,nCh,csO.length);
   if(st.inv.length)h+=`<h2>Factures en attente · ${eur(toRecv())}</h2><div class="card">${st.inv.slice().sort((a,b)=>a.due-b.due).slice(0,12).map(v=>`<div class="row sm" style="padding:4px 0"><span style="flex:1;min-width:0">${esc(v.from)}</span><span class="money">${eur(v.amt)}</span><span class="tag">${dstr(v.due)}</span></div>`).join('')}</div>`;
   return h}
 function rPb(){let h=goalCard()+acCard()+`<h2>Petits boulots — particuliers, commerces, communes</h2><p class="mut sm" style="margin:-2px 4px 10px">Le client a accepté ton devis : tu acceptes et tu y vas.</p>`;
   if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--rd)"><b>🔒 Inscris d'abord ton entreprise à la BCE</b><p class="mut">Sans numéro d'entreprise, pas de facture.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire (105 €)</button></div>`;
   const L=st.jobs.slice().sort((a,b)=>jobMiss(a).length-jobMiss(b).length);
-  for(const o of L){const J=JOBS[o.j],miss=jobMiss(o);const ctl={part:'Particulier',pro:'Entreprise',com:'Commune'}[o.ct];
+  const nPb=Math.min(L.length,pgN('pb',20));for(const o of L.slice(0,nPb)){const J=JOBS[o.j],miss=jobMiss(o);const ctl={part:'Particulier',pro:'Entreprise',com:'Commune'}[o.ct];
     h+=`<div class="card acc" style="--ac:${J.ac};${miss.length?'opacity:.62':''}">${jobHead(J,`${o.client} · ${ctl} — ${o.town}`,`<span class="tag g" style="font-size:15px">${eur(o.price)}</span>`)}
     <div class="tags"><span class="tag">${nb(o.q)} ${J.un}</span><span class="tag">⏱ ${o.dur} jours</span><span class="tag">${o.ct==='part'?'💶 payé à la fin':o.ct==='com'?'📄 payé à 30 jours':'📄 facture 15-30 jours'}</span><span class="tag">Jusqu'au ${dstr(o.until)}</span></div>
     <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:freeCount()<JOBS[o.j].minW?`<button class="btn w s" disabled>⏳ ${field().length>1?'Plus assez de monde de libre ('+Math.max(0,freeCount())+' / '+JOBS[o.j].minW+')':'Occupé : termine d’abord ton chantier en cours'}</button>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
+  h+=pgBtn('pb',20,nPb,L.length);
   return h+(L.length?'':'<p class="mut">Pas de demande aujourd’hui. Reviens demain !</p>')+(st.adm.bce?adCard():'')}
 function rAo(){let h=goalCard()+workCard(1);const mine=st.tenders.filter(t=>t.my);
   h+=seg(aoTab,[['pub','📢 Publiés'],['mes',`📨 Mes offres (${mine.length})`],['riv','⚔️ Concurrents']],'aoTab');
@@ -2593,18 +2608,18 @@ function rAo(){let h=goalCard()+workCard(1);const mine=st.tenders.filter(t=>t.my
     if(!acc)h+=`<div class="card acc" style="--ac:var(--bl)"><h3>🔒 Pas encore accessible</h3><p class="mut">Pour remettre offre au SPW, il faut :</p>${['bce','rc','vca'].map(k=>`<div class="row" style="margin:6px 0">${st.adm[k]?'✅':'❌'} ${ADM[k].ic} ${ADM[k].n} <span class="mut">(${eur(ADM[k].p)})</span>${st.adm[k]?'':`<button class="btn s" style="margin-left:auto;padding:6px 10px" onclick="buyAdm('${k}')">Obtenir</button>`}</div>`).join('')}<p class="mut sm">…plus le matériel, le personnel et les références demandés dans chaque cahier spécial des charges.</p></div>`;
     h+=`<p class="mut sm" style="margin:0 4px 10px">Offres en préparation : <b>${myOffers()} / ${offerCap()}</b>. Les marchés de faible montant et les procédures négociées n'apparaissent que si tu es invité.</p>`;
     const ts=st.tenders.filter(t=>t.status==='open'&&!t.my).map(t=>({t,ok:spwReq(t).every(x=>x.ok)})).sort((a,b)=>b.ok-a.ok||a.t.bidEnd-b.t.bidEnd);
-    for(const{t,ok}of ts){const J=JOBS[t.j];
+    const nAoL=Math.min(ts.length,pgN('ao',20));for(const{t,ok}of ts.slice(0,nAoL)){const J=JOBS[t.j];
       h+=`<div class="card acc" style="--ac:${J.ac}"><div class="mut sm">${t.buyer.replace('SPW Mobilité et Infrastructures','SPW MI')} · Réf. ${t.ref}</div>${jobHead(J,`${t.road} — ${t.town}`,t.urgent?'<span class="tag r">URGENT</span>':'')}
       <div class="tags"><span class="tag ${t.proc==='po'?'b':t.proc==='pn'?'v':''}">${PROC[t.proc].n}</span><span class="tag">${nb(t.q)} ${J.un}</span><span class="tag">⏱ ${t.N} j ouvrables</span>${t.proc==='po'?`<span class="tag b">Estimation ${eur(t.est)}</span>`:''}<span class="tag">${J.nat==='travaux'?'Travaux':'Services'}</span><span class="tag o">Remise des offres : ${dstr(t.bidEnd)}</span></div>
       ${reqHtml(spwReq(t))}
       ${t.wxu?'<div class="tags"><span class="tag r">🚨 Urgence météo : prix +30 %</span></div>':''}${t.am?`<div class="tags"><span class="tag v">🤝 En association avec ${esc(t.am)} (50/50)</span></div>`:''}
       <div style="margin-top:10px">${ok?`<button class="btn w" onclick="bidUI(${t.id})">📝 Préparer mon offre</button>`:!t.am&&t.cls===st.cls+1&&spwReq(t).filter(x=>!x.ok).length===1&&st.cls>=1?`<button class="btn s w" onclick="amGo(${t.id})">🤝 Répondre en association avec un grand groupe (50/50)</button>`:''}</div></div>`}
-    if(!ts.length)h+='<p class="mut">Aucun marché publié pour le moment.</p>'}
+    h+=pgBtn('ao',20,nAoL,ts.length);if(!ts.length)h+='<p class="mut">Aucun marché publié pour le moment.</p>'}
   else if(aoTab==='mes'){
     if(!mine.length)h+='<p class="mut">Tu n\'as encore remis aucune offre.</p>';
-    for(const t of mine.slice().reverse()){const J=JOBS[t.j];const i=t.bids?t.bids.findIndex(b=>b.me):-1;
+    const mineR=mine.slice().reverse(),nMi=Math.min(mineR.length,pgN('mes',20));for(const t of mineR.slice(0,nMi)){const J=JOBS[t.j];const i=t.bids?t.bids.findIndex(b=>b.me):-1;
       const stt=t.status==='open'?`<span class="tag o">Ouverture des offres le ${dstr(t.bidEnd)}</span>`:t.status==='opened'?`<span class="tag b">Classement provisoire : ${i+1}e / ${t.bids.length} · décision le ${dstr(t.dec)}</span>`:t.win===st.name?'<span class="tag g">🏆 Attribué à toi</span>':`<span class="tag r">Attribué à ${esc(t.win||'personne')}</span>`+(t.rec?'<span class="tag o">⏳ Recours en cours au Conseil d’État</span>':'');
-      h+=`<div class="card acc" style="--ac:${J.ac}"><div class="mut sm">Réf. ${t.ref}</div>${jobHead(J,`${t.road} — ${t.town}`,`<b>${eur(t.my.tot)}</b>`)}<div class="tags">${stt}</div>${recEligible(t)?`<button class="btn" style="margin-top:10px" onclick="recUI(${t.id})">⚖️ Introduire un recours avec un avocat</button><div class="mut sm">Possible pendant 15 jours (jusqu’au ${dstr(t.lostD+15)}) : ton offre était très proche ou écartée à tort.</div>`:''}${t.bids?`<h2>PV d'ouverture</h2>${pvTable(t)}`:`<button class="btn s" style="margin-top:10px" onclick="withdraw(${t.id})">Retirer mon offre</button>`}</div>`}}
+      h+=`<div class="card acc" style="--ac:${J.ac}"><div class="mut sm">Réf. ${t.ref}</div>${jobHead(J,`${t.road} — ${t.town}`,`<b>${eur(t.my.tot)}</b>`)}<div class="tags">${stt}</div>${recEligible(t)?`<button class="btn" style="margin-top:10px" onclick="recUI(${t.id})">⚖️ Introduire un recours avec un avocat</button><div class="mut sm">Possible pendant 15 jours (jusqu’au ${dstr(t.lostD+15)}) : ton offre était très proche ou écartée à tort.</div>`:''}${t.bids?`<h2>PV d'ouverture</h2>${pvTable(t)}`:`<button class="btn s" style="margin-top:10px" onclick="withdraw(${t.id})">Retirer mon offre</button>`}</div>`}h+=pgBtn('mes',20,nMi,mineR.length)}
   else{h+=`<p class="mut sm" style="margin:0 4px 10px">Les autres entreprises remettent aussi offre. Elles ont leurs spécialités, leur taille et leurs prix.</p>`;
     const all=[...st.riv.map(r=>({...r,busy:r.load.filter(e=>e>st.day).length})),{n:st.name,me:1,sz:st.cls>=2?2:st.cls?1:0,rep:st.rep,won:st.stats.won,ca:st.stats.ca,busy:running().filter(c=>!JOBS[c.j].p).length,jobs:Object.keys(st.refs)}].sort((a,b)=>b.won-a.won||b.ca-a.ca);
     for(const r of all)h+=`<div class="card ${r.me?'acc':''}"><div class="row"><b style="flex:1;${r.me?'color:var(--or2)':''}">${esc(r.n)}</b><span class="tag">${['Petite','Moyenne','Grande'][r.sz]}</span></div><div class="tags"><span class="tag">${stars(r.rep)}</span><span class="tag g">🏆 ${r.won} marchés</span><span class="tag">${eur(r.ca)}</span><span class="tag o">🦺 ${r.busy} en cours</span></div><div class="mut sm" style="margin-top:6px">${(r.jobs||[]).map(j=>JOBS[j]?JOBS[j].ic:'').join(' ')}</div></div>`}
@@ -2617,7 +2632,7 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
   const card=w=>{const R0=ROLES[w.r],c=busy.get(w.id),stx=staffStat(w);return`<div class="card"><div class="hd">${avatar(w,48)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${R0.n}${w.day?' · '+eur(monthly(w))+'/mois (coût employeur)':''}</div></div></div>
     <div class="tags">${R0.cat==='ouv'?`<span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>`:''}${w.pc?'<span class="tag v">🪪 Permis C</span>':''}${w.r==='etu'?`<span class="tag ${(w.hy||0)>=650?'r':''}">⏱ ${Math.round(w.hy||0)} / 650 h cette année</span>`:''}${behav(w)?`<span class="tag ${behav(w)[1]}">${behav(w)[0]}</span>`:''}${w.warn?`<span class="tag r">⚠️ ${w.warn} avertissement${w.warn>1?'s':''}</span>`:''}${R0.cat==='ouv'?`<span class="tag ${c?'o':''}">${c?'🦺 '+JOBS[c.j].n.split(' ').slice(0,3).join(' '):(w.ce||0)>0?'🏠 Chômage temporaire ('+w.ce+' j)':'💤 Libre'}</span>`:''}${w.det&&EU[w.det]?`<span class="tag v">✈️ Détaché : ${EU[w.det].f} ${EU[w.det].n.split(' (')[0]}</span>`:''}</div>${R0.d&&R0.cat!=='ouv'?`<div class="mut sm" style="margin-top:6px">${R0.d}</div>`:''}${stx}
     <div class="row" style="margin-top:8px">${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="cvUI('w',${w.id})">📄 CV</button>`}${R0.cat==='ouv'&&!w.pc?`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="trainPC(${w.id})">🪪 Permis C (2 900 €)</button>`:''}${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="fire(${w.id})">Licencier</button>`}</div></div>`};
-  if(eqTab==='terrain'){const F=fieldOwn();h+=`<h2>Sur les chantiers (${F.length})</h2>`;F.forEach(w=>h+=card(w));if(nI)h+=`<div class="card"><b>🦺 + ${nb(nI)} intérimaire${nI>1?'s':''}</b><button class="btn s w" style="margin-top:8px" onclick="eqTab='it';click();render()">Voir l’onglet Intérim</button></div>`}
+  if(eqTab==='terrain'){const F=fieldOwn(),nF=Math.min(F.length,pgN('ter',25));h+=`<h2>Sur les chantiers (${F.length})</h2>`;F.slice(0,nF).forEach(w=>h+=card(w));h+=pgBtn('ter',25,nF,F.length);if(nI)h+=`<div class="card"><b>🦺 + ${nb(nI)} intérimaire${nI>1?'s':''}</b><button class="btn s w" style="margin-top:8px" onclick="eqTab='it';click();render()">Voir l’onglet Intérim</button></div>`}
   else if(eqTab==='it'){h+=rIt()}
   else if(eqTab==='rap'){const sup=has('gest')||field().some(w=>w.r==='chef');
     if(has('chefp'))h+=`<div class="card"><div class="row"><b style="flex:1">👔 Patrick traite les rapports</b></div><div class="mut sm" style="margin-top:4px">Primes aux très bons, recadrage puis avertissement écrit aux autres. Les licenciements, c’est toi qui décides. Sévérité :</div><div style="margin-top:6px">${[['d','😊 Gentil'],['n','😐 Normal'],['s','😠 Strict']].map(([k,l])=>`<span class="chip ${(st.cpSev||'n')===k?'on':''}" onclick="st.cpSev='${k}';click();save();render()">${l}</span>`).join('')}</div></div>`;
@@ -2637,7 +2652,7 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
       `<div class="row" style="margin-top:10px"><button class="btn s" onclick="rptAct(${r.id},'talk')">🗣️ Recadrer</button><button class="btn" onclick="rptAct(${r.id},'warn')">⚠️ Avertissement écrit</button></div>${w.it?`<div class="row" style="margin-top:8px"><button class="btn r" onclick="rptAct(${r.id},'fire')">↩️ Renvoyer à l’agence (intérimaire)</button><button class="btn s" onclick="rptAct(${r.id},'ok')">Ignorer</button></div>`:`<div class="row" style="margin-top:8px"><button class="btn s" onclick="rptAct(${r.id},'fire')">📤 Licencier (préavis ${eur(preavisCost(w))})</button><button class="btn r" onclick="rptAct(${r.id},'grave')">🚪 Motif grave</button><button class="btn s" onclick="rptAct(${r.id},'ok')">Ignorer</button></div>`}`):''}</div>`}
     h+='<p class="mut sm">Rappel : en Belgique, le licenciement pour motif grave doit être notifié dans les 3 jours ouvrables qui suivent les faits, et la faute doit être prouvée. Sinon, l’ouvrier peut aller au tribunal du travail.</p>'}
   else if(eqTab==='bureau'){const office=st.workers.filter(w=>ROLES[w.r].cat!=='ouv');
-    h+=`<h2>Encadrement, bureau et direction</h2>`;if(!office.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, factures, chantiers. Toi seul, tu peux suivre 2 chantiers et 2 offres en même temps.</p>';office.forEach(w=>h+=card(w));
+    h+=`<h2>Encadrement, bureau et direction</h2>`;if(!office.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, factures, chantiers. Toi seul, tu peux suivre 2 chantiers et 2 offres en même temps.</p>';{const nO=Math.min(office.length,pgN('off',20));office.slice(0,nO).forEach(w=>h+=card(w));h+=pgBtn('off',20,nO,office.length)}
     h+=`<h2>Postes à pourvoir</h2>`;
     for(const r of['aide','plan','offre','cond','recru','chefp','recouv','comm','rsoc','hiver','gest','secr','metreur','compta','rh','meca','prev','qhse','flotte','achat','juriste','assist','gardien','form','dirt','daf','dirc']){const R0=ROLES[r];if(!R0.multi&&has(r))continue;const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
       h+=`<div class="card" style="${lock?'opacity:.6':''}"><div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(R0.day*WDM)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>
@@ -3277,7 +3292,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-07.2";
+var APPV="2026-11-07.3";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
