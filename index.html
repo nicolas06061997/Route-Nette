@@ -527,7 +527,7 @@ const payroll=()=>st.workers.reduce((a,w)=>a+(w.it?0:w.day),0);
 // charge d'encadrement : un chantier public = 1, un petit boulot privé = 1/3 (petit, simple, souvent seul)
 const mgmtLoad=()=>Math.round(running().filter(c=>c.crew.length).reduce((a,c)=>a+(JOBS[c.j].p?1/3:1),0)*10)/10;
 const mgmtCap=()=>2+3*cnt('gest')+(has('dirt')?1:0);
-const offerCap=()=>2+(has('secr')?3:0)+(has('metreur')?2:0)+(has('dirc')?3:0)+(typeof ino==='function'&&ino('ia')?4:0);
+const offerCap=()=>Math.floor(ownW()/20)+2+(has('secr')?3:0)+(has('metreur')?2:0)+(has('dirc')?3:0)+(typeof ino==='function'&&ino('ia')?4:0);
 const running=()=>st.contracts.filter(c=>c.st==='run');
 const myOffers=()=>st.tenders.filter(t=>t.my&&t.status!=='done').length;
 const payDelay=base=>Math.max(5,base-(has('aide')?10:0)+(!has('aide')&&ownW()>=6?15:0));
@@ -1355,9 +1355,9 @@ function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.worke
   st.tenders=st.tenders.filter(t=>t.status!=='done'||t.rec||(t.my&&st.day-t.dec<20));
   st.tenders=st.tenders.filter(t=>t.status!=='opened'||t.my||st.day-t.bidEnd<3);
   const open=st.tenders.filter(t=>t.status==='open').length;
-  if(open<10&&Math.random()<.7*evF('t'))genTender();if(open<10&&Math.random()<.4*evF('t'))genTender();if(open<12&&evF('t')>1.3&&Math.random()<.3)genTender();
+  {const tc=tenderCap();if(open<tc){const k=1.1*tc/10*evF('t');let n=Math.floor(k)+(Math.random()<k%1?1:0);while(n-->0)genTender()}}
   st.jobs=st.jobs.filter(o=>o.until>=st.day);
-  if(st.jobs.length<3+3*Math.min(8,field().length)&&Math.random()<(.5+st.rep/150+field().length*.08)*(1+adBoost())*evF('j'))genJob();if(adBoost()&&Math.random()<adBoost()*.5)genJob();if(field().length>2&&Math.random()<.3)genJob();
+  if(st.jobs.length<3+3*Math.min(30,field().length)&&Math.random()<(.5+st.rep/150+field().length*.08)*(1+adBoost())*evF('j'))genJob();if(adBoost()&&Math.random()<adBoost()*.5)genJob();if(field().length>2&&Math.random()<.3)genJob();for(let i=Math.floor(fieldOwn().length/40);i>0;i--)if(Math.random()<.5)genJob();
   if(!st.jobs.some(o=>!JOBS[o.j].need.length))genJob(month()===12||month()<=2&&Math.random()<.5?'p_neige':'p_dechets');
   if(x.getDay()===1){refreshCand();try{acOffer()}catch(e){}}
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
@@ -2003,6 +2003,17 @@ function rMega(){if(!megaOpen())return`<div class="card"><h3>🌐 Géant</h3><p 
   h+=`<p class="mut sm" style="margin:2px 4px 8px">${megaSec==='c'?'Tu paies une fois, l’État te verse une redevance chaque mois pendant toute la durée. À la fin, l’ouvrage lui revient.':megaSec==='g'?'Des groupes routiers européens à racheter (noms inventés). Ils te versent leur bénéfice chaque mois ; tu peux les revendre au même prix.':'Tes usines rendent tes chantiers moins chers et vendent aussi aux autres entreprises.'}</p>`;
   const ks=Object.keys(T).sort((a,b)=>(L.some(x=>x.k===b)?1:0)-(L.some(x=>x.k===a)?1:0)||T[a].p-T[b].p);
   return h+ks.map(k=>mCard(megaSec,k)).join('')}
+// Combien de marchés publics peuvent être ouverts en même temps : grandit avec la classe et la taille de l'entreprise
+const tenderCap=()=>Math.min(80,10+3*(st.cls||0)+Math.floor(ownW()/15));
+// Charge de travail : occupation des ouvriers, chantiers, marchés ouverts, offres en préparation
+function workCard(ao){const onC=new Set();running().forEach(c=>c.crew.forEach(i=>onC.add(i)));const F=field().filter(w=>!w.boss&&!w.det&&!(w.off>st.day));if(F.length<3)return'';
+  const busy=F.filter(w=>onC.has(w.id)).length,occ=Math.round(busy/F.length*100),run=running(),pub=run.filter(c=>!JOBS[c.j].p).length,wait=st.contracts.filter(c=>c.st==='wait').length;
+  const op=st.tenders.filter(t=>t.status==='open'&&!t.my),okT=st.vca!==0&&st.adm.vca?op.filter(t=>spwReq(t).every(x=>x.ok)).length:0;
+  const col=occ>=75?'var(--gr)':occ>=45?'var(--or)':'var(--rd)';
+  const tip=occ<45?(okT?`Pas assez de travail : ${okT} marché${okT>1?'s':''} ouvert${okT>1?'s':''} pour toi dans 🏛️ Marchés${has('offre')?' (Grégory remet les offres tout seul, augmente son nombre d’offres avec un métreur ou une secrétaire)':''}.`:'Pas assez de travail : accepte plus de petits boulots, ou attends les prochains marchés publics.'):occ>=95?'Tout le monde travaille : tu peux engager (ou prendre des intérimaires) pour décrocher plus de marchés.':'';
+  return`<div class="card"><div class="row"><b style="flex:1">📊 Ta charge de travail</b><b style="color:${col}">${occ} %</b></div><div style="height:8px;border-radius:5px;background:var(--card2);overflow:hidden;margin:6px 0"><div style="height:100%;width:${occ}%;background:${col}"></div></div>
+  <div class="mgrid" style="grid-template-columns:repeat(4,1fr);margin-top:6px"><div><span>Au travail</span><b>${busy}/${F.length}</b></div><div><span>Chantiers</span><b>${run.length}${wait?' +'+wait:''}</b></div><div><span>Marchés ouverts</span><b>${op.length}/${tenderCap()}</b></div><div><span>Mes offres</span><b>${myOffers()}/${offerCap()}</b></div></div>
+  ${tip?`<div class="mut sm" style="margin-top:6px">${tip}</div>`:''}</div>`}
 /* ---------- Personnel, achats, banque ---------- */
 function hire(i){const w=st.cand[i];if(!w)return;if(!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<monthly(w))return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(monthly(w))}).`);
   st.cand.splice(i,1);ck('hire');w.mot=w.base;w.hd=st.day;w.age=cvOf(w).age;st.workers.push(w);log(`👷 ${w.n} rejoint l'équipe : ${ROLES[w.r].n}.`,false);kaching();goals();save();render()}
@@ -2539,7 +2550,7 @@ function render(headOnly){
 }
 function goalCard(){const g=curGoal();if(!g&&st.adm.bce){const C=crr(),M=MEGA.find(x=>crr().mega[x.k]!=='ok');return`<div class="goal" onclick="click();careerUI()" style="cursor:pointer"><span class="gi">🎖️</span><div><b>Objectif de carrière</b><div>${M?(typeof C.mega[M.k]==='number'?`${M.ic} ${M.n} : fini dans ${left(C.mega[M.k])}`:C.lv<M.lv?`Atteins le niveau ${M.lv} (tu es niveau ${C.lv}) pour le grand chantier « ${M.n} »`:`Lance le grand chantier « ${M.n} »`):C.lv<100?`Atteins le niveau 100 (tu es niveau ${C.lv})`:'🏆 Tu as tout fini. Respect, patron !'}</div></div></div>`}return g?`<div class="goal"><span class="gi">🎯</span><div><b>Objectif</b><div>${g.t}</div></div></div>`:''}
 function jobHead(J,sub,right){return`<div class="hd"><div class="ic" style="--ac2:${J.ac}2e">${J.ic}</div><div style="flex:1;min-width:0"><h3>${J.n}</h3><div class="mut">${sub}</div></div>${right||''}</div>`}
-function rCh(){let h=goalCard()+dqCard()+decCard()+lawCard();const cs=st.contracts;
+function rCh(){let h=goalCard()+workCard()+dqCard()+decCard()+lawCard();const cs=st.contracts;
   if(st.cash<0)h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Ton compte est dans le rouge (${eur(st.cash)})</b><div class="mut sm" style="margin-top:4px">Chaque paiement reçu s'ajoute bien, mais les salaires, la vie privée et les impôts partent le 1er du mois. Regarde le relevé et le bilan dans 📊 Entreprise. Solutions : moins de personnel, plus de chantiers, ou un prêt.</div><button class="btn s" style="margin-top:8px" onclick="tab('bi')">Voir mon relevé de compte</button></div>`;
   if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--ye)"><h3>👋 Bienvenue, patron !</h3><p>Tu pars de zéro : ${eur(3000)} d'économies, ta vieille voiture, une pince, des gants et des sacs. Pas d'ouvrier, pas de machine. Attention : chaque mois, il faut aussi payer ta vie privée (loyer, courses…) et les impôts.</p><p class="mut">Première étape : inscrire ton entreprise à la Banque-Carrefour des Entreprises (guichet d'entreprise) pour avoir un numéro de TVA et pouvoir facturer.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire à la BCE (105 €)</button></div>`;
   else if(!cs.length)h+=`<div class="card"><h3>Aucun chantier en cours</h3><p class="mut">Prends un travail dans <b>🧰 Boulots</b>${st.adm.vca?' ou remets offre dans <b>🏛️ Marchés</b>':''}.</p><button class="btn w" onclick="tab('pb')">Voir les petits boulots</button></div>`;
@@ -2565,7 +2576,7 @@ function rPb(){let h=goalCard()+acCard()+`<h2>Petits boulots — particuliers, c
     <div class="tags"><span class="tag">${nb(o.q)} ${J.un}</span><span class="tag">⏱ ${o.dur} jours</span><span class="tag">${o.ct==='part'?'💶 payé à la fin':o.ct==='com'?'📄 payé à 30 jours':'📄 facture 15-30 jours'}</span><span class="tag">Jusqu'au ${dstr(o.until)}</span></div>
     <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:freeCount()<JOBS[o.j].minW?`<button class="btn w s" disabled>⏳ ${field().length>1?'Plus assez de monde de libre ('+Math.max(0,freeCount())+' / '+JOBS[o.j].minW+')':'Occupé : termine d’abord ton chantier en cours'}</button>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
   return h+(L.length?'':'<p class="mut">Pas de demande aujourd’hui. Reviens demain !</p>')+(st.adm.bce?adCard():'')}
-function rAo(){let h=goalCard();const mine=st.tenders.filter(t=>t.my);
+function rAo(){let h=goalCard()+workCard(1);const mine=st.tenders.filter(t=>t.my);
   h+=seg(aoTab,[['pub','📢 Publiés'],['mes',`📨 Mes offres (${mine.length})`],['riv','⚔️ Concurrents']],'aoTab');
   const acc=st.adm.bce&&st.adm.rc&&st.adm.vca;
   if(has('offre'))h+=`<div class="card acc" style="--ac:var(--bl)"><b>📑 Grégory remet les offres pour toi</b><div class="mut sm" style="margin-top:4px">Prix = ton prix de revient × le coefficient choisi. Plus il est bas, plus tu gagnes de marchés mais moins tu gagnes d'argent.</div><div class="row" style="margin-top:8px">${[1.25,1.3,1.35,1.45,1.55].map(k=>`<button class="btn ${(st.offCoef||1.35)===k?'':'s'}" style="padding:6px 9px" onclick="st.offCoef=${k};save();render()">× ${String(k).replace('.',',')}</button>`).join('')}</div></div>`;
@@ -3257,7 +3268,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-06.9";
+var APPV="2026-11-06.10";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
