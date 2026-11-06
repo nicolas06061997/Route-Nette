@@ -1648,6 +1648,9 @@ const GOALS=[
   {k:'h57',t:'Crée ta holding personnelle',ok:()=>!!(st.priv&&st.priv.ph)},
   {k:'h58',t:'Ta holding personnelle vaut 10 millions €',ok:()=>!!(st.priv&&st.priv.ph)&&phVal()>=1e7},
   {k:'h59',t:'Transmets ta société à ton enfant',ok:()=>!!(st.priv&&st.priv.trans)},
+  {k:'h60',t:'Vends ton entreprise à un grand groupe',ok:()=>!!(st.priv&&st.priv.sold)},
+  {k:'h61',t:'Réputation personnelle de 80',ok:()=>((st.priv&&st.priv.rp)||0)>=80},
+  {k:'h62',t:'Rénove une maison',ok:()=>!!(st.priv&&st.priv.own.some(o=>o.rv))},
   {k:'h40',t:'Niveau de carrière 100 : légende absolue',ok:()=>crr().lv>=100}];
 // Confettis (au-dessus de tout)
 const fxc=$('#fx'),fg=fxc.getContext('2d');let conf=[];
@@ -1846,7 +1849,7 @@ function rIt(){const L=itList(),busy=new Map();st.contracts.forEach(c=>c.st==='r
 // nouveaux métiers : bonus des ouvriers spécialisés et effets mensuels des employés
 const PAVJ=['trottoirs','pmr','pontage','p_allee'],MARQJ=['marquage','marq_auto'],AUTJ=['autoroute','marq_auto','deneig_auto','balay_auto','epareuse_auto','cloture'],HIVJ=['deneig','deneig_auto','depots_sel','p_neige','p_selpk'];
 function specB(c,crew){let f=1;const hasR=r=>crew.some(w=>w.r===r);if(PAVJ.includes(c.j)&&hasR('paveur'))f*=1.15;if(MARQJ.includes(c.j)&&hasR('peintre'))f*=1.2;if(AUTJ.includes(c.j)&&hasR('signal'))f*=1.1;if(HIVJ.includes(c.j)&&has('hiver')){f*=1.15;rsAdd('hiv',1)}return f}
-function rolesMonth(){for(const f of[indexTick,bigEvTick,acMonth,rivMonth,pvMonth4,pvWorthTick])try{f()}catch(e){}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
+function rolesMonth(){for(const f of[indexTick,bigEvTick,acMonth,rivMonth,pvMonth4,pvMonth5,pvWorthTick])try{f()}catch(e){}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
 /* ---------- Indexation, contrats d'entretien, concurrents, grands événements, astuces, notifications ---------- */
 // Indexation automatique des salaires (Belgique) : chaque 1er janvier ; les prix du marché suivent à 90 %
 const pIdx=()=>1+((st.idx||1)-1)*.9;
@@ -2047,6 +2050,7 @@ const PRIV={
   domotique:{c:'reno',n:'Domotique et alarme',ic:'🛡️',p:6500,m:20,dep:.1,needHome:1},
   // Logement (prix moyens notaires Wallonie 2025)
   appart:{c:'home',n:'Appartement en Wallonie (prix moyen)',ic:'🏢',p:206300,m:420,dep:-.03,home:1,hr:850},
+  flip:{c:'home',n:'Maison à rénover (Charleroi, gros travaux)',ic:'🏚️',p:145000,m:180,dep:-.02,hr:650,flip:1},
   maison:{c:'home',n:'Maison en Wallonie (prix moyen 2025)',ic:'🏠',p:269550,m:520,dep:-.04,home:1,hr:1000},
   villa:{c:'home',n:'Villa 4 façades avec jardin',ic:'🏡',p:480000,m:850,dep:-.04,home:1,hr:1650},
   maitre:{c:'home',n:'Maison de maître rénovée',ic:'🏛️',p:690000,m:1100,dep:-.03,home:1,hr:2100},
@@ -2134,7 +2138,7 @@ function pRent(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const
   save();render()}
 // journal de la vie privée
 function pEv(t,a,toast){const V=pv();(V.ev||(V.ev=[])).unshift({d:st.day,t,a:+a||0});if(V.ev.length>40)V.ev.length=40;if(toast||curTab==='pv'&&toast!==false&&a===undefined)toastMsg(t,1)}
-function pValue(o){const P=PRIV[o.k],y=(st.day-o.day)/365;if(!P||P.c==='exp'||P.once||P.keep||P.sub)return 0;let v=P.c==='coll'?o.price*(o.vm||1):o.price*Math.pow(1-P.dep,y);if(P.c==='car'&&!o.used)v*=.85;return Math.round(v)}
+function pValue(o){const P=PRIV[o.k],y=(st.day-o.day)/365;if(!P||P.c==='exp'||P.once||P.keep||P.sub)return 0;let v=P.c==='coll'?o.price*(o.vm||1):o.price*Math.pow(1-P.dep,y);if(o.rv)v*=1.75;if(P.c==='car'&&!o.used)v*=.85;return Math.round(v)}
 function buyFees(k,loan){const P=PRIV[k];if(P.c==='loc')return Math.round(P.p*.125)+Math.round(2500+P.p*.01);if(P.c==='home'){const first=P.home&&!ownsHome();return Math.round(P.p*(first?.03:.125))+Math.round(2500+P.p*.01)}return P.tmc||0}
 function mortPay(capital){const r=MORT_RATE/12,n=MORT_Y*12;return capital*r/(1-Math.pow(1+r,-n))}
 function privMonthly(){let t=0;for(const o of pv().own){const P=PRIV[o.k];if(P&&P.m)t+=P.m;if(o.loan)t+=o.pay}return Math.round(t)}
@@ -2176,6 +2180,7 @@ function privMonth(){lifeEvents();try{healthMonth();familyMonth();collMonth()}ca
 const INV={sav:{n:'Compte épargne réglementé',ic:'🐷',r:.015,v:0,d:'± 1,5 %/an, sans risque. Intérêts exonérés jusqu’à ± 1 000 €/an.'},
   etf:{n:'ETF monde (actions, compte-titres)',ic:'📈',r:.07,v:.045,d:'± 7 %/an en moyenne, mais ça monte et ça descend. Taxe sur les opérations de bourse 0,12 %.'},
   gold:{n:'Or physique (lingots)',ic:'🥇',r:.05,v:.035,d:'± 5 %/an en moyenne, valeur refuge. Frais d’achat ± 3 %.'},
+  obl:{n:'Bon d’État belge (obligations)',ic:'🇧🇪',r:.028,v:.002,d:'± 2,8 %/an, garanti par l’État belge. Sans risque, mais rapporte moins que les actions.'},
   pens:{n:'Épargne-pension',ic:'👴',r:.04,v:.01,d:'Maximum 1 050 € par an, et 30 % rendus en réduction d’impôt chaque année.'}};
 /* ---------- Bourse (vie privée) : vraies entreprises cotées, cours de départ approximatifs, évolution simulée ----------
    Règles belges : taxe sur les opérations de bourse (TOB) 0,35 % (max 1 600 €), courtage 0,1 % (min. 2 €),
@@ -2360,7 +2365,7 @@ function privInvest(){const V=pv(),I=V.inv||(V.inv={sav:0,etf:0,gold:0,pens:0});
     if(Math.random()<(P.hrn&&!P.rent?.12:.05)){pEv(`🏚️ ${P.n} : pas de locataire ce mois-ci.`);continue}rent+=r}
   if(rent){V.cash+=rent;V.rentT=(V.rentT||0)+rent;pEv(`🔑 Loyers reçus : +${eur(rent)}`,0)}
   if(month()===1&&V.pensY){const back=Math.round(V.pensY*.3);V.cash+=back;pEv(`👴 Réduction d'impôt épargne-pension : +${eur(back)}`);V.pensY=0}}
-function invMove(k,a){const V=pv(),I=V.inv||(V.inv={sav:0,etf:0,gold:0,pens:0});click();
+function invMove(k,a){const V=pv(),I=V.inv||(V.inv={sav:0,etf:0,gold:0,pens:0});click();if(!(I[k]>=0))I[k]=0;
   if(a>0){if(k==='pens'){const y=V.pensY||0;a=Math.min(a,1050-y);if(a<=0)return toastMsg('Maximum 1 050 € par an pour l’épargne-pension.');V.pensY=y+a}
     if(V.cash<a)return toastMsg('Pas assez sur ton compte privé.');V.cash-=a;I[k]+=Math.round(a*(k==='etf'?.9988:k==='gold'?.97:1))}
   else{if(k==='pens')return toastMsg('L’épargne-pension est bloquée jusqu’à ta pension.');const v=Math.min(I[k],-a||I[k]);I[k]-=v;V.cash+=Math.round(v*(k==='etf'?.9988:k==='gold'?.97:1))}
@@ -2616,7 +2621,7 @@ function pvHome(net,worth){const V=pv(),hap=pvHappy(net),own=V.own.filter(o=>PRI
   if(net<0){const need=Math.min(100000,Math.ceil((patSal()-net)/100)*100),canRent=own.filter(o=>PRIV[o.k].hr&&!o.lou&&!(PRIV[o.k].home&&myHome()===o));
     h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Tu dépenses ${eur(-net)} de plus que tu gagnes chaque mois</b><div class="mut sm" style="margin-top:4px">Ton compte privé va fondre. Le plus simple :</div><button class="btn w" style="margin-top:8px" onclick="setSal(${need})">💶 Mettre mon salaire à ${eur(need)} net</button>${canRent.length?`<button class="btn s w" style="margin-top:6px" onclick="pvGo('biens')">🔑 Mettre un bien en location (${canRent.length} possible${canRent.length>1?'s':''})</button>`:''}${st.srl?`<div class="mut sm" style="margin-top:6px">Ta SRL paiera ± ${eur(Math.round(need/.55))} brut par mois pour ce salaire.</div>`:''}</div>`}
   const W=V.wh||[];if(W.length>=2)h+=`<div class="card"><div class="row"><span class="mut sm" style="flex:1">Ton patrimoine, mois après mois</span><b class="${W[W.length-1]>=W[0]?'money':'neg'} sm">${W[W.length-1]>=W[0]?'+':''}${eur(W[W.length-1]-W[0])}</b></div>${spark(W,300,60)}</div>`;
-  return h}
+  return h+fortuneCard()}
 function pThumb(k,ic){const c=IMC[k];if(!c&&IMG[k]&&!IMH[k])try{loadImg(k)}catch(e){}if(c&&c.src&&!c.none)return`<img src="${c.src}" alt="" referrerpolicy="no-referrer" onclick="event.stopPropagation();pPhoto('${k}')" onerror="this.style.display='none'" style="width:58px;height:58px;border-radius:12px;object-fit:cover;flex:none;margin-right:10px;cursor:zoom-in">`;return`<div class="ic">${ic}</div>`}
 function pPhoto(k){click();showModal(photo(k)+`<button class="btn s w" style="margin-top:10px" onclick="closeM()">Fermer</button>`)}
 const pShort=n=>n.replace(/ \(.*$/,'');
@@ -2634,6 +2639,7 @@ function pBien(id){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=
   if(P.sub)b+=`<button class="btn r w" style="padding:13px" onclick="pSell(${id})">✂️ Résilier · tu économises ${eur(P.m)}/mois</button>`;
   else if(!P.keep)b+=`<button class="btn w" style="padding:13px" onclick="pSell(${id})">💰 Vendre · tu reçois ${eur(net)}</button><div class="mut sm" style="margin:4px 2px 0">${gn>=0?`Tu gagnes ${eur(gn)} par rapport au prix d’achat.`:`Tu perds ${eur(-gn)} par rapport au prix d’achat.`}${fee?` Frais d’agence ± 3 % : ${eur(fee)}.`:''}${o.loan?` Le crédit restant (${eur(o.loan)}) est remboursé à la vente.`:''}</div>`;
   if(P.hr)b+=`<button class="btn s w" style="padding:12px;margin-top:8px" onclick="pRent(${id});pBien(${id})">${!o.lou?`🔑 Mettre en location · +${eur(r||P.hr)}/mois`:o.louEnd?'⏳ Préavis en cours (départ le '+dstr(o.louEnd)+')':st.day<(o.louFrom||0)?'✕ Annuler la mise en location':'🏠 Récupérer le bien (préavis 6 mois)'}</button>`;
+  if(P.flip&&!o.rv)b+=o.rw?`<div class="tags" style="margin-top:8px"><span class="tag o">🔨 Travaux en cours jusqu’au ${dstr(o.rw)}</span></div>`:`<button class="btn g w" style="padding:12px;margin-top:8px" onclick="flipGo(${id})">🔨 Rénover (60 000 €) · vaudra ± ${eur(v*1.75)}</button>`;
   if(P.keep)b+=`<div class="mut sm">Ça fait partie de ta vie : ça ne se vend pas.</div>`;
   const pc=IMC[o.k];showModal(`${pc&&pc.src&&!pc.none?photo(o.k):''}<div class="hd" style="margin-top:6px"><div class="ic">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3>${o.lou?'<span class="tag g">🔑 En location</span>':P.home&&myHome()===o?'<span class="tag v">🏡 Tu habites ici</span>':''}</div></div>
   <table style="margin:10px 0">${rows.map(x=>`<tr><td class="mut">${x[0]}</td><td style="text-align:right">${x[1]}</td></tr>`).join('')}</table>${b}<button class="btn s w" style="margin-top:10px" onclick="closeM()">Fermer</button>`)}
@@ -2710,8 +2716,10 @@ function pvPayMore(){const V=pv(),y=date(st.day).getFullYear(),b=Math.round(Math
   h+=`<div class="card"><b>🏦 Réserve de liquidation</b><div class="mut sm">Tu mets du bénéfice de côté : 10 % de cotisation maintenant, puis seulement 5 % quand tu le sors, après 3 ans (règle belge, simplifiée). En réserve : <b>${eur(lq)}</b> · disponible : <b>${eur(rd)}</b>.</div><div class="row" style="margin-top:8px">${[50000,200000,1000000].map(a=>`<button class="btn s" style="padding:7px 10px" ${canPay()<a?'disabled':''} onclick="liqPut(${a})">+${eur(a)}</button>`).join('')}${rd?`<button class="btn" style="padding:7px 10px" onclick="liqOut()">Sortir ${eur(rd)}</button>`:''}</div></div>`;
   h+=`<h2>🚗 Avantages de dirigeant</h2><div class="card"><div class="row"><b style="flex:1">🚗 Voiture de société</b><button class="btn ${V.vsoc?'g':'s'}" style="padding:6px 10px" onclick="pv().vsoc=pv().vsoc?0:1;click();save();render()">${V.vsoc?'Oui':'Non'}</button></div><div class="mut sm">Ta SRL paie les frais de tes voitures (déductibles). Toi, tu paies seulement l’avantage de toute nature (ATN, ± 20 % des frais).</div>
     <div class="row" style="margin-top:10px"><b style="flex:1">🧓 Pension complémentaire (assurance groupe)</b></div><div class="mut sm">Ta SRL verse une prime chaque mois (déductible) ; le capital grandit (± 2,5 %/an) et compte dans ton patrimoine. Récupérable avec 10 % de taxe. Capital : <b>${eur(V.agT||0)}</b>.</div><div class="row" style="margin-top:8px">${[0,500,1000,2500].map(a=>`<button class="btn ${(V.ag||0)===a?'g':'s'}" style="padding:6px 10px" onclick="pv().ag=${a};click();save();render()">${a?eur(a)+'/mois':'Aucune'}</button>`).join('')}${V.agT>1000?`<button class="btn s" style="padding:6px 10px" onclick="agOut()">Récupérer ${eur(V.agT*.9)}</button>`:''}</div></div>`;
+  h+=ccCard();
   h+=`<div class="card acc" style="--ac:var(--vi)"><div class="row"><b style="flex:1">🏦 Ta holding personnelle</b><button class="btn" style="padding:7px 12px" onclick="pvGo('hold')">${V.ph?'Ouvrir · '+eur(phVal()):'Découvrir'}</button></div><div class="mut sm">Les dividendes de ta SRL y remontent sans impôt : tu les réinvestis (immeubles, actions, start-ups) et tu ne paies que sur ce que tu sors.</div></div>`;
   if(V.wed||V.cpl)h+=`<div class="card"><b>💍 Protéger ton patrimoine</b><div class="mut sm">${V.cm?'✅ Contrat de mariage signé (séparation de biens) : en cas de séparation, ton patrimoine est protégé.':'Sans contrat de mariage, une séparation coupe ton patrimoine privé en deux.'}</div>${V.cm?'':`<button class="btn s w" style="margin-top:8px" ${V.cash<1800?'disabled':''} onclick="cmGo()">Signer un contrat de mariage (1 800 € de notaire)</button>`}</div>`;
+  h+=`<div class="card"><b>🏁 Vendre ton entreprise</b><div class="mut sm">Un grand groupe te rachète pour ± ${eur(Math.max(0,grpValue()*.9))}. ${V.ph?'Par ta holding, la plus-value est exonérée.':'Sans holding, tu paies 10 % sur la plus-value au-delà d’1 million €.'} Ensuite tu repars de zéro avec une nouvelle petite entreprise.</div><button class="btn s w" style="margin-top:8px" ${grpValue()*.9<1e6?'disabled':''} onclick="sellCo()">${grpValue()*.9<1e6?'🔒 Ton entreprise doit valoir au moins 1,1 M€':'Vendre mon entreprise'}</button></div>`;
   h+=`<div class="card"><div class="row"><b style="flex:1">📈 Bourse</b><button class="btn s" style="padding:7px 12px" onclick="pvGo('bourse')">Ouvrir</button></div></div>`;
   return h}
 function agOut(ok){const V=pv();if(!(V.agT>1000))return;if(!ok)return ask(`Récupérer ta pension complémentaire ?\nCapital : ${eur(V.agT)}\nTaxe (10 %) : ${eur(V.agT*.1)}\nTu reçois : ${eur(V.agT*.9)}`,()=>agOut(1),{ic:'🧓',ok:'Récupérer'});V.cash+=Math.round(V.agT*.9);pEv(`🧓 Pension complémentaire récupérée : +${eur(V.agT*.9)}.`);V.agT=0;save();render()}
@@ -2724,6 +2732,45 @@ function pvMonth4(){const V=pv(),B=pvBudget();V.hap=pvHappy(B.ti-B.to);
   if(Math.random()<.003){const a=Math.round(R(30000,300000)/1000)*1000;V.cash+=a;pEv(`🕊️ Un oncle éloigné te laisse un héritage : +${eur(a)}.`,0,true)}
   if(V.wed&&(V.hap??60)<35&&Math.random()<.03){if(V.cm)pEv('💔 Divorce. Grâce à ton contrat de mariage, ton patrimoine est protégé.',0,true);else{const c=Math.max(0,Math.round(V.cash/2));V.cash-=c;for(const k in V.inv||{})V.inv[k]=Math.round(V.inv[k]/2);if(V.ph)V.ph.cash=Math.round(V.ph.cash/2);pEv(`💔 Divorce sans contrat de mariage : ton patrimoine est partagé (−${eur(c)} sur ton compte, placements coupés en deux).`,0,true)}V.wed=0;V.cpl=0;V.hp=clamp(hp()-20,0,100)}
   if(month()===9)for(const o of V.own.filter(o=>o.k==='enfant')){const a=Math.floor((st.day-o.day)/365);if(a>=18&&a<=22){V.cash-=7500;pEv('🎓 Rentrée universitaire de ton enfant : minerval, kot et livres (−7 500 €).',0)}else if(a===23){pEv('🎓 Ton enfant a obtenu son diplôme ! Tu es fier/fière.',0,true);V.hp=clamp(hp()+5,0,100)}}}
+/* ---------- Vie privée v5 : compte courant, réputation personnelle, rénovation, vente de l'entreprise, fortune totale ---------- */
+// compte courant du dirigeant : V.cc > 0 = la société te doit (tu lui as prêté) ; < 0 = tu dois à la société
+function ccMove(a){const V=pv();a=Math.round(a);if(!st.srl)return;click();
+  if(a>0){if(V.cash<a)return toastMsg('Pas assez sur ton compte privé.');V.cash-=a;V.cc=(V.cc||0)+a;mv(a,'Prêt du dirigeant (compte courant)','loan');pEv(`🔁 Tu prêtes ${eur(a)} à ta société (intérêts 5 %/an).`,0)}
+  else{a=-a;const owed=Math.max(0,V.cc||0);if(owed>0){const r=Math.min(owed,a);if(r>canPay())return toastMsg(`Ta société doit garder 3 mois de charges : maximum ${eur(canPay())}.`);mv(-r,'Remboursement du compte courant du dirigeant','loan');V.cc-=r;V.cash+=r;pEv(`🔁 Ta société te rembourse ${eur(r)}.`,0)}
+    else{if(a>canPay())return toastMsg(`Ta société doit garder 3 mois de charges : maximum ${eur(canPay())}.`);mv(-a,'Avance au dirigeant (compte courant débiteur)','loan');V.cc=(V.cc||0)-a;V.cash+=a;pEv(`🔁 Ta société t’avance ${eur(a)} (intérêts 6 %/an à payer, avantage taxé si tu ne paies pas).`,0)}}
+  save();render()}
+function ccPayBack(){const V=pv();const d=Math.max(0,-(V.cc||0));if(!d)return;const r=Math.min(d,Math.max(0,V.cash));if(r<=0)return toastMsg('Pas assez sur ton compte privé.');V.cash-=r;V.cc+=r;mv(r,'Le dirigeant rembourse son compte courant','loan');click();save();render()}
+function ccMonth(){const V=pv(),c=V.cc||0;if(!c)return;if(c>0){const i=Math.round(c*.05/12);mv(-i,'Intérêts du compte courant du dirigeant','fix');V.cash+=Math.round(i*.7)}else{const i=Math.round(-c*.06/12);V.cash-=i;mv(i,'Intérêts payés par le dirigeant (compte courant)','in')}}
+// réputation personnelle : galas, mécénat, interviews ; elle tire la réputation de l'entreprise
+const PREP=[{k:'gala',ic:'🥂',n:'Organiser un gala de charité',c:50000,r:10,d:'Les élus et les grands clients viennent : réputation personnelle +10.'},
+  {k:'club',ic:'⚽',n:'Devenir mécène du club de foot local',c:25000,r:6,d:'Ton logo sur les maillots, tout le village en parle : +6.'},
+  {k:'conf',ic:'🎤',n:'Donner une conférence à l’UWE (Union wallonne des entreprises)',c:3000,r:4,d:'Tu racontes ton parcours devant 300 patrons : +4.'},
+  {k:'tv',ic:'📺',n:'Passer dans une émission télé régionale',c:0,r:5,d:'Gratuit, mais une seule fois par an. Avec une chargée de communication, ça se passe toujours bien.'}];
+function repAct(k){const V=pv(),A=PREP.find(x=>x.k===k),y=date(st.day).getFullYear();if(!A)return;if(k==='tv'&&V.tvY===y)return toastMsg('Déjà passé à la télé cette année.');if(V.cash<A.c)return toastMsg(`Il faut ${eur(A.c)} sur ton compte privé.`);
+  V.cash-=A.c;if(k==='tv'){V.tvY=y;if(!has('comm')&&Math.random()<.2){V.rp=clamp((V.rp??20)-4,0,100);pEv('📺 L’interview tourne mal : tu as bafouillé en direct. Réputation personnelle −4.',0,true);save();render();return}}
+  V.rp=clamp((V.rp??20)+A.r,0,100);click();pEv(`${A.ic} ${A.n} : réputation personnelle +${A.r}.`,0);save();render()}
+function repMonth(){const V=pv();const r=V.rp??20;if(r>20)st.rep=clamp(st.rep+(r-20)/80,0,100);V.rp=Math.max(0,r-.8)}
+function repCard(){const V=pv(),r=Math.round(V.rp??20);return`<h2>⭐ Ta réputation personnelle · ${r} / 100</h2><div class="card"><div style="height:8px;border-radius:5px;background:var(--card2);overflow:hidden"><div style="height:100%;width:${r}%;background:linear-gradient(90deg,var(--or),var(--ye))"></div></div><div class="mut sm" style="margin-top:6px">Plus tu es connu(e) et apprécié(e), plus ton entreprise gagne en réputation chaque mois. Elle baisse doucement si tu ne fais rien.</div>
+  ${PREP.map(A=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);margin-top:6px"><span style="font-size:22px">${A.ic}</span><div style="flex:1;min-width:0"><b class="sm">${A.n}</b><div class="mut" style="font-size:12px">${A.d}</div></div><button class="btn s" style="padding:6px 9px;font-size:12px" ${V.cash<A.c||(A.k==='tv'&&V.tvY===date(st.day).getFullYear())?'disabled':''} onclick="repAct('${A.k}')">${A.c?eur(A.c):'Gratuit'}</button></div>`).join('')}</div>`}
+// rénovation d'une maison achetée à rénover
+function flipGo(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o||o.rv||o.rw)return;if(V.cash<60000)return toastMsg('Il faut 60 000 € pour les travaux.');
+  if(!ok)return ask(`Rénover la maison ?\nTravaux (toiture, châssis, électricité, cuisine) : 60 000 €\nDurée : ± 4 mois\nValeur après travaux : ± ${eur(pValue(o)*1.75)}`,()=>flipGo(id,1),{ic:'🔨',ok:'Lancer les travaux'});
+  V.cash-=60000;o.rw=st.day+120;pEv('🔨 Travaux de rénovation lancés (± 4 mois).',0);save();render();pBien(id)}
+function flipMonth(){const V=pv();for(const o of V.own)if(o.rw&&st.day>=o.rw){delete o.rw;o.rv=1;pEv(`🏡 Rénovation terminée : ${PRIV[o.k].n} vaut maintenant ${eur(pValue(o))}. Tu peux la revendre ou la louer.`,0,true)}}
+// petite maladie (± 1 fois tous les 4 ans)
+function sickMonth(){const V=pv();if(Math.random()<.02){V.hp=clamp(hp()-15,0,100);const c=Math.round(R(300,2500));V.cash-=c;pEv(`🤒 Tu es malade quelques semaines (hôpital, médicaments : −${eur(c)}). Ta santé baisse.`,0,true)}}
+// vendre ton entreprise (fin d'une aventure) : par la holding, la plus-value est exonérée
+function sellCo(ok){const V=pv(),val=Math.round(grpValue()*.9),H=V.ph;if(val<1e6)return toastMsg('Ton entreprise doit valoir au moins 1 million € pour intéresser un repreneur.');
+  const tax=H?0:Math.round(Math.max(0,val-1e6)*.1),net=val-tax;
+  if(!ok)return ask(`Vendre ton entreprise ?\nPrix proposé par un grand groupe : ${eur(val)} (90 % de la valeur du groupe)\n${H?'Vendue par ta holding : plus-value exonérée, l’argent va dans ta holding':'Taxe belge sur les plus-values (10 % au-delà d’1 million €) : '+eur(tax)}\nTu reçois : ${eur(net)}\n⚠️ Tu repars ensuite de zéro avec une nouvelle petite entreprise (tu gardes ta vie privée, tes succès et ta carrière).`,()=>sellCo(1),{ic:'🏁',ok:'Vendre mon entreprise',danger:1});
+  if(H)H.cash+=net;else V.cash+=net;V.cash+=V.cc||0;V.cc=0;V.sold=(V.sold||0)+1;pEv(`🏁 Tu as vendu ton entreprise pour ${eur(val)} !`,0,true);log(`🏁 Entreprise vendue pour ${eur(val)}. Une nouvelle aventure commence.`);
+  try{relaunch()}catch(e){}goals();save();render()}
+function fortuneCard(){const V=pv(),pr=pvWorth()-(V.ph?phVal():0),hd=V.ph?phVal():0,co=Math.max(0,Math.round(grpValue()));const tot=pr+hd+co;
+  return`<div class="card"><div class="mut sm">💎 Ta fortune totale</div><b style="font-size:22px">${eur(tot)}</b><div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin:8px 0;background:var(--card2)">${[[pr,'#4fdc7a'],[hd,'#b48cff'],[co,'#ff9a1f']].map(([v,c])=>`<div style="width:${tot>0?Math.max(0,v)/tot*100:0}%;background:${c}"></div>`).join('')}</div><div class="sm"><span style="color:#4fdc7a">■</span> Privé ${eur(pr)} · <span style="color:#b48cff">■</span> Holding ${eur(hd)} · <span style="color:#ff9a1f">■</span> Ta société ${eur(co)}</div></div>`}
+function ccCard(){const V=pv(),c=V.cc||0;if(!st.srl)return'';return`<div class="card"><b>🔁 Compte courant avec ta société</b><div class="mut sm">${c>0?`Ta société te doit <b>${eur(c)}</b> (tu reçois 5 %/an d’intérêts, précompte 30 %).`:c<0?`Tu dois <b class="neg">${eur(-c)}</b> à ta société (6 %/an d’intérêts à payer).`:'Tu peux prêter de l’argent à ta société quand elle en manque, ou emprunter à ta société (à rembourser).'}</div>
+  <div class="row" style="margin-top:8px">${[10000,50000,250000].map(a=>`<button class="btn s" style="padding:6px 9px;font-size:12px" ${V.cash<a?'disabled':''} onclick="ccMove(${a})">Prêter ${eur(a)}</button>`).join('')}</div>
+  <div class="row" style="margin-top:6px">${[10000,50000].map(a=>`<button class="btn s" style="padding:6px 9px;font-size:12px" ${canPay()<a?'disabled':''} onclick="ccMove(${-a})">${c>0?'Récupérer':'Emprunter'} ${eur(a)}</button>`).join('')}${c<0?`<button class="btn" style="padding:6px 9px;font-size:12px" onclick="ccPayBack()">Rembourser</button>`:''}</div></div>`}
+function pvMonth5(){for(const f of[ccMonth,repMonth,flipMonth,sickMonth])try{f()}catch(e){}}
 function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=pvWorth(),B=pvBudget(),net=B.ti-B.to;
   const lv=LVL.filter(l=>worth>=l[0]).pop(),li=LVL.indexOf(lv),nx=LVL[li+1],pr=nx?Math.max(0,Math.min(1,(worth-Math.max(0,lv[0]))/(nx[0]-Math.max(0,lv[0])))):1;
   const h0=myHome(),ic=c=>own.filter(o=>c.includes(PRIV[o.k].c)).map(o=>PRIV[o.k].ic),kids=own.filter(o=>o.k==='enfant').length,pets=own.filter(o=>o.k==='chien'||o.k==='chat').map(o=>PRIV[o.k].ic);
@@ -2743,7 +2790,7 @@ function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=pvWorth(),B=pvB
   <tr><td><b>Reste à la fin du mois</b></td><td style="text-align:right"><b class="${net<0?'neg':'money'}">${net>=0?'+':''}${eur(net)}</b></td></tr></table>
   <div class="pvbud"><i style="width:${B.ti?Math.min(100,B.to/B.ti*100).toFixed(1):100}%;background:${net<0?'var(--rd)':'var(--or)'}"></i></div>
   <div class="mut sm" style="margin-top:6px">${net<0?'⚠️ Tu dépenses plus que tu gagnes : augmente ton salaire de patron (onglet 💶 Argent), mets un bien en location ou vends quelque chose.':B.ti?`Tu dépenses ${Math.round(B.to/B.ti*100)} % de ce que tu gagnes. Le reste s’ajoute à ton compte privé le 1er du mois.`:'Fixe ton salaire de patron dans 💶 Argent.'}</div></details>`;
-  if((V.ev||[]).length)h+=`<h2>Ces derniers mois</h2><div class="card">${V.ev.slice(0,12).map(e=>`<div class="sm pvev"><span class="mut">${dstr(e.d)}</span> ${e.t}</div>`).join('')}</div>`;
+  h+=repCard();if((V.ev||[]).length)h+=`<h2>Ces derniers mois</h2><div class="card">${V.ev.slice(0,12).map(e=>`<div class="sm pvev"><span class="mut">${dstr(e.d)}</span> ${e.t}</div>`).join('')}</div>`;
   h+=`<div class="card" style="padding:10px 12px"><div class="row" style="flex-wrap:nowrap"><div class="sm" style="flex:1">🏠 Tu possèdes <b>${own.length}</b> bien(s) pour <b>${eur(own.reduce((a,o)=>a+pValue(o),0))}</b></div><button class="btn s" style="padding:7px 10px" onclick="pvGo('biens')">Voir</button></div></div>`;
   return h}
   if(pvSec==='money'){h+=`<div class="kpi" style="margin-bottom:12px"><div><span>Compte privé</span><b class="${V.cash<0?'neg':'money'}">${eur(V.cash)}</b></div><div><span>Déjà versé depuis la société</span><b>${eur(V.tr||0)}</b></div></div>`+`
@@ -3125,7 +3172,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-06.6";
+var APPV="2026-11-06.7";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
