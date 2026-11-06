@@ -76,6 +76,7 @@ button{font-family:inherit}
 .btn.s::after,.btn:disabled::after{display:none}
 @keyframes shine{0%,70%{left:-60%}100%{left:130%}}
 #cash{transition:transform .2s}
+#bell{position:relative;font-size:20px;padding:6px 8px;margin-right:6px;border-radius:12px;background:#ffffff10;cursor:pointer;opacity:.55}#bell.on{opacity:1;background:#ff9a1f33}#bellN{position:absolute;top:-4px;right:-4px;background:#ff5d57;color:#fff;font-size:11px;border-radius:9px;padding:0 5px;line-height:17px}#bellN:empty{display:none}
 #cash.up{animation:cup .6s}#cash.down{animation:cdown .6s}
 @keyframes cup{30%{transform:scale(1.12);box-shadow:0 0 18px rgba(79,220,122,.8)}}
 @keyframes cdown{30%{transform:scale(.94);box-shadow:0 0 18px rgba(255,93,87,.7)}}
@@ -177,6 +178,7 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
 <header id="top">
   <div id="logo" onclick="if(st&&st.adm.bce){click();careerUI()}" style="cursor:pointer"><span id="lt">RN</span><span id="lvl">1</span></div>
   <div id="tinfo"><div id="tname"></div><div id="tsub"></div></div>
+  <div id="bell" onclick="if(st)notifUI()">🔔<b id="bellN"></b></div>
   <div id="cash"></div>
 </header>
 <div id="scene">
@@ -1002,7 +1004,7 @@ function euDecAct(id,i,k){decAct(id,i);if(fil()[k])euFiche(k);else closeM()}
 function euFiche(k){const F=fil()[k],C=EU[k];if(!F)return;const D=euD(F),L=F.last,dir=F.dir||{n:'Directeur d’origine',t:'n',sk:1},ramp=Math.min(100,Math.round(Math.max(.08,Math.min(1,F.m/(D.ramp||17)))*100)),sh=euShare(k,F),rl=Math.round(euRL(F));
   const Lv=F.lv,pot=C.pot*(Lv===1?1:Lv===2?1.7:2.5),fx=C.fix*(Lv===1?1:Lv===2?1.45:2)*D.fix*(F.fixP||1),full=Math.round(pot*D.rv*(dir.sk||1)*(.9+rl/500)*(1-C.var)-fx),netF=Math.round(full*(full>0?1-C.tax:1));
   const decs=(st.dec||[]).filter(d=>d.f===k);
-  let h=`<div class="hd"><div style="font-size:44px;line-height:1;margin-right:10px">${C.f}</div><div style="flex:1;min-width:0"><h3>${C.n}</h3><div class="mut sm">Niveau ${F.lv} · ${F.m} mois · démarrage ${ramp} %</div></div></div>`;
+  let h=`<div class="hd"><div style="font-size:44px;line-height:1;margin-right:10px">${C.f}</div><div style="flex:1;min-width:0"><h3>${C.n}</h3><div class="mut sm">Niveau ${F.lv} · ${F.m} mois · démarrage ${ramp} %</div></div></div>`+euScene(k);
   for(const d of decs){const T=DECT.find(x=>x.k===d.k);if(!T)continue;h+=`<div class="card acc" style="--ac:var(--or);margin-top:10px"><b class="sm">📬 ${esc(d.t.replace(/^.*? — /,''))}</b><div class="mut sm" style="margin-top:3px">Réponds avant le ${dstr(d.exp)}, sinon : « ${T.o[T.def][0]} »</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${T.o.map((o,i)=>`<button class="btn ${i===0?'':'s'}" style="padding:8px 10px" onclick="euDecAct(${d.id},${i},'${k}')">${o[0]}</button>`).join('')}</div></div>`}
   h+=`<div class="kpi" style="margin-top:10px"><div><span>CA du mois</span><b>${L?eur(L.rv):'—'}</b></div><div><span>Résultat du mois</span><b class="${L&&L.net<0?'neg':'money'}">${L?(L.net>=0?'+':'')+eur(L.net):'—'}</b></div><div><span>Caisse de la filiale</span><b>${eur(F.cash)}</b></div><div><span>Part de marché</span><b>${sh<.1?'< 0,1':nb1(sh)} %</b></div></div>
   <div class="card" style="margin-top:10px"><div class="row"><span style="flex:1">⭐ Réputation locale</span><b>${rl} / 100</b></div><div style="height:10px;border-radius:6px;background:var(--card2);overflow:hidden;margin-top:6px"><div style="height:100%;width:${rl}%;background:linear-gradient(90deg,var(--or),var(--ye))"></div></div>
@@ -1173,7 +1175,7 @@ function genJob(force){const m=month();const ok=PJ.filter(k=>inSeason(JOBS[k],m)
   const big=1+Math.min(4,field().length-1)*.5;const step=J.rate>=100?25:1;
   const q=Math.max(step,Math.round(J.rate*R(.5,2.2)*big/step)*step);
   // la journée entamée est due (déplacement, chargement, mise en place) : on facture des demi-journées complètes
-  const price=Math.max(60,Math.round(Math.ceil(q/(J.rate*.5))*J.rate*.5*J.pu*R(1,1.15)/5)*5);const cl=pick(CLIENTS);
+  const price=Math.max(60,Math.round(Math.ceil(q/(J.rate*.5))*J.rate*.5*J.pu*R(1,1.15)*pIdx()/5)*5);const cl=pick(CLIENTS);
   st.jobs.push({id:st.nid++,j,q,price,dur:Math.ceil(q/J.rate)+RI(4,8),client:cl[0],ct:cl[1],town:pick(TOWNS),until:st.day+RI(3,7)});
 }
 function inSeason(J,m){if(!J.mo)return true;const[a,b]=J.mo;return a<=b?(m>=a&&m<=b):(m>=a||m<=b)}
@@ -1211,10 +1213,10 @@ function genTender(forceJob,urgent){
   const nRef=Math.min(Math.max(J.minW,V>1.4e6?40:8),Math.max(J.minW,Math.ceil(q/(J.rate*(V>1.4e6?160:90)))));
   const N=Math.ceil(q/(J.rate*nRef)*R(1.25,1.5))+3;
   const B=pick(BUYERS);const postes=[];
-  const tu=trueUnit(j);postes.push({d:J.main,u:J.un,q,ref:+(tu*COEF).toFixed(2),c:tu});
-  if(J.ex)postes.push({d:J.ex.d,u:J.ex.u,q:Math.max(1,Math.round(q*J.ex.k)),ref:J.ex.pu,c:J.ex.c});
-  postes.push({d:'Signalisation de chantier (mise en place, maintien, enlèvement)',u:'jour',q:Math.ceil(N*.8),ref:J.need.includes('fleche')?135:80,c:J.need.includes('fleche')?105:62});
-  const est=Math.round(postes.reduce((a,p)=>a+p.q*p.ref*R(.95,1.08),0)/10)*10;
+  const tu=trueUnit(j)*pIdx();postes.push({d:J.main,u:J.un,q,ref:+(tu*COEF).toFixed(2),c:tu});
+  if(J.ex)postes.push({d:J.ex.d,u:J.ex.u,q:Math.max(1,Math.round(q*J.ex.k)),ref:+(J.ex.pu*pIdx()).toFixed(2),c:+(J.ex.c*pIdx()).toFixed(2)});
+  postes.push({d:'Signalisation de chantier (mise en place, maintien, enlèvement)',u:'jour',q:Math.ceil(N*.8),ref:Math.round((J.need.includes('fleche')?135:80)*pIdx()),c:Math.round((J.need.includes('fleche')?105:62)*pIdx())});
+  const est=Math.round(postes.reduce((a,p)=>a+p.q*p.ref*R(.95,1.08),0)*evF('e')/10)*10;
   const crit=proc==='po'&&Math.random()<.4?'pvt':'prix';
   const bidEnd=st.day+(urgent?3:RI(10,20)),dec=bidEnd+(proc==='po'?RI(15,25):RI(5,12));
   st.tenders.push({id:st.nid++,j,q,est,N,nRef,postes,proc,crit,buyer:B[0],ref:`MI/${B[1]}/${date(st.day).getFullYear()}/${String(RI(100,980)).padStart(4,'0')}`,road:pick(B[2]),town:pick(B[3]),
@@ -1270,7 +1272,7 @@ function openBids(t){const J=JOBS[t.j];const bids=[];
   const pool=st.riv.filter(r=>r.n!==t.am&&r.jobs.includes(t.j)&&(r.sz>=1||t.est<143000)&&(r.sz>=2||t.est<900000));
   let n=t.proc==='fm'?RI(2,3):t.proc==='pn'?RI(2,5):RI(3,8);
   const sh=pool.sort(()=>Math.random()-.5).filter(r=>r.load.filter(e=>e>st.day).length<(r.sz+1)*3).slice(0,n);
-  for(const r of sh){const busy=r.load.filter(e=>e>st.day).length;const p=t.est*(r.ag+.05+R(-.05,.06)+busy*.02)*(itOwn()&&st.itComp===0?1.04:1);
+  for(const r of sh){const busy=r.load.filter(e=>e>st.day).length;const p=t.est*(r.ag+.05+R(-.05,.06)+busy*.02)*(itOwn()&&st.itComp===0?1.04:1)*(()=>{const y=rivP(r).sty;return y==='casse'?.96:y==='qual'?1.03:y==='hiver'&&HIVJ.includes(t.j)?.93:1})();
     bids.push({n:r.n,tot:Math.round(p*100)/100,vt:r.rep,irr:Math.random()<.07?'documents manquants':null})}
   if(t.my)bids.push({n:st.name,tot:t.my.tot,vt:clamp(st.rep+(has('dirt')?10:0)+(has('dirc')?10:0)+(ino('hvo')?5:0)+((st.fond||0)>=1e6?3:0),0,100),me:1,irr:null});
   bids.sort((a,b)=>a.tot-b.tot);t.bids=bids;t.status='opened';
@@ -1302,7 +1304,7 @@ function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr s
 
 /* ---------- Simulation d'une journée ---------- */
 function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
-  if(w&&r<.12)return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
+  if(w&&r<(evOn('hiver')?.32:.12))return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);let late=Math.max(0,delay-30);if(late&&has('recouv')){const d2=Math.round(late*.3);rsAdd('recd',late-d2);delay=30+d2;late=d2}st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl,late})}
 function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
@@ -1329,13 +1331,13 @@ function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.worke
   for(const c of [...st.contracts]){const J=JOBS[c.j];
     if(c.st==='wait'&&!J.p&&!c.md&&st.day>=c.startBy-4){c.md=1;log(`🚨 Mise en demeure du SPW : commence « ${J.n} » (${esc(c.road)}) avant le ${dstr(c.startBy)}, sinon le marché sera résilié avec une pénalité de ${eur(c.price*.05)}. Libère des ouvriers dans 🦺 Chantiers.`)}
     if(c.st==='wait'&&st.day>c.startBy){st.contracts.splice(st.contracts.indexOf(c),1);
-      if(J.p){st.rep=clamp(st.rep-2,0,100);log(`😠 ${c.road} a pris quelqu'un d'autre : tu n'es jamais venu. Réputation -2.`)}
+      if(J.p){if(c.ac)acSat(c.ac,-20);st.rep=clamp(st.rep-2,0,100);log(`😠 ${c.road} a pris quelqu'un d'autre : tu n'es jamais venu. Réputation -2.`)}
       else{st.rep=clamp(st.rep-10,0,100);if(c.caut)log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Cautionnement de ${eur(c.caut)} perdu, réputation -10.`);else{const f=Math.round(c.price*.05);mv(-f,'Pénalité du SPW','other');log(`⚖️ Le SPW résilie le marché ${J.n} : jamais commencé. Pénalité ${eur(f)}, réputation -10.`)}}continue}
     if(c.st!=='run'||!work||(intemp&&!J.allw))continue;
     // congés du bâtiment : les ouvriers sont en vacances, mais le patron peut travailler
     if(conge&&!c.crew.some(i=>{const w=st.workers.find(x=>x.id===i);return w&&w.boss}))continue;
     if(!c.crew.length){if(!conge)c.wd++;continue}
-    if(!conge)c.wd++;let eqc=0;for(const t in c.own){eqc+=c.own[t]*EQ[t].u*(1-tierShare(t,'us'));wearUse(t,c)}let rc=0;for(const t in c.rent||{}){rc+=(RENT[t]||0)+EQ[t].u;const RD=st.rentD||(st.rentD={});RD[t]=(RD[t]||0)+1}if(rc)mv(-rc,'Location de matériel','use',1);if(has('meca')){rsAdd('meca',eqc*.1);eqc*=.9}if(sfx('atel'))eqc*=.92;if(sfx('cuve'))eqc*=.93;if(ino('elec'))eqc*=.95;if(ino('ecam'))eqc*=.8;if(has('achat')){rsAdd('achv',eqc*.05);eqc*=.95}mv(-(eqc+(J.p?(st.eq.van?0:14):40)),'Carburant et usure','use',1);
+    if(!conge)c.wd++;let eqc=0;for(const t in c.own){eqc+=c.own[t]*EQ[t].u*(1-tierShare(t,'us'));wearUse(t,c)}let rc=0;for(const t in c.rent||{}){rc+=(RENT[t]||0)+EQ[t].u;const RD=st.rentD||(st.rentD={});RD[t]=(RD[t]||0)+1}if(rc)mv(-rc,'Location de matériel','use',1);if(has('meca')){rsAdd('meca',eqc*.1);eqc*=.9}if(sfx('atel'))eqc*=.92;if(sfx('cuve'))eqc*=.93;if(ino('elec'))eqc*=.95;if(ino('ecam'))eqc*=.8;if(has('achat')){rsAdd('achv',eqc*.05);eqc*=.95}mv(-(eqc+(J.p?(st.eq.van?0:14):40))*evF('f'),'Carburant et usure','use',1);
     const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(w=>w&&!(w.off>st.day)&&(!conge||w.boss)&&!(w.r==='etu'&&(w.hy||0)>=650));
     crew.forEach(w=>{if(w.r==='etu')w.hy=(w.hy||0)+7.6});
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF*(has('cond')&&!J.p&&c.wd>c.N*(c.prog/c.q)?1.1:1)*inoWork(J)*(c.vb>st.day?c.vf||1:1)*qualWork(J);
@@ -1351,15 +1353,15 @@ function tick(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.worke
   st.tenders=st.tenders.filter(t=>t.status!=='done'||t.rec||(t.my&&st.day-t.dec<20));
   st.tenders=st.tenders.filter(t=>t.status!=='opened'||t.my||st.day-t.bidEnd<3);
   const open=st.tenders.filter(t=>t.status==='open').length;
-  if(open<10&&Math.random()<.7)genTender();if(open<10&&Math.random()<.4)genTender();
+  if(open<10&&Math.random()<.7*evF('t'))genTender();if(open<10&&Math.random()<.4*evF('t'))genTender();if(open<12&&evF('t')>1.3&&Math.random()<.3)genTender();
   st.jobs=st.jobs.filter(o=>o.until>=st.day);
-  if(st.jobs.length<3+3*Math.min(8,field().length)&&Math.random()<(.5+st.rep/150+field().length*.08)*(1+adBoost()))genJob();if(adBoost()&&Math.random()<adBoost()*.5)genJob();if(field().length>2&&Math.random()<.3)genJob();
+  if(st.jobs.length<3+3*Math.min(8,field().length)&&Math.random()<(.5+st.rep/150+field().length*.08)*(1+adBoost())*evF('j'))genJob();if(adBoost()&&Math.random()<adBoost()*.5)genJob();if(field().length>2&&Math.random()<.3)genJob();
   if(!st.jobs.some(o=>!JOBS[o.j].need.length))genJob(month()===12||month()<=2&&Math.random()<.5?'p_neige':'p_dechets');
-  if(x.getDay()===1)refreshCand();
+  if(x.getDay()===1){refreshCand();try{acOffer()}catch(e){}}
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
   events(work);decTick(work);try{itDaily(work,x)}catch(e){}try{wxUrgent();unionTick();lawTick();achatNeed();if(date(st.day).getDay()===1)achatTick();if(date(st.day).getDate()===10)taxAudit();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
   if(st.cash<-overdraft()&&!st.over)rescue();
-  dqTick();save();renderTick();
+  try{tipTick()}catch(e){}dqTick();save();renderTick();
 }
 // Bénéfice du mois (trésorerie + investissements − amortissements) → cotisations sociales et impôts
 // Mouvement sur le compte en banque (relevé + bilan du mois)
@@ -1381,7 +1383,7 @@ function monthTax(mn){siteMonth();const amort=Object.keys(st.eq).reduce((a,k)=>a
 function failUI(){showModal(`<h3>💀 Faillite</h3><p>C'est la 3e fois que <b>${esc(st.name)}</b> ne peut plus payer ses dettes. Le tribunal de l'entreprise prononce la <b>faillite</b> : le curateur vend tes machines, ton personnel est licencié, tes chantiers sont repris par d'autres.</p>
   <div class="card"><b>🔁 Relancer une nouvelle société</b><div class="mut sm" style="margin-top:4px">Tu repars avec 3 000 € d'économies, sans machine ni personnel. Tu gardes ton expérience : tes références de chantiers, ton chiffre d'affaires passé, tes objectifs atteints et ton efficacité. Réputation -20.</div><button class="btn w" style="margin-top:10px" onclick="relaunch()">Relancer une nouvelle société</button></div>
   <button class="btn s w" style="margin-top:6px" onclick="restart()">Tout recommencer à zéro</button>`)}
-function relaunch(){st.grp=[];st.hold=null;st.itAg=null;st.itq=[];st.itAcc=0;st.ino={};st.fil={};st.xs=[];st.site='home';st.siteLoan=null;st.ipo=null;st.ads={};st.riv=newRivals();const C=st.career||(st.career={won:0,lost:0,done:0,ca:0,spw:0,earned:0});for(const k in st.stats)C[k]=(C[k]||0)+st.stats[k];st.stats={won:0,lost:0,done:0,ca:0,spw:0,earned:0};st.caY={};st.found=st.day+1;const boss=st.workers.find(w=>w.boss);st.workers=[boss];boss.mot=1;st.eq={};st.contracts=[];st.inv=[];st.reports=[];st.adm={};st.cls=0;st.loan=0;st.salAcc=0;st.prj=0;st.over=false;st.srl=0;
+function relaunch(){st.grp=[];st.acn=[];st.aco=[];st.bigEv=null;st.hold=null;st.itAg=null;st.itq=[];st.itAcc=0;st.ino={};st.fil={};st.xs=[];st.site='home';st.siteLoan=null;st.ipo=null;st.ads={};st.riv=newRivals();const C=st.career||(st.career={won:0,lost:0,done:0,ca:0,spw:0,earned:0});for(const k in st.stats)C[k]=(C[k]||0)+st.stats[k];st.stats={won:0,lost:0,done:0,ca:0,spw:0,earned:0};st.caY={};st.found=st.day+1;const boss=st.workers.find(w=>w.boss);st.workers=[boss];boss.mot=1;st.eq={};st.contracts=[];st.inv=[];st.reports=[];st.adm={};st.cls=0;st.loan=0;st.salAcc=0;st.prj=0;st.over=false;st.srl=0;
   st.tenders.forEach(t=>{if(t.status==='open')t.my=null});st.tenders=st.tenders.filter(t=>t.status==='open');st.rep=clamp(st.rep-20,5,100);st.cash=0;st.mv=[];st.mon={};
   mv(3000,"Nouveau départ : tes économies",'in');st.mStart=st.cash;st.mCapex=0;st.mLoan=0;st.name=st.name.replace(/( \d+)?$/,m=>' '+((parseInt(m)||1)+1));
   log(`🔁 Nouvelle société : ${esc(st.name)}. Inscris-la à la BCE pour recommencer à facturer.`);closeM();refreshCand();save();render()}
@@ -1401,7 +1403,7 @@ function aidList(){const L=[];const emp=st.workers.filter(w=>!w.boss&&!w.it).sor
 function payAids(){const t=aidList().reduce((a,x)=>a+x[1],0);if(t>0){mv(t,'Aides à l’emploi (ONSS premiers engagements, Impulsion -25 ans)','aid');log(`🤝 Aides à l'emploi reçues : +${eur(t)}`,false)}}
 function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c),1);if(!J.p)try{spwCheck(c)}catch(e){}ck('done');if(J.p)ck('jobs');addXP(J.p?3:10);
   const crew=c.crew.map(i=>st.workers.find(w=>w.id===i)).filter(Boolean);const avg=crew.reduce((a,w)=>a+w.sk,0)/Math.max(1,crew.length);
-  const n=Math.max(0,c.wd-c.N),late=n>0;
+  const n=Math.max(0,c.wd-c.N),late=n>0;if(c.ac)try{acSat(c.ac,late?-10:4)}catch(e){}
   // amende pour retard (art. 86 RGE) : R = 0,45 × M × n² / N², maximum 5 %
   const fine=J.p?(late?c.price*.1:0):Math.min(c.price*.05,.45*c.price*n*n/(c.N*c.N));
   let rest=c.price-c.billed-fine,msg='';
@@ -1433,7 +1435,7 @@ function events(work){if(Math.random()>.045)return;const run=running();const r=M
   else if(st.adm.bce&&Math.random()<.4){const k=RI(80,400)*(has('compta')?.5:1);mv(-k,'Amende TVA','other');log(`📮 Amende administrative : déclaration TVA rentrée en retard (-${eur(k)}).${has('compta')?'':' Un comptable éviterait ça.'}`)}
 }
 function mkW(r){const R0=ROLES[r];const bonus=has('rh')?.06:0;const sk=+Math.min(1.45,R(R0.sk[0],R0.sk[1])+bonus).toFixed(2);
-  return{id:st.nid++,n:pick(PREN)+' '+pick(NOMS),r,sk,day:Math.round(R0.day*R(.97,1.05)),pc:R0.pc||(r==='qual'&&Math.random()<.25)||(r==='chef'&&Math.random()<.5)?1:0,skin:RI(0,SKIN.length-1),base:base(),mot:0,hd:0,warn:0}}
+  return{id:st.nid++,n:pick(PREN)+' '+pick(NOMS),r,sk,day:Math.round(R0.day*R(.97,1.05)*(st.idx||1)),pc:R0.pc||(r==='qual'&&Math.random()<.25)||(r==='chef'&&Math.random()<.5)?1:0,skin:RI(0,SKIN.length-1),base:base(),mot:0,hd:0,warn:0}}
 function base(){const lazy=Math.random()<(has('rh')?.1:.22);return+(lazy?R(.35,.62):R(.75,1)).toFixed(2)}
 // Préavis en semaines selon l'ancienneté (statut unique, licenciement par l'employeur)
 function preavisW(w){const m=(st.day-(w.hd||0))/30.4;if(m<3)return 1;if(m<4)return 3;if(m<5)return 4;if(m<6)return 5;if(m<9)return 6;if(m<12)return 7;if(m<15)return 8;if(m<18)return 9;if(m<21)return 10;if(m<24)return 11;return 12+Math.floor(m/12-2)}
@@ -1640,6 +1642,8 @@ const GOALS=[
   {k:'h52',t:'Gagne 10 appels d’offres à l’étranger',ok:()=>((st.ck||{}).euwon||0)>=10},
   {k:'h53',t:'Crée ta holding européenne',ok:()=>!!st.hold},
   {k:'h54',t:'Filiales dans les 10 pays',ok:()=>Object.keys(st.fil||{}).length>=10},
+  {k:'h55',t:'Signe 5 contrats d’entretien',ok:()=>((st.ck||{}).acn||0)>=5},
+  {k:'h56',t:'Deviens n°1 du classement wallon',ok:()=>{try{const me=caRecent();return me>0&&(st.riv||[]).every(r=>rivCA(rivP(r))<me)}catch(e){return false}}},
   {k:'h40',t:'Niveau de carrière 100 : légende absolue',ok:()=>crr().lv>=100}];
 // Confettis (au-dessus de tout)
 const fxc=$('#fx'),fg=fxc.getContext('2d');let conf=[];
@@ -1715,7 +1719,7 @@ const itOwn=()=>!!(st.itAg&&(st.itAg.ks||[]).length);
 const itList=()=>st.workers.filter(w=>w.it);
 const itQ=()=>st.itq||(st.itq=[]);
 const itPend=r=>itQ().reduce((a,q)=>a+(!r||q.r===r?q.n:0),0);
-const itRate=r=>Math.round(ROLES[r].day*(itOwn()?ITOWN:ITK));
+const itRate=r=>Math.round(ROLES[r].day*(st.idx||1)*(itOwn()?ITOWN:ITK));
 const itCap=()=>itOwn()?1000+400*(st.itAg.ks.length-1):300;
 const itAgVal=()=>itOwn()?st.itAg.ks.reduce((a,k)=>a+AGN.find(x=>x.k===k).p*.9,0):0;
 function itDelay(n){const d=n<=5?RI(1,2):n<=50?RI(4,6):RI(10,20);return itOwn()?Math.max(1,Math.ceil(d/2)):d}
@@ -1838,12 +1842,102 @@ function rIt(){const L=itList(),busy=new Map();st.contracts.forEach(c=>c.st==='r
 // nouveaux métiers : bonus des ouvriers spécialisés et effets mensuels des employés
 const PAVJ=['trottoirs','pmr','pontage','p_allee'],MARQJ=['marquage','marq_auto'],AUTJ=['autoroute','marq_auto','deneig_auto','balay_auto','epareuse_auto','cloture'],HIVJ=['deneig','deneig_auto','depots_sel','p_neige','p_selpk'];
 function specB(c,crew){let f=1;const hasR=r=>crew.some(w=>w.r===r);if(PAVJ.includes(c.j)&&hasR('paveur'))f*=1.15;if(MARQJ.includes(c.j)&&hasR('peintre'))f*=1.2;if(AUTJ.includes(c.j)&&hasR('signal'))f*=1.1;if(HIVJ.includes(c.j)&&has('hiver')){f*=1.15;rsAdd('hiv',1)}return f}
-function rolesMonth(){if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
+function rolesMonth(){for(const f of[indexTick,bigEvTick,acMonth,rivMonth])try{f()}catch(e){}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
+/* ---------- Indexation, contrats d'entretien, concurrents, grands événements, astuces, notifications ---------- */
+// Indexation automatique des salaires (Belgique) : chaque 1er janvier ; les prix du marché suivent à 90 %
+const pIdx=()=>1+((st.idx||1)-1)*.9;
+function indexTick(){const y=date(st.day).getFullYear();if(month()!==1||st.idxY===y||st.day<200){if(!st.idxY)st.idxY=y;return}st.idxY=y;
+  const r=+(R(.018,.032)+(evOn('infl')?.035:0)).toFixed(3);st.idx=(st.idx||1)*(1+r);
+  st.workers.forEach(w=>{if(!w.boss)w.day=Math.round(w.day*(1+r))});(st.cand||[]).forEach(w=>w.day=Math.round(w.day*(1+r)));
+  log(`📈 Indexation automatique des salaires (loi belge) : +${nb1(r*100)} % au 1er janvier. Les prix du marché montent aussi, mais vérifie tes marges.`)}
+// grands événements rares (± tous les 3 ans)
+const BIGEV={crise:{ic:'📉',n:'Crise économique',d:'Les pouvoirs publics serrent le budget : 2 fois moins d’appels d’offres et 30 % de petits boulots en moins.',t:.5,j:.7,mo:[6,10]},
+  gasoil:{ic:'⛽',n:'Flambée du gasoil',d:'Le prix du diesel explose : carburant et usure +40 % sur tous les chantiers.',f:1.4,mo:[4,8]},
+  relance:{ic:'🚀',n:'Plan de relance européen',d:'Des milliards pour les routes : 60 % d’appels d’offres en plus, et des marchés 8 % plus chers.',t:1.6,e:1.08,mo:[8,12]},
+  infl:{ic:'💸',n:'Forte inflation',d:'L’inflation grimpe : la prochaine indexation des salaires sera beaucoup plus forte (+3,5 % en plus).',mo:[6,12]},
+  hiver:{ic:'🥶',n:'Hiver extrême',d:'Neige et gel en série : beaucoup plus de jours de neige, d’urgences et de marchés de déneigement.',mo:[3,4]}};
+const evOn=k=>!!(st.bigEv&&st.bigEv.k===k&&st.day<=st.bigEv.end);
+const evF=x=>{const E=st.bigEv;if(!E||st.day>E.end)return 1;return BIGEV[E.k][x]||1};
+function bigEvTick(){const E=st.bigEv;if(E&&st.day>E.end){log(`${BIGEV[E.k].ic} Fin de l’événement : ${BIGEV[E.k].n.toLowerCase()}.`);st.bigEv=null}
+  if(st.bigEv||st.day<365||Math.random()>.03)return;const m=month();const L=Object.keys(BIGEV).filter(k=>k!=='hiver'||m===11||m===12||m===1);const k=pick(L),B=BIGEV[k];
+  st.bigEv={k,end:st.day+Math.round(RI(B.mo[0],B.mo[1])*30.4)};log(`${B.ic} Grand événement : ${B.n} ! ${B.d} (jusqu’au ${dstr(st.bigEv.end)})`)}
+function bigEvCard(){const E=st.bigEv;if(!E||st.day>E.end)return'';const B=BIGEV[E.k];return`<div class="card acc" style="--ac:var(--vi)"><b>${B.ic} ${B.n}</b><div class="mut sm" style="margin-top:4px">${B.d}</div><div class="tags" style="margin-top:6px"><span class="tag v">Jusqu’au ${dstr(E.end)}</span></div></div>`}
+// Contrats d'entretien annuels avec des clients privés
+const ACJ=['p_tonte','p_haie','p_dechets','p_debrous','p_karcher','p_feuilles','p_neige','p_desherb','p_grandpel'].filter(k=>JOBS[k]);
+const ACCL=[['Commune de Gesves (service travaux)','com'],['Zoning industriel de Ghlin','pro'],['Supermarché Carrefour Market de Ciney','pro'],['Parc d’activités de Wavre','pro'],['Commune d’Ohey','com'],['Maison de repos Les Lilas','pro'],['Syndic Le Parc (copropriété)','pro'],['Hôpital régional de Dinant','pro'],['Golf de Durbuy','pro'],['Intercommunale BEP','com'],['Commune de Somme-Leuze','com'],['Camping du Lac de Virelles','pro']];
+const acL=()=>st.acn||(st.acn=[]),acO=()=>st.aco||(st.aco=[]);
+function acOffer(){if(!st.adm.bce||st.rep<25||st.stats.done<5||acO().length>=2||acL().filter(a=>!a.done).length>=Math.min(8,1+Math.floor(fieldOwn().length/2))||Math.random()>.25)return;
+  const j=pick(ACJ),J=JOBS[j],cl=pick(ACCL),q=Math.max(1,Math.round(J.rate*R(1,3)));const per=Math.round(Math.ceil(q/(J.rate*.5))*J.rate*.5*J.pu*.95*pIdx()/5)*5;
+  acO().push({id:st.nid++,j,cl:cl[0],q,per,yrs:RI(1,3),exp:st.day+14});log(`📝 Offre de contrat d’entretien : ${cl[0]} (${J.n.toLowerCase()}, ${eur(per)} par passage). Voir 🧰 Boulots.`,false)}
+function acAccept(id){const o=acO().find(x=>x.id===id);if(!o)return;st.aco=acO().filter(x=>x!==o);click();acL().push({id:o.id,j:o.j,cl:o.cl,q:o.q,per:o.per,yrs:o.yrs,start:st.day,end:st.day+Math.round(o.yrs*365),sat:70,n:0});ck('acn');log(`📝 Contrat signé avec ${o.cl} pour ${o.yrs} an${o.yrs>1?'s':''}.`);goals();save();render()}
+function acRefuse(id){st.aco=acO().filter(x=>x.id!==id);click();save();render()}
+const acSat=(id,v)=>{const a=acL().find(x=>x.id===id);if(a)a.sat=clamp(a.sat+v,0,100)};
+function acMonth(){st.aco=acO().filter(o=>o.exp>=st.day);const m=month();
+  for(const a of acL()){if(a.done)continue;
+    if(st.day>=a.end){if(Math.random()<a.sat/100){a.end=st.day+365;a.per=Math.round(a.per*1.02/5)*5;a.ren=(a.ren||0)+1;log(`📝 ${a.cl} renouvelle son contrat pour un an (satisfaction ${Math.round(a.sat)} %).`)}else{a.done=1;log(`📝 ${a.cl} ne renouvelle pas son contrat (satisfaction ${Math.round(a.sat)} %).`)}continue}
+    const J=JOBS[a.j];if(!inSeason(J,m))continue;if(J.need.some(t=>!(st.eq[t]>0))){acSat(a.id,-15);log(`📝 Pas de passage chez ${a.cl} ce mois : il te manque le matériel. Le client est mécontent.`);continue}
+    const N=Math.max(2,Math.ceil(a.q/J.rate)+4);st.contracts.push({id:st.nid++,j:a.j,q:a.q,road:a.cl,ct:'pro',town:pick(TOWNS),price:a.per,prog:0,vis:0,N,wd:0,startBy:st.day+5,st:'wait',crew:[],own:{},billed:0,caut:0,seed:RI(1,99999),tap:{},nRef:1,ac:a.id});a.n++}
+  st.acn=acL().filter(a=>!a.done||st.day-a.end<60)}
+function acCard(){const O=acO(),L=acL().filter(a=>!a.done);if(!O.length&&!L.length)return st.stats.done>=5&&st.adm.bce?`<div class="card"><b>📝 Contrats d’entretien</b><div class="mut sm" style="margin-top:4px">Des communes, zonings et commerces te proposeront bientôt des contrats d’un à trois ans (il faut au moins 25 de réputation).</div></div>`:'';
+  let h=`<h2>📝 Contrats d’entretien (${L.length})</h2>`;
+  for(const o of O){const J=JOBS[o.j];h+=`<div class="card acc" style="--ac:var(--gr)"><b>${esc(o.cl)}</b><div class="mut sm">${J.ic} ${J.n} · ${nb(o.q)} ${J.un} par passage, chaque mois${J.mo?' en saison':''} · ${o.yrs} an${o.yrs>1?'s':''}</div><div class="tags" style="margin-top:6px"><span class="tag g">${eur(o.per)} par passage</span><span class="tag">Réponds avant le ${dstr(o.exp)}</span>${jobMiss({j:o.j}).length?'<span class="tag r">Il te manque le matériel</span>':''}</div><div class="row" style="margin-top:8px"><button class="btn g" onclick="acAccept(${o.id})">✍️ Signer</button><button class="btn s" onclick="acRefuse(${o.id})">Refuser</button></div></div>`}
+  if(L.length){h+=`<div class="card">`;for(const a of L){const J=JOBS[a.j];h+=`<div style="padding:7px 0;border-top:1px solid var(--line)"><div class="row"><span style="flex:1;min-width:0">${J.ic} <b>${esc(a.cl)}</b></span><b class="money">${eur(a.per)}</b></div><div class="row" style="margin-top:4px"><span class="mut sm" style="flex:1">${a.n} passage${a.n>1?'s':''} · fin le ${dstr(a.end)}</span><span class="sm">${a.sat>=70?'😊':a.sat>=40?'😐':'😠'} ${Math.round(a.sat)} %</span></div><div style="height:6px;border-radius:4px;background:var(--card2);overflow:hidden;margin-top:4px"><div style="height:100%;width:${a.sat}%;background:${a.sat>=70?'var(--gr2)':a.sat>=40?'var(--or)':'var(--rd)'}"></div></div></div>`}
+    h+=`<div class="mut sm" style="margin-top:6px">Chaque mois, un passage arrive dans tes chantiers. Fini à temps : le client est content. En retard ou pas fait : il est mécontent. À la fin, il renouvelle selon sa satisfaction.</div></div>`}
+  return h}
+// Concurrents avec une personnalité
+const RSTY={casse:['🔪','Casseur de prix','Remet des offres très basses pour gagner à tout prix.'],hiver:['❄️','Spécialiste de l’hiver','Imbattable sur le déneigement et le salage.'],qual:['⭐','Champion de la qualité','Prix plus élevés, mais très bonne réputation.'],agr:['🎣','Chasseur de têtes','Essaie de débaucher tes meilleurs ouvriers.'],fam:['🏡','Entreprise familiale','Prudente et régulière, très ancrée localement.']};
+const RBOSS=['Jean-Marc Lhoest','Didier Bastin','Pascale Gobert','Frédéric Noël','Véronique Laloux','Philippe Dachouffe','Christophe Lekeu','Bernadette Mathieu','Olivier Jadot','Sabine Collard','Gérard Thiry','Luc Hansoul','Martine Debras','Pierre Wéry'];
+const rivH=n=>{let h=strHash(n);h^=h>>>16;h=Math.imul(h,0x45d9f3b);h^=h>>>16;h=Math.imul(h,0x45d9f3b);return(h^(h>>>16))>>>0};
+function rivP(r){if(!r.sty||!r.v2){r.v2=1;const h=rivH(r.n);r.sty=Object.keys(RSTY)[h%5];r.boss=RBOSS[(h>>>8)%RBOSS.length]}return r}
+const rivCA=r=>Math.round(RCA[Math.min(2,r.sz)]*(.75+((rivH(r.n)>>>4)%50)/100)*(1+Math.min(.5,(r.won||0)*.01)));
+function rivMonth(){(st.riv||[]).forEach(rivP);const own=fieldOwn().filter(w=>!w.boss&&!w.it&&!w.det&&w.sk>=1.1);const D=st.dec||(st.dec=[]);
+  if(own.length&&fieldOwn().length>=6&&!D.some(d=>d.k==='riv_poach')&&Math.random()<.1){const R1=pick((st.riv||[]).filter(r=>r.sty==='agr'))||pick(st.riv||[]);if(R1){const w=pick(own);D.push({id:st.nid++,k:'riv_poach',exp:st.day+20,w:w.id,r:R1.n,t:`${R1.n} (${R1.boss}) propose un meilleur salaire à ${w.n}, un de tes meilleurs ouvriers.`});log(`🎣 ${R1.n} essaie de débaucher ${w.n} (📬 Décisions).`)}}
+  if(month()===1&&Math.random()<.3){const sm=(st.riv||[]).filter(r=>r.sz===0);const bg=(st.riv||[]).filter(r=>r.sz>=1).sort((a,b)=>rivCA(b)-rivCA(a));if(sm.length>=4&&bg.length){const a=pick(bg.slice(0,3)),b=pick(sm);st.riv.splice(st.riv.indexOf(b),1);a.won=(a.won||0)+10;a.jobs=[...new Set([...a.jobs,...b.jobs])];log(`📰 Concurrence : ${a.n} rachète ${b.n}.`)}}}
+DECT.push({k:'riv_poach',ic:'🎣',ok:()=>false,mk:()=>({t:''}),o:[['Augmenter son salaire de 5 % pour le garder',d=>{const w=st.workers.find(x=>x.id===d.w);if(w){w.day=Math.round(w.day*1.05);w.mot=1;w.base=Math.min(1,(w.base||.8)+.03);log(`💶 ${w.n} reste chez toi.`)}}],['Le laisser partir',d=>{const w=st.workers.find(x=>x.id===d.w);if(w){dropW(w);log(`👋 ${w.n} part chez ${d.r}.`)}}]],def:1});
+function rankCard(){(st.riv||[]).forEach(rivP);const me={n:st.name,ca:Math.round(caRecent()),me:1};const L=[...(st.riv||[]).map(r=>({n:r.n,ca:rivCA(r),r})),me].sort((a,b)=>b.ca-a.ca);const pos=L.indexOf(me)+1;
+  return`<div class="card acc" style="--ac:var(--ye)"><h3>🏆 Classement des entreprises wallonnes</h3><div class="mut sm">Tu es <b>${pos}${pos===1?'er':'e'}</b> sur ${L.length} (chiffre d’affaires sur un an, estimé pour les concurrents).</div>
+  ${L.slice(0,Math.max(8,pos)).map((x,i)=>`<div class="row sm" style="padding:6px 0;border-top:1px solid var(--line);${x.me?'background:#ff9a1f22;border-radius:8px;padding-left:6px':''}"><b style="width:26px">${i+1}.</b><span style="flex:1;min-width:0">${x.me?'⭐ <b>'+esc(x.n)+'</b> (toi)':`${RSTY[x.r.sty][0]} ${esc(x.n)}<div class="mut" style="font-size:11px">${esc(x.r.boss)} · ${RSTY[x.r.sty][1]}</div>`}</span><b>${eur(x.ca)}</b></div>`).join('')}</div>`}
+// Astuces : expliquées une seule fois quand une fonction se débloque
+const TIPS=[{k:'ouv',c:()=>fieldOwn().length>=2,ic:'👷',t:'Ton premier ouvrier',d:'Les « équipes automatiques » (👷 Équipe) envoient tes ouvriers libres sur les chantiers. Quand il n’y a pas de travail, le chômage temporaire t’évite de payer plein pot.'},
+  {k:'vca',c:()=>!!st.adm.vca,ic:'🏛️',t:'Les marchés publics sont ouverts',d:'Avec la VCA, tu peux répondre aux marchés du SPW (🏛️ Marchés). Remplis le métré, choisis ton prix, et regarde le PV d’ouverture : le moins cher gagne souvent.'},
+  {k:'aide',c:()=>ownW()>=6&&!has('aide'),ic:'🧮',t:'Pense à l’aide-comptable',d:'À partir de 6 personnes, sans aide-comptable, tes factures partent en retard : tu es payé 15 jours plus tard. Engage-la dans 👷 Équipe → 🏢 Bureau.'},
+  {k:'rap',c:()=>(st.reports||[]).length>0,ic:'📋',t:'Les rapports de chantier',d:'Tes chefs remarquent qui travaille bien ou mal (👷 Équipe → 📋 Rapports). Prime, recadrage, avertissement… ou engage un chef du personnel pour s’en occuper.'},
+  {k:'cls',c:()=>st.cls>=1,ic:'🏅',t:'Tu es agréé',d:'L’agréation te donne accès aux gros marchés de travaux. Pour monter de classe, regarde la « Prochaine étape » dans 📊 Entreprise → Résumé.'},
+  {k:'acn',c:()=>acO().length>0,ic:'📝',t:'Contrats d’entretien',d:'Un client te propose un contrat d’un à trois ans (🧰 Boulots). Un passage par mois, payé à chaque fois : un revenu régulier. Fais-le à temps pour qu’il renouvelle.'},
+  {k:'it',c:()=>st.workers.some(w=>w.it),ic:'🦺',t:'L’intérim',d:'Les intérimaires coûtent plus cher, mais sans préavis : parfait pour les pics de travail. Ceux qui n’ont plus de chantier retournent à l’agence. Les meilleurs peuvent signer un CDI.'},
+  {k:'srl',c:()=>!!st.srl,ic:'🏢',t:'Ta société (SRL)',d:'Ta SRL paie l’impôt des sociétés, et tu te verses un salaire ou des dividendes (🏡 Privé). Plus tard, elle pourra ouvrir des filiales en Europe.'},
+  {k:'eu',c:()=>caRecent()>=1500000&&!!st.srl,ic:'🌍',t:'Les filiales en Europe',d:'Tu peux créer une filiale à l’étranger (📊 Entreprise → 🏆 Empire). Choisis bien ton directeur : prudent, ambitieux ou économe.'},
+  {k:'ag',c:()=>ownW()>=200,ic:'🏢',t:'200 employés !',d:'Tu peux maintenant racheter l’agence d’intérim (👷 Équipe → 🦺 Intérim) : intérimaires au prix coûtant et bénéfice chaque mois.'}];
+function tipTick(){if(typeof playing==='undefined'||!playing||modalOpen)return;if(!st.tips){st.tips={};for(const t of TIPS)try{if(t.c())st.tips[t.k]=1}catch(e){}return}
+  for(const t of TIPS){if(st.tips[t.k])continue;let ok=false;try{ok=t.c()}catch(e){}if(!ok)continue;st.tips[t.k]=1;speed=0;showModal(`<div style="text-align:center;font-size:52px;line-height:1.1">${t.ic}</div><h3 style="text-align:center">💡 ${t.t}</h3><p style="margin:10px 0">${t.d}</p><button class="btn w" onclick="closeM()">Compris !</button><p class="mut sm" style="text-align:center;margin-top:8px">Toutes les astuces : 📊 Entreprise → ⚙️ Plus</p>`);return}}
+function tipsList(){return`<h2>💡 Astuces</h2><div class="card">${TIPS.map(t=>`<div style="padding:6px 0;border-top:1px solid var(--line)"><b class="sm">${t.ic} ${t.t}</b>${(st.tips||{})[t.k]?`<div class="mut sm">${t.d}</div>`:'<div class="mut sm">🔒 Se débloquera plus tard.</div>'}</div>`).join('')}</div>`}
+// Centre de notifications : tout ce qui attend une réponse
+function notifs(){const L=[];
+  for(const d of st.dec||[]){const T=DECT.find(x=>x.k===d.k);if(T)L.push({ic:T.ic,t:d.t,go:d.f?`euFiche('${d.f}')`:`closeM();tab('ch')`})}
+  for(const x of(st.law||[]).filter(x=>x.st==='open'))L.push({ic:'⚖️',t:x.kind==='fisc'?'Contrôle fiscal : réponse attendue':`Procès : ${x.w} t’attaque`,go:`closeM();tab('ch')`});
+  for(const c of st.contracts)if(c.st==='wait'&&c.md)L.push({ic:'🚨',t:`Mise en demeure : commence ${JOBS[c.j].n} (${c.road}) avant le ${dstr(c.startBy)}`,go:`closeM();tab('ch')`});
+  const P=st.workers.filter(w=>w.it&&w.it.prop===1);if(P.length)L.push({ic:'🎯',t:`Élodie propose ${P.length} CDI à des intérimaires`,go:`closeM();eqTab='it';tab('eq')`});
+  const S=(st.reports||[]).filter(r=>!r.done&&!r.good&&(r.sig||r.grave));if(S.length)L.push({ic:'📋',t:`${S.length} rapport(s) de chantier à traiter (faute grave ou licenciement)`,go:`closeM();eqTab='rap';tab('eq')`});
+  for(const k in st.fil||{}){const F=st.fil[k];if(F.tn&&!F.tn.co&&EU[k])L.push({ic:EU[k].f,t:`Appel d’offres à ${EU[k].n.split(' (')[0]} : ${F.tn.n}`,go:`euFiche('${k}')`})}
+  if(acO().length)L.push({ic:'📝',t:`${acO().length} offre(s) de contrat d’entretien`,go:`closeM();tab('pb')`});
+  if((st.cand||[]).some(w=>w.leg))L.push({ic:'⭐',t:'Jason Pougin, l’ouvrier légendaire, est dans tes candidats !',go:`closeM();eqTab='recru';tab('eq')`});
+  return L}
+function notifUI(){click();const L=notifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${L.length?L.map(x=>`<div class="row" style="padding:9px 0;border-top:1px solid var(--line)"><span style="font-size:22px">${x.ic}</span><span class="sm" style="flex:1;min-width:0">${esc(x.t)}</span><button class="btn s" style="padding:6px 10px" onclick="${x.go}">Voir</button></div>`).join(''):'<p class="mut">✅ Rien à traiter pour le moment.</p>'}<button class="btn s w" style="margin-top:12px" onclick="closeM()">Fermer</button>`)}
+// Décor de chaque pays dans la fiche d'une filiale
+function euScene(k){const C=EU[k];const sky={uk:'#8fa3b5',nl:'#9cc8ef',es:'#ffd59a',it:'#ffd9a8'}[k]||'#a9d8ff';let el='';
+  if(k==='ch'||k==='at')el+='<path d="M0 70 L50 22 L80 50 L120 10 L170 60 L210 25 L260 55 L300 30 L300 90 L0 90Z" fill="#7d8fa1"/><path d="M42 30 L50 22 L58 30Z M112 18 L120 10 L128 18Z M202 33 L210 25 L218 33Z" fill="#fff"/>';
+  else if(k==='nl')el+='<rect x="0" y="62" width="300" height="10" fill="#6fb0e0"/>'+[60,180].map(x=>`<rect x="${x}" y="30" width="10" height="34" fill="#c08550"/><g transform="translate(${x+5},30)"><rect x="-1" y="-22" width="2" height="44" fill="#eee" transform="rotate(25)"/><rect x="-1" y="-22" width="2" height="44" fill="#eee" transform="rotate(115)"/></g>`).join('');
+  else if(k==='es'||k==='it')el+=`<circle cx="250" cy="22" r="13" fill="#ffef9a"/><path d="M0 65 Q60 40 120 60 Q190 38 300 62 L300 90 L0 90Z" fill="#c9b27a"/>`+(k==='it'?[70,90,200].map(x=>`<ellipse cx="${x}" cy="48" rx="4" ry="14" fill="#2f5d2f"/>`).join(''):[60,150,230].map(x=>`<circle cx="${x}" cy="56" r="7" fill="#7a8f4a"/>`).join(''));
+  else if(k==='uk')el+='<ellipse cx="80" cy="18" rx="40" ry="10" fill="#cfd8e0"/><ellipse cx="220" cy="22" rx="50" ry="11" fill="#cfd8e0"/>'+[...Array(12)].map((_,i)=>`<line x1="${30+i*22}" y1="30" x2="${26+i*22}" y2="40" stroke="#7fa3c8" stroke-width="1.5"/>`).join('')+'<rect x="200" y="48" width="34" height="16" rx="3" fill="#d6262c"/>';
+  else if(k==='pl'||k==='de')el+=[20,45,70,240,265,290].map(x=>`<path d="M${x} 66 L${x+10} 36 L${x+20} 66Z" fill="#2f5d3a"/>`).join('');
+  else if(k==='lu')el+='<rect x="210" y="34" width="44" height="30" fill="#b9a68a"/><rect x="214" y="26" width="10" height="10" fill="#b9a68a"/><rect x="240" y="26" width="10" height="10" fill="#b9a68a"/>';
+  else el+='<path d="M0 66 Q80 50 160 62 Q230 54 300 64 L300 90 L0 90Z" fill="#d8c060"/><rect x="230" y="30" width="10" height="34" fill="#c9c2b5"/><path d="M228 30 L235 14 L242 30Z" fill="#8a8277"/>';
+  return`<svg viewBox="0 0 300 90" width="100%" style="display:block;border-radius:12px;margin:10px 0"><rect width="300" height="90" fill="${sky}"/>${el}<rect y="70" width="300" height="20" fill="#4a4f56"/><rect y="79" width="300" height="2" fill="#e9e9e9" stroke-dasharray="12 10" stroke="#e9e9e9"/><g transform="translate(120,58)"><rect width="34" height="14" rx="3" fill="#ff9a1f"/><rect x="24" y="-6" width="12" height="10" rx="2" fill="#ff9a1f"/><circle cx="8" cy="15" r="4" fill="#222"/><circle cx="28" cy="15" r="4" fill="#222"/></g><text x="10" y="22" font-size="20">${C.f}</text></svg>`}
 /* ---------- Personnel, achats, banque ---------- */
 function hire(i){const w=st.cand[i];if(!w)return;if(!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<monthly(w))return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(monthly(w))}).`);
   st.cand.splice(i,1);ck('hire');w.mot=w.base;w.hd=st.day;w.age=cvOf(w).age;st.workers.push(w);log(`👷 ${w.n} rejoint l'équipe : ${ROLES[w.r].n}.`,false);kaching();goals();save();render()}
 function hireRole(r){const R0=ROLES[r];if(!st.adm.bce)return;if(!R0.multi&&has(r))return;if(R0.need&&ownW()<R0.need)return toastMsg(`Il faut au moins ${R0.need} personnes dans l'entreprise.`);
-  const day=R0.day;if(st.cash<day*WDM)return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(day*WDM)}).`);
+  const day=Math.round(R0.day*(st.idx||1));if(st.cash<day*WDM)return toastMsg(`Il faut pouvoir payer un mois de salaire (${eur(day*WDM)}).`);
   const n=nextName(r);
   st.workers.push({id:st.nid++,n,r,sk:1,day,pc:0,skin:RI(0,SKIN.length-1),base:1,mot:1,hd:st.day,warn:0});log(`${R0.ic} ${n} rejoint ${esc(st.name)} : ${R0.n}.`);kaching();goals();save();render()}
 function fire(id,ok){ok=ok||0;const w=st.workers.find(x=>x.id===id);if(!w||w.boss)return;if(w.it)return itBack(id);const onC=st.contracts.find(c=>c.st==='run'&&c.crew.includes(id));if(onC&&ok<1)return ask(`${w.n} est sur un chantier\n${w.n.split(' ')[0]} travaille sur « ${JOBS[onC.j].n} ».\n⚠️ Si l'équipe devient trop petite, ce chantier sera mis en pause.`,()=>fire(id,1),{ic:'🦺',ok:'Continuer'});
@@ -2347,7 +2441,7 @@ let lastTab=null;
 // pendant le jeu rapide, la liste (surtout l'Équipe avec ses portraits) n'est redessinée que toutes les 0,8 à 1,5 s : plus fluide sur téléphone
 let lastPaneT=0;function renderTick(){if(curTab==='pv'&&pvSec==='casino')return render(true);const now=performance.now(),gap=speed>=3?1500:speed===2?800:0;render(gap&&now-lastPaneT<gap&&!modalOpen)}
 function render(headOnly){
-  cashFx();$('#cash').classList.toggle('neg',st.cash<0);
+  cashFx();$('#cash').classList.toggle('neg',st.cash<0);try{const nN=notifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0)}catch(e){}
   $('#tname').textContent=st.name;$('#lt').textContent=st.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'RN';{const n=Object.keys(st.goals).length;$('#lvl').textContent=n+1;$('#logo').style.setProperty('--lv',Math.round(n/GOALS.length*100)+'%')}
   $('#tsub').textContent=`${stars(st.rep)} ${Math.round(st.rep)} · ${st.cls?CLS[st.cls].n:st.adm.bce?'Entreprise inscrite':'Pas encore inscrit'} · ${ownW()} pers.`;
   const k=dayKind(st.day);$('#hudW').textContent=(k?'🏖️ ':WX[st.wx].ic+' ')+dstr(st.day)+' '+date(st.day).getFullYear()+(k?' · '+k:'');
@@ -2384,7 +2478,7 @@ function rCh(){let h=goalCard()+dqCard()+decCard()+lawCard();const cs=st.contrac
     h+='</div>'}
   if(st.inv.length)h+=`<h2>Factures en attente · ${eur(toRecv())}</h2><div class="card">${st.inv.slice().sort((a,b)=>a.due-b.due).slice(0,12).map(v=>`<div class="row sm" style="padding:4px 0"><span style="flex:1;min-width:0">${esc(v.from)}</span><span class="money">${eur(v.amt)}</span><span class="tag">${dstr(v.due)}</span></div>`).join('')}</div>`;
   return h}
-function rPb(){let h=goalCard()+`<h2>Petits boulots — particuliers, commerces, communes</h2><p class="mut sm" style="margin:-2px 4px 10px">Le client a accepté ton devis : tu acceptes et tu y vas.</p>`;
+function rPb(){let h=goalCard()+acCard()+`<h2>Petits boulots — particuliers, commerces, communes</h2><p class="mut sm" style="margin:-2px 4px 10px">Le client a accepté ton devis : tu acceptes et tu y vas.</p>`;
   if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--rd)"><b>🔒 Inscris d'abord ton entreprise à la BCE</b><p class="mut">Sans numéro d'entreprise, pas de facture.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire (105 €)</button></div>`;
   const L=st.jobs.slice().sort((a,b)=>jobMiss(a).length-jobMiss(b).length);
   for(const o of L){const J=JOBS[o.j],miss=jobMiss(o);const ctl={part:'Particulier',pro:'Entreprise',com:'Commune'}[o.ct];
@@ -2632,13 +2726,13 @@ function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
   <h2>Démarches</h2><div class="card">${Object.keys(ADM).map(k=>{const a=ADM[k];return`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:20px">${a.ic}</span><div style="flex:1;min-width:0"><b>${a.n}</b><div class="mut sm">${a.d}</div></div>${st.adm[k]?'<span class="tag g">✅ Fait</span>':`<button class="btn" style="padding:7px 11px" ${st.cash<a.p||(k!=='bce'&&!st.adm.bce)?'disabled':''} onclick="buyAdm('${k}')">${eur(a.p)}</button>`}</div>`}).join('')}</div>
   <h2>Agréation des entrepreneurs (travaux)</h2><div class="card"><b>${st.cls?'🏅 '+CLS[st.cls].n+' — catégorie G':'Pas encore agréé'}</b><div class="mut sm">Marchés de travaux jusqu'à ${clsMax(CLS[st.cls])} HTVA. Classes réelles de l’AR du 26/09/1991 (montants rétablis après l’arrêt du Conseil d’État du 12/12/2025). Les marchés de services n'ont pas besoin d'agréation.</div>
   ${u?`<p style="margin:10px 0 4px">${u.n} (jusqu'à ${clsMax(u)}) :</p>${reqHtml([{ok:!!(st.adm.vca&&st.adm.rc),tx:'🦺 VCA + RC'},{ok:st.stats.ca>=u.ca,tx:`💶 CA ${eur(u.ca)}`},{ok:ownW()>=u.w,tx:`👷 ${u.w} personnes`},{ok:st.rep>=u.r,tx:`⭐ réputation ${u.r}`},...(u.dir||[]).map(r=>({ok:has(r),tx:ROLES[r].ic+' '+ROLES[r].n})),{ok:st.cash>=u.c,tx:`🧾 frais de dossier ${eur(u.c)}`}])}<button class="btn w" style="margin-top:10px" onclick="upCls()" ${clsOk(u)?'':'disabled'}>Introduire la demande</button>`:'<p>Classe maximale 👑</p>'}</div>`+(st.adm.bce?insCard():'');
-  else if(biTab==='emp')h+=empireCard()+euCard()+(st.adm.bce?friendsCard():'<div class="card"><p class="mut">Inscris ton entreprise à la BCE pour comparer avec tes amis.</p></div>');
+  else if(biTab==='emp')h+=empireCard()+rankCard()+euCard()+(st.adm.bce?friendsCard():'<div class="card"><p class="mut">Inscris ton entreprise à la BCE pour comparer avec tes amis.</p></div>');
   else if(biTab==='plus')h+=`<h2>Réglages</h2><div class="card"><div class="row"><button class="btn s" onclick="st.snd=st.snd?0:1;save();render()">${st.snd?'🔊 Son activé':'🔇 Son coupé'}</button><button class="btn s" onclick="st.ntf={all:'imp',imp:'off',off:'all'}[st.ntf||'imp'];save();render()">${{all:'💬 Messages : tous',imp:'💬 Messages : importants',off:'💬 Messages : aucun'}[st.ntf||'imp']}</button><button class="btn s" onclick="exportSave()">💾 Sauvegarde</button><button class="btn s" onclick="importUI()">📥 Charger</button><button class="btn s" onclick="restorePrev()">🛟 Copie d’avant</button></div>
   <div class="row" style="margin-top:10px"><button class="btn s" onclick="chkV(1)">🔄 Vérifier les mises à jour</button><button class="btn s" onclick="fullScreen()">⛶ Plein écran</button></div><p class="mut sm">Ta partie est enregistrée sur ce GSM et reste intacte après chaque mise à jour. Version <span id="ver2"></span></p>
   <button class="btn r" onclick="restart()">Recommencer une nouvelle entreprise</button></div>
   <h2>Journal</h2><div class="card log">${st.log.slice(0,40).map(l=>`<div><span class="mut">${dstr(l.d)}</span> — ${l.t}</div>`).join('')||'<span class="mut">Rien encore.</span>'}</div>
-    <h2>Objectifs</h2><div class="card">${GOALS.map(g=>`<div style="padding:3px 0">${st.goals[g.k]?'✅':'⬜'} ${g.t}</div>`).join('')}</div>`;
-  else h+=bizSum();
+    <h2>Objectifs</h2><div class="card">${GOALS.map(g=>`<div style="padding:3px 0">${st.goals[g.k]?'✅':'⬜'} ${g.t}</div>`).join('')}</div>`+tipsList();
+  else h+=bigEvCard()+bizSum();
   setTimeout(()=>{const v=$('#ver2');if(v)v.textContent=window.APPV||''},0);
   return h}
 
@@ -2869,7 +2963,7 @@ function draw(t){if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs(); // télépho
     const crew=c.crew.map(id=>st.workers.find(w=>w.id===id)).filter(Boolean);const nShow=Math.min(6,crew.length)-(mach&&mach!=='nacelle'?1:0)-(mach==='nacelle'?1:0);
     for(let k=0;k<Math.max(0,nShow);k++){const w=crew[k+(mach?1:0)]||crew[k];const wx=sx-6-k*22+Math.sin(t*.7+k)*5;const wy=yWork+(k%2)*6;
       let tool=J.tool;if(mach)tool=k===0?'porte':'';if(vk==='branches')tool='porte';const lazy=(w.mot??1)<.55&&Math.sin(t*.4+k*2)>-.2;if(lazy)tool='gsm';
-      worker(lazy?wx-10:wx,wy,lazy?0:t,{tool,ph:k*1.9,skin:w.skin,helm:w.boss?'#fff':k%2?'#ffd23f':'#ff9a1f',bag:k%2?'#ffd23f':'#2f79d9'})}
+      worker(lazy?wx-10:wx,wy,lazy?0:t,{tool,ph:k*1.9,skin:w.skin,vest:w.it?'#2f9cff':undefined,helm:w.boss?'#fff':k%2?'#ffd23f':'#ff9a1f',bag:k%2?'#ffd23f':'#2f79d9'})}
   }else{
     // dépôt / maison quand il n'y a pas de chantier
     const bx=CW*.08;
@@ -2930,7 +3024,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-06.2";
+var APPV="2026-11-06.3";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
