@@ -1,4 +1,4 @@
-# Route Nette — version 1.0
+# Route Nette — version 1.1
 
 Jeu mobile (PWA, un seul fichier `index.html`) de gestion d'une entreprise d'entretien des routes en Wallonie.
 
@@ -14,6 +14,9 @@ Jouer : https://nicolas06061997.github.io/Route-Nette/ (installable sur le tél�
 - **Empire** : innovation, rachat de concurrents, bourse, filiales dans 10 pays d'Europe, puis concessions, groupes européens et industrie (dès 100 millions €).
 - **Vie privée** : salaire, dividendes, holding, maisons, voitures, yachts, famille, bourse, casino équitable.
 - **Carrière** : 100 niveaux, défis du mois, 12 grands chantiers, 97 succès. Le jeu est « fini » à 100 %, et on peut continuer après.
+
+## 2e entreprise : société de nettoyage
+Page « Mes entreprises » : Route Nette est gratuite ; la société de nettoyage se débloque pour 25 millions € (compte privé). Titres-services, bureaux, commerces, écoles, hôpitaux (marchés publics), vitres et chantiers ponctuels, personnel avec absences et départs, matériel, banque et impôts. Même calendrier et même vie privée.
 
 ## Sauvegarde
 Automatique dans le téléphone (`routenette-save`). Code de sauvegarde à exporter / importer dans Entreprise → Plus.
