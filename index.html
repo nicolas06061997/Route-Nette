@@ -681,11 +681,12 @@ function inoUI(){const I=st.ino||{};let h=`<h3>🔬 Innovation</h3><p class="mut
 // Rachat de concurrents : prix ± 0,45 × chiffre d'affaires annuel (≈ 5-6 × l'EBITDA du secteur)
 const RCA=[1200000,4500000,18000000];
 const ENTR=[['Nord-Infra Services SA (France)',.98,72],['Rijnland Wegbeheer NV (Pays-Bas)',.97,75],['Meuse & Sambre Infra SA',1.0,70],['Eurovoirie Groupe SA',.96,78],['Groupe Ardoise Travaux SA',.99,73]];
-const accPrice=r=>Math.round(RCA[r.sz]*.45*(.8+r.rep/250)/1000)*1000;
+const acCA=r=>rivCA(rivP(r));
+const accPrice=r=>Math.round(acCA(r)*.45*(.8+r.rep/250)/1000)*1000;
 function accReq(r){return r.sz===0?[st.cls>=1,'Agréation classe 4']:r.sz===1?[st.cls>=2&&has('daf'),'Classe 6 + un DAF']:[st.cls>=3&&has('daf'),'Classe 7 + un DAF']}
 function acquire(n,ok){const r=st.riv.find(x=>x.n===n);if(!r)return;const pr=accPrice(r),[can,why]=accReq(r);if(!can)return toastMsg('Il faut : '+why);if(st.cash<pr)return toastMsg(`Il faut ${eur(pr)} sur le compte.`);
-  if(!ok)return ask(`Racheter ${r.n} ?\nPrix : ${eur(pr)}\nChiffre d’affaires : ± ${eur(RCA[r.sz])}/an\nBénéfice attendu : ± ${eur(RCA[r.sz]*.07*.75/12)}/mois\nElle ne te fera plus concurrence. Son équipe continue de travailler sous ton nom ; ses bénéfices remontent chaque mois (dividendes exonérés).`,()=>acquire(n,1),{ic:'🤝',ok:'Racheter'});
-  mv(-pr,'Rachat de '+r.n,'buy');st.mCapex+=pr;st.riv.splice(st.riv.indexOf(r),1);(st.grp||(st.grp=[])).push({n:r.n,sz:r.sz,ca:RCA[r.sz],d:st.day,pr,tot:0,last:0});st.rep=clamp(st.rep+2,0,100);
+  if(!ok)return ask(`Racheter ${r.n} ?\nPrix : ${eur(pr)}\nChiffre d’affaires : ± ${eur(acCA(r))}/an\nBénéfice attendu : ± ${eur(acCA(r)*.07*.75/12)}/mois\nElle ne te fera plus concurrence. Son équipe continue de travailler sous ton nom ; ses bénéfices remontent chaque mois (dividendes exonérés).`,()=>acquire(n,1),{ic:'🤝',ok:'Racheter'});
+  mv(-pr,'Rachat de '+r.n,'buy');st.mCapex+=pr;st.riv.splice(st.riv.indexOf(r),1);(st.grp||(st.grp=[])).push({n:r.n,sz:r.sz,ca:acCA(r),d:st.day,pr,tot:0,last:0});st.rep=clamp(st.rep+2,0,100);
   log(`🤝 Tu as racheté ${r.n} pour ${eur(pr)} !`);confetti(180);kaching();save();closeM();acqUI()}
 function grpSell(i,ok){const g=st.grp[i];if(!g)return;const v=Math.round(g.ca*.4);if(!ok)return ask(`Revendre ${g.n} ?\nPrix de vente : ${eur(v)}\nElle redeviendra un concurrent.`,()=>grpSell(i,1),{ic:'🤝',ok:'Revendre',danger:1});
   mv(v,'Vente de '+g.n,'buy');st.mCapex-=v;st.grp.splice(i,1);const T=RIVT.find(x=>x[0]===g.n);st.riv.push({n:g.n,sz:g.sz,jobs:T?T[2]:SPWJ,ag:T?T[3]:1,rep:T?T[4]:60,load:[],won:0,ca:0});save();closeM();acqUI()}
@@ -699,7 +700,7 @@ function acqUI(){let h=`<h3>🤝 Racheter un concurrent</h3><p class="mut sm">Co
   if((st.grp||[]).length){h+=`<h2>Ton groupe</h2>`;st.grp.forEach((g,i)=>{h+=`<div class="card"><div class="row" style="flex-wrap:nowrap"><b style="flex:1">🏢 ${esc(g.n)}</b><button class="btn s" style="padding:6px 9px" onclick="grpSell(${i})">Revendre</button></div><div class="tags"><span class="tag">CA ± ${eur(g.ca)}/an</span><span class="tag ${g.last>=0?'g':'r'}">dernier mois ${eur(g.last)}</span><span class="tag g">total reçu ${eur(g.tot)}</span></div></div>`})}
   h+=`<h2>Concurrents</h2>`;
   for(const r of st.riv.slice().sort((a,b)=>a.sz-b.sz)){const pr=accPrice(r),[can,why]=accReq(r);h+=`<div class="card"><div class="hd"><div class="ic">${['🏠','🏢','🏭'][r.sz]}</div><div style="flex:1;min-width:0"><h3>${esc(r.n)}</h3><div class="mut sm">${['Petite entreprise','Entreprise moyenne','Grand groupe'][r.sz]} · ⭐ ${r.rep} · ${r.won} marché(s) gagné(s) depuis le début</div></div></div>
-    <div class="tags"><span class="tag">Prix ${eur(pr)}</span><span class="tag">CA ± ${eur(RCA[r.sz])}/an</span>${can?'':`<span class="tag r">🔒 ${why}</span>`}</div><button class="btn" style="margin-top:10px" ${can&&st.cash>=pr?'':'disabled'} onclick="acquire('${r.n.replace(/'/g,"\\'")}')">Racheter</button></div>`}
+    <div class="tags"><span class="tag">Prix ${eur(pr)}</span><span class="tag">CA ± ${eur(acCA(r))}/an</span>${can?'':`<span class="tag r">🔒 ${why}</span>`}</div><button class="btn" style="margin-top:10px" ${can&&st.cash>=pr?'':'disabled'} onclick="acquire('${r.n.replace(/'/g,"\\'")}')">Racheter</button></div>`}
   showModal(h+'<button class="btn s w" onclick="closeM()">Fermer</button>')}
 // Valeur du groupe (estimation simple) : ± 0,6 × CA + trésorerie + matériel + bâtiments + filiales + sociétés rachetées − dettes
 function grpValue(){let v=caRecent()*.6+st.cash+Object.keys(st.eq).reduce((a,k)=>a+eqVal(k)*.5,0);
@@ -2728,19 +2729,13 @@ function pvBudget(){const V=pv(),inc=[],out=[],G={};
   if(sav)inc.push(['☀️ Économies sur les factures (solaire, isolation…)',sav]);for(const g in G)out.push([g,G[g]]);if(V.cash<0)out.push(['🔴 Intérêts du découvert privé (9 %)',Math.round(-V.cash*.09/12)]);
   const ti=inc.reduce((a,x)=>a+x[1],0),to=out.reduce((a,x)=>a+x[1],0);return{inc,out,ti,to}}
 const PGRP=[['🏠 Immobilier',['home','loc']],['🔨 Ma maison',['reno']],['🖼️ Collections',['coll']],['🚗 Véhicules',['car','occ','moto']],['⛵ Bateaux',['boat']],['💎 Luxe',['lux']],['🌌 Démesure',['ult']],['👨‍👩‍👧 Famille et abonnements',['fam']]];
-function ownCard(o){const P=PRIV[o.k],v=pValue(o);let st_='';
-  if(o.lou){st_=o.louEnd?`<span class="tag o">📨 Préavis : départ le ${dstr(o.louEnd)}</span>`:st.day<(o.louFrom||0)?'<span class="tag b">🔎 L’agence cherche un locataire</span>':'<span class="tag g">🔑 Loué</span>'}
-  else if(P.home&&myHome()===o)st_='<span class="tag v">🏡 Tu habites ici</span>';
-  const r=rentOf(o);
-  return`<div class="card pvo"><div class="hd"><div class="ic" style="--ac2:#2b3d52">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3><div class="mut sm">${P.keep||P.sub?'Depuis le '+dstr(o.day)+' '+date(o.day).getFullYear():`Acheté ${eur(o.price)} · vaut <b style="color:${v>=o.price?'var(--gr)':'var(--tx)'}">${eur(v)}</b>`}</div></div></div>
-  <div class="tags">${st_}${P.m>0?`<span class="tag">-${eur(P.m)}/mois</span>`:P.m<0?`<span class="tag g">+${eur(-P.m)}/mois d’économies</span>`:''}${r&&(!o.lou||o.louOk)?`<span class="tag g">+${eur(r)}/mois de loyer</span>`:''}${o.loan?`<span class="tag o">Crédit ${eur(o.loan)} · ${eur(o.pay)}/mois</span>`:''}</div>
-  <div class="row" style="margin-top:8px">${P.hr?`<button class="btn s" style="padding:7px 10px" onclick="pRent(${o.id})">${!o.lou?'🔑 Mettre en location':o.louEnd?'⏳ Préavis en cours':st.day<(o.louFrom||0)?'✕ Annuler la location':'🏠 Récupérer (préavis 6 mois)'}</button>`:''}${P.keep?'':`<button class="btn s" style="padding:7px 10px" onclick="pSell(${o.id})">${P.sub?'Résilier':'Vendre'}</button>`}</div></div>`}
 // Vie privée v3 : accueil clair (patrimoine, reste du mois, bonheur, conseil en 1 bouton, courbe), biens en liste + fiche, boutique compacte
 let pvAff=0,pvSort='';
 function pvHappy(net){const V=pv(),own=V.own.filter(o=>PRIV[o.k]);const h=35+hp()*.35+(ownsHome()?10:0)+(V.wed?8:V.cpl?5:0)+Math.min(12,own.filter(o=>o.k==='enfant').length*4)+(net>=0?8:-15)+(V.away>st.day?10:0)+Math.min(10,own.filter(o=>['lux','boat','coll','exp','moto','ult'].includes(PRIV[o.k].c)).length*2);return Math.round(clamp(h,0,100))}
 function pvWorthTick(){const V=pv(),W=V.wh||(V.wh=[]);W.push(Math.round(pvWorth()));if(W.length>60)W.shift()}
 function pvHome(net,worth){const V=pv(),hap=pvHappy(net),own=V.own.filter(o=>PRIV[o.k]);let h=`<div class="pvtiles"><div><span>💎 Patrimoine</span><b>${eur(worth)}</b></div><div><span>📅 Il te reste / mois</span><b class="${net<0?'neg':'money'}">${net>=0?'+':''}${eur(net)}</b></div><div><span>${hap>=70?'😊':hap>=45?'😐':'😟'} Bonheur</span><b>${hap} %</b></div></div>`;
-  if(net<0){const need=Math.min(100000,Math.ceil((patSal()-net)/100)*100),canRent=own.filter(o=>PRIV[o.k].hr&&!o.lou&&!(PRIV[o.k].home&&myHome()===o));
+  if(net<0&&!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--or)"><b>⏳ Pas encore de salaire</b><div class="mut sm" style="margin-top:4px">Ta société n’est pas encore inscrite à la BCE : elle ne peut pas encore te payer. Ta vie (${eur(-net)}/mois) est payée par ton compte privé en attendant. Inscris-la vite pour commencer à facturer.</div><button class="btn w" style="margin-top:8px" onclick="privClose();tab('ch')">🏢 Aller à mon entreprise</button></div>`;
+  else if(net<0){const need=Math.min(100000,Math.ceil((patSal()-net)/100)*100),canRent=own.filter(o=>PRIV[o.k].hr&&!o.lou&&!(PRIV[o.k].home&&myHome()===o));
     h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Tu dépenses ${eur(-net)} de plus que tu gagnes chaque mois</b><div class="mut sm" style="margin-top:4px">Ton compte privé va fondre. Le plus simple :</div><button class="btn w" style="margin-top:8px" onclick="setSal(${need})">💶 Mettre mon salaire à ${eur(need)} net</button>${canRent.length?`<button class="btn s w" style="margin-top:6px" onclick="pvGo('biens')">🔑 Mettre un bien en location (${canRent.length} possible${canRent.length>1?'s':''})</button>`:''}${st.srl?`<div class="mut sm" style="margin-top:6px">Ta SRL paiera ± ${eur(Math.round(need/.55))} brut par mois pour ce salaire.</div>`:''}</div>`}
   const W=V.wh||[];if(W.length>=2)h+=`<div class="card"><div class="row"><span class="mut sm" style="flex:1">Ton patrimoine, mois après mois</span><b class="${W[W.length-1]>=W[0]?'money':'neg'} sm">${W[W.length-1]>=W[0]?'+':''}${eur(W[W.length-1]-W[0])}</b></div>${spark(W,300,60)}</div>`;
   return h+fortuneCard()}
@@ -3295,11 +3290,11 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-07.5";
+var APPV="2026-11-07.6";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
-(function(){var v=document.getElementById("ver");if(v)v.textContent="Version "+APPV})();
+(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 1.0 · "+APPV})();
 function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){});
  fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
   if(!j||!j.v||j.v===APPV){if(man)say("Le jeu est à jour ✓ (version "+APPV+")");return}
