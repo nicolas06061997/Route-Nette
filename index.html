@@ -116,17 +116,9 @@ nav button.on{color:var(--or2);background:#1a3022}
 nav button.on b{filter:none;opacity:1;transform:scale(1.08)}
 nav .bd{position:absolute;top:1px;right:calc(50% - 22px);background:var(--rd);color:#fff;border-radius:9px;font-size:10px;padding:0 5px;font-weight:900;min-width:16px}
 /* --- 2e entreprise (nettoyage) et accueil « Mes entreprises » --- */
-#clean,#hub{position:fixed;top:0;bottom:0;left:0;right:0;max-width:760px;margin:auto;z-index:29;display:none;flex-direction:column}
-#clean{background:linear-gradient(180deg,#0f2433,#0a1822)}#hub{background:linear-gradient(180deg,#14283a,#0c1824);z-index:28}
-#clean.on,#hub.on{display:flex;animation:pvin .25s ease-out}
-#clhead{display:flex;align-items:center;gap:7px;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;background:linear-gradient(180deg,#1d4a66,#143448);border-bottom:1px solid #ffffff1a}
-#clcash{background:linear-gradient(180deg,#1f5f7a,#164a60);border:1px solid #6fd3ff66;border-radius:14px;padding:6px 9px;font-weight:900;font-size:14.5px;color:#d9f4ff;white-space:nowrap}
-#clcash.neg{color:#ffb3b3;border-color:#ff6b6b88}
-#clspd{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}#clspd>*{pointer-events:auto}.cldate{background:#0009;color:#fff;border-radius:10px;padding:4px 9px;font:800 12px Nunito,sans-serif}.clsp{display:flex;gap:3px;background:#0007;border-radius:12px;padding:3px}.clsp button{background:#ffffff14;border:0;color:#fff;border-radius:9px;padding:6px 8px;font:900 12px Nunito,sans-serif}.clsp button.on{background:#ffb02e;color:#222}
-#clscene{position:relative;height:150px;flex:none;border-bottom:1px solid #ffffff14}#clcv{width:100%;height:100%;display:block}
-#clpane,#hubpane{flex:1;overflow-y:auto;padding:12px 12px 24px;-webkit-overflow-scrolling:touch}
-#cltabs{background:#0b1a24;border-top:1px solid #ffffff1a}#cltabs button.on{background:#143448;color:#6fd3ff}
-#hubpane{padding-top:calc(env(safe-area-inset-top) + 16px)}.hubt{padding:4px 4px 12px}.hubc{cursor:pointer}.hubc.lock{border-style:dashed}
+#hub{position:fixed;top:0;bottom:0;left:0;right:0;max-width:760px;margin:auto;z-index:28;display:none;flex-direction:column;background:linear-gradient(180deg,#0d1a14,#0a140f)}
+#hub.on{display:flex;animation:pvin .25s ease-out}
+#hubpane{flex:1;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 16px) 12px 24px;-webkit-overflow-scrolling:touch}.hubt{padding:4px 4px 12px}.hubc{cursor:pointer}.hubc.lock{border-style:dashed}
 #hubb{position:relative;font-size:19px;padding:6px 8px;margin-right:4px;border-radius:12px;background:#ffffff10;cursor:pointer}
 /* --- Vie privée : une page à part, son propre monde --- */
 #priv{position:fixed;top:0;bottom:0;left:0;right:0;max-width:760px;margin:auto;z-index:30;display:none;flex-direction:column;background:linear-gradient(180deg,#1d1631,#120d20)}
@@ -191,10 +183,10 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
 </head>
 <body>
 <header id="top">
-  <div id="logo" onclick="if(st&&st.adm.bce){click();careerUI()}" style="cursor:pointer"><span id="lt">RN</span><span id="lvl">1</span></div>
+  <div id="logo" onclick="if(st&&curTab==='cl'&&st.cl){click();clCareerUI()}else if(st&&st.adm.bce){click();careerUI()}" style="cursor:pointer"><span id="lt">RN</span><span id="lvl">1</span></div>
   <div id="tinfo"><div id="tname"></div><div id="tsub"></div></div>
   <div id="hubb" onclick="if(st){click();tab('hub')}" title="Mes entreprises">🏢</div>
-  <div id="bell" onclick="if(st)notifUI()">🔔<b id="bellN"></b></div>
+  <div id="bell" onclick="if(st)(curTab==='cl'&&st.cl?clNotifUI():notifUI())">🔔<b id="bellN"></b></div>
   <div id="cash"></div>
 </header>
 <div id="scene">
@@ -204,6 +196,7 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
   <div id="speed"><button data-sp="0" aria-label="Pause">❚❚</button><button data-sp="1" aria-label="Vitesse normale">▶</button><button data-sp="2" aria-label="Rapide">▶▶</button><button data-sp="3" aria-label="Très rapide">▶▶▶</button></div>
 </div>
 <main id="pane"></main>
+<nav id="cltabs" style="display:none"></nav>
 <nav id="tabs">
   <button data-t="ch"><b>🦺</b>Chantiers</button>
   <button data-t="pb"><b>🧰</b>Boulots</button>
@@ -214,7 +207,6 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
   <button data-t="pv"><b>🏡</b>Privé</button>
 </nav>
 <div id="hub"><main id="hubpane"></main></div>
-<div id="clean"><header id="clhead"></header><div id="clscene"><canvas id="clcv"></canvas><div id="clspd"></div></div><main id="clpane"></main><nav id="cltabs"></nav></div>
 <div id="priv"><header id="phead"></header><div id="pscene"></div><main id="ppane"></main><nav id="ptabs"></nav></div>
 <div id="modal"><div class="box" id="mbox"></div></div>
 <div id="toast"></div>
@@ -2572,6 +2564,7 @@ let lastTab=null;
 // pendant le jeu rapide, la liste (surtout l'Équipe avec ses portraits) n'est redessinée que toutes les 0,8 à 1,5 s : plus fluide sur téléphone
 let lastPaneT=0;function renderTick(){if(curTab==='pv'&&pvSec==='casino')return render(true);const now=performance.now(),gap=speed>=3?1500:speed===2?800:0;render(gap&&now-lastPaneT<gap&&!modalOpen)}
 function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();
+  if(curTab==='cl'&&st.cl){$('#hub').classList.remove('on');$('#priv').classList.remove('on');document.body.classList.remove('pvmode');return clRender(headOnly)}
   cashFx();$('#cash').classList.toggle('neg',st.cash<0);try{const nN=notifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0)}catch(e){}
   $('#tname').textContent=st.name;$('#lt').textContent=st.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'RN';{const n=Object.keys(st.goals).length;$('#lvl').textContent=n+1;$('#logo').style.setProperty('--lv',Math.round(n/GOALS.length*100)+'%')}
   $('#tsub').textContent=`${stars(st.rep)} ${Math.round(st.rep)} · ${st.cls?CLS[st.cls].n:st.adm.bce?'Entreprise inscrite':'Pas encore inscrit'} · ${ownW()} pers.`;
@@ -2583,10 +2576,9 @@ function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();
   cleanReports();const nR=st.reports.filter(r=>!r.done).length;if(nR)$('[data-t=eq]').insertAdjacentHTML('beforeend',`<span class="bd">${nR}</span>`);
   if(nWait)$('[data-t=ch]').insertAdjacentHTML('beforeend',`<span class="bd">${nWait}</span>`);
   if(nJob&&!st.contracts.length)$('[data-t=pb]').insertAdjacentHTML('beforeend',`<span class="bd">${nJob}</span>`);
-  const clOn=curTab==='cl'&&!!st.cl,hubOn=curTab==='hub'||(curTab==='cl'&&!st.cl);$('#clean').classList.toggle('on',clOn);$('#hub').classList.toggle('on',hubOn);
-  if(clOn||hubOn){$('#priv').classList.remove('on');document.body.classList.remove('pvmode');
-    if(clOn){$('#clhead').innerHTML=clHead();$('#clspd').innerHTML=clSpeed();const tb=clTabs();if($('#cltabs').innerHTML!==tb)$('#cltabs').innerHTML=tb}
-    if(headOnly===true)return;lastPaneT=performance.now();const P=clOn?$('#clpane'):$('#hubpane'),y=P.scrollTop,fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=clOn?rCl():rHub();P.scrollTop=y;return}
+  const hubOn=curTab==='hub'||(curTab==='cl'&&!st.cl);$('#hub').classList.toggle('on',hubOn);
+  if(hubOn){$('#priv').classList.remove('on');document.body.classList.remove('pvmode');if(headOnly===true)return;lastPaneT=performance.now();const P=$('#hubpane'),y=P.scrollTop;P.innerHTML=rHub();P.scrollTop=y;return}
+  const tb0=$('#tabs');if(tb0.style.display==='none'){tb0.style.display='';$('#cltabs').style.display='none';shownCash=null;cashFx()}
   const pvOn=curTab==='pv';$('#priv').classList.toggle('on',pvOn);document.body.classList.toggle('pvmode',pvOn);
   if(pvOn){$('#phead').innerHTML=pHead();const sc=pScene();if(sc!==lastScene){$('#pscene').innerHTML=sc;lastScene=sc}
     const pt=[['vie','🏡','Accueil'],['biens','🗝️','Biens'],['money','💶','Argent'],['shop','🛒','Boutique'],['casino','🎰','Loisirs']].map(([k,i,l])=>`<button class="${pvSec===k||(k==='money'&&(pvSec==='bourse'||pvSec==='hold'))?'on':''}" onclick="pvGo('${k}')"><b>${i}</b>${l}</button>`).join('');if($('#ptabs').innerHTML!==pt)$('#ptabs').innerHTML=pt}
@@ -3298,7 +3290,7 @@ cv.addEventListener('pointerdown',e=>{const c=selC();if(!c)return;const b=cv.get
 
 /* ---------- Boucle ---------- */
 const SPD=[0,4500,1800,600];let acc=0,prevT=performance.now();
-function loop(now){const dt=Math.min(250,now-prevT);prevT=now;if(playing&&!modalOpen&&speed&&!st.over){acc+=dt;if(acc>=SPD[speed]){acc=0;tick()}}if(curTab==='cl'&&st&&st.cl)try{clDraw(now/1000)}catch(e){}else draw(now/1000);requestAnimationFrame(loop)}
+function loop(now){const dt=Math.min(250,now-prevT);prevT=now;if(playing&&!modalOpen&&speed&&!st.over){acc+=dt;if(acc>=SPD[speed]){acc=0;tick()}}if(curTab==='cl'&&st&&st.cl){try{clDraw(now/1000)}catch(e){}}else draw(now/1000);requestAnimationFrame(loop)}
 render();
 function fullScreen(){try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).then(()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(e){}setTimeout(rs,300)}).catch(()=>{});else if(d.webkitRequestFullscreen)d.webkitRequestFullscreen()}catch(e){}}
 addEventListener('scroll',()=>{if(scrollY)scrollTo(0,0)});
@@ -3325,6 +3317,7 @@ const CLO={// personnel de bureau : coût employeur mensuel
   tsr:{n:'Responsable d’agence titres-services',nm:'Nathalie Gilson',ic:'🏠',m:4500,d:'+40 % de demandes titres-services, clients plus fidèles (1 agence pour ± 120 aides-ménagères).'},
   off:{n:'Responsable des appels d’offres',nm:'Pierre Lemaire',ic:'📑',m:5600,d:'Remet lui-même les offres aux marchés publics quand tu remplis les conditions (+5 points de qualité dans les offres).'},
   compta:{n:'Comptable',nm:'Marc Wauthier',ic:'🧮',m:4900,d:'Relance les clients : paiements 10 jours plus tôt en moyenne.'},
+  prev:{n:'Conseiller en prévention',nm:'Julien Dethier',ic:'🦺',m:4600,d:'Accidents du travail −40 %, prime d’assurance accidents du travail −0,5 point.'},
   dir:{n:'Directrice d’exploitation',nm:'Valérie Hanquet',ic:'👩‍💼',m:8500,d:'Indispensable au-delà de 150 personnes : sans elle, l’organisation perd 10 % d’efficacité. Achète aussi le matériel manquant.'}};
 const CLE={
   henry:{n:'Aspirateur Numatic Henry',ic:'🧹',p:230,d:'Matériel de base : 1 pour 3 techniciennes.'},
@@ -3340,14 +3333,14 @@ const CLE={
   nacelle:{n:'Nacelle 20 m (occasion)',ic:'🏗️',p:32000,d:'Vitres et façades en hauteur.'},
   van:{n:'Camionnette (Berlingo, occasion)',ic:'🚐',p:15500,d:'1 par chantier ponctuel en cours (450 €/mois : assurance, carburant).'}};
 const CLK={
-  bur:{n:'Bureaux',ic:'🏢',prod:220,mkt:34,m2:[150,4000],f:[3,5]},
-  com:{n:'Commerce / magasin',ic:'🛍️',prod:250,mkt:33,m2:[100,2500],f:[5,6]},
-  med:{n:'Cabinet médical / maison de repos',ic:'🩺',prod:140,mkt:37,m2:[120,3000],f:[5,5],eq:'vap'},
-  eco:{n:'École / crèche',ic:'🏫',prod:170,mkt:32,m2:[400,6000],f:[5,5],eq:'mono'},
-  cop:{n:'Communs d’immeuble',ic:'🏘️',prod:300,mkt:33,m2:[150,1500],f:[1,2]},
-  ind:{n:'Industrie / agroalimentaire (nuit)',ic:'🏭',prod:300,mkt:38,m2:[2000,20000],f:[5,6],eq:'hp'},
-  hop:{n:'Hôpital',ic:'🏥',prod:120,mkt:39,m2:[8000,60000],f:[7,7],eq:'vap',pub:1},
-  adm:{n:'Bâtiment administratif',ic:'🏛️',prod:230,mkt:33,m2:[2000,30000],f:[5,5],pub:1}};
+  bur:{n:'Bureaux',ic:'🏢',prod:220,mkt:37,m2:[150,4000],f:[3,5]},
+  com:{n:'Commerce / magasin',ic:'🛍️',prod:250,mkt:36,m2:[100,2500],f:[5,6]},
+  med:{n:'Cabinet médical / maison de repos',ic:'🩺',prod:140,mkt:40,m2:[120,3000],f:[5,5],eq:'vap'},
+  eco:{n:'École / crèche',ic:'🏫',prod:170,mkt:35,m2:[400,6000],f:[5,5],eq:'mono'},
+  cop:{n:'Communs d’immeuble',ic:'🏘️',prod:300,mkt:36,m2:[150,1500],f:[1,2]},
+  ind:{n:'Industrie / agroalimentaire (nuit)',ic:'🏭',prod:300,mkt:41,m2:[2000,20000],f:[5,6],eq:'hp'},
+  hop:{n:'Hôpital',ic:'🏥',prod:120,mkt:42,m2:[8000,60000],f:[7,7],eq:'vap',pub:1},
+  adm:{n:'Bâtiment administratif',ic:'🏛️',prod:230,mkt:36,m2:[2000,30000],f:[5,5],pub:1}};
 const CLP={
   fin:{n:'Nettoyage de fin de chantier',ic:'🏗️',h:[12,160],p:40,r:'of'},
   dem:{n:'Grand nettoyage après déménagement',ic:'📦',h:[6,30],p:38,r:'of'},
@@ -3376,7 +3369,7 @@ const CLCLI={bur:['Cabinet d’avocats','Bureau comptable','Agence immobilière'
 const CLBUY=['Commune de','Ville de','CPAS de','Province de','Intercommunale de','Athénée royal de','Haute École de','SPW — bâtiments de'];
 
 const clW=d=>{const x=date(d),wd=x.getDay();return wd!==0&&wd!==6&&!ferie(x)};
-function clNew(name,cap){return{v:1,name,found:st.day,cash:cap,cap0:cap,rep:40,idx:1,adm:{},staff:[{id:1,n:'Toi',r:'tech',boss:1,hw:38,sk:1,rel:1,mot:1,day:st.day,f:0}],nid:2,eq:{},ctr:[],job:[],dem:[],ten:[],ts:{h:0,n:0,wait:0,wh:0,sat:70,acc:0},off:{},cand:[],inv:[],mv:[],mon:{},pl:{rev:0,cost:0},lastPl:null,mH:[],caM:[],log:[],goals:{},loan:0,loss:0,salAcc:0,accF:{cons:0,km:0},st8:{done:0,won:0,lost:0,ca:0,tsh:0},autoQ:1,autoH:1,autoB:1,autoT:1,coef:1,lvl:0}}
+function clNew(name,cap){return{v:1,name,found:st.day,cash:cap,cap0:cap,rep:40,idx:1,adm:{},staff:[{id:1,n:'Toi',r:'tech',boss:1,hw:38,sk:1,rel:1,mot:1,day:st.day,f:0}],nid:2,eq:{},ctr:[],job:[],dem:[],ten:[],ts:{h:0,n:0,wait:0,wh:0,sat:70,acc:0},off:{},cand:[],inv:[],mv:[],mon:{},pl:{rev:0,cost:0},lastPl:null,mH:[],caM:[],log:[],goals:{},loan:0,loss:0,salAcc:0,accF:{cons:0,km:0},st8:{done:0,won:0,lost:0,ca:0,tsh:0},autoQ:1,autoH:1,autoB:1,autoT:1,coef:1,lvl:0,dec:[],comp:[],rpt:[],car:{lv:1,xp:0},mg:{},riv:clRivGen(),at:.022,site:'home'}}
 const cl=()=>st.cl;
 function clMv(a,l,cat){const C=st.cl;a=Math.round(a*100)/100;C.cash+=a;C.mv.unshift({d:st.day,a,l});if(C.mv.length>80)C.mv.length=80;C.mon[cat]=(C.mon[cat]||0)+a}
 function clLog(t,imp){const C=st.cl;C.log.unshift({d:st.day,t});if(C.log.length>60)C.log.length=60;if(imp&&curTab==='cl')toastMsg(t,2)}
@@ -3396,7 +3389,7 @@ const clMiss=()=>{const N=clNeeds(),M={};for(const k in N){const m=N[k]-(st.cl.e
 function clCap(){// heures disponibles par jour ouvrable, par groupe
   const C=st.cl,cap={ts:0,of:0,vi:0},lost={ts:0,of:0,vi:0};const repl=clOffN('plan')?.6:1;
   for(const w of C.staff){const R0=CLR[w.r];let h=w.hw/5*(R0.work||1)*(w.sk||1)*(R0.pool==='ts'?.88:1);if(w.abs>0){lost[R0.pool]+=h*repl;h*=1-repl}cap[R0.pool]+=h}
-  const big=clStaffN()>150&&!clOffN('dir')?.9:1,small=C.staff.length>12&&!clOffN('plan')?.94:1;for(const k in cap)cap[k]*=big*small;return{cap,lost}}
+  const big=clStaffN()>150&&!clOffN('dir')?.9:1,small=C.staff.length>12&&!clOffN('plan')?.94:1,crowd=clCrowd()?.92:1,stk=C.strike>st.day?0:1;for(const k in cap)cap[k]*=big*small*crowd*stk;return{cap,lost}}
 const clDemOf=()=>st.cl.ctr.filter(c=>c.st==='run').reduce((a,c)=>a+c.hpw/5,0);
 const clCa12=()=>(st.cl.caM||[]).slice(-12).reduce((a,b)=>a+b,0)+(st.cl.pl.rev||0);
 const clEqVal=()=>Object.keys(st.cl.eq).reduce((a,k)=>a+CLE[k].p*st.cl.eq[k],0);
@@ -3407,9 +3400,9 @@ const clReserve=()=>Math.round(3*(clPayroll()+clFixedM()));
 const clCanPay=()=>Math.max(0,Math.round(st.cl.cash-clReserve()));
 function clFixedL(){const C=st.cl,n=C.staff.length+Object.values(C.off).reduce((a,b)=>a+b,0),pay=clPayroll(),L=[];
   if(clHas('onss')&&n>1)L.push(['Secrétariat social',15*(n-1)]);
-  const rent=n<5?0:n<30?900:n<150?2600:n<600?6500:n<2000?16000:38000;if(rent)L.push([n<30?'Petit bureau + local de stockage':'Bureaux, dépôt et agences',rent]);
+  const S=CLSITE[clSiteK()];if(S.r)L.push([S.ic+' '+S.n,S.r]);if(C.chefX)L.push(['Prime de fidélité d’une cheffe d’équipe',C.chefX]);
   if(n>1)L.push(['Logiciel de planning et pointage',9*n]);
-  if(clHas('rc'))L.push(['RC exploitation',50+clCa12()*.0005],['Assurance accidents du travail (2,2 %)',pay*.022]);
+  if(clHas('rc')){const at=Math.max(.012,(C.at||.022)-(clOffN('prev')?.005:0));L.push(['RC exploitation',50+clCa12()*.0005],[`Assurance accidents du travail (${(at*100).toFixed(1).replace('.',',')} %)`,pay*at])}
   if(clHas('iso'))L.push(['ISO 9001 (audits)',350]);
   if(C.eq.van)L.push(['Camionnettes (assurance, carburant)',450*C.eq.van]);
   const ev=clEqVal();if(ev)L.push(['Entretien du matériel (1 %/mois)',ev*.01]);
@@ -3443,16 +3436,17 @@ function clBuyMiss(){const M=clMiss();let p=0;for(const k in M)p+=CLE[k].p*M[k];
 function clSell(k){const C=st.cl;if(!C.eq[k])return;C.eq[k]--;if(!C.eq[k])delete C.eq[k];clMv(CLE[k].p*.45,'Revente : '+CLE[k].n,'buy');click();save();render()}
 
 /* ---------- clients privés : demandes, devis ---------- */
-function clDemGen(){const C=st.cl,ks=['bur','bur','com','med','eco','cop','cop','ind'],k=pick(ks),K=CLK[k];
-  if(Math.random()<.35){const pk=pick(Object.keys(CLP)),P=CLP[pk];const h=RI(P.h[0],P.h[1]);return{id:C.nid++,t:'job',k:pk,n:`${pick(['Particulier','Promoteur','Gérant','Syndic','Entreprise'])} — ${pick(TOWNS)}`,h,mkt:+(P.p*(C.idx||1)).toFixed(2),d:st.day,exp:st.day+10}}
+function clDemGen(){const C=st.cl,ks=['bur','bur','com','med','eco','cop','cop','ind'],k=pick(ks),K=CLK[k],mo=date(st.day).getMonth();
+  if(mo===7&&Math.random()<.4){const h=RI(30,140);return{id:C.nid++,t:'job',k:'fin',n:`Grand nettoyage d’été — ${pick(['École communale','Athénée','Institut','Crèche'])} de ${pick(TOWNS)}`,h,mkt:+(40*(C.idx||1)).toFixed(2),d:st.day,exp:st.day+10}}
+  if(Math.random()<(mo===3||mo===4?.55:.35)){const pk=pick(Object.keys(CLP)),P=CLP[pk];const h=RI(P.h[0],P.h[1]);return{id:C.nid++,t:'job',k:pk,n:`${pick(['Particulier','Promoteur','Gérant','Syndic','Entreprise'])} — ${pick(TOWNS)}`,h,mkt:+(P.p*(C.idx||1)).toFixed(2),d:st.day,exp:st.day+10}}
   const m2=Math.round(R(K.m2[0],Math.min(K.m2[1],K.m2[0]+(K.m2[1]-K.m2[0])*(.25+C.rep/130)))/10)*10,f=RI(K.f[0],K.f[1]);
   return{id:C.nid++,t:'ctr',k,n:`${pick(CLCLI[k])} — ${pick(TOWNS)}`,m2,f,hpw:+(m2*f/K.prod).toFixed(1),mkt:+(K.mkt*(C.idx||1)).toFixed(2),yrs:pick([1,2,3]),d:st.day,exp:st.day+10}}
 function clQuote(id,lv,silent){const C=st.cl,q=C.dem.find(x=>x.id===id);if(!q||q.sent)return;if(!clHas('bce'))return toastMsg('Inscris d’abord ta société à la BCE.');if(q.t==='ctr'&&!clHas('rc'))return toastMsg('Les entreprises demandent une RC exploitation (📊 Société).');
   q.sent=1;q.lv=lv;q.price=+(q.mkt*(1+(+lv||0))).toFixed(2);q.ans=st.day+RI(3,8);if(!silent){click();save();render()}}
 function clAnswer(q){const C=st.cl;const base=q.lv<0?.78:q.lv>0?.3:.55,p=Math.min(.95,base*(.55+C.rep/90));const yes=Math.random()<p;C.dem.splice(C.dem.indexOf(q),1);
   if(!yes){C.st8.lost++;clLog(`❌ ${q.n} a choisi un autre prestataire.`);return}
-  if(q.t==='ctr'){const c={id:C.nid++,k:q.k,n:q.n,m2:q.m2,f:q.f,hpw:q.hpw,price:q.price,sat:70,st:'run',start:st.day+RI(3,10),end:st.day+365*q.yrs,acc:0,accH:0,low:0};c.st='wait';C.ctr.push(c);clLog(`🎉 Contrat signé : ${q.n} (${q.hpw} h/semaine à ${eur2(q.price)}/h, ${q.yrs} an${q.yrs>1?'s':''}).`,1)}
-  else{C.job.push({id:C.nid++,k:q.k,n:q.n,h:q.h,done:0,price:q.price,st:'wait',d:st.day});clLog(`🎉 Devis accepté : ${CLP[q.k].n} — ${q.n} (${q.h} h).`,1)}}
+  if(q.t==='ctr'){const c={id:C.nid++,k:q.k,n:q.n,m2:q.m2,f:q.f,hpw:q.hpw,price:q.price,sat:70,st:'run',start:st.day+RI(3,10),end:st.day+365*q.yrs,acc:0,accH:0,low:0};c.st='wait';C.ctr.push(c);clXP(8);clLog(`🎉 Contrat signé : ${q.n} (${q.hpw} h/semaine à ${eur2(q.price)}/h, ${q.yrs} an${q.yrs>1?'s':''}).`,1)}
+  else{C.job.push({id:C.nid++,k:q.k,n:q.n,h:q.h,done:0,price:q.price,st:'wait',d:st.day});clXP(2);clLog(`🎉 Devis accepté : ${CLP[q.k].n} — ${q.n} (${q.h} h).`,1)}}
 
 
 /* ---------- marchés publics ---------- */
@@ -3471,15 +3465,15 @@ function clTenReq(t){const C=st.cl,R0=[];const ok=(b,l)=>R0.push({ok:!!b,l});
 function clQualScore(){const C=st.cl;return Math.min(1,C.rep/100*.6+(clHas('iso')?.15:0)+(clHas('eco')?.05:0)+(clOffN('off')?.05:0)+(clOffN('qual')?.05:0))}
 function clBid(id,coef,silent){const C=st.cl,t=C.ten.find(x=>x.id===id);if(!t||t.my)return;if(!clTenReq(t).every(x=>x.ok))return toastMsg('Tu ne remplis pas encore toutes les conditions.');
   t.my={price:+(t.mkt*(+coef||1)).toFixed(2),q:clQualScore()};if(!silent){click();clLog(`📨 Offre remise : ${CLK[t.k].n} — ${t.buyer} à ${eur2(t.my.price)}/h.`);save();render()}}
-function clOpen(t){const C=st.cl;C.ten.splice(C.ten.indexOf(t),1);if(!t.my)return;const R1=Array.from({length:t.riv},()=>({n:pick(CLRIV),price:+(t.mkt*R(.88,1.08)).toFixed(2),q:R(.45,.9)}));
+function clOpen(t){const C=st.cl;C.ten.splice(C.ten.indexOf(t),1);if(!t.my)return;const R1=Array.from({length:t.riv},()=>({n:pick(clRivs()).n||pick(CLRIV),price:+(t.mkt*R(.88,1.08)).toFixed(2),q:R(.45,.9)}));
   const all=[...R1,{n:C.name,price:t.my.price,q:t.my.q,me:1}],mn=Math.min(...all.map(x=>x.price));for(const x of all)x.sc=60*mn/x.price+40*x.q;all.sort((a,b)=>b.sc-a.sc);
   const me=all.find(x=>x.me),pos=all.indexOf(me)+1;
-  if(pos===1){C.st8.won++;C.ctr.push({id:C.nid++,k:t.k,n:t.buyer,m2:t.m2,f:t.f,hpw:t.hpw,price:t.my.price,sat:72,st:'wait',start:st.day+15,end:st.day+15+365*t.yrs,acc:0,accH:0,low:0,pub:1});
+  if(pos===1){C.st8.won++;clXP(25);C.ctr.push({id:C.nid++,k:t.k,n:t.buyer,m2:t.m2,f:t.f,hpw:t.hpw,price:t.my.price,sat:72,st:'wait',start:st.day+15,end:st.day+15+365*t.yrs,acc:0,accH:0,low:0,pub:1});
     clLog(`🏛️ Marché gagné : ${CLK[t.k].n} — ${t.buyer} (${t.hpw} h/semaine, ${t.yrs} ans, ± ${eur(t.ann)}/an) !`,1);try{confetti(120)}catch(e){}}
   else{C.st8.lost++;clLog(`🏛️ Marché perdu : ${t.buyer} — tu es ${pos}e sur ${all.length} (gagnant : ${all[0].n} à ${eur2(all[0].price)}/h).`)}}
 
 /* ---------- simulation d'un jour ---------- */
-function clTick(){const C=st.cl;if(!C||C.over)return;const d=st.day,x=date(d),dom=x.getDate(),wd=x.getDay();
+function clTick(){const C=st.cl;if(!C||C.over)return;clFix(C);const d=st.day,x=date(d),dom=x.getDate(),wd=x.getDay(),mo=x.getMonth();
   if(dom===1)clMonth();
   // salaires : courent tous les jours, payés le 1er
   C.salAcc+=clPayroll()*12/365;
@@ -3488,9 +3482,10 @@ function clTick(){const C=st.cl;if(!C||C.over)return;const d=st.day,x=date(d),do
   // factures payées
   for(let i=C.inv.length-1;i>=0;i--){const v=C.inv[i];if(d>=v.due){clMv(v.a,v.l,'in');C.inv.splice(i,1)}}
   // absences
-  for(const w of C.staff){if(w.boss)continue;if(w.abs>0)w.abs--;else if(clW(d)&&Math.random()<.02*(1.4-w.rel))w.abs=RI(2,15)}
+  const flu=(mo<=1||mo===11?1.6:1)*(C.fluB>d?.5:1);for(const w of C.staff){if(w.boss)continue;if(w.abs>0)w.abs--;else if(clW(d)&&Math.random()<.02*(1.4-w.rel)*flu){w.abs=RI(2,15);w.nab=(w.nab||0)+1}}
+  if(clW(d)){clDecTick();clCompTick();clAccTick()}if(wd===5)clRptTick();clMegaTick();
   // contrats qui commencent / finissent
-  for(const c of C.ctr){if(c.st==='wait'&&d>=c.start){c.st='run';clLog(`🧽 Début du contrat : ${c.n}.`)}
+  for(const c of C.ctr){if(c.st==='wait'&&d>=c.start){c.st='run';c.sh=c.sh||(c.k==='ind'?'nuit':c.k==='bur'||c.k==='adm'?'tot':'jour');clLog(`🧽 Début du contrat : ${c.n}.`)}
     if(c.st==='run'&&d>=c.end){c.st='end';clInvC(c);C.st8.done++;
       if(!c.pub&&!c.notice&&c.sat>=70){c.st='run';c.end=d+365;c.price=+(c.price*1.02).toFixed(2);clLog(`🔁 ${c.n} renouvelle son contrat pour un an (+2 %).`)}
       else clLog(c.notice?`👋 Fin du contrat avec ${c.n} (préavis donné).`:`🏁 Fin du contrat : ${c.n}.`)}}
@@ -3499,7 +3494,7 @@ function clTick(){const C=st.cl;if(!C||C.over)return;const d=st.day,x=date(d),do
   if(clHas('bce')){const rate=(.12+C.rep/600)*(1+Math.min(1.5,clOffN('com')*.5))*(1+Math.min(.5,C.staff.length/800));const cap=6+2*clOffN('com')+Math.floor(C.staff.length/25);
     if(C.dem.filter(q=>!q.sent).length<cap&&Math.random()<Math.min(.95,rate))C.dem.push(clDemGen());
     for(const q of C.dem.slice()){if(q.sent&&d>=q.ans)clAnswer(q);else if(!q.sent&&d>=q.exp)C.dem.splice(C.dem.indexOf(q),1)}
-    if(clOffN('com')&&C.autoQ){const fr=clCap().cap.of-clDemOf();for(const q of C.dem)if(!q.sent&&(q.t==='job'||clHas('rc'))&&(C.autoH&&clOffN('rh')||fr>q.hpw/5||q.t==='job'))clQuote(q.id,C.coefQ||0,1)}}
+    if(clOffN('com')&&C.autoQ){const cp=clCap().cap.of;let fr=cp-clDemOf()-C.dem.filter(q=>q.sent&&q.t==='ctr').reduce((a,q)=>a+q.hpw/5*.55,0)+(clOffN('rh')&&C.autoH?Math.max(4,cp*.08):0);for(const q of C.dem)if(!q.sent&&(q.t==='job'||clHas('rc'))&&(q.t==='job'||fr>q.hpw/5)){clQuote(q.id,C.coefQ||0,1);if(q.t==='ctr')fr-=q.hpw/5*.55}}}
   if(clHas('tsag')){const T=C.ts,r=(.4+C.rep/70)*(1+.25*Math.min(8,clOffN('tsr')))*Math.max(.08,1-T.n/25000);const nn=Math.random()<r%1?Math.ceil(r):Math.floor(r);for(let i=0;i<nn;i++){if(T.wait>40+T.n*.15)break;T.wait++;T.wh+=RI(3,5)}
     if((clOffN('plan')||clOffN('tsr'))&&C.autoT)clTsAccept(1)}
   if(clHas('bce')&&C.ten.length<4+Math.floor(C.staff.length/60)&&Math.random()<.04+Math.min(.06,C.staff.length/3000))C.ten.push(clTenGen());
@@ -3515,15 +3510,15 @@ function clTick(){const C=st.cl;if(!C||C.over)return;const d=st.day,x=date(d),do
     const N=clNeeds(),techs=clField('tech').length+clField('chef').length,field=techs+clField('vit').length;
     const chefOK=Math.min(1,clField('chef').length*15/Math.max(1,techs-clField('chef').length)),qualOK=Math.min(1,clOffN('qual')*200/Math.max(1,field)),kitOK=Math.min(1,(C.eq.henry||0)/Math.max(1,N.henry||0),(C.eq.chariot||0)/Math.max(1,N.chariot||0));
     const used={};
-    for(const c of run){const h=c.hpw/5*cov;c.accH+=h;c.acc+=h*c.price;C.accF.cons+=h*.55*(clHas('eco')?1.1:1);
+    for(const c of run){const h=c.hpw/5*cov;c.accH+=h;c.acc+=h*c.price;C.accF.cons+=h*.55*(clHas('eco')?1.1:1)*(C.prodX||1);if(c.sh==='nuit')C.accF.prime=(C.accF.prime||0)+h*CLR.tech.brut*(C.idx||1)*CLR.tech.k*.25;if(c.boost)C.accF.prime=(C.accF.prime||0)+h*.1*CLR.tech.brut*(C.idx||1)*CLR.tech.k;
       let eqOK=1;for(const k of [clMach(c),CLK[c.k].eq])if(k){used[k]=(used[k]||0)+1;if(used[k]>(C.eq[k]||0))eqOK=0}c.eqOK=eqOK;
-      const q=100*Math.pow(cov,1.5)*(.5+.15*chefOK+.1*qualOK+.15*kitOK)*(eqOK?1:.8)+(clHas('iso')?3:0);c.q=Math.round(q);c.sat=clamp(c.sat+(q-c.sat)*.03,0,100);
+      const q=Math.min(100,100*Math.pow(cov,1.5)*(.5+.15*chefOK+.1*qualOK+.15*kitOK)*(eqOK?1:.8)+(clHas('iso')?3:0)+(c.boost?6:0)+(c.vq>d?2*(c.vqb||0):0));c.q=Math.round(q);c.sat=clamp(c.sat+(q-c.sat)*.03,0,100);
       if(c.sat<35){c.low++;if(c.low>=10&&!c.notice){c.notice=1;c.end=Math.min(c.end,d+30);C.rep=clamp(C.rep-1,0,100);clLog(`⚠️ ${c.n} n’est pas satisfait (${Math.round(c.sat)}/100) et résilie le contrat (fin dans 30 jours).`,1)}}else c.low=0}
     // chantiers ponctuels
     let left={of:Math.max(0,cap.of-D),vi:cap.vi};
     for(const j of C.job){const P=CLP[j.k];if(j.st==='wait'){const vans=(C.eq.van||0)-C.job.filter(z=>z.st==='run').length,eqF=!P.eq||(C.eq[P.eq]||0)>C.job.filter(z=>z.st==='run'&&CLP[z.k].eq===P.eq).length;if(vans>0&&eqF&&left[P.r]>2)j.st='run';else continue}
       if(j.st!=='run')continue;const h=Math.min(left[P.r],j.h-j.done,24);left[P.r]-=h;j.done+=h;C.accF.cons+=h*.6;
-      if(j.done>=j.h-.01){j.st='done';const a=j.h*j.price;C.inv.push({a,due:d+30-(clOffN('compta')?10:0),l:'Facture : '+P.n+' — '+j.n});C.pl.rev+=a;C.st8.done++;C.st8.ca+=a;C.rep=clamp(C.rep+.4,0,100);clLog(`✅ Chantier terminé : ${P.n} — ${j.n} (${eur(a)} facturés).`)}}
+      if(j.done>=j.h-.01){j.st='done';const a=j.h*j.price;C.inv.push({a,due:d+30-(clOffN('compta')?10:0),l:'Facture : '+P.n+' — '+j.n});C.pl.rev+=a;C.st8.done++;C.st8.ca+=a;C.rep=clamp(C.rep+.4,0,100);clXP(3);clLog(`✅ Chantier terminé : ${P.n} — ${j.n} (${eur(a)} facturés).`)}}
     C.job=C.job.filter(j=>j.st!=='done');C.idle=Math.max(0,left.of)+Math.max(0,left.vi)+Math.max(0,cap.ts-tsd);
     // réputation suit la satisfaction
     const sats=run.map(c=>c.sat);if(C.ts.n)sats.push(C.ts.sat);if(sats.length){const avg=sats.reduce((a,b)=>a+b,0)/sats.length;C.rep=clamp(C.rep+(avg-C.rep)*.004,0,100)}
@@ -3534,11 +3529,11 @@ function clTick(){const C=st.cl;if(!C||C.over)return;const d=st.day,x=date(d),do
   if(dom%5===0)clGoals()}
 function clTsAccept(silent){const C=st.cl,T=C.ts;if(!T.wait)return;const free=clCap().cap.ts*5*1.03-T.h;if(free<=0){if(!silent)toastMsg('Plus de place : engage des aides-ménagères.');return}
   const per=T.wh/T.wait,n=Math.min(T.wait,Math.floor(free/per));if(n<1){if(!silent)toastMsg('Plus de place : engage des aides-ménagères.');return}T.n+=n;T.h+=n*per;T.wait-=n;T.wh-=n*per;if(!silent){click();clLog(`🏠 ${n} nouveaux clients titres-services (${Math.round(n*per)} h/semaine).`);save();render()}}
-function clAutoHire(){const C=st.cl,{cap}=clCap(),mx=Math.max(5,Math.round(C.staff.length*.08));let n=0;const ok=C.cash+clOver()>clPayroll()/Math.max(1,C.staff.length)*2,room=()=>!C.crisis;
+function clAutoHire(){const C=st.cl,{cap}=clCap(),mx=Math.max(6,Math.round(C.staff.length*.15));let n=0;const ok=!C.crisis&&C.cash+clOver()>clPayroll()/Math.max(1,C.staff.length)*2,room=()=>true;
   // les heures déjà vendues sont toujours couvertes ; la croissance (familles en attente) seulement s’il y a de l’argent
   const tsNeed=C.ts.h/5+(ok?C.ts.wh/5*.5:0)-cap.ts;let k=0;while(clHas('tsag')&&k*5.2<tsNeed&&n<mx&&room()){clHireAuto('am');n++;k++}
-  const ofNeed=clDemOf()+C.job.filter(j=>CLP[j.k].r==='of').length*4-cap.of;k=0;while(ofNeed>k*5&&n<mx&&room()){clHireAuto('tech');n++;k++}
-  const viNeed=C.job.filter(j=>CLP[j.k].r==='vi').length*6-cap.vi;k=0;while(viNeed>k*7&&n<mx&&room()){clHireAuto('vit');n++;k++}
+  const ofNeed=clDemOf()+C.job.filter(j=>CLP[j.k].r==='of').reduce((a,j)=>a+Math.min(6,j.h-j.done)*.5,0)-cap.of;k=0;while(ofNeed>k*5&&n<mx&&room()){clHireAuto('tech');n++;k++}
+  const viNeed=C.job.filter(j=>CLP[j.k].r==='vi').reduce((a,j)=>a+Math.min(7,j.h-j.done)*.6,0)-cap.vi;k=0;while(viNeed>k*7&&n<mx&&room()){clHireAuto('vit');n++;k++}
   const techs=clField('tech').length;while(clField('chef').length*15<techs-15&&n<mx&&room()){clHireAuto('chef');n++}
   if(n)clLog(`🗂️ Caroline a recruté ${n} personne${n>1?'s':''} cette semaine.`)}
 function clInvC(c){const C=st.cl;if(c.acc<1)return;const a=Math.round(c.acc);C.inv.push({a,due:st.day+(c.pub?30+RI(0,15):35)-(clOffN('compta')?10:0),l:`Facture : ${c.n} (${Math.round(c.accH)} h)`});C.pl.rev+=a;C.st8.ca+=a;c.acc=0;c.accH=0}
@@ -3548,7 +3543,7 @@ function clMonth(){const C=st.cl;
   // salaires et frais
   if(C.salAcc>0){clMv(-C.salAcc,'Salaires du mois (coût employeur)','sal');C.pl.cost+=C.salAcc;C.salAcc=0}
   for(const [l,a] of clFixedL())if(a>0){clMv(-a,l,'fix');C.pl.cost+=a}
-  if(C.accF.cons>0){clMv(-C.accF.cons,'Produits et consommables','fix');C.pl.cost+=C.accF.cons}if(C.accF.km>0){clMv(-C.accF.km,'Indemnités de déplacement des aides-ménagères','fix');C.pl.cost+=C.accF.km}C.accF={cons:0,km:0};
+  if(C.accF.cons>0){clMv(-C.accF.cons,'Produits et consommables','fix');C.pl.cost+=C.accF.cons}if(C.accF.km>0){clMv(-C.accF.km,'Indemnités de déplacement des aides-ménagères','fix');C.pl.cost+=C.accF.km}if(C.accF.prime>0){clMv(-C.accF.prime,'Primes de nuit et heures de renfort','sal');C.pl.cost+=C.accF.prime}C.accF={cons:0,km:0,prime:0};if(C.lastPl&&C.lastPl.res>0)clXP(10);
   if(C.cash<0){const i=-C.cash*.09/12;clMv(-i,'Intérêts du découvert (9 %/an)','fix');C.pl.cost+=i}
   if(C.loan>0){const r=Math.min(C.loan,Math.max(500,C.loan*.02));C.loan-=r;clMv(-r,'Remboursement du prêt (capital)','loan')}
   // impôt des sociétés (25 %), amortissement du matériel sur 5 ans, pertes reportées
@@ -3562,6 +3557,8 @@ function clMonth(){const C=st.cl;
   const gone=[];for(const w of C.staff.slice()){if(w.boss)continue;const p=.03*(1.6-(w.mot||.8))*(clOffN('rh')?.7:1);if(Math.random()<p){C.staff.splice(C.staff.indexOf(w),1);gone.push(w.n)}}
   if(gone.length)clLog(`🚪 ${gone.length} départ${gone.length>1?'s':''} ce mois-ci (${gone.slice(0,3).join(', ')}${gone.length>3?'…':''}). C’est fréquent dans le nettoyage.`);
   // indexation des salaires et des prix en janvier
+  for(const r of clRivs())r.ca=Math.round(r.ca*R(.997,1.006));
+  if(date(st.day).getMonth()===0&&C.at>.018)C.at=+Math.max(.018,C.at-.002).toFixed(4);
   if(date(st.day).getMonth()===0){C.idx=+((C.idx||1)*1.02).toFixed(4);for(const c of C.ctr)c.price=+(c.price*1.02).toFixed(2);clLog('📈 Indexation de janvier : salaires et prix +2 %.')}
   // cessation de paiement
   if(C.cash<-clOver()){C.red=(C.red||0)+1;if(C.red>=2){C.crisis=1;clLog('🚨 Ta société de nettoyage ne peut plus payer ses dettes.',1)}}else C.red=0}
@@ -3590,8 +3587,15 @@ const CLG=[
   ['c13','CA de 10 M€ sur 12 mois',C=>clCa12()>=1e7],['c14','500 personnes',C=>clStaffN()>=500],['c15','10 marchés publics gagnés',C=>C.st8.won>=10],
   ['c16','Satisfaction moyenne de 85 (au moins 10 contrats)',C=>{const r=C.ctr.filter(c=>c.st==='run');return r.length>=10&&r.reduce((a,c)=>a+c.sat,0)/r.length>=85}],
   ['c17','2 000 personnes : un géant du secteur',C=>clStaffN()>=2000],['c18','CA de 50 M€ sur 12 mois',C=>clCa12()>=5e7],['c19','Ta société de nettoyage vaut 100 M€',C=>clVal()>=1e8],
-  ['c20','5 000 clients titres-services',C=>C.ts.n>=5000]];
-function clGoals(){const C=st.cl;if(!C)return;for(const [k,t,f] of CLG)if(!C.goals[k]){let ok=false;try{ok=f(C)}catch(e){}if(ok){C.goals[k]=st.day;clLog(`🏆 Succès : ${t}`,1);try{confetti(90)}catch(e){}}}}
+  ['c20','5 000 clients titres-services',C=>C.ts.n>=5000],
+  ['c21','Fais une visite de contrôle parfaite',C=>(st.ck.clvis3||0)>=1],['c22','25 visites parfaites',C=>(st.ck.clvis3||0)>=25],['c23','Prends 20 décisions de patron',C=>(st.ck.cldec||0)>=20],
+  ['c24','Niveau 10',C=>C.car.lv>=10],['c25','Niveau 25',C=>C.car.lv>=25],['c26','Niveau 50 : légende du nettoyage',C=>C.car.lv>=50],
+  ['c27','Termine ton premier grand contrat',C=>Object.values(C.mg).includes('ok')],['c28','Termine les 8 grands contrats',C=>CLMEGA.every(M=>C.mg[M.k]==='ok')],
+  ['c29','Rachète une société concurrente',C=>(st.ck.clacq||0)>=1],['c30','Deviens n°1 du nettoyage en Wallonie',C=>clRivs().every(r=>r.ca<clCa12())],
+  ['c31','Ouvre un siège avec 8 agences',C=>['sieg','hq'].includes(clSiteK())],['c32','Un an sans accident du travail (50 personnes ou plus)',C=>C.staff.length>=50&&st.day-(C.lastAcc??C.found)>=365],
+  ['c33','Absentéisme sous 5 % (100 personnes ou plus)',C=>C.staff.length>=100&&C.staff.filter(w=>w.abs>0).length/C.staff.length<.05],['c34','Réputation de 95',C=>C.rep>=95],
+  ['c35','Résultat de 1 M€ en un mois',C=>(C.lastPl&&C.lastPl.res||0)>=1e6]];
+function clGoals(){const C=st.cl;if(!C)return;for(const [k,t,f] of CLG)if(!C.goals[k]){let ok=false;try{ok=f(C)}catch(e){}if(ok){C.goals[k]=st.day;clXP(30);clLog(`🏆 Succès : ${t}`,1);try{confetti(90)}catch(e){}}}}
 
 /* ---------- déblocage et création ---------- */
 function clUnlock(ok){const V=pv();if(st.clUnlock)return;if(V.cash<CL_PRICE)return toastMsg(`Il faut ${eur(CL_PRICE)} sur ton compte privé (tu as ${eur(V.cash)}).`);
@@ -3606,16 +3610,26 @@ function clCreate(cap){const V=pv();if(V.cash<cap)return toastMsg('Pas assez sur
 
 /* ---------- interface ---------- */
 let clSec='home',clStaffMore=30;
-function clHead(){const C=st.cl;return`<button class="pback" onclick="click();tab('hub')" aria-label="Mes entreprises">🏢 ‹</button><div style="flex:1;min-width:0"><div style="font-weight:900;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🧽 ${esc(C.name)}</div><div style="font-size:11.5px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stars(C.rep)} ${Math.round(C.rep)} · ${clStaffN()} pers.</div></div><div id="clcash" class="${C.cash<0?'neg':''}">${eur(C.cash)}</div>`}
-function clSpeed(){return`<span class="cldate">${dstr(st.day)} ${date(st.day).getFullYear()}</span><div class="clsp">${['❚❚','▶','▶▶','▶▶▶'].map((l,i)=>`<button class="${speed===i?'on':''}" onclick="speed=${i};click();render()">${l}</button>`).join('')}</div>`}
+function clRender(headOnly){const C=st.cl;clFix(C);const K=C.car;
+  $('#tname').textContent='🧽 '+C.name;$('#lt').textContent=C.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'NT';$('#lvl').textContent=K.lv;
+  $('#tsub').textContent=`${stars(C.rep)} ${Math.round(C.rep)} · ${CLTIT[Math.min(9,Math.floor(K.lv/5))]} · ${clStaffN()} pers.`;
+  const ca=$('#cash');ca.textContent=eur(C.cash);ca.classList.toggle('neg',C.cash<0);shownCash=null;
+  const nN=clNotifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0);
+  const dx=date(st.day),k=dx.getDay()%6===0?'Week-end':ferie(dx);$('#hudW').textContent=(k?'🏖️ ':WX[st.wx].ic+' ')+dstr(st.day)+' '+dx.getFullYear()+(k?' · '+k:'');
+  const run=C.ctr.filter(c=>c.st==='run').length;$('#hudJob').textContent=`🧽 ${run} contrat${run>1?'s':''}${C.ts.n?` · 🏠 ${C.ts.n} familles`:''}`;
+  document.querySelectorAll('[data-sp]').forEach(b=>b.classList.toggle('on',+b.dataset.sp===speed));
+  $('#tabs').style.display='none';const ct=$('#cltabs');ct.style.display='';const tb=clTabs();if(ct.innerHTML!==tb)ct.innerHTML=tb;
+  if(headOnly===true)return;lastPaneT=performance.now();const P=$('#pane'),y=P.scrollTop,key='cl'+clSec;P.classList.toggle('enter',lastTab!==key);lastTab=key;const fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=rCl();P.scrollTop=y}
 function clTabs(){return[['home','🏠','Accueil'],['cli','📨','Clients'],['pub','🏛️','Marchés'],['team','👥','Équipe'],['mat','🧰','Matériel'],['soc','📊','Société']].map(([k,i,l])=>{let b='';const C=st.cl;
   if(k==='cli'){const n=C.dem.filter(q=>!q.sent).length+(C.ts.wait&&clHas('tsag')?1:0);if(n)b=`<span class="bd">${n}</span>`}if(k==='pub'){const n=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(n)b=`<span class="bd">${n}</span>`}
   if(k==='mat'){const n=Object.keys(clMiss()).length;if(n)b=`<span class="bd">${n}</span>`}
-  return`<button class="${clSec===k?'on':''}" onclick="clSec='${k}';click();$('#clpane').scrollTop=0;render()"><b>${i}</b>${l}${b}</button>`}).join('')}
+  return`<button class="${clSec===k?'on':''}" onclick="clSec='${k}';click();$('#pane').scrollTop=0;render()"><b>${i}</b>${l}${b}</button>`}).join('')}
 function clSeg(cur,items,k){return`<div class="seg">${items.map(([v,l])=>`<button class="${Math.abs(cur-v)<1e-6?'on':''}" onclick="st.cl.${k}=${v};click();save();render()">${l}</button>`).join('')}</div>`}
 function clTile(l,v,cls){return`<div><span>${l}</span><b class="${cls||''}">${v}</b></div>`}
 function clBar(p,col){return`<div style="height:8px;border-radius:5px;background:#ffffff14;overflow:hidden;margin-top:6px"><div style="height:100%;width:${clamp(p,0,100)}%;background:${col||'var(--gr)'}"></div></div>`}
 function rCl(){const C=st.cl;C.coefQ=+C.coefQ||0;C.coef=+C.coef||1;if(!Number.isFinite(C.cash))C.cash=0;if(C.crisis&&C.crisisD!==st.day&&!modalOpen){C.crisisD=st.day;setTimeout(clCrisisUI,50)}return({home:clHome,cli:clCli,pub:clPub,team:clTeam,mat:clMat,soc:clSoc})[clSec]()}
+function clGoalCard(){const C=st.cl,g=CLG.find(([k])=>!C.goals[k]),K=C.car;const M=CLMEGA.find(x=>C.mg[x.k]!=='ok');
+  return`<div class="goal" onclick="click();clCareerUI()" style="cursor:pointer"><span class="gi">${g?'🎯':'🎖️'}</span><div><b>${g?'Objectif':'Carrière'}</b><div>${g?g[1]:M?(typeof C.mg[M.k]==='number'?`${M.ic} ${M.n} : fini le ${dstr(C.mg[M.k])}`:`Grand contrat : ${M.n}`):'Tout est fini. Bravo !'}</div><div class="sm" style="opacity:.8;margin-top:2px">🎖️ Niveau ${K.lv} · ${CLTIT[Math.min(9,Math.floor(K.lv/5))]}${K.lv<50?` · ${Math.round(K.xp/clXpN(K.lv)*100)} %`:''}</div></div></div>`}
 function clTodo(){const C=st.cl,T=[];const go=(t,s,b)=>T.push(`<div class="row" style="padding:7px 0;border-top:1px solid var(--line)"><div style="flex:1" class="sm">${t}</div><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clSec='${s}';click();render()">${b}</button></div>`);
   if(!clHas('bce'))go('📝 Inscris ta société à la BCE','soc','Société');else if(!clHas('onss'))go('🧾 Immatricule-toi comme employeur à l’ONSS','soc','Société');else if(!clHas('rc'))go('🛡️ Prends la RC exploitation + accidents du travail','soc','Société');
   const nq=C.dem.filter(q=>!q.sent).length;if(nq&&clHas('bce'))go(`📨 ${nq} demande${nq>1?'s':''} de clients attend${nq>1?'ent':''} ton devis`,'cli','Voir');
@@ -3628,7 +3642,7 @@ function clTodo(){const C=st.cl,T=[];const go=(t,s,b)=>T.push(`<div class="row" 
   return T.length?`<h2>À faire maintenant</h2><div class="card" style="padding:4px 12px">${T.join('')}</div>`:''}
 function clHome(){const C=st.cl,L=C.lastPl,{cap,lost}=clCap(),run=C.ctr.filter(c=>c.st==='run');const avg=run.length?Math.round(run.reduce((a,c)=>a+c.sat,0)/run.length):null;
   let h=`<div class="pvtiles">${clTile('🏦 Compte',eur(C.cash),C.cash<0?'neg':'money')}${clTile('📈 Mois passé',L?(L.res>=0?'+':'')+eur(L.res):'—',L&&L.res<0?'neg':'money')}${clTile('😊 Satisfaction',avg===null?'—':avg+' / 100')}</div>`;
-  h+=clTodo();
+  h+=clGoalCard()+clDecCard()+clCompCard()+clTodo();
   const absN=C.staff.filter(w=>w.abs>0).length;
   h+=`<h2>Aujourd’hui</h2><div class="card"><div class="mgrid" style="margin-top:0">${clTile('🧽 Contrats',run.length+(C.ctr.length>run.length?` (+${C.ctr.length-run.length})`:''))}${clTile('🏠 Clients TS',C.ts.n)}${clTile('🏗️ Chantiers',C.job.length)}</div><div class="mgrid">${clTile('👥 Terrain',C.staff.length)}${clTile('🤒 Absents',absN+(C.staff.length>1?` (${Math.round(absN/C.staff.length*100)} %)`:''))}${clTile('⏳ Heures non vendues',Math.round(C.idle||0)+' h/j')}</div>
   <div class="mut sm" style="margin-top:8px">Heures faites : bureaux ${Math.round((C.cov??1)*100)} % · titres-services ${Math.round((C.ts.cov??1)*100)} %. Les heures payées mais non vendues coûtent cher : trouve des clients ou réduis l’équipe.</div></div>
@@ -3654,8 +3668,8 @@ function clCli(){const C=st.cl;let h='';
   if(clOffN('com'))h+=`<div class="card"><label class="row sm" style="gap:6px"><input type="checkbox" ${C.autoQ?'checked':''} onchange="st.cl.autoQ=this.checked?1:0;save()"> Olivier envoie les devis tout seul</label>${clSeg(+C.coefQ||0,[[-.1,'−10 %'],[0,'Marché'],[.1,'+10 %']],'coefQ')}</div>`;
   const run=C.ctr;h+=`<h2>🧽 Contrats (${run.length})</h2>`;
   if(!run.length)h+=`<div class="card"><p class="mut">Aucun contrat pour l’instant.</p></div>`;
-  for(const c of run.slice().sort((a,b)=>a.sat-b.sat).slice(0,40)){const K=CLK[c.k],m=clMach(c);h+=`<div class="card ${c.notice?'acc':''}" style="${c.notice?'--ac:var(--rd)':''}"><div class="row" style="flex-wrap:nowrap"><span style="font-size:24px">${K.ic}</span><div style="flex:1;min-width:0"><b class="sm">${esc(c.n)}</b>${c.pub?' <span class="tag b">🏛️ public</span>':''}<div class="mut" style="font-size:12px">${K.n} · ${nb(c.m2)} m² · ${c.hpw} h/sem. · ${eur2(c.price)}/h · ${c.st==='wait'?'commence le '+dstr(c.start):'jusqu’au '+dstr(c.end)+' '+date(c.end).getFullYear()}</div></div><b class="sm ${c.sat<50?'neg':'money'}">${Math.round(c.sat)}</b></div>
-    ${clBar(c.sat,c.sat<50?'var(--rd)':c.sat<70?'var(--or)':'var(--gr)')}${c.eqOK===0?`<div class="sm neg" style="margin-top:4px">⚠️ Machine manquante sur place : ${[m,K.eq].filter(Boolean).map(k=>CLE[k].n).join(', ')}</div>`:''}${c.notice?'<div class="sm neg" style="margin-top:4px">Le client a donné son préavis.</div>':''}</div>`}
+  for(const c of run.slice().sort((a,b)=>a.sat-b.sat).slice(0,40)){const K=CLK[c.k],m=clMach(c);h+=`<div class="card ${c.notice?'acc':''}" style="cursor:pointer;${c.notice?'--ac:var(--rd)':''}" onclick="clCtrUI(${c.id})"><div class="row" style="flex-wrap:nowrap"><span style="font-size:24px">${K.ic}</span><div style="flex:1;min-width:0"><b class="sm">${esc(c.n)}</b>${c.pub?' <span class="tag b">🏛️ public</span>':''}<div class="mut" style="font-size:12px">${K.n} · ${nb(c.m2)} m² · ${c.hpw} h/sem. · ${eur2(c.price)}/h · ${c.st==='wait'?'commence le '+dstr(c.start):'jusqu’au '+dstr(c.end)+' '+date(c.end).getFullYear()}</div></div><b class="sm ${c.sat<50?'neg':'money'}">${Math.round(c.sat)}</b></div>
+    ${clBar(c.sat,c.sat<50?'var(--rd)':c.sat<70?'var(--or)':'var(--gr)')}${c.eqOK===0?`<div class="sm neg" style="margin-top:4px">⚠️ Machine manquante sur place : ${[m,K.eq].filter(Boolean).map(k=>CLE[k].n).join(', ')}</div>`:''}${c.notice?'<div class="sm neg" style="margin-top:4px">Le client a donné son préavis.</div>':''}<div class="mut" style="font-size:11.5px;margin-top:4px">${c.sh==='nuit'?'🌙 nuit · ':c.sh==='tot'?'🌅 tôt le matin · ':''}${c.boost?'💪 renforcé · ':''}${c.vd!==undefined&&st.day-c.vd<15?'🔍 visité':'Touche pour la fiche, une visite ou renégocier ›'}</div></div>`}
   if(C.job.length)h+=`<h2>🏗️ Chantiers ponctuels (${C.job.length})</h2>`+C.job.map(j=>{const P=CLP[j.k];return`<div class="card"><div class="row"><span style="font-size:22px">${P.ic}</span><div style="flex:1;min-width:0"><b class="sm">${P.n}</b><div class="mut" style="font-size:12px">${esc(j.n)} · ${Math.round(j.done)}/${j.h} h · ${j.st==='wait'?'⏸ en attente ('+(!(C.eq.van>0)?'camionnette':P.eq&&!C.eq[P.eq]?CLE[P.eq].n:'personnel')+')':'en cours'}</div></div></div>${clBar(j.done/j.h*100)}</div>`}).join('');
   return h}
 function clPub(){const C=st.cl;let h=`<div class="card"><p class="mut sm">Écoles, communes, CPAS, hôpitaux… Pas d’agréation pour les services de nettoyage, mais des conditions de sélection (chiffre d’affaires, personnel, ISO). Attribution : 60 points pour le prix, 40 pour la qualité (ta note : <b>${Math.round(clQualScore()*40)}/40</b>).</p></div>`;
@@ -3671,19 +3685,21 @@ function clAva(w,sz){const g=rng(strHash(w.n));const sk=['#f1c9a5','#e0ac80','#c
 function clTeam(){const C=st.cl,{cap,lost}=clCap();const tsD=C.ts.h/5,ofD=clDemOf();let h='';
   const pool=(l,c,dm,col)=>`<div style="margin-top:8px"><div class="row sm"><span style="flex:1">${l}</span><b>${Math.round(c)} h dispo / ${Math.round(dm)} h vendues par jour</b></div>${clBar(dm?Math.min(100,c/dm*100):c?100:0,c>=dm?'var(--gr)':'var(--rd)')}</div>`;
   h+=`<h2>Heures par jour</h2><div class="card">${pool('🧽 Bureaux et contrats',cap.of,ofD)}${clHas('tsag')?pool('🏠 Titres-services',cap.ts,tsD):''}${pool('🪟 Vitres',cap.vi,C.job.filter(j=>CLP[j.k].r==='vi').length*6)}<div class="mut sm" style="margin-top:8px">Absences aujourd’hui : ${Math.round(lost.of+lost.ts+lost.vi)} h perdues${clOffN('plan')?' (Fatima en remplace une partie)':''}. Dans le nettoyage, ± 8-10 % d’absences, c’est normal.</div></div>`;
-  h+=`<h2>Bureau et encadrement</h2>`;for(const k in CLO){const O=CLO[k],n=clOffN(k);h+=`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:24px">${O.ic}</span><div style="flex:1;min-width:0"><b class="sm">${O.n}${n?` · ${n}`:''}</b><div class="mut" style="font-size:12px">${n?esc(O.nm)+(n>1?' et '+(n-1)+' autre'+(n>2?'s':''):'')+' · ':''}${eur(O.m*(C.idx||1))}/mois · ${O.d}</div></div></div><div class="row" style="margin-top:6px;gap:6px"><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clOffHire('${k}',1)">${n?'+1':'Engager'}</button>${n?`<button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clOffHire('${k}',-1)">−1</button>`:''}</div></div>`}
+  h+=clRptCard();h+=`<h2>Bureau et encadrement</h2>`;for(const k in CLO){const O=CLO[k],n=clOffN(k);h+=`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:24px">${O.ic}</span><div style="flex:1;min-width:0"><b class="sm">${O.n}${n?` · ${n}`:''}</b><div class="mut" style="font-size:12px">${n?esc(O.nm)+(n>1?' et '+(n-1)+' autre'+(n>2?'s':''):'')+' · ':''}${eur(O.m*(C.idx||1))}/mois · ${O.d}</div></div></div><div class="row" style="margin-top:6px;gap:6px"><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clOffHire('${k}',1)">${n?'+1':'Engager'}</button>${n?`<button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clOffHire('${k}',-1)">−1</button>`:''}</div></div>`}
   if(clOffN('rh'))h+=`<div class="card"><label class="row sm" style="gap:6px"><input type="checkbox" ${C.autoH?'checked':''} onchange="st.cl.autoH=this.checked?1:0;save()"> Caroline recrute toute seule chaque lundi</label></div>`;
   h+=`<h2>Candidats (${C.cand.length})</h2>`;if(!clHas('onss'))h+=`<div class="card"><p class="mut">Immatricule-toi d’abord comme employeur à l’ONSS (📊 Société).</p></div>`;
   for(const p of C.cand.slice(0,12)){const R0=CLR[p.r];p.feel=p.feel||clFeel(p);h+=`<div class="card"><div class="row" style="flex-wrap:nowrap;gap:10px">${clAva(p,44)}<div style="flex:1;min-width:0"><b class="sm">${esc(p.n)}</b><div class="mut" style="font-size:12px">${R0.ic} ${R0.n} · ${p.age} ans · ${p.town} · ${p.exp} an${p.exp>1?'s':''} d’expérience</div><div style="font-size:12px">${p.feel}</div></div></div>
     <div class="row" style="margin-top:6px"><span class="mut" style="flex:1;font-size:12px">${p.hw} h/semaine · ${eur2(R0.brut*(C.idx||1))}/h brut (${R0.cp}) · ${eur(clWage(p))}/mois</span><button class="btn s" style="padding:6px 10px;font-size:12px" ${clHas('onss')&&(p.r!=='am'||clHas('tsag'))?'':'disabled'} onclick="clHire(${p.id})">Engager</button></div></div>`}
   const S=C.staff.slice().sort((a,b)=>(b.boss?1:0)-(a.boss?1:0)||(b.abs>0)-(a.abs>0));
-  h+=`<h2>Ton équipe (${C.staff.length})</h2><div class="card" style="padding:4px 12px">${S.slice(0,clStaffMore).map(w=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);flex-wrap:nowrap;gap:8px">${clAva(w,34)}<div style="flex:1;min-width:0"><b class="sm">${esc(w.n)}</b><div class="mut" style="font-size:11.5px">${CLR[w.r].ic} ${w.boss?'Patron(ne) sur le terrain':CLR[w.r].n} · ${w.hw} h/sem.${w.abs>0?` · <span class="neg">🤒 absente ${w.abs} j</span>`:''}</div></div>${w.boss?'':`<button class="btn s" style="padding:5px 8px;font-size:11px" onclick="clFire(${w.id})">✋</button>`}</div>`).join('')}</div>${S.length>clStaffMore?`<button class="btn s w" onclick="clStaffMore+=50;render()">Voir ${Math.min(50,S.length-clStaffMore)} de plus</button>`:''}`;
+  h+=`<h2>Ton équipe (${C.staff.length})</h2><div class="card" style="padding:4px 12px">${S.slice(0,clStaffMore).map(w=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);flex-wrap:nowrap;gap:8px;cursor:pointer" onclick="clCV(${w.id})">${clAva(w,34)}<div style="flex:1;min-width:0"><b class="sm">${esc(w.n)}</b><div class="mut" style="font-size:11.5px">${CLR[w.r].ic} ${w.boss?'Patron(ne) sur le terrain':CLR[w.r].n} · ${w.hw} h/sem.${w.abs>0?` · <span class="neg">🤒 absente ${w.abs} j</span>`:''}</div></div><span class="mut">›</span></div>`).join('')}</div>${S.length>clStaffMore?`<button class="btn s w" onclick="clStaffMore+=50;render()">Voir ${Math.min(50,S.length-clStaffMore)} de plus</button>`:''}`;
   return h}
 function clMat(){const C=st.cl,N=clNeeds(),M=clMiss();let mp=0;for(const k in M)mp+=CLE[k].p*M[k];
   let h=`<div class="card"><div class="row"><div style="flex:1"><b>Matériel manquant</b><div class="mut sm">${mp?Object.keys(M).map(k=>`${M[k]} × ${CLE[k].n}`).join(', '):'Rien, tout est en ordre ✓'}</div></div>${mp?`<button class="btn s" onclick="clBuyMiss()">Tout acheter · ${eur(mp)}</button>`:''}</div></div><p class="mut sm" style="margin:2px 4px 8px">Prix HTVA estimés d’annonces 2026. Les autolaveuses et monobrosses restent sur le site du client. Amorties sur 5 ans.</p>`;
   for(const k in CLE){const E=CLE[k],n=C.eq[k]||0,need=N[k]||0;h+=`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:26px">${E.ic}</span><div style="flex:1;min-width:0"><b class="sm">${E.n}</b><div class="mut" style="font-size:12px">${E.d}</div></div></div><div class="row" style="margin-top:6px;gap:6px"><span class="tag ${need>n?'r':n?'g':''}">${n} possédé${n>1?'s':''}${need?` · ${need} utilisé${need>1?'s':''}`:''}</span><span style="flex:1"></span>${n?`<button class="btn s" style="padding:6px 9px;font-size:12px" onclick="clSell('${k}')">Revendre</button>`:''}<button class="btn s" style="padding:6px 9px;font-size:12px" onclick="clBuy('${k}')">Acheter · ${eur(E.p)}</button></div></div>`}
   return h}
-function clSoc(){const C=st.cl,L=C.lastPl;let h=`<h2>Démarches</h2><div class="card" style="padding:4px 12px">`;
+function clSiteCard(){const C=st.cl,k=clSiteK(),S=CLSITE[k],n=clStaffN();return`<h2>🏢 Locaux</h2><div class="card ${clCrowd()?'acc':''}" style="${clCrowd()?'--ac:var(--rd)':''}"><div class="row" style="flex-wrap:nowrap"><span style="font-size:30px">${S.ic}</span><div style="flex:1;min-width:0"><b>${S.n}</b><div class="mut sm">${eur(S.r)}/mois · ${n} / ${S.cap>1e8?'∞':S.cap} personnes</div></div></div>${S.cap<1e8?clBar(n/S.cap*100,clCrowd()?'var(--rd)':'var(--gr)'):''}${clCrowd()?'<div class="sm neg" style="margin-top:6px">⚠️ Trop petit : tout le monde perd 8 % d’efficacité. Déménage !</div>':''}
+  <div style="margin-top:8px">${Object.keys(CLSITE).filter(x=>x!==k).map(x=>{const T=CLSITE[x];return`<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><span style="font-size:20px">${T.ic}</span><div style="flex:1;min-width:0"><b class="sm">${T.n}</b><div class="mut" style="font-size:11.5px">${eur(T.r)}/mois · ${T.cap>1e8?'sans limite':T.cap+' personnes'}</div></div><button class="btn s" style="padding:5px 9px;font-size:12px" onclick="clMove('${x}')">Choisir</button></div>`}).join('')}</div></div>`}
+function clSoc(){const C=st.cl,L=C.lastPl;let h=`<div class="card" style="cursor:pointer" onclick="clCareerUI()"><div class="row"><span style="font-size:28px">🎖️</span><div style="flex:1"><b>Niveau ${C.car.lv} · ${CLTIT[Math.min(9,Math.floor(C.car.lv/5))]}</b><div class="mut sm">Carrière et 8 grands contrats ›</div></div></div>${C.car.lv<50?clBar(C.car.xp/clXpN(C.car.lv)*100,'linear-gradient(90deg,var(--or),var(--ye))'):''}</div><h2>Démarches</h2><div class="card" style="padding:4px 12px">`;
   for(const k in CLA){const A=CLA[k],s=C.adm[k];h+=`<div style="padding:8px 0;border-top:1px solid var(--line)"><div class="row"><b class="sm" style="flex:1">${s===1?'✅':s?'⏳':'⬜'} ${A.n}</b>${s?'':`<button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clAdm('${k}')">${A.c?eur(A.c):'Gratuit'}</button>`}</div><div class="mut" style="font-size:12px">${s>1?`Réponse vers le ${dstr(s)}. `:''}${A.d}</div></div>`}h+=`</div>`;
   h+=`<h2>Argent</h2><div class="card"><div class="mgrid" style="margin-top:0">${clTile('Compte',eur(C.cash),C.cash<0?'neg':'money')}${clTile('Factures à recevoir',eur(clRecv()))}${clTile('CA 12 mois',eur(clCa12()))}</div><div class="mgrid">${clTile('Salaires / mois',eur(clPayroll()))}${clTile('Frais fixes / mois',eur(clFixedM()))}${clTile('Valeur',eur(clVal()))}</div>
   ${L?`<div class="mut sm" style="margin-top:8px">Mois passé : facturé ${eur(L.rev)}, coûts ${eur(L.cost)}, impôt ${eur(L.tax)} → <b class="${L.res<0?'neg':'money'}">${L.res>=0?'+':''}${eur(L.res)}</b></div>`:''}
@@ -3694,6 +3710,7 @@ function clSoc(){const C=st.cl,L=C.lastPl;let h=`<h2>Démarches</h2><div class="
   <div class="row" style="margin-top:8px;gap:6px">${[10000,100000,1e6].map(a=>`<button class="btn s" style="padding:6px 9px;font-size:12px" ${cp<a?'disabled':''} onclick="clDiv(${a})">Dividende ${eur(a)}</button>`).join('')}${cp>=1000?`<button class="btn s" style="padding:6px 9px;font-size:12px" onclick="clDiv(${cp})">Tout (${eur(cp)})</button>`:''}</div>
   <div class="row" style="margin-top:6px;gap:6px">${[10000,100000,1e6].map(a=>`<button class="btn s" style="padding:6px 9px;font-size:12px" ${V.cash<a?'disabled':''} onclick="clApport(${a})">Apporter ${eur(a)}</button>`).join('')}</div>${C.cc>0?`<div class="row" style="margin-top:6px"><span class="mut sm" style="flex:1">Tu as apporté ${eur(C.cc)} (compte courant).</span><button class="btn s" style="padding:6px 9px;font-size:12px" ${cp<1?'disabled':''} onclick="clBack(${Math.min(C.cc,cp)})">Me rembourser</button></div>`:''}
   <button class="btn s w" style="margin-top:8px" onclick="tab('pv')">🏡 Ma vie privée</button></div>`;
+  h+=clSiteCard()+clRankCard();
   const n=Object.keys(C.goals).length;h+=`<h2>🏆 Succès · ${n} / ${CLG.length}</h2><div class="card">${clBar(n/CLG.length*100,'linear-gradient(90deg,var(--or),var(--ye))')}${CLG.map(([k,t])=>`<div class="sm" style="padding:4px 0">${C.goals[k]?'✅':'⬜'} ${t}</div>`).join('')}</div>`;
   return h}
 function rHub(){const V=pv();const rn=`<div class="card hubc" onclick="click();tab('ch')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🦺</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(st.name)}</b><div class="mut sm">Parcs, jardins et routes · gratuit</div></div><span class="tag g">Ouverte</span></div><div class="mgrid">${clTile('Compte',eur(st.cash),st.cash<0?'neg':'money')}${clTile('Personnel',ownW())}${clTile('Valeur',eur(Math.max(0,grpValue())))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`;
@@ -3705,36 +3722,163 @@ function rHub(){const V=pv();const rn=`<div class="card hubc" onclick="click();t
   return`<div class="hubt"><div style="font-size:13px;opacity:.75">Bonjour patron 👋</div><h1 style="margin:2px 0 4px;font-size:24px">Mes entreprises</h1><div class="sm" style="opacity:.8">${dstr(st.day)} ${date(st.day).getFullYear()} · le temps passe pour toutes tes sociétés</div></div>${rn}${c2}
   <div class="card hubc" onclick="click();tab('pv')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:34px">🏡</span><div style="flex:1"><b>Ma vie privée</b><div class="mut sm">Compte privé : ${eur(V.cash)}</div></div><span style="font-size:20px">›</span></div></div>
   <div class="card" style="opacity:.6"><div class="row"><span style="font-size:30px">❔</span><div style="flex:1"><b>Prochaine entreprise</b><div class="mut sm">Bientôt…</div></div></div></div>`}
-/* ---------- décor ---------- */
-let clCv=null,clX=0;
-function clDraw(t){const cv=$('#clcv');if(!cv)return;const W=cv.clientWidth,H=cv.clientHeight;if(!W)return;const dpr=Math.min(2,window.devicePixelRatio||1);if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
-  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);const C=st.cl;if(!C)return;
-  const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#1b3a5c');sky.addColorStop(.6,'#f4a96b');sky.addColorStop(1,'#ffd9a0');g.fillStyle=sky;g.fillRect(0,0,W,H);
-  g.fillStyle='#fff6';for(let i=0;i<3;i++){const cx=((t*8+i*170)%(W+120))-60;g.beginPath();g.ellipse(cx,24+i*14,26,8,0,0,7);g.fill()}
-  // immeuble de bureaux
-  const bx=W*.12,bw=Math.min(190,W*.42),bh=H*.72,by=H*.86-bh;g.fillStyle='#2e4a66';g.fillRect(bx,by,bw,bh);g.fillStyle='#3d6386';g.fillRect(bx+bw-14,by,14,bh);
-  const lit=Math.min(1,(C.ctr.filter(c=>c.st==='run').length+1)/8);for(let r=0;r<7;r++)for(let c=0;c<6;c++){const on=((r*7+c*3)%10)/10<lit;g.fillStyle=on?'#ffe7a3':'#1d3247';g.fillRect(bx+10+c*(bw-30)/6,by+10+r*(bh-30)/7,(bw-30)/6-6,(bh-30)/7-7)}
-  g.fillStyle='#fff';g.font='800 11px Nunito,sans-serif';g.fillText(C.name.slice(0,22),bx+6,by-6);
-  // laveur de vitres sur sa perche
-  if(C.job.some(j=>j.st==='run'&&CLP[j.k].r==='vi')||clField('vit').length){const wy=by+bh*.4+Math.sin(t)*bh*.25;g.strokeStyle='#ddd';g.lineWidth=2;g.beginPath();g.moveTo(bx+bw+18,H*.86);g.lineTo(bx+bw+4,wy);g.stroke();g.fillStyle='#2f8a6a';g.fillRect(bx+bw+14,H*.86-22,9,16);g.fillStyle='#f1c9a5';g.beginPath();g.arc(bx+bw+18.5,H*.86-26,4.5,0,7);g.fill()}
-  // maisons (titres-services)
-  if(C.ts.n){for(let i=0;i<Math.min(3,1+Math.floor(C.ts.n/50));i++){const hx=W*.66+i*48,hy=H*.86;g.fillStyle=['#e9d8c4','#f2e3b3','#d9c2c9'][i];g.fillRect(hx,hy-34,40,34);g.fillStyle='#a64b3c';g.beginPath();g.moveTo(hx-4,hy-34);g.lineTo(hx+20,hy-52);g.lineTo(hx+44,hy-34);g.fill();g.fillStyle='#ffe7a3';g.fillRect(hx+7,hy-26,10,9)}}
-  // sol, trottoir
-  g.fillStyle='#55606b';g.fillRect(0,H*.86,W,H*.14);g.fillStyle='#9aa4ad';g.fillRect(0,H*.86,W,4);
-  // camionnettes
-  for(let i=0;i<Math.min(3,C.eq.van||0);i++){const vx=W*.6+i*62,vy=H*.93;g.fillStyle='#f4f7fb';g.fillRect(vx,vy-20,52,18);g.fillRect(vx+38,vy-26,14,8);g.fillStyle='#3d8bd6';g.fillRect(vx,vy-12,52,3);g.fillStyle='#222';g.beginPath();g.arc(vx+12,vy,5,0,7);g.arc(vx+42,vy,5,0,7);g.fill()}
-  // techniciennes avec chariot
-  const n=Math.min(7,C.staff.length);for(let i=0;i<n;i++){const sp=12+i*4,x=((t*sp+i*97)%(W+40))-20,y=H*.86-2;const w=C.staff[i];g.fillStyle=w&&CLR[w.r].pool==='ts'?'#e05a8a':'#3d8bd6';g.fillRect(x-4,y-18,8,13);g.fillStyle='#f1c9a5';g.beginPath();g.arc(x,y-22,4,0,7);g.fill();g.fillStyle='#ffd23f';g.fillRect(x+6,y-10,9,8);g.fillStyle='#333';g.fillRect(x+6,y-2,2,2);g.fillRect(x+13,y-2,2,2)}}
+
+/* ---------- v2 : profondeur (décisions, plaintes, visites, accidents, carrière, locaux, concurrents) ---------- */
+const CLSITE={home:{n:'Chez toi (bureau à la maison)',ic:'🏠',cap:6,r:0},bur:{n:'Petit bureau 60 m² + local',ic:'🏢',cap:30,r:900},ag:{n:'Bureau + dépôt 250 m²',ic:'🏬',cap:150,r:2600},reg:{n:'Siège régional + 3 agences',ic:'🏙️',cap:600,r:6500},sieg:{n:'Siège + 8 agences en Wallonie',ic:'🏛️',cap:2000,r:16000},hq:{n:'Grand siège + 20 agences',ic:'🌆',cap:1e9,r:38000}};
+const clSiteK=()=>{const C=st.cl;if(C.site)return C.site;const n=C.staff.length;return n<5?'home':n<30?'bur':n<150?'ag':n<600?'reg':n<2000?'sieg':'hq'};
+function clMove(k,ok){const C=st.cl,S=CLSITE[k];if(!S||clSiteK()===k)return;const cost=Math.round(S.r*2+(S.cap>150?S.r:0));
+  if(!ok)return ask(`Déménager ?\nNouveaux locaux : ${S.n}\nLoyer : ${eur(S.r)}/mois\nPlace pour : ${S.cap>1e8?'sans limite':S.cap+' personnes'}\nDéménagement, garantie locative et aménagement : ${eur(cost)}`,()=>clMove(k,1),{ic:S.ic,ok:'Déménager'});
+  clMv(-cost,'Déménagement : '+S.n,'fix');C.pl.cost+=cost;C.site=k;clLog(`${S.ic} Nouveaux locaux : ${S.n}.`,1);closeM();save();render()}
+const clCrowd=()=>{const C=st.cl;return clStaffN()>CLSITE[clSiteK()].cap};
+// carrière de la société de nettoyage
+const CLTIT=['Débutant(e)','Indépendant(e) du ménage','Petite patronne','Cheffe d’entreprise','Entrepreneur(e) reconnu(e)','Leader régional','Référence wallonne','Grand groupe','Géant de la propreté','Légende du nettoyage'];
+const clXpN=l=>Math.round(150+l*l*1.2);
+function clXP(n){const C=st.cl;if(!C||!n)return;const K=C.car||(C.car={lv:1,xp:0});if(K.lv>=50)return;K.xp+=n;while(K.lv<50&&K.xp>=clXpN(K.lv)){K.xp-=clXpN(K.lv);K.lv++;clLog(`🎖️ Niveau ${K.lv} : ${CLTIT[Math.min(9,Math.floor(K.lv/5))]} !`,1);try{confetti(80)}catch(e){}}}
+const CLMEGA=[
+  {k:'m1',ic:'🎪',n:'Foire agricole de Libramont (4 jours)',d:20,lv:3,w:15,c:20000,g:58000,x:200},
+  {k:'m2',ic:'🏟️',n:'Stade de football : nettoyage après chaque match pendant une saison',d:60,lv:6,w:30,c:60000,g:170000,x:350},
+  {k:'m3',ic:'🎵',n:'Festival de musique d’été (avant, pendant, après)',d:30,lv:9,w:60,c:110000,g:300000,x:500},
+  {k:'m4',ic:'🚉',n:'Grande gare wallonne : contrat d’un an',d:120,lv:13,w:120,c:300000,g:850000,x:800},
+  {k:'m5',ic:'✈️',n:'Terminal d’un aéroport régional',d:180,lv:18,w:250,c:700000,g:2000000,x:1200},
+  {k:'m6',ic:'🏛️',n:'Parlement et administrations régionales',d:240,lv:24,w:500,c:1500000,g:4200000,x:1800},
+  {k:'m7',ic:'🏥',n:'Réseau hospitalier universitaire (5 sites)',d:365,lv:32,w:1000,c:3500000,g:10000000,x:2600},
+  {k:'m8',ic:'🇪🇺',n:'Bâtiments européens à Bruxelles',d:540,lv:42,w:2000,c:8000000,g:24000000,x:4000}];
+function clMegaGo(k,ok){const C=st.cl,M=CLMEGA.find(x=>x.k===k),i=CLMEGA.indexOf(M),K=C.car||{lv:1};C.mg=C.mg||{};if(C.mg[k])return;
+  if(i>0&&C.mg[CLMEGA[i-1].k]!=='ok')return toastMsg('Termine d’abord le grand contrat précédent.');if(K.lv<M.lv)return toastMsg(`Il faut le niveau ${M.lv}.`);if(clStaffN()<M.w)return toastMsg(`Il faut au moins ${M.w} personnes.`);if(C.cash<M.c)return toastMsg(`Il faut ${eur(M.c)} sur le compte.`);
+  if(!ok)return ask(`Lancer le grand contrat ?\nContrat : ${M.n}\nInvestissement (équipes en renfort, matériel loué) : ${eur(M.c)}\nPayé à la fin : ${eur(M.g)}\nDurée : ${M.d} jours`,()=>clMegaGo(k,1),{ic:M.ic,ok:'Lancer'});
+  clMv(-M.c,'Grand contrat : '+M.n,'fix');C.pl.cost+=M.c;C.mg[k]=st.day+M.d;clLog(`${M.ic} Grand contrat lancé : ${M.n}.`,1);closeM();save();render()}
+function clMegaTick(){const C=st.cl;for(const M of CLMEGA){const v=(C.mg||{})[M.k];if(typeof v==='number'&&st.day>=v){C.mg[M.k]='ok';C.inv.push({a:M.g,due:st.day+30,l:'Grand contrat : '+M.n});C.pl.rev+=M.g;C.st8.ca+=M.g;clXP(M.x);C.rep=clamp(C.rep+3,0,100);clLog(`🏆 Grand contrat terminé : ${M.n} (${eur(M.g)} facturés).`,1);try{confetti(140)}catch(e){}}}}
+function clCareerUI(){const C=st.cl,K=C.car||{lv:1,xp:0};C.mg=C.mg||{};showModal(`<h3>🎖️ Carrière de ${esc(C.name)}</h3><div class="card"><b style="font-size:18px">Niveau ${K.lv} · ${CLTIT[Math.min(9,Math.floor(K.lv/5))]}</b>${K.lv<50?clBar(K.xp/clXpN(K.lv)*100,'linear-gradient(90deg,var(--or),var(--ye))')+`<div class="mut sm" style="margin-top:4px">${Math.round(K.xp)} / ${clXpN(K.lv)} XP · contrats signés, marchés gagnés, visites parfaites, grands contrats, succès.</div>`:'<div class="tag g">Niveau maximum</div>'}</div>
+  <h2>Grands contrats</h2>${CLMEGA.map((M,i)=>{const v=C.mg[M.k],prev=i===0||C.mg[CLMEGA[i-1].k]==='ok';return`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:28px">${M.ic}</span><div style="flex:1;min-width:0"><b class="sm">${M.n}</b><div class="mut" style="font-size:12px">${M.d} jours · ${M.w} personnes · niveau ${M.lv} · investi ${eur(M.c)} → payé ${eur(M.g)} · +${M.x} XP</div></div></div>${v==='ok'?'<span class="tag g">✅ Terminé</span>':typeof v==='number'?`<span class="tag o">⏳ Fini le ${dstr(v)}</span>`:prev?`<button class="btn s" style="margin-top:6px" onclick="clMegaGo('${M.k}')">Lancer</button>`:'<span class="tag">🔒 Contrat précédent</span>'}</div>`}).join('')}<button class="btn w" onclick="closeM()">Fermer</button>`)}
+// concurrents
+const CLSTY={prix:'Casseur de prix',qual:'Champion de la qualité',ts:'Spécialiste titres-services',hop:'Spécialiste hôpitaux',fam:'Entreprise familiale'};
+function clRivGen(){return CLRIV.map((n,i)=>({n,ca:Math.round(R(1.5e6,(i<3?9e7:3e7))/1e5)*1e5,sty:pick(Object.keys(CLSTY)),boss:pick(CLPF.concat(CLPM))+' '+pick(NOMS)}))}
+const clRivs=()=>st.cl.riv||(st.cl.riv=clRivGen());
+function clAcq(n,ok){const C=st.cl,i=clRivs().findIndex(r=>r.n===n);if(i<0)return;const r=C.riv[i],pr=Math.round(r.ca*.5/1e4)*1e4;
+  if(clStaffN()<50)return toastMsg('Il faut au moins 50 personnes pour racheter une société.');if(C.cash<pr)return toastMsg(`Il faut ${eur(pr)} sur le compte (prêt possible dans 📊 Société).`);
+  const ppl=Math.round(r.ca/45000),tsn=Math.round(r.ca*(r.sty==='ts'?.6:.3)/(4*52*clTSV())),ofH=Math.round(r.ca*(r.sty==='ts'?.35:.65)/52/34);
+  if(!ok)return ask(`Racheter ${r.n} ?\nPrix (± 0,5 × chiffre d’affaires) : ${eur(pr)}\nChiffre d’affaires : ± ${eur(r.ca)}/an\nPersonnel repris : ± ${ppl} personnes\nClients titres-services repris : ± ${tsn}\nContrats repris : ± ${ofH} heures/semaine\nTout le monde passe chez toi (convention collective 32 bis : reprise du personnel).`,()=>clAcq(n,1),{ic:'🤝',ok:'Racheter'});
+  clMv(-pr,'Rachat de '+r.n,'buy');C.riv.splice(i,1);const tsR=clHas('tsag')?tsn:0;
+  for(let k=0;k<ppl;k++){const role=k<ppl*(tsR?(r.sty==='ts'?.55:.3):0)?'am':k%14===0?'chef':'tech';const p=clPerson(role==='am'&&!clHas('tsag')?'tech':role);p.id=C.nid++;p.day=st.day;C.staff.push(p)}
+  if(tsR){C.ts.n+=tsR;C.ts.h+=tsR*4}let left=ofH;while(left>5){const h=Math.min(left,R(30,160));left-=h;const k=pick(['bur','com','eco','med']);C.ctr.push({id:C.nid++,k,n:`${pick(CLCLI[k])} — ${pick(TOWNS)} (ex-${r.n})`,m2:Math.round(h*CLK[k].prod/5),f:5,hpw:+h.toFixed(1),price:+(CLK[k].mkt*(C.idx||1)*R(.95,1.03)).toFixed(2),sat:65,st:'run',start:st.day,end:st.day+365*RI(1,3),acc:0,accH:0,low:0,sh:'jour'})}
+  C.rep=clamp(C.rep+2,0,100);clXP(300);ck('clacq');clLog(`🤝 Rachat de ${r.n} : ${ppl} personnes et leurs clients rejoignent ${C.name}.`,1);try{confetti(140)}catch(e){}closeM();save();render()}
+function clRankCard(){const C=st.cl,me={n:C.name,ca:Math.round(clCa12()),me:1},L=[...clRivs().map(r=>({n:r.n,ca:r.ca,r})),me].sort((a,b)=>b.ca-a.ca),pos=L.indexOf(me)+1;
+  return`<h2>🏆 Le nettoyage en Wallonie · tu es ${pos}${pos===1?'er':'e'} / ${L.length}</h2><div class="card" style="padding:4px 12px">${L.map((x,i)=>`<div class="row" style="padding:7px 0;border-top:1px solid var(--line);${x.me?'background:#ff9a1f22;border-radius:8px;padding-left:6px':''}"><b style="width:26px" class="sm">${i+1}.</b><div style="flex:1;min-width:0"><b class="sm">${x.me?'⭐ '+esc(x.n):esc(x.n)}</b>${x.r?`<div class="mut" style="font-size:11.5px">${CLSTY[x.r.sty]} · ${esc(x.r.boss)}</div>`:''}</div><b class="sm">${eur(x.ca)}</b>${x.r?`<button class="btn s" style="padding:5px 8px;font-size:11px;margin-left:6px" ${clStaffN()<50||C.cash<x.ca*.5?'disabled':''} onclick="clAcq('${x.n.replace(/'/g,"\\'")}')">Racheter</button>`:''}</div>`).join('')}</div><p class="mut sm" style="margin:4px">Racheter une société : ± 0,5 × son chiffre d’affaires, dès 50 personnes. Son personnel et ses clients passent chez toi.</p>`}
+// décisions du patron
+const CLDEC=[
+  {k:'raise',ic:'💶',t:'Augmentation demandée',d:'Les techniciennes demandent 0,40 €/h de plus (au-dessus du barème).',ch:[['Accepter',()=>{st.cl.idx*=1.006;st.cl.staff.forEach(w=>w.mot=Math.min(1.2,(w.mot||.8)+.15));return'Tout le monde est content (+0,6 % de salaires).'}],['Refuser',()=>{st.cl.staff.forEach(w=>w.mot=Math.max(.3,(w.mot||.8)-.06));return'Déception dans les équipes : motivation en baisse.'}]],def:1},
+  {k:'keys',ic:'🔑',t:'Clés perdues',d:'Une employée a perdu le trousseau d’un client (bureaux).',ch:[['Changer toutes les serrures (1 400 €)',()=>{clCost(1400,'Changement de serrures chez un client');return'Le client apprécie ta réaction.'}],['Ne rien dire',()=>{const c=pick(st.cl.ctr.filter(c=>c.st==='run'));if(c&&Math.random()<.4){c.sat-=25;return'Le client l’a appris… satisfaction −25 !'}return'Personne n’a rien remarqué. Ouf.'}]],def:1},
+  {k:'theft',ic:'💍',t:'Accusation de vol',d:'Une cliente titres-services accuse son aide-ménagère d’avoir pris une bague.',ch:[['Ouvrir une enquête et déclarer à l’assurance',()=>{clCost(500,'Franchise RC (déclaration de sinistre)');return Math.random()<.7?'La bague a été retrouvée sous un meuble. Ton aide-ménagère est blanchie.':'L’assurance indemnise la cliente.'}],['Licencier l’aide-ménagère',()=>{const w=pick(clField('am'));if(w){st.cl.staff.splice(st.cl.staff.indexOf(w),1);st.cl.staff.forEach(x=>x.mot=Math.max(.3,(x.mot||.8)-.05))}return'Les autres aides-ménagères trouvent ça injuste.'}]],def:0},
+  {k:'prod',ic:'🧴',t:'Hausse des produits',d:'Ton fournisseur augmente ses prix de 6 %.',ch:[['Accepter',()=>{st.cl.prodX=Math.min(1.3,(st.cl.prodX||1)*1.06);return'Consommables +6 %.'}],['Changer de fournisseur',()=>{st.cl.ctr.forEach(c=>c.sat-=3);return'Moins cher, mais produits un peu moins bons (satisfaction −3).'}],['Commander en gros (5 000 €)',()=>{clCost(5000,'Commande de produits en gros');st.cl.prodX=Math.max(.8,(st.cl.prodX||1)*.94);return'Consommables −6 %.'}]],def:0},
+  {k:'extra',ic:'🌸',t:'Grand nettoyage demandé',d:'Un client veut un grand nettoyage complet en plus de son contrat.',ch:[['Accepter (chantier ponctuel)',()=>{st.cl.job.push({id:st.cl.nid++,k:'fin',n:'Grand nettoyage chez un client fidèle',h:RI(16,60),done:0,price:+(40*(st.cl.idx||1)).toFixed(2),st:'wait',d:st.day});return'Nouveau chantier ponctuel ajouté.'}],['Refuser poliment',()=>'Le client comprend.']],def:1},
+  {k:'union',ic:'✊',t:'Délégation syndicale',d:'Le syndicat demande une prime de 150 € par personne pour la fin d’année.',ch:[['Accepter',()=>{clCost(150*st.cl.staff.length,'Prime syndicale de fin d’année');st.cl.staff.forEach(w=>w.mot=Math.min(1.2,(w.mot||.8)+.1));return'Paix sociale et équipes motivées.'}],['Refuser',()=>{st.cl.strike=st.day+RI(1,3);return'Grève de 1 à 3 jours : aucune heure prestée !'}]],def:0},
+  {k:'press',ic:'📰',t:'Reportage télé',d:'Une télé régionale veut filmer tes équipes au travail.',ch:[['Accepter',()=>{const m=st.cl.staff.reduce((a,w)=>a+(w.mot||.8),0)/Math.max(1,st.cl.staff.length);const g=m>.8?4:-3;st.cl.rep=clamp(st.cl.rep+g,0,100);return g>0?'Super reportage : réputation +4.':'Des employées se plaignent à l’antenne : réputation −3.'}],['Refuser',()=>'Pas de reportage.']],def:1},
+  {k:'train',ic:'🎓',t:'Formation professionnelle',d:'Le fonds de formation propose une formation « techniques de nettoyage » pour 10 personnes (1 800 €).',ch:[['Inscrire 10 personnes',()=>{clCost(1800,'Formation professionnelle (10 personnes)');st.cl.staff.filter(w=>!w.boss).sort((a,b)=>a.sk-b.sk).slice(0,10).forEach(w=>{w.sk=Math.min(1.35,+(w.sk+.06).toFixed(2));w.cert=(w.cert||0)+1;w.mot=Math.min(1.2,(w.mot||.8)+.05)});return'10 personnes formées : efficacité +6 %.'}],['Pas maintenant',()=>'Une autre fois.']],def:1},
+  {k:'flood',ic:'🌊',t:'Inondation dans une école',d:'Une école communale est inondée et cherche une entreprise en urgence.',ch:[['Y aller (gros chantier urgent, +30 %)',()=>{st.cl.job.push({id:st.cl.nid++,k:'des',n:'Inondation — École communale',h:RI(40,120),done:0,price:+(52*1.3*(st.cl.idx||1)).toFixed(2),st:'wait',d:st.day});return'Chantier urgent ajouté (désinfection, vapeur nécessaire).'}],['Pas d’équipe libre',()=>'Une autre entreprise y va.']],def:1},
+  {k:'insp',ic:'🕵️',t:'Contrôle de l’inspection sociale',d:'Les inspecteurs vérifient les contrats, les horaires et les déclarations Dimona.',ch:[['Ouvrir les dossiers',()=>{if(clOffN('rh')||st.cl.staff.length<8)return'Tout est en ordre. Bravo !';const f=RI(2,12)*1000;clCost(f,'Amende de l’inspection sociale');return`Des déclarations manquent : amende de ${eur(f)}. Une gestionnaire RH aurait évité ça.`}]],def:0},
+  {k:'van',ic:'🚐',t:'Camionnette accidentée',d:'Une camionnette a été emboutie sur un parking.',ch:[['Réparer (2 800 €)',()=>{clCost(2800,'Réparation d’une camionnette');return'Réparée en 5 jours.'}],['La revendre en l’état',()=>{if(st.cl.eq.van){st.cl.eq.van--;clMv(4000,'Revente d’une camionnette accidentée','buy')}return'Une camionnette en moins.'}]],def:0},
+  {k:'night',ic:'🌙',t:'Passage en horaire de nuit',d:'Un client industriel veut que vous veniez la nuit (prime de nuit pour le personnel).',ch:[['Accepter (+12 % de prix, prime de nuit 25 %)',()=>{const c=st.cl.ctr.find(c=>c.st==='run'&&c.sh!=='nuit');if(c){c.sh='nuit';c.price=+(c.price*1.12).toFixed(2)}return'Le contrat passe en nuit.'}],['Refuser',()=>{const c=pick(st.cl.ctr.filter(c=>c.st==='run'));if(c)c.sat-=8;return'Le client est déçu (satisfaction −8).'}]],def:1},
+  {k:'poach',ic:'🕴️',t:'Débauchage',d:'Un concurrent veut débaucher ta meilleure cheffe d’équipe.',ch:[['Augmenter sa paie (+300 €/mois)',()=>{st.cl.chefX=(st.cl.chefX||0)+300;return'Elle reste !'}],['La laisser partir',()=>{const w=clField('chef')[0];if(w)st.cl.staff.splice(st.cl.staff.indexOf(w),1);return'Elle part chez la concurrence.'}]],def:1},
+  {k:'flu',ic:'🤧',t:'Épidémie de grippe',d:'Beaucoup d’absences cette semaine.',ch:[['Payer des heures supplémentaires (+50 %)',()=>{clCost(Math.round(clPayroll()*.04),'Heures supplémentaires (grippe)');st.cl.fluB=st.day+10;return'Les heures sont faites malgré la grippe.'}],['Tenir bon',()=>{st.cl.staff.forEach(w=>{if(!w.boss&&Math.random()<.15)w.abs=Math.max(w.abs||0,RI(3,8))});return'15 % de l’équipe est malade quelques jours.'}]],def:0},
+  {k:'eco',ic:'🌿',t:'Client « vert »',d:'Un gros client exige des produits écologiques.',ch:[['Passer aux produits écolabel',()=>{if(!st.cl.adm.eco){st.cl.adm.eco=1;clCost(3000,'Écolabel (produits et méthodes)')}return'Écolabel obtenu : +5 points dans les marchés publics.'}],['Refuser',()=>{const c=pick(st.cl.ctr.filter(c=>c.st==='run'&&!c.pub));if(c){c.notice=1;c.end=Math.min(c.end,st.day+30)}return'Le client donne son préavis.'}]],def:0},
+  {k:'pay',ic:'⏳',t:'Retard de paiement',d:'Un gros client paie avec 2 mois de retard.',ch:[['Mise en demeure (avocat 600 €)',()=>{clCost(600,'Mise en demeure');return'Il paie dans la semaine, avec les intérêts.'}],['Patienter',()=>{const v=st.cl.inv[0];if(v)v.due+=45;return'Une facture arrive 45 jours plus tard.'}]],def:1}];
+function clCost(a,l){const C=st.cl;clMv(-a,l,'fix');C.pl.cost+=a}
+function clDecTick(){const C=st.cl;C.dec=C.dec||[];for(const d of C.dec.slice())if(st.day>=d.exp)clDecAct(d.id,CLDEC.find(x=>x.k===d.k).def,1);
+  C.decL=C.decL||{};if(C.staff.length>=3&&C.dec.length<3&&Math.random()<.025){const pool=CLDEC.filter(x=>!C.dec.some(d=>d.k===x.k)&&!(st.day-(C.decL[x.k]??-999)<180)&&(x.k!=='poach'||clField('chef').length)&&(x.k!=='theft'||clField('am').length)&&(x.k!=='van'||C.eq.van)&&(x.k!=='night'||C.ctr.some(c=>c.st==='run'&&c.sh!=='nuit')));if(pool.length){const D=pick(pool);C.decL[D.k]=st.day;C.dec.push({id:C.nid++,k:D.k,d:st.day,exp:st.day+30});clLog(`${D.ic} Décision à prendre : ${D.t}.`,1)}}}
+function clDecAct(id,i,auto){const C=st.cl,d=(C.dec||[]).find(x=>x.id===id);if(!d)return;const D=CLDEC.find(x=>x.k===d.k);C.dec.splice(C.dec.indexOf(d),1);let r='';try{r=D.ch[i][1]()}catch(e){r=''}ck('cldec');clXP(5);clLog(`${D.ic} ${D.t} — ${auto?'sans réponse : ':''}${D.ch[i][0]}. ${r}`,!auto);if(!auto){save();render()}}
+function clDecCard(){const C=st.cl;if(!(C.dec||[]).length)return'';return`<h2>🧠 Décisions à prendre (${C.dec.length})</h2>`+C.dec.map(d=>{const D=CLDEC.find(x=>x.k===d.k);return`<div class="card acc" style="--ac:var(--ye)"><div class="row" style="flex-wrap:nowrap"><span style="font-size:26px">${D.ic}</span><div style="flex:1;min-width:0"><b>${D.t}</b><div class="mut sm">${D.d}</div></div></div><div style="margin-top:8px;display:grid;gap:6px">${D.ch.map((c,i)=>`<button class="btn s w" onclick="clDecAct(${d.id},${i})">${c[0]}</button>`).join('')}</div><div class="mut" style="font-size:11.5px;margin-top:4px">Sans réponse avant le ${dstr(d.exp)} : « ${D.ch[D.def][0]} ».</div></div>`}).join('')}
+// plaintes des clients
+const CLCOMP=['Les poubelles n’ont pas été vidées','Traces sur les vitres de l’accueil','Les toilettes étaient sales lundi matin','Poussière sur les bureaux','Le sol est resté collant','Une porte est restée ouverte après le passage','Le savon n’a pas été remis'];
+function clCompTick(){const C=st.cl;C.comp=C.comp||[];for(const p of C.comp.slice())if(st.day>=p.exp)clCompAct(p.id,2,1);
+  if(clOffN('qual'))for(const p of C.comp.slice())if(st.day-p.d>=2)clCompAct(p.id,0,1);
+  for(const c of C.ctr){if(c.st!=='run'||C.comp.length>=8)continue;if(Math.random()<Math.max(0,(90-(c.q||70)))/100*.012)C.comp.push({id:C.nid++,c:c.id,t:pick(CLCOMP),d:st.day,exp:st.day+7})}}
+function clCompAct(id,i,auto){const C=st.cl,p=(C.comp||[]).find(x=>x.id===id);if(!p)return;const c=C.ctr.find(x=>x.id===p.c);C.comp.splice(C.comp.indexOf(p),1);if(!c)return;
+  if(i===0){clCost(Math.round(4*CLR.tech.brut*(C.idx||1)*CLR.tech.k),'Passage gratuit chez '+c.n);c.sat=Math.min(100,c.sat+6)}else if(i===1){const g=Math.round(c.hpw*52/12*c.price*.05);clCost(g,'Geste commercial (−5 %) — '+c.n);c.sat=Math.min(100,c.sat+4)}else{c.sat-=10;C.rep=clamp(C.rep-.5,0,100)}
+  if(!auto){click();save();render()}}
+function clCompCard(){const C=st.cl;if(!(C.comp||[]).length)return'';return`<h2>📢 Plaintes de clients (${C.comp.length})</h2>`+C.comp.map(p=>{const c=C.ctr.find(x=>x.id===p.c);return c?`<div class="card acc" style="--ac:var(--rd)"><b class="sm">${CLK[c.k].ic} ${esc(c.n)}</b><div class="sm" style="margin-top:2px">« ${p.t} »</div><div class="row" style="margin-top:8px;gap:6px"><button class="btn s" style="flex:1;padding:7px 3px;font-size:12px" onclick="clCompAct(${p.id},0)">Repasser gratuitement</button><button class="btn s" style="flex:1;padding:7px 3px;font-size:12px" onclick="clCompAct(${p.id},1)">Geste −5 %</button><button class="btn s" style="flex:1;padding:7px 3px;font-size:12px" onclick="clCompAct(${p.id},2)">Ignorer</button></div><div class="mut" style="font-size:11.5px;margin-top:4px">Sans réponse avant le ${dstr(p.exp)} : ignorée (satisfaction −10). ${clOffN('qual')?'Sandrine s’en occupe dans 2 jours.':''}</div></div>`:''}).join('')}
+// rapports sur le personnel
+function clRptTick(){const C=st.cl;C.rpt=C.rpt||[];if(C.rpt.length>=10)return;for(const w of C.staff){if(w.boss||w.rp)continue;const a=(w.nab||0);if(a>=3||(w.mot||.8)<.45){w.rp=1;C.rpt.push({id:C.nid++,w:w.id,why:a>=3?`${a} absences en peu de temps`:'Démotivée : travail bâclé, retards'})}if(C.rpt.length>=10)break}}
+function clRptAct(id,a){const C=st.cl,r=(C.rpt||[]).find(x=>x.id===id);if(!r)return;const w=C.staff.find(x=>x.id===r.w);C.rpt.splice(C.rpt.indexOf(r),1);if(!w)return render();w.rp=0;w.nab=0;
+  if(a==='talk'){if(Math.random()<.6){w.mot=Math.min(1.2,(w.mot||.8)+.2);w.rel=Math.min(1.05,w.rel+.05);toastMsg('Entretien positif : elle se reprend.')}else toastMsg('L’entretien n’a rien changé.')}
+  else if(a==='warn'){w.warn=(w.warn||0)+1;w.rel=Math.min(1.05,w.rel+.08);w.mot=Math.max(.3,(w.mot||.8)-.05);toastMsg('Avertissement écrit envoyé.')}
+  else if(a==='fire'){clFire(w.id,1);return}save();render()}
+function clRptCard(){const C=st.cl;if(!(C.rpt||[]).length)return'';return`<h2>⚠️ Rapports sur le personnel (${C.rpt.length})</h2>`+C.rpt.map(r=>{const w=C.staff.find(x=>x.id===r.w);return w?`<div class="card"><div class="row" style="flex-wrap:nowrap;gap:8px">${clAva(w,38)}<div style="flex:1;min-width:0"><b class="sm">${esc(w.n)}</b><div class="mut" style="font-size:12px">${CLR[w.r].n} · ${r.why}${w.warn?` · ${w.warn} avertissement${w.warn>1?'s':''}`:''}</div></div></div><div class="row" style="margin-top:8px;gap:6px"><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'talk')">Entretien</button><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'warn')">Avertissement</button><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'fire')">Licencier</button></div></div>`:''}).join('')}
+// fiche d'une personne
+function clCV(id){const C=st.cl,w=C.staff.find(x=>x.id===id);if(!w)return;const R0=CLR[w.r],seen=st.day-(w.day||0)>=30;const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
+  showModal(`<div class="row" style="flex-wrap:nowrap;gap:12px">${clAva(w,72)}<div style="flex:1;min-width:0"><h3 style="margin:0">${esc(w.n)}</h3><div class="mut sm">${w.boss?'Patron(ne) sur le terrain':R0.ic+' '+R0.n}${w.age?` · ${w.age} ans · ${w.town}`:''}</div>${w.boss?'':`<div class="sm">${R0.cp} · ${eur2(R0.brut*(C.idx||1))}/h brut</div>`}</div></div>
+  <div class="card" style="margin-top:10px">${[['Contrat',w.hw+' h/semaine'],['Coût employeur',eur(clWage(w))+'/mois'],['Chez toi depuis',dstr(w.day||0)+' '+date(w.day||0).getFullYear()],['Expérience',(w.exp||0)+' an(s) avant'],['Formations',w.cert||0],['Sérieux',seen?stars(Math.round(clamp((w.rel-.45)/.6*5,1,5))):'Visible après 30 jours'],['Motivation',seen?stars(Math.round(clamp(((w.mot||.8)-.3)/.8*5,1,5))):'Visible après 30 jours'],['Efficacité',Math.round((w.sk||1)*100)+' %'],['Absente',w.abs>0?w.abs+' jour(s) encore':'Non']].map(([a,b])=>`<div class="row sm" style="padding:3px 0"><span class="mut" style="flex:1">${a}</span><b>${b}</b></div>`).join('')}</div>
+  ${w.boss?'':`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><button class="btn s" onclick="clHours(${w.id},5)">+5 h/semaine</button><button class="btn s" onclick="clHours(${w.id},-5)">−5 h/semaine</button><button class="btn s" onclick="clPrime(${w.id})">Prime 200 €</button><button class="btn s" onclick="clTrain(${w.id})">Formation 450 €</button></div><button class="btn r w" style="margin-top:8px" onclick="clFire(${w.id})">Licencier</button>`}<p></p><button class="btn s w" onclick="closeM()">Fermer</button>`)}
+function clHours(id,d){const w=st.cl.staff.find(x=>x.id===id);if(!w)return;w.hw=clamp(w.hw+d,10,38);w.mot=Math.min(1.2,(w.mot||.8)+(d>0?.06:-.08));click();save();clCV(id)}
+function clPrime(id){const w=st.cl.staff.find(x=>x.id===id);if(!w)return;clCost(200*1.3,'Prime — '+w.n);w.mot=Math.min(1.2,(w.mot||.8)+.15);click();save();clCV(id)}
+function clTrain(id){const w=st.cl.staff.find(x=>x.id===id);if(!w)return;if((w.cert||0)>=4)return toastMsg('Elle a déjà suivi toutes les formations.');clCost(450,'Formation — '+w.n);w.sk=Math.min(1.35,+(w.sk+.05).toFixed(2));w.cert=(w.cert||0)+1;w.mot=Math.min(1.2,(w.mot||.8)+.05);click();save();clCV(id)}
+// fiche d'un contrat + visite de contrôle (mini-jeu)
+const CLVB=[['🗑️','Poubelle pas vidée'],['💧','Sol mouillé sans panneau'],['🕸️','Toile d’araignée'],['🧴','Produit sans étiquette'],['🚪','Porte laissée ouverte'],['💡','Lumières restées allumées'],['🧻','Plus de papier toilette'],['🪟','Traces sur les vitres'],['🧤','Gants abandonnés']],CLVOK=['✨','🪴','🪑','🧼','🖥️','📚','🛋️','🚽','🧽','🗄️','🖼️','☕'];
+let cvis=null;
+function clCtrUI(id){const C=st.cl,c=C.ctr.find(x=>x.id===id);if(!c)return;const K=CLK[c.k],m=clMach(c);
+  showModal(`<h3>${K.ic} ${esc(c.n)}</h3><div class="mut sm">${K.n}${c.pub?' · marché public':''} · ${nb(c.m2)} m² · ${c.f}×/semaine · ${c.sh==='nuit'?'🌙 la nuit':c.sh==='tot'?'🌅 tôt le matin':'🏢 en journée'}</div>
+  <div class="card" style="margin-top:8px">${[['Heures par semaine',c.hpw+' h'],['Prix',eur2(c.price)+'/h'],['Rapporte',eur(c.hpw*52/12*c.price)+'/mois'],['Fin',dstr(c.end)+' '+date(c.end).getFullYear()],['Satisfaction',Math.round(c.sat)+' / 100'],['Qualité du travail',(c.q??'—')+' / 100'],['Machine sur place',[m,K.eq].filter(Boolean).map(k=>CLE[k].ic+' '+CLE[k].n).join(', ')||'Pas nécessaire'],['Dernière visite',c.vd!==undefined?dstr(c.vd):'Jamais']].map(([a,b])=>`<div class="row sm" style="padding:3px 0"><span class="mut" style="flex:1">${a}</span><b>${b}</b></div>`).join('')}${clBar(c.sat,c.sat<50?'var(--rd)':c.sat<70?'var(--or)':'var(--gr)')}</div>
+  <div class="mut sm">La qualité dépend des heures faites (${Math.round((C.cov??1)*100)} %), des cheffes d’équipe (1 pour 15), de la contrôleuse qualité, du matériel de base et de la machine sur place.</div>
+  <div style="display:grid;gap:6px;margin-top:10px"><button class="btn" onclick="clVisit(${c.id})">🔍 Visite de contrôle (mini-jeu)</button><button class="btn s" onclick="clBoost(${c.id})">${c.boost?'✅ Heures renforcées (+10 %) — arrêter':'💪 Renforcer de 10 % les heures (offert)'}</button>${c.pub?'':`<button class="btn s" onclick="clReneg(${c.id})">📈 Renégocier le prix (+3 %)</button>`}<button class="btn r s" onclick="clStop(${c.id})">Résilier le contrat</button><button class="btn s" onclick="closeM()">Fermer</button></div>`)}
+function clBoost(id){const c=st.cl.ctr.find(x=>x.id===id);if(!c)return;c.boost=c.boost?0:1;click();save();clCtrUI(id)}
+function clReneg(id){const c=st.cl.ctr.find(x=>x.id===id);if(!c||c.rn&&st.day-c.rn<180)return toastMsg('Tu as déjà renégocié il y a moins de 6 mois.');c.rn=st.day;if(c.sat>=75&&Math.random()<.75){c.price=+(c.price*1.03).toFixed(2);toastMsg('✅ Le client accepte +3 %.')}else{c.sat-=12;toastMsg('❌ Le client refuse et n’apprécie pas (satisfaction −12).')}save();clCtrUI(id)}
+function clStop(id,ok){const C=st.cl,c=C.ctr.find(x=>x.id===id);if(!c)return;if(!ok)return ask(`Résilier le contrat ?\nClient : ${c.n}\n${c.pub?'⚠️ Marché public : le cautionnement (5 %) est perdu et ta réputation baisse.':'Préavis de 3 mois : il continue jusque-là.'}`,()=>clStop(id,1),{ic:'✂️',ok:'Résilier',danger:1});
+  if(c.pub){clCost(Math.round(c.hpw*52*c.price*.05),'Cautionnement perdu — '+c.n);C.rep=clamp(C.rep-5,0,100);c.end=st.day}else{c.notice=1;c.end=Math.min(c.end,st.day+90)}closeM();save();render()}
+function clVisit(id){const C=st.cl,c=C.ctr.find(x=>x.id===id);if(!c||c.st!=='run')return toastMsg('Le contrat n’a pas encore commencé.');if(c.vd!==undefined&&st.day-c.vd<15)return toastMsg(`Déjà visité le ${dstr(c.vd)}. Reviens dans ${15-(st.day-c.vd)} jour(s).`);
+  const pb=CLVB.slice().sort(()=>Math.random()-.5).slice(0,3),cells=[...pb.map(p=>({e:p[0],t:p[1],bad:1})),...Array.from({length:9},()=>({e:pick(CLVOK)}))].sort(()=>Math.random()-.5);
+  if(cvis&&cvis.timer)clearInterval(cvis.timer);cvis={id,cells,found:0,end:performance.now()+15000};click();clVisDraw();cvis.timer=setInterval(()=>{if(!cvis)return;if(performance.now()>=cvis.end)clVisEnd();else clVisDraw()},250)}
+function clVisDraw(){if(!cvis)return;const c=st.cl.ctr.find(x=>x.id===cvis.id),t=Math.max(0,(cvis.end-performance.now())/1000);
+  showModal(`<h3>🔍 Visite de contrôle</h3><div class="mut sm">${c?CLK[c.k].ic+' '+esc(c.n):''}</div><p class="sm" style="margin:8px 0">Trouve les <b>3 choses mal faites</b> avant le client ! Une erreur coûte 1,5 seconde.</p>
+  <div class="row" style="flex-wrap:nowrap;margin-bottom:8px"><b style="flex:1">✅ ${cvis.found} / 3</b><b style="color:${t<5?'var(--rd)':'var(--or2)'}">⏱️ ${t.toFixed(1)} s</b></div><div class="pvbar" style="margin:0 0 10px"><i style="width:${t/15*100}%"></i></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${cvis.cells.map((x,i)=>`<button onclick="clVisTap(${i})" style="aspect-ratio:1;font-size:34px;border-radius:14px;border:2px solid ${x.f?'var(--gr)':x.x?'var(--rd)':'#ffffff22'};background:${x.f?'#1d5232':x.x?'#5b2322':'#24402e'}">${x.e}</button>`).join('')}</div>`)}
+function clVisTap(i){if(!cvis)return;const x=cvis.cells[i];if(x.f||x.x)return;if(x.bad){x.f=1;cvis.found++;snd(880,.08,'triangle',.06);if(cvis.found>=3)return clVisEnd()}else{x.x=1;cvis.end-=1500;snd(200,.12,'square',.04)}clVisDraw()}
+function clVisEnd(){if(!cvis)return;clearInterval(cvis.timer);const v=cvis;cvis=null;const C=st.cl,c=C.ctr.find(x=>x.id===v.id),n=v.found;
+  if(c){c.vd=st.day;c.sat=Math.min(100,c.sat+4*n);c.vq=st.day+15;c.vqb=n}C.staff.forEach(w=>{if(CLR[w.r].pool==='of')w.mot=Math.min(1.2,(w.mot||.8)+.01*n)});if(n===3){C.rep=clamp(C.rep+.5,0,100);ck('clvis3')}clXP(2*n+(n===3?5:0));save();
+  showModal(`<h3>${n===3?'🏆 Visite parfaite !':n?'👍 Visite terminée':'😬 Visite ratée'}</h3><div class="card">${v.cells.filter(x=>x.bad).map(x=>`<div class="sm" style="margin:4px 0">${x.f?'✅':'❌'} ${x.e} ${x.t}</div>`).join('')}</div><p class="sm">Satisfaction du client +${4*n}. Qualité +${2*n} pendant 15 jours : tes équipes savent que tu passes !</p><button class="btn w" onclick="closeM();render()">Continuer</button>`)}
+// accidents du travail
+function clAccTick(){const C=st.cl;if(!clW(st.day))return;const p=.00010*(clOffN('prev')?.6:1);for(const w of C.staff){if(w.boss||w.abs>0)continue;if(Math.random()<p){w.abs=RI(10,40);C.at=Math.min(.05,(C.at||.022)+.002);C.lastAcc=st.day;ck('clacc');clLog(`🚑 Accident du travail : ${w.n} (${pick(['chute sur un sol mouillé','mal de dos en portant un seau','projection de produit dans les yeux','chute d’un escabeau','coupure avec un sac poubelle'])}). Absente ${w.abs} jours.`,1)}}}
+// notifications
+function clNotifs(){const C=st.cl,L=[];if(!C)return L;for(const d of C.dec||[]){const D=CLDEC.find(x=>x.k===d.k);L.push([D.ic,D.t,"clSec='home'"])}for(const p of C.comp||[])L.push(['📢','Plainte : '+p.t,"clSec='home'"]);if((C.rpt||[]).length)L.push(['⚠️',C.rpt.length+' rapport(s) sur le personnel',"clSec='team'"]);
+  if(C.crisis)L.push(['🚨','Cessation de paiement',"clSec='soc'"]);const nt=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(nt&&!clOffN('off'))L.push(['🏛️',nt+' marché(s) public(s) où remettre offre',"clSec='pub'"]);if(C.ts.wait>5&&!clOffN('plan')&&!clOffN('tsr'))L.push(['🏠',C.ts.wait+' familles attendent une aide-ménagère',"clSec='cli'"]);return L}
+function clNotifUI(){const L=clNotifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${L.length?`<div class="card" style="padding:4px 12px">${L.map(([i,t,a])=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:nowrap"><span style="font-size:22px">${i}</span><span class="sm" style="flex:1">${t}</span><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="${a};closeM();render()">Voir</button></div>`).join('')}</div>`:'<p class="mut">Rien à traiter. 👌</p>'}<button class="btn w" onclick="closeM()">Fermer</button>`)}
+function clFix(C){C.dec=C.dec||[];C.comp=C.comp||[];C.rpt=C.rpt||[];C.car=C.car||{lv:1,xp:0};C.mg=C.mg||{};C.riv=C.riv||clRivGen();if(C.at===undefined)C.at=.022;if(!C.site)C.site=clSiteK()}
+/* ---------- décor : même style que Route Nette (ciel, collines, maisons), une rue avec les bâtiments des clients ---------- */
+let clCam=0;
+function clBuilding(x,y,w,h,col,roof,lit,sign){rect(x,y-h,w,h,col);rect(x,y-h-4,w,4,roof);const cols=Math.max(2,Math.floor(w/14)),rows=Math.max(2,Math.floor(h/16));for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const on=hh(x*7+r*13+c*31)<lit;rect(x+5+c*(w-8)/cols,y-h+6+r*(h-14)/rows,(w-8)/cols-5,(h-14)/rows-6,on?'#ffe9a8':'#7fa6c4')}rect(x+w/2-6,y-12,12,12,'#4d5a66');if(sign){g.fillStyle='#fff';g.font='800 8px Nunito,sans-serif';g.fillText(sign,x+3,y-h-7)}}
+function cleaner(x,y,t,o){worker(x,y,t,{walk:o.walk,ph:o.ph,vest:o.vest,helm:o.hair,skin:o.skin,s:o.s||1});const s=o.s||1;if(o.tool==='mop'){const k=Math.sin(t*5+(o.ph||0))*4;ln(x+3*s,y-26*s,x+(14+k)*s,y-1,'#c9a26b',1.8);rr(x+(10+k)*s,y-3,9*s,3,1,'#5b8fd6')}else if(o.tool==='cart'){rr(x+7*s,y-15*s,13*s,12*s,2,'#ffd23f');rr(x+9*s,y-20*s,4*s,5*s,1,'#2f79d9');rr(x+14*s,y-19*s,4*s,4*s,1,'#e05a8a');circ(x+9*s,y-2,1.8,'#333');circ(x+18*s,y-2,1.8,'#333')}else if(o.tool==='pole'){ln(x+2*s,y-30*s,x+18*s,y-90*s,'#d6dde4',2);rr(x+14*s,y-96*s,10*s,4*s,1,'#2f79d9')}}
+function clDraw(t){if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs();g.setTransform(Math.min(2,devicePixelRatio||1),0,0,Math.min(2,devicePixelRatio||1),0,0);g.globalAlpha=1;const C=st.cl;if(!C)return;
+  const pal=PAL[season()],wk=WX[st.wx].k,yHill=CH*.5,yWalk=CH*.80,yRoad=CH*.84;clCam+=.25;const cam=clCam;
+  const sk=SKY[wk];let gr=g.createLinearGradient(0,0,0,CH*.6);gr.addColorStop(0,sk[0]);gr.addColorStop(.7,sk[1]);gr.addColorStop(1,sk[2]);g.fillStyle=gr;g.fillRect(0,0,CW,CH*.6+2);
+  if(wk==='sun'||wk==='cloud'){const sx2=CW*.84,sy2=CH*.13;const sg=g.createRadialGradient(sx2,sy2,0,sx2,sy2,60);sg.addColorStop(0,'rgba(255,248,200,.95)');sg.addColorStop(.25,'rgba(255,236,150,.55)');sg.addColorStop(1,'rgba(255,236,150,0)');g.fillStyle=sg;g.fillRect(sx2-60,sy2-60,120,120)}
+  const cc=wk==='storm'?'rgba(70,80,95,.9)':wk==='rain'?'rgba(150,160,172,.9)':'rgba(255,255,255,.88)';for(const cl of clouds){const x=((cl.x+t*6*cl.s)%(CW+260)+CW+260)%(CW+260)-130,y=CH*cl.y*.8,s=cl.s;g.fillStyle=cc;g.beginPath();g.ellipse(x,y,30*s,10*s,0,0,7);g.ellipse(x-14*s,y+2*s,16*s,9*s,0,0,7);g.ellipse(x+12*s,y-5*s,18*s,12*s,0,0,7);g.fill()}
+  camX=cam;hills(.08,yHill,CH*.18,pal.hillF,1.3);hills(.22,CH*.56,CH*.12,pal.hillN,4.1);
+  // ville lointaine
+  for(let i=Math.floor(cam*.3/46)-1;i<Math.floor((cam*.3+CW)/46)+2;i++){const x=i*46-cam*.3,h=30+hh(i*11)*55;rect(x,CH*.62-h,40,h,hh(i*5)<.5?'#9fb3c4':'#b7c3cc');for(let r=0;r<h/12-1;r++)rect(x+6,CH*.62-h+6+r*12,28,4,'rgba(255,255,255,.35)')}
+  rect(0,CH*.62,CW,yWalk-CH*.62,pal.grass2||'#7fb069');
+  // rue : bâtiments des clients
+  const run=C.ctr.filter(c=>c.st==='run'),B=Math.max(4,Math.min(10,run.length+3));
+  for(let i=Math.floor(cam/130)-1;i<Math.floor((cam+CW)/130)+2;i++){const x=i*130-cam,k=((i%B)+B)%B,c=run[k%Math.max(1,run.length)];const kind=c?c.k:['bur','com','cop'][((i%3)+3)%3];
+    if(kind==='cop'||(!c&&hh(i*3)<.3)){house(x+40,yWalk,1.3,'#efe6d6','#a5442f');house(x+90,yWalk,1.2,'#e6dccb','#5a6270');continue}
+    const col={bur:'#cfd8e3',com:'#f1e3c8',med:'#e8f1f5',eco:'#f3d9b1',ind:'#b9c0c7',hop:'#f4f6f8',adm:'#d9d2c3'}[kind]||'#cfd8e3',h={hop:120,adm:105,ind:70,bur:95,eco:70,com:55,med:65}[kind]||80;
+    clBuilding(x+12,yWalk,104,Math.min(h,CH*.62),col,'#5a6270',c?.75:.35,c?(CLK[kind].ic+' '+c.n.split(' — ')[0]).slice(0,22):'');if(kind==='hop'){rect(x+56,yWalk-h+10,16,5,'#e33');rect(x+61.5,yWalk-h+5,5,16,'#e33')}}
+  // trottoir et route
+  rect(0,yWalk,CW,yRoad-yWalk,'#c9ced3');rect(0,yWalk,CW,2,'#e8ecef');rect(0,yRoad,CW,CH-yRoad,'#4a5058');for(let i=Math.floor(cam/60)-1;i<Math.floor((cam+CW)/60)+2;i++)rect(i*60-cam,yRoad+(CH-yRoad)/2-1,30,3,'#f2f2f2');
+  // camionnettes de la société
+  const nv=Math.min(3,C.eq.van||0);for(let i=0;i<nv;i++){const x=((t*30+i*260)%(CW+160))-80;van(x,CH-4,t,1);g.fillStyle='#2f79d9';g.font='900 7px Nunito,sans-serif';g.fillText(C.name.slice(0,12),x-34,CH-18)}
+  for(let i=0;i<2;i++){const x=CW-((t*45+i*330)%(CW+120))+60;car(x,CH-14,['#d94a3a','#3a7bd5','#e0b23a'][i],1,.9)}
+  // personnel à l'œuvre
+  const n=Math.min(8,C.staff.length);for(let i=0;i<n;i++){const w=C.staff[i],pool=CLR[w.r].pool,x=((i*97+t*(8+i*3))%(CW+40))-20;cleaner(x,yWalk+3,t,{walk:1,ph:i*1.7,vest:w.boss?'#2c3e50':pool==='ts'?'#e05a8a':w.r==='vit'?'#2f8a6a':w.r==='chef'?'#3d4f9e':'#3d8bd6',hair:['#2b1b10','#4a2c17','#a8743f','#1c1c1c','#d9b26a'][i%5],skin:i%4,tool:w.r==='vit'?'pole':i%3===0?'cart':'mop',s:.9})}
+  if(wk==='rain'||wk==='storm'){g.strokeStyle='rgba(200,220,240,.5)';g.lineWidth=1;g.beginPath();for(let i=0;i<60;i++){const x=(hh(i)*CW+t*40)%CW,y=(hh(i*7)*CH+t*300)%CH;g.moveTo(x,y);g.lineTo(x-3,y+9)}g.stroke()}
+  if(wk==='snow'){g.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<70;i++){const x=(hh(i)*CW+Math.sin(t+i)*10)%CW,y=(hh(i*7)*CH+t*40)%CH;g.fillRect(x,y,2,2)}}}
 
 requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-07.7";
+var APPV="2026-11-10.1";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
-(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 1.1 · "+APPV})();
+(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 1.2 · "+APPV})();
 function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){});
  fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
   if(!j||!j.v||j.v===APPV){if(man)say("Le jeu est à jour ✓ (version "+APPV+")");return}
