@@ -1383,7 +1383,7 @@ function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt
 let TICKING=0,WBI=null;
 const wById=id=>(WBI||(WBI=new Map(st.workers.map(w=>[w.id,w])))).get(id);
 function tick(){TICKING=1;WBI=null;GESTC=null;SPWC.clear();try{tick0();if(st.cl)try{clTick()}catch(e){console.error(e)}if(st.shop)try{shTick()}catch(e){console.error(e)}try{hPoolDay()}catch(e){}}finally{TICKING=0;WBI=null}save();renderTick()}
-function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}
+function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}try{louDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
@@ -2306,30 +2306,141 @@ function clawback(){const V=pv();let r=0,why='';
 const pv=()=>st.priv||(st.priv={cash:0,own:[],tr:0});
 const ownsHome=()=>pv().own.some(o=>PRIV[o.k]&&PRIV[o.k].home&&!o.lou);
 const myHome=()=>pv().own.find(o=>PRIV[o.k]&&PRIV[o.k].home&&!o.lou);
-// loyer d'un bien : immeuble de rapport (P.rent) ou logement mis en location (P.hr), indexé chaque année
-function rentOf(o){const P=PRIV[o.k];if(!P)return 0;const r=P.rent||(o.lou?P.hr:0);return r?Math.round(r*(o.ix||1)):0}
-function pRent(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=PRIV[o.k];if(!P||!P.hr)return;if(o.rw&&!o.lou)return toastMsg('Attends la fin des travaux pour louer.');clk();
-  if(!o.lou){const only=P.home&&myHome()===o;
-    if(!ok)return ask(`Mettre en location ?\nBien : ${P.n.replace(/ \(.*$/,'')}\nLoyer : ${eur(Math.round(P.hr*(o.ix||1)))}/mois\nCharges (toujours pour toi) : ${eur(P.m)}/mois\nLocataire trouvé : en ± 1 mois\nBail : 9 ans\n${P.hrn?'C’est une '+P.hrn+'. ':''}Pour récupérer le bien, il faut envoyer un préavis de 6 mois au locataire (occupation personnelle).${only?'\n⚠️ C’est ta seule maison : tu devras louer ailleurs. Ta vie courante repasse de 850 à 1 650 €/mois.':''}`,()=>pRent(id,1),{ic:'🔑',ok:'Mettre en location',img:photo(o.k)});
-    o.lou=1;o.louFrom=st.day+30;delete o.louEnd;delete o.louOk;pEv(`🔑 ${P.n} : mis en location, l’agence cherche un locataire.`)}
-  else if(o.louEnd){return toastMsg(`Préavis en cours : le locataire part le ${dstr(o.louEnd)} ${date(o.louEnd).getFullYear()}.`)}
-  else if(st.day<o.louFrom){delete o.lou;delete o.louFrom;pEv(`🏠 ${P.n} : location annulée, pas encore de locataire.`)}
-  else{if(!ok)return ask(`Récupérer ton bien ?\nBien : ${P.n.replace(/ \(.*$/,'')}\nPréavis : 6 mois\nDépart du locataire : ${dstr(st.day+182)} ${date(st.day+182).getFullYear()}\nTu envoies un préavis par recommandé (occupation personnelle). Le locataire paie son loyer jusqu’à son départ.`,()=>pRent(id,1),{ic:'📨',ok:'Envoyer le préavis'});o.louEnd=st.day+182;pEv(`📨 Préavis envoyé au locataire de ${P.n} : départ le ${dstr(o.louEnd)} ${date(o.louEnd).getFullYear()}.`)}
-  save();render()}
+// ===== Location des logements (comme en vrai, Wallonie) =====
+// o.lou=1 : le bien est réservé à la location (tu n'y habites pas). o.lz = dossier de location :
+//  saisonnier {sai:1,d,stop,tot,fee} ; bail de résidence principale {m:'ag'|'moi', s:'srch'|'ok', f (jour de signature prévu), ask (loyer demandé), t (locataire), tot, fee}
+//  locataire t = {n,d (début),r (loyer),a (prochaine indexation),q (sérieux caché),un (mois impayés),ua (montant),md (mise en demeure),jp (fin de la procédure),end (départ),by ('me'|'lui'),noRe}
+let louAcc=null;const LOU_AG=.08,LOU_SAI=.2,LOU_TAX=.1,LOU_SEA={def:[1,1,1,1,1,1,1,1,1,1,1,1],cote:[.4,.4,.6,.8,1,1.3,2.2,2.2,1.1,.7,.5,.8],capferrat:[.4,.4,.6,.8,1,1.3,2.2,2.2,1.1,.7,.5,.8],chalet:[.8,.8,.8,1,1,1,1.5,1.5,1,1,.8,.8],chateau:[.3,.3,.6,.9,1.3,1.6,1.6,1.6,1.4,.9,.5,1]};
+const louSai=o=>!!(PRIV[o.k]&&PRIV[o.k].hrn);
+// loyer du marché aujourd'hui (suit l'indexation générale ; maison rénovée = +50 %)
+function louMkt(o){const P=PRIV[o.k];return P&&P.hr?Math.round(P.hr*(st.idx||1)*(o.rv?1.5:1)/5)*5:0}
+function louTen(o,m,r,d){const P=PRIV[o.k];return{n:P.c==='ult'?pick(NOMS)+' '+pick(['Consulting','Partners','Group','Legal'])+' SA':pick(PREN)+' '+pick(NOMS),d,r,a:d+365,q:+(m==='ag'?R(.6,1):R(.2,1)).toFixed(2),un:0,ua:0}}
+// anciennes parties (o.louFrom / louOk / louEnd) → nouveau dossier
+function louFix(o){if(!o||!o.lou||o.lz)return;const P=PRIV[o.k];if(!P||!P.hr){for(const k of['lou','louFrom','louOk','louEnd'])delete o[k];return}
+  const r=Math.round(P.hr*(o.ix||1));
+  if(P.hrn){o.lz={sai:1,d:o.louFrom||st.day,tot:0,fee:0};if(o.louEnd)o.lz.stop=Math.min(o.louEnd,st.day+30)}
+  else if(o.louFrom&&st.day<o.louFrom)o.lz={m:'ag',s:'srch',f:o.louFrom,ask:r,tot:0,fee:0};
+  else{o.lz={m:'ag',s:'ok',tot:0,fee:0,t:louTen(o,'ag',r,Math.min(st.day,o.louFrom||st.day))};if(o.louEnd){o.lz.t.end=o.louEnd;o.lz.t.by='me'}}
+  for(const k of['louFrom','louOk','louEnd'])delete o[k]}
+// loyer mensuel attendu (brut) : immeuble de rapport, locataire en place, ou moyenne de la location saisonnière
+function rentOf(o){const P=PRIV[o.k];if(!P)return 0;if(P.rent)return Math.round(P.rent*(o.ix||1));if(!o.lou)return 0;louFix(o);const z=o.lz;if(!z)return 0;if(z.sai)return louMkt(o);return z.t?z.t.r:0}
+// frais d'agence / plateforme par mois, impôt (moyenne par mois), charges du propriétaire
+function louFee(o){const z=o.lou&&o.lz;if(!z)return 0;if(z.sai)return Math.round(louMkt(o)*LOU_SAI);return z.m==='ag'&&z.t?Math.round(z.t.r*LOU_AG):0}
+function louTaxM(o){const P=PRIV[o.k],z=o.lou&&o.lz;return z&&(z.sai||z.t)?Math.round(P.hr*LOU_TAX):0}
+function pCharge(o){const P=PRIV[o.k];if(!P||!P.m)return 0;if(P.m<0||P.rent||!P.hr||!o.lou)return P.m;const z=o.lz||{};if(z.sai)return P.m;return Math.round(P.m*(z.t?.35:.5))}
+const louNet=o=>rentOf(o)-louFee(o)-louTaxM(o)-pCharge(o);
+function louDelay(m,lv){return Math.round((m==='ag'?RI(14,40):RI(30,75))*[.5,1,2.2][lv])}
+// statut en quelques mots (liste des biens)
+function louStat(o){const P=PRIV[o.k];if(P.rent)return'🔑 loué';if(!o.lou)return P.home&&myHome()===o?'🏡 tu y habites':'';louFix(o);const z=o.lz||{},t=z.t;
+  if(z.sai)return z.stop?'⏳ dernières réservations':'🏖️ location saisonnière';if(z.s==='srch')return'🔎 cherche un locataire';if(!t)return'🔑 en location';
+  if(t.jp)return'⚖️ procédure en justice';if(t.un)return`⚠️ ${t.un} mois impayé${t.un>1?'s':''}`;if(t.end)return t.by==='me'?'📨 tu as donné congé':'📬 le locataire part';return'🔑 loué à '+t.n}
+function louFree(o,msg){const z=o.lz;if(z)o.lzT=(o.lzT||0)+(z.tot||0);delete o.lou;delete o.lz;if(msg)pEv(msg,0,true)}
+// fin d'un bail : état des lieux de sortie, garantie locative (2 mois), puis bien libre ou nouvelle recherche
+function louEnd(o,exp){const V=pv(),P=PRIV[o.k],z=o.lz,t=z.t,nm=pShort(P.n);
+  const dmg=exp?Math.round(R(.5,2.5)*t.r):Math.random()<.35?Math.round(R(.15,1)*t.r):0,gar=t.r*2,due=(t.ua||0)+dmg,cov=Math.min(gar,due),lost=due-cov;
+  V.cash+=cov-dmg;
+  pEv(`${exp?'🚪 Expulsion par huissier':'🔑 Départ de '+t.n} (${nm}). État des lieux de sortie : ${dmg?'dégâts '+eur(dmg):'rien à signaler'}${t.ua?', loyers impayés '+eur(t.ua):''}. ${cov?`La garantie locative te rembourse ${eur(cov)}.`:'La garantie locative est rendue au locataire.'}${lost>0?` Perdu (locataire insolvable) : ${eur(lost)}.`:''}`,cov-dmg,true);
+  if(t.by==='me'||t.noRe)return louFree(o,`🏠 ${nm} est libre : ${P.home&&!ownsHome()?'tu y habites de nouveau (ta vie courante repasse à 850 €/mois)':'tu en fais ce que tu veux'}.`);
+  const f=louDelay(z.m,1);z.s='srch';z.f=st.day+f;z.ask=louMkt(o);delete z.t;pEv(`🔎 ${nm} : ${z.m==='ag'?'l’agence cherche':'tu cherches'} un nouveau locataire (± ${f} jours, ${eur(z.ask)}/mois).`)}
+function louJuge(o,auto){const V=pv(),t=o.lz.t,c=750;t.jp=st.day+RI(90,150);V.cash-=c;o.lz.fee+=c;
+  pEv(`⚖️ ${pShort(PRIV[o.k].n)} : ${auto?'l’agence saisit':'tu saisis'} le juge de paix contre ${t.n} (avocat + huissier ${eur(c)}). Jugement et expulsion vers le ${dstr(t.jp)}.`,-c,true)}
+// chaque jour : signature d'un bail, fin de bail, jugement
+function louDay(){const V=pv();for(const o of[...V.own]){if(!o.lou)continue;louFix(o);const z=o.lz;if(!z||z.sai)continue;const P=PRIV[o.k],nm=pShort(P.n);
+  if(z.s==='srch'&&st.day>=z.f){const t=louTen(o,z.m,z.ask,st.day);if(z.lv===2)t.q=+Math.max(.1,t.q-.1).toFixed(2);z.t=t;z.s='ok';delete z.f;delete z.lv;const fee=z.m==='ag'?Math.round(t.r*1.21):0;V.cash-=fee;z.fee+=fee;
+    pEv(`🤝 ${nm} : ${t.n} signe un bail de 9 ans à ${eur(t.r)}/mois. Garantie locative de ${eur(t.r*2)} bloquée sur un compte à son nom.${fee?` Commission de l’agence : ${eur(fee)} (1 mois de loyer + TVA).`:''}`,-fee,true);continue}
+  const t=z.t;if(!t)continue;
+  if(t.jp&&st.day>=t.jp)louEnd(o,1);else if(t.end&&st.day>=t.end)louEnd(o,0)}}
+// le 1er du mois : loyers, indexation, impayés, pannes, départs ; location saisonnière ; impôt une fois par an
+function louMonth(o){louFix(o);const V=pv(),P=PRIV[o.k],z=o.lz,nm=pShort(P.n);if(!o.lou||!z)return;const sc=Math.pow(Math.max(1,P.hr/1000),.6);
+  if(z.sai){if(z.stop&&st.day>=z.stop)return louFree(o,`🏠 ${nm} : dernières réservations terminées, le bien est de nouveau libre.`);
+    const pm=(month()+10)%12,part=clamp((st.day-z.d)/30,0,1);if(part<=0)return;const S=LOU_SEA[o.k]||LOU_SEA.def,g=Math.round(louMkt(o)*S[pm]*R(.7,1.3)*part),fee=Math.round(g*LOU_SAI);
+    V.cash+=g-fee;z.tot+=g;z.fee+=fee;V.rentT=(V.rentT||0)+g;V.rtxA=(V.rtxA||0)+Math.round(P.hr*LOU_TAX*part);
+    if(louAcc){louAcc.n++;louAcc.a+=g-fee}else pEv(`🏖️ ${nm} : réservations ${/^[aeiouéo]/.test(MOIS[pm])?'d’':'de '}${MOIS[pm]} : ${eur(g)} − commission et ménage ${eur(fee)}`,g-fee,false);
+    if(Math.random()<.06){const c=Math.round(R(100,600)*sc);V.cash-=c;pEv(`🧹 ${nm} : ${pick(['vaisselle cassée par des vacanciers','matelas taché à remplacer','lave-linge en panne','télé tombée'])} : −${eur(c)}`,-c,false)}return}
+  const t=z.t;if(!t)return;
+  if(st.day>=t.a){const i=evOn('inflation')?.035:.02;t.r=Math.round(t.r*(1+i));t.a+=365;pEv(`📈 ${nm} : loyer indexé à la date anniversaire du bail (+${i>.03?'3,5':'2'} %, indice santé) : ${eur(t.r)}/mois.`,0,false)}
+  const part=clamp((st.day-t.d)/30,0,1);if(part<=0)return;const due=Math.round(t.r*part);V.rtxA=(V.rtxA||0)+Math.round(P.hr*LOU_TAX*part);
+  if(t.jp){t.un++;t.ua+=due}
+  else{const payP=t.un?Math.min(.9,(.25+.4*t.q)*(t.md?1.6:1)):1-.06*(1-t.q);
+    if(Math.random()<payP){const got=due+t.ua,fee=z.m==='ag'?Math.round(got*LOU_AG):0;V.cash+=got-fee;z.tot+=got;z.fee+=fee;V.rentT=(V.rentT||0)+got;
+      if(t.un)pEv(`✅ ${nm} : ${t.n} rembourse tout son retard (${eur(got)}${fee?' − agence '+eur(fee):''}).`,got-fee,true);else if(part<1)pEv(`🔑 ${nm} : 1er loyer de ${t.n} au prorata (${Math.round(part*30)} jours) : ${eur(got)}${fee?' − agence '+eur(fee):''}`,got-fee,false);else if(louAcc){louAcc.n++;louAcc.a+=got-fee}else pEv(`🔑 ${nm} : loyer de ${t.n} ${eur(got)}`,got-fee,false);t.un=0;t.ua=0;t.md=0}
+    else{t.un++;t.ua+=due;t.md=0;pEv(`⚠️ ${nm} : ${t.n} n’a pas payé son loyer (${t.un} mois de retard, ${eur(t.ua)}).${z.m==='ag'?'':' Va voir la fiche du bien pour réagir.'}`,0,true);
+      if(z.m==='ag'){if(t.un===1){t.md=1;pEv(`📨 L’agence envoie une mise en demeure à ${t.n}.`,0,false)}else louJuge(o,1)}}}
+  if(Math.random()<.08){const c=Math.round(R(150,900)*sc);V.cash-=c;pEv(`🛠️ ${nm} : ${pick(['chaudière en panne','fuite d’eau sous l’évier','volet roulant cassé','chauffe-eau à remplacer','infiltration par la toiture','châssis qui ne ferme plus'])} : grosse réparation à ta charge (propriétaire) : −${eur(c)}`,-c,false)}
+  if(!t.end&&!t.jp&&!t.un&&st.day-t.d>180&&Math.random()<.02){t.end=st.day+90;t.by='lui';pEv(`📬 ${nm} : ${t.n} donne son préavis de 3 mois (${pick(['mutation professionnelle','il achète une maison','la famille s’agrandit','il part vivre chez son compagnon / sa compagne'])}). Départ le ${dstr(t.end)} ${date(t.end).getFullYear()}.`,0,true)}}
+function louTaxTick(){const V=pv();if(month()===1&&V.rtxA){V.rtxP=(V.rtxP||0)+V.rtxA;V.rtxA=0}
+  if(month()===9&&V.rtxP){const a=V.rtxP;V.rtxP=0;V.cash-=a;pEv(`🧾 Impôt sur tes revenus locatifs de l’an passé (revenu cadastral indexé × 1,4) : −${eur(a)}`,-a,true)}}
+// ----- interface : choisir comment louer -----
+let louM='ag',louL=1;
+function louSetup(id,m,lv){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=PRIV[o.k];if(!P||!P.hr)return;
+  if(o.lou)return pBien(id);if(o.rw)return toastMsg('Attends la fin des travaux pour louer.');clk();if(m)louM=m;if(lv!==undefined)louL=lv;
+  const nm=pShort(P.n),only=P.home&&myHome()===o,mkt=louMkt(o),tax=Math.round(P.hr*LOU_TAX),row=(a,b,c)=>`<div class="askr"><span>${a}</span><b class="${c||''}">${b}</b></div>`;let h=`<div class="ask"><div class="askh"><div class="askic">🔑</div><h3>Louer : ${nm}</h3></div>`;
+  if(louSai(o)){const ch=P.m,fee=Math.round(mkt*LOU_SAI),net=mkt-fee-tax-ch,S=LOU_SEA[o.k]||LOU_SEA.def,hi=S.indexOf(Math.max(...S)),lo=S.indexOf(Math.min(...S));
+    h+=`<p class="askp">C’est une ${P.hrn}. Une agence (ou une plateforme) gère les réservations, l’accueil et le ménage. Les revenus changent selon la saison : beaucoup en ${MOIS[hi]}, peu en ${MOIS[lo]}.</p>
+    ${row('Revenus moyens',eur(mkt)+'/mois','money')}${row('Commission + ménage (20 %)','−'+eur(fee))}${row('Charges (énergie, entretien…)','−'+eur(ch))}${row('Impôt (1 fois par an)','± −'+eur(tax)+'/mois')}${row('Il te reste en moyenne',(net>=0?'+':'')+eur(net)+'/mois',net>=0?'money':'neg')}${row('Sans location (bien vide)','−'+eur(P.m)+'/mois')}
+    <p class="askp">Tu peux arrêter quand tu veux : les réservations déjà faites sont gardées 1 mois.</p>${only?`<div class="askw">⚠️ Tu habites ici : tu devras louer ailleurs. Ta vie courante passe de 850 à 1 650 €/mois.</div>`:''}
+    <div class="row" style="margin-top:16px;flex-wrap:nowrap"><button class="btn s" style="flex:1" onclick="closeM()">Annuler</button><button class="btn g" style="flex:1.5" onclick="louStart(${id})">🏖️ Mettre en location</button></div></div>`;return showModal(h)}
+  const ask=Math.round(mkt*[.9,1,1.1][louL]),ch=Math.round(P.m*.35),fee=louM==='ag'?Math.round(ask*LOU_AG):0,net=ask-fee-tax-ch,d=[[14,40],[30,75]][louM==='ag'?0:1].map(x=>Math.round(x*[.5,1,2.2][louL])),peb=o.peb?0:250,first=louM==='ag'?Math.round(ask*1.21):0;
+  h+=`<p class="askp">Bail de résidence principale de 9 ans (règle en Wallonie). Le locataire paie le loyer le 1er du mois, son énergie et les petites réparations. Toi, tu paies les grosses réparations, l’assurance et le précompte immobilier.</p>
+  <div class="mut sm" style="margin:10px 0 4px">1. Qui s’occupe de la location ?</div><div class="chips">${[['ag','🏢 Une agence'],['moi','🙋 Moi-même']].map(([k,l])=>`<button class="${louM===k?'on':''}" onclick="louSetup(${id},'${k}')">${l}</button>`).join('')}</div>
+  <div class="mut sm" style="margin-top:-6px">${louM==='ag'?'L’agence fait les visites, choisit un locataire sérieux (salaire vérifié), encaisse le loyer et s’occupe des impayés (mise en demeure, juge de paix). Prix : 1 mois de loyer + TVA à chaque nouveau locataire, puis 8 % du loyer.':'Gratuit, mais tu trouves un locataire moins vite et tu vérifies moins bien : plus de risque d’impayés, et c’est toi qui dois réagir.'}</div>
+  <div class="mut sm" style="margin:12px 0 4px">2. Quel loyer demander ? (prix du marché : ${eur(mkt)})</div><div class="chips">${['💨 −10 % (vite loué)','⚖️ Prix du marché','💰 +10 % (plus long)'].map((l,i)=>`<button class="${louL===i?'on':''}" onclick="louSetup(${id},null,${i})">${l}</button>`).join('')}</div>
+  ${row('Loyer',eur(ask)+'/mois','money')}${fee?row('Agence (8 %)','−'+eur(fee)+'/mois'):''}${row('Tes charges (précompte, assurance…)','−'+eur(ch)+'/mois')}${row('Impôt (1 fois par an)','± −'+eur(tax)+'/mois')}${row('Il te reste',(net>=0?'+':'')+eur(net)+'/mois',net>=0?'money':'neg')}${row('Sans location (bien vide)','−'+eur(P.m)+'/mois')}
+  ${row('Locataire trouvé en','± '+d[0]+' à '+d[1]+' jours')}${peb?row('Certificat PEB (obligatoire)',eur(peb)+' maintenant'):''}${first?row('À la signature (agence)',eur(first)):''}
+  <p class="askp">Pour récupérer le bien plus tard, il faudra donner un préavis de 6 mois au locataire (pour y habiter toi-même).</p>${only?`<div class="askw">⚠️ Tu habites ici : tu devras louer ailleurs. Ta vie courante passe de 850 à 1 650 €/mois.</div>`:''}
+  <div class="row" style="margin-top:16px;flex-wrap:nowrap"><button class="btn s" style="flex:1" onclick="closeM()">Annuler</button><button class="btn g" style="flex:1.5" onclick="louStart(${id})">🔑 Mettre en location</button></div></div>`;showModal(h)}
+const pRent=id=>louSetup(id);
+function louStart(id){const V=pv(),o=V.own.find(x=>x.id===id);if(!o||o.lou)return;const P=PRIV[o.k];if(!P||!P.hr)return;if(o.rw)return toastMsg('Attends la fin des travaux pour louer.');const nm=pShort(P.n);
+  if(louSai(o)){o.lou=1;o.lz={sai:1,d:st.day,tot:0,fee:0};pEv(`🏖️ ${nm} : en location saisonnière. Les premières réservations arrivent.`,0,false)}
+  else{if(!o.peb){if(V.cash<250)return toastMsg('Il te faut 250 € pour le certificat PEB.');V.cash-=250;o.peb=1;pEv(`📄 Certificat PEB de ${nm} (obligatoire pour louer) : −250 €`,-250,false)}
+    const f=louDelay(louM,louL);o.lou=1;o.lz={m:louM,s:'srch',f:st.day+f,ask:Math.round(louMkt(o)*[.9,1,1.1][louL]),lv:louL,tot:0,fee:0};
+    pEv(`🔎 ${nm} : ${louM==='ag'?'l’agence cherche':'tu cherches'} un locataire à ${eur(o.lz.ask)}/mois (± ${f} jours).`,0,false)}
+  clk();save();render();pBien(id)}
+function louAct(id,a,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o||!o.lou)return;louFix(o);const P=PRIV[o.k],z=o.lz,t=z&&z.t,nm=pShort(P.n);if(!z)return;
+  const back=()=>{clk();save();render();pBien(id)};
+  if(a==='cancel'&&z.s==='srch'){louFree(o,`🏠 ${nm} : tu arrêtes de chercher un locataire.`);return back()}
+  if(a==='lower'&&z.s==='srch'){z.ask=Math.round(z.ask*.9);z.f=st.day+Math.max(3,Math.round((z.f-st.day)/2));pEv(`🏷️ ${nm} : loyer demandé baissé à ${eur(z.ask)}/mois.`,0,false);return back()}
+  if(a==='sstop'&&z.sai){if(z.stop)return;if(!ok)return ask(`Arrêter la location saisonnière ?\nBien : ${nm}\nFin des réservations : ${dstr(st.day+30)}\nLes vacanciers qui ont déjà réservé viennent encore pendant 1 mois.`,()=>louAct(id,a,1),{ic:'🏖️',ok:'Arrêter'});z.stop=st.day+30;pEv(`🏖️ ${nm} : plus de nouvelles réservations, bien libre le ${dstr(z.stop)}.`,0,false);return back()}
+  if(!t)return;
+  if(a==='back'){if(t.end&&t.by==='me')return;if(t.end){t.noRe=1;pEv(`🏠 ${nm} : tu ne reloueras pas après le départ de ${t.n}.`,0,false);return back()}
+    const e=st.day+182;if(!ok)return ask(`Récupérer ton bien ?\nBien : ${nm}\nLocataire : ${t.n}\nPréavis : 6 mois\nDépart le : ${dstr(e)} ${date(e).getFullYear()}\nTu envoies le congé par recommandé, pour y habiter toi-même ou ta famille proche (obligation : y vivre au moins 2 ans). Le locataire paie son loyer jusqu’à son départ.`,()=>louAct(id,a,1),{ic:'📨',ok:'Envoyer le préavis'});
+    t.end=e;t.by='me';pEv(`📨 Congé envoyé à ${t.n} (${nm}) : départ le ${dstr(e)} ${date(e).getFullYear()}.`,0,false);return back()}
+  if(a==='reloue'&&t.end&&t.by==='lui'){delete t.noRe;return back()}
+  if(a==='md'&&t.un&&!t.md&&!t.jp){V.cash-=15;t.md=1;pEv(`📨 ${nm} : mise en demeure envoyée à ${t.n} par recommandé (−15 €).`,-15,false);return back()}
+  if(a==='juge'&&t.un&&!t.jp){if(!ok)return ask(`Saisir le juge de paix ?\nLocataire : ${t.n}\nRetard : ${eur(t.ua)} (${t.un} mois)\nAvocat + huissier : ${eur(750)}\nDurée : 3 à 5 mois\nLe juge ordonne en général le paiement et l’expulsion. La garantie locative (${eur(t.r*2)}) couvre une partie du retard, le reste est souvent perdu.`,()=>louAct(id,a,1),{ic:'⚖️',ok:'Saisir le juge',danger:1});louJuge(o,0);return back()}
+  if(a==='mgmt'){z.m=z.m==='ag'?'moi':'ag';pEv(`${z.m==='ag'?'🏢 Tu confies':'🙋 Tu reprends'} la gestion de ${nm}${z.m==='ag'?' à une agence (8 % du loyer)':''}.`,0,false);return back()}}
+// carte « Location » dans la fiche d'un bien
+function louCard(o){const P=PRIV[o.k],id=o.id;if(!P.hr||P.rent)return'';const row=(a,b,c)=>`<div class="askr"><span>${a}</span><b class="${c||''}">${b}</b></div>`,B=(t,f,c)=>`<button class="btn ${c||'s'} w" style="padding:11px;margin-top:6px" onclick="${f}">${t}</button>`;
+  if(!o.lou){const net=louSai(o)?louMkt(o)*(1-LOU_SAI)-P.hr*LOU_TAX-P.m:louMkt(o)*(1-LOU_AG)-P.hr*LOU_TAX-P.m*.35;
+    return`<div class="card" style="margin-top:8px;background:var(--card2)"><b>🔑 Location</b><div class="mut sm" style="margin:4px 0">${P.home&&myHome()===o?'Tu habites ici. ':''}${louSai(o)?'Location saisonnière ('+P.hrn+')':'Loyer du marché'} : <b>${eur(louMkt(o))}/mois</b>, soit ± <b class="${net>=0?'money':'neg'}">${net>=0?'+':''}${eur(Math.round(net))}/mois</b> après frais, charges et impôt.${o.lzT?' Déjà reçu en loyers : '+eur(o.lzT)+'.':''}</div>${B('🔑 Mettre en location…',`louSetup(${id})`,'g')}</div>`}
+  louFix(o);const z=o.lz||{},t=z.t;let h=`<div class="card" style="margin-top:8px;background:var(--card2)"><b>🔑 Location · ${louStat(o)}</b><div style="margin-top:6px">`;
+  if(z.sai){h+=row('Type','saisonnière ('+P.hrn+')')+row('Revenus moyens',eur(louMkt(o))+'/mois')+row('Reçu depuis le début',eur(z.tot),'money')+row('Commissions payées',eur(z.fee))+(z.stop?row('Bien libre le',dstr(z.stop)):'')+'</div>'+(z.stop?'':B('🛑 Arrêter la location saisonnière',`louAct(${id},'sstop')`))+'</div>';return h}
+  const gest=z.m==='ag'?'🏢 agence (8 %)':'🙋 toi-même';
+  if(z.s==='srch'){const d=Math.max(0,z.f-st.day);h+=row('Loyer demandé',eur(z.ask)+'/mois')+row('Gestion',gest)+row('Locataire trouvé',d<=7?'cette semaine':'dans ± '+d+' jours')+'</div><div class="mut sm" style="margin-top:6px">Le bien est vide : tu paies la moitié des charges (chauffage minimum, assurance, précompte).</div>'+B('🏷️ Baisser le loyer de 10 % (trouver 2× plus vite)',`louAct(${id},'lower')`)+B('✕ Arrêter de chercher',`louAct(${id},'cancel')`)+'</div>';return h}
+  if(!t)return h+'</div></div>';
+  h+=row('Locataire',esc(t.n))+row('Depuis le',dstr(t.d)+' '+date(t.d).getFullYear())+row('Loyer',eur(t.r)+'/mois','money')+row('Prochaine indexation',dstr(t.a)+' '+date(t.a).getFullYear())+row('Garantie locative',eur(t.r*2)+' (compte bloqué)')+row('Gestion',gest)+row('Il te reste',(louNet(o)>=0?'+':'')+eur(louNet(o))+'/mois',louNet(o)>=0?'money':'neg')+row('Reçu depuis le début',eur(z.tot),'money')+'</div>';
+  if(t.jp)h+=`<div class="askw">⚖️ Procédure devant le juge de paix : jugement et expulsion vers le ${dstr(t.jp)}. Retard : ${eur(t.ua)}.</div>`;
+  else if(t.un){h+=`<div class="askw">⚠️ ${esc(t.n)} ne paie plus : ${t.un} mois de retard (${eur(t.ua)}).${z.m==='ag'?' L’agence s’en occupe.':''}</div>`;if(z.m!=='ag')h+=(t.md?'<div class="mut sm" style="margin-top:6px">📨 Mise en demeure envoyée : il a plus de chances de payer ce mois-ci.</div>':B('📨 Envoyer une mise en demeure (15 €)',`louAct(${o.id},'md')`))+B('⚖️ Saisir le juge de paix (750 €)',`louAct(${o.id},'juge')`,'r')}
+  if(t.end&&!t.jp)h+=`<div class="mut sm" style="margin-top:6px">${t.by==='me'?'📨 Tu as donné congé':'📬 '+esc(t.n)+' a donné son préavis'} : départ le <b>${dstr(t.end)} ${date(t.end).getFullYear()}</b>.${t.by==='lui'?(t.noRe?' Ensuite le bien reste libre.':' Ensuite '+(z.m==='ag'?'l’agence cherche':'tu cherches')+' un nouveau locataire.'):''}</div>`;
+  if(!t.jp){if(!t.end)h+=B('🏠 Récupérer le bien (préavis 6 mois)',`louAct(${id},'back')`);else if(t.by==='lui')h+=t.noRe?B('🔁 Finalement, relouer après son départ',`louAct(${id},'reloue')`):B('🏠 Ne pas relouer après son départ',`louAct(${id},'back')`)}
+  if(!t.jp)h+=B(z.m==='ag'?'🙋 Gérer moi-même (plus de frais d’agence)':'🏢 Confier à une agence (8 % du loyer)',`louAct(${id},'mgmt')`);
+  return h+'</div>'}
+// valeur de vente : un logement vendu avec un locataire se vend ± 8 % moins cher (l'acheteur reprend le bail)
+function pSellVal(o){const P=PRIV[o.k],occ=!!(o.lou&&o.lz&&o.lz.t&&!o.lz.sai),v=Math.round(pValue(o)*(occ?.92:1)),fee=P.c==='home'?Math.round(v*.03):0;return{v,fee,net:v-fee-(o.loan||0),occ}}
 // journal de la vie privée
 function pEv(t,a,toast){const V=pv();(V.ev||(V.ev=[])).unshift({d:st.day,t,a:+a||0});if(V.ev.length>40)V.ev.length=40;if(toast||curTab==='pv'&&toast!==false&&a===undefined)toastMsg(t,1)}
 function pValue(o){const P=PRIV[o.k],y=(st.day-o.day)/365;if(!P||P.c==='exp'||P.once||P.keep||P.sub)return 0;let v=P.c==='coll'?o.price*(o.vm||1):o.price*Math.pow(1-P.dep,y);if(o.rv)v*=1.75;if(P.c==='car'&&!o.used)v*=.85;return Math.round(v)}
-function buyFees(k,loan){const P=PRIV[k];if(P.c==='loc')return Math.round(P.p*.125)+Math.round(2500+P.p*.01);if(P.c==='home'){const first=P.home&&!ownsHome();return Math.round(P.p*(first?.03:.125))+Math.round(2500+P.p*.01)}return P.tmc||0}
+function buyFees(k,loan){const P=PRIV[k];if(P.c==='loc')return Math.round(P.p*.125)+Math.round(2500+P.p*.01);if(P.c==='home'){const first=P.home&&!pv().own.some(o=>PRIV[o.k]&&PRIV[o.k].c==='home');return Math.round(P.p*(first?.03:.125))+Math.round(2500+P.p*.01)}return P.tmc||0}
 function mortPay(capital){const r=MORT_RATE/12,n=MORT_Y*12;return capital*r/(1-Math.pow(1+r,-n))}
-function privMonthly(){let t=0;for(const o of pv().own){const P=PRIV[o.k];if(P&&P.m)t+=P.m;if(o.loan)t+=o.pay}return Math.round(t)}
+function privMonthly(){let t=0;for(const o of pv().own){const P=PRIV[o.k];if(P&&P.m)t+=pCharge(o)+louFee(o)+louTaxM(o);if(o.loan)t+=o.pay}return Math.round(t)}
 function pBuy(k,loan,ok){const P=PRIV[k],V=pv();if(P.needHome&&!ownsHome())return toastMsg('Il te faut d’abord une maison.');
   const fee=buyFees(k),need=loan?Math.round(P.p*.2)+fee:P.p+fee;
   if(V.cash<need)return toastMsg(`Il te faut ${eur(need)} sur ton compte privé (tu as ${eur(V.cash)}).${loan?'':' Pour une maison, tu peux aussi prendre un crédit hypothécaire.'}`);
   if(!ok)return ask(`${P.n}\nPrix : ${eur(P.p)}${fee?`\n${P.c==='home'?'Droits d’enregistrement + notaire':'Taxe de mise en circulation'} : ${eur(fee)}`:''}${loan?`\nApport (20 %) : ${eur(P.p*.2)}\nCrédit hypothécaire : ${eur(P.p*.8)}\nRemboursement : ${eur(mortPay(P.p*.8))}/mois\nDurée et taux : ${MORT_Y} ans à ${(MORT_RATE*100).toFixed(1).replace('.',',')} %`:''}${P.m?`\nCoûts chaque mois : ${eur(P.m)}`:''}\nSur ton compte privé : ${eur(V.cash)}\nAprès l’achat : ${eur(V.cash-need)}`,()=>pBuy(k,loan,1),{ic:P.ic,ok:P.c==='exp'?'Réserver':loan?'Acheter avec le crédit':'Acheter',img:photo(k)});
   if(k==='mariage'&&!V.cpl&&!V.wed)return toastMsg('Il faut d’abord rencontrer quelqu’un (ça arrive un jour par hasard).');ck('pv');V.cash-=need;if(P.c==='exp'){V.away=st.day+RI(7,14);V.hp=clamp(hp()+30,0,100);pEv(`✈️ En vacances jusqu’au ${dstr(V.away)}. Ton entreprise tourne sans toi ${has('cond')||has('gest')?'(tes chefs gèrent)':'(-10 % de travail : personne ne gère à ta place)'}.`,0,false)}if(k==='mariage')V.wed=st.day||1;if(P.c!=='exp'&&!P.once){const o={id:st.nid++,k,day:st.day,price:P.p,used:P.c==='occ'};if(loan){o.loan=Math.round(P.p*.8);o.pay=Math.round(mortPay(P.p*.8))}V.own.push(o)}
   pEv(`${P.ic} ${P.c==='exp'?'Profite bien : ':'Achat : '}${P.n}${loan?' (avec crédit hypothécaire)':''}.`);confetti(P.p>100000?180:80);snd(880,.1,'triangle',.06);save();render()}
-function pSell(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P0=PRIV[o.k];if(P0.sub){if(!ok)return ask(`Résilier ?\nAbonnement : ${P0.n}\nÉconomie : ${eur(P0.m)}/mois`,()=>pSell(id,1),{ic:P0.ic,ok:'Résilier'});V.own.splice(V.own.indexOf(o),1);pEv(`✂️ Résilié : ${P0.n}.`,0);save();render();return}if(P0.keep)return;const P=PRIV[o.k],v=pValue(o),fee=P.c==='home'?Math.round(v*.03):0,net=v-fee-(o.loan||0);
-  if(!ok)return ask(`Vendre ${P.n.replace(/ \(.*$/,'')} ?\nAcheté : ${eur(o.price)}\nValeur aujourd’hui : ${eur(v)}${fee?`\nFrais d’agence (± 3 %) : ${eur(fee)}`:''}${o.loan?`\nRemboursement du crédit restant : ${eur(o.loan)}`:''}\nTu reçois : ${eur(net)}`,()=>pSell(id,1),{ic:P.ic,ok:'Vendre',img:photo(o.k)});
+function pSell(id,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P0=PRIV[o.k];if(P0.sub){if(!ok)return ask(`Résilier ?\nAbonnement : ${P0.n}\nÉconomie : ${eur(P0.m)}/mois`,()=>pSell(id,1),{ic:P0.ic,ok:'Résilier'});V.own.splice(V.own.indexOf(o),1);pEv(`✂️ Résilié : ${P0.n}.`,0);save();render();return}if(P0.keep)return;louFix(o);const P=PRIV[o.k],SV=pSellVal(o),v=SV.v,fee=SV.fee,net=SV.net;
+  if(!ok)return ask(`Vendre ${P.n.replace(/ \(.*$/,'')} ?\nAcheté : ${eur(o.price)}\nValeur aujourd’hui : ${eur(v)}${SV.occ?'\nVendu avec le locataire : −8 % (bail repris)':''}${fee?`\nFrais d’agence (± 3 %) : ${eur(fee)}`:''}${o.loan?`\nRemboursement du crédit restant : ${eur(o.loan)}`:''}\nTu reçois : ${eur(net)}`,()=>pSell(id,1),{ic:P.ic,ok:'Vendre',img:photo(o.k)});
   V.own.splice(V.own.indexOf(o),1);V.cash+=net;pEv(`💰 Vendu : ${P.n} (${eur(net)}).`);save();render()}
 function pTransfer(a,kind){a=Math.round(a);if(kind==='div'&&hH()&&hH().own.rn){toastMsg('Ta holding possède la société : le dividende remonte dans la holding, sans impôt.');return hUp('rn',a)}if(a<=0||st.cash<a)return toastMsg('Pas assez d’argent sur le compte de la société.');if(a>canPay())return toastMsg(`Test de liquidité : ta société doit garder 3 mois de charges (${eur(reserve())}). Tu peux verser au maximum ${eur(canPay())}.`);const V=pv();let net=a,lbl='';
   if(!st.srl){lbl='Prélèvement privé (bénéfice déjà taxé)';}
@@ -2338,7 +2449,7 @@ function pTransfer(a,kind){a=Math.round(a);if(kind==='div'&&hH()&&hH().own.rn){t
   const ded=st.srl&&kind!=='div';mv(-a,lbl,ded?'sal':'priv');if(!ded)st.mCapex+=a;V.cash+=net;V.tr+=net;outLog(a,1);pEv(`🏦 ${eur(net)} versés sur ton compte privé (${lbl}).`,0);save();render()}
 // chaque 1er du mois : coûts de la vie privée et remboursements de crédit
 function lifeEvents(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),has_=c=>own.filter(o=>PRIV[o.k].c===c||o.k===c),mo=month(),E=[];
-  const cars=own.filter(o=>['car','occ'].includes(PRIV[o.k].c)),kids=has_('enfant').length,pets=has_('chien').length+has_('chat').length,h=myHome(),rented=own.filter(o=>o.lou&&o.louOk);
+  const cars=own.filter(o=>['car','occ'].includes(PRIV[o.k].c)),kids=has_('enfant').length,pets=has_('chien').length+has_('chat').length,h=myHome();
   if(mo===8&&kids)E.push([`🎒 Rentrée scolaire (${kids} enfant${kids>1?'s':''}) : fournitures, cartable, vêtements`,-330*kids,1]);
   if(mo===12)E.push([`🎄 Fêtes de fin d’année : cadeaux et repas de famille`,-(450+250*kids),1]);
   if(mo===7||mo===8)E.push([`☀️ Vacances d’été en famille`,-(1200+400*kids),.25]);
@@ -2348,12 +2459,11 @@ function lifeEvents(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),has_=c=>own.fi
   if(h)E.push([`💧 Fuite d’eau dans ${PRIV[h.k].n.replace(/ \(.*$/,'').toLowerCase()} : franchise de l’assurance incendie`,-285,.04]);
   if(!h)E.push([`🏢 Indexation de ton loyer`,-20,mo===3?1:0]);
   if(pets)E.push([`🐾 Vétérinaire : vaccins et consultation`,-Math.round(R(90,260)),.12]);
-  if(rented.length)E.push([`🛠️ Panne chez ton locataire (${PRIV[pick(rented).k].n.replace(/ \(.*$/,'')}) : réparation à ta charge`,-Math.round(R(250,900)),.1]);
   if(mo===6)E.push([`🧾 Remboursement d’impôt (avertissement-extrait de rôle)`,Math.round(R(150,700)),.4]);
   E.push([`🎂 Anniversaire : cadeau de la famille`,0,mo===((st.nid%12)+1)?1:0]);
   E.push([`🍽️ Restaurant entre amis`,-Math.round(R(80,180)),.25]);
   for(const [t,a,pr] of E)if(Math.random()<pr){V.cash+=a;pEv(t+(a?` : ${a>0?'+':''}${eur(a)}`:''),a)}}
-function privMonth(){lifeEvents();try{healthMonth();familyMonth();collMonth()}catch(e){}try{mkMonth()}catch(e){}const V=pv();let t=ownsHome()?850:1650;privInvest();for(const o of [...V.own]){const P=PRIV[o.k];if(!P)continue;t+=P.m||0;if(o.loan){const it=o.loan*MORT_RATE/12;t+=o.pay;o.loan=Math.max(0,Math.round(o.loan-(o.pay-it)));if(!o.loan){delete o.pay;pEv(`🏠 Crédit hypothécaire remboursé : ${P.n} est entièrement à toi !`)}}}
+function privMonth(){lifeEvents();try{healthMonth();familyMonth();collMonth()}catch(e){}try{mkMonth()}catch(e){}const V=pv();let t=ownsHome()?850:1650;privInvest();for(const o of [...V.own]){const P=PRIV[o.k];if(!P)continue;t+=pCharge(o);if(o.loan){const it=o.loan*MORT_RATE/12;t+=o.pay;o.loan=Math.max(0,Math.round(o.loan-(o.pay-it)));if(!o.loan){delete o.pay;pEv(`🏠 Crédit hypothécaire remboursé : ${P.n} est entièrement à toi !`)}}}
   if(V.cash<0)t+=Math.round(-V.cash*.09/12);V.cash-=t;if(t)pEv(`🏡 Vie privée (${ownsHome()?'courses, énergie, voiture':'loyer, courses, énergie, voiture'}${V.own.length?', tes biens':''}${V.own.some(o=>o.loan)?', crédit':''}) : -${eur(t)}`,0);
   if(V.cash<-10000&&V.own.length){const o=V.own.slice().sort((a,b)=>pValue(b)-pValue(a))[0];const P=PRIV[o.k],v=pValue(o);V.own.splice(V.own.indexOf(o),1);V.cash+=v-(o.loan||0);pEv(`⚖️ Huissier : ${P.n} est saisi(e) et vendu(e) pour payer tes dettes privées.`)}}
 // Placements privés (rendements moyens réels, avec des hauts et des bas) et loyers
@@ -2537,20 +2647,19 @@ function rBourse(){const V=pv(),M=mk(),H=V.stk||{},val=stkVal(),cost=Object.valu
 function privInvest(){const V=pv(),I=V.inv||(V.inv={sav:0,etf:0,gold:0,pens:0});let rent=0;
   for(const k in INV){const P=INV[k];if(!I[k])continue;const g=P.r/12+(P.v?(Math.random()*2-1)*P.v:0);const before=I[k];I[k]=Math.max(0,Math.round(I[k]*(1+g)));V.gain=(V.gain||0)+I[k]-before}
   for(const o of V.own){const P=PRIV[o.k];if(!P)continue;
-    if(o.lou&&o.louEnd&&st.day>=o.louEnd){delete o.lou;delete o.louEnd;delete o.louFrom;delete o.louOk;pEv(`🏠 Ton locataire est parti : tu peux de nouveau habiter ${P.n}.`);continue}
-    if(o.lou&&st.day<(o.louFrom||0))continue;
-    if(o.lou&&o.louFrom&&!o.louOk){o.louOk=1;pEv(`🤝 ${P.n} : un locataire a signé le bail (${eur(rentOf(o))}/mois).`)}
+    if(P.hr&&!P.rent){louAcc=louAcc||{n:0,a:0};try{louMonth(o)}catch(e){}continue}
     const r=rentOf(o);if(!r)continue;
     if(month()===1&&(o.iy||0)<date(st.day).getFullYear()){o.iy=date(st.day).getFullYear();if(st.day-o.day>300){o.ix=(o.ix||1)*1.02;pEv(`📈 Indexation du loyer de ${P.n} : ${eur(Math.round(r*1.02))}/mois.`)}}
-    if(Math.random()<(P.hrn&&!P.rent?.12:.05)){pEv(`🏚️ ${P.n} : pas de locataire ce mois-ci.`);continue}rent+=r}
-  if(rent){V.cash+=rent;V.rentT=(V.rentT||0)+rent;pEv(`🔑 Loyers reçus : +${eur(rent)}`,0)}
+    if(Math.random()<.05){pEv(`🏚️ ${P.n} : pas de locataire ce mois-ci.`);continue}rent+=r}
+  if(louAcc&&louAcc.n)pEv(`🔑 Loyers et réservations de tes biens (${louAcc.n} bien${louAcc.n>1?'s':''}, frais d’agence déduits) : +${eur(louAcc.a)}`,louAcc.a,false);louAcc=null;try{louTaxTick()}catch(e){}
+  if(rent){V.cash+=rent;V.rentT=(V.rentT||0)+rent;pEv(`🔑 Loyers de tes immeubles : +${eur(rent)}`,0)}
   if(month()===1&&V.pensY){const back=Math.round(V.pensY*.3);V.cash+=back;pEv(`👴 Réduction d'impôt épargne-pension : +${eur(back)}`);V.pensY=0}}
 function invMove(k,a){const V=pv(),I=V.inv||(V.inv={sav:0,etf:0,gold:0,pens:0});clk();if(!(I[k]>=0))I[k]=0;
   if(a>0){if(k==='pens'){const y=V.pensY||0;a=Math.min(a,1050-y);if(a<=0)return toastMsg('Maximum 1 050 € par an pour l’épargne-pension.');V.pensY=y+a}
     if(V.cash<a)return toastMsg('Pas assez sur ton compte privé.');V.cash-=a;I[k]+=Math.round(a*(k==='etf'?.9988:k==='gold'?.97:1))}
   else{if(k==='pens')return toastMsg('L’épargne-pension est bloquée jusqu’à ta pension.');const v=Math.min(I[k],-a||I[k]);I[k]-=v;V.cash+=Math.round(v*(k==='etf'?.9988:k==='gold'?.97:1))}
   save();render()}
-const passive=()=>pv().own.reduce((a,o)=>{const P=PRIV[o.k],r=rentOf(o);return a+(r?r-(P.m||0):0)},0);
+const passive=()=>pv().own.reduce((a,o)=>{const r=rentOf(o);return a+(r?r-louFee(o)-louTaxM(o)-pCharge(o):0)},0);
 const loanMax=()=>st.adm.bce?Math.round((20000+caRecent()*.3)*(has('compta')?1.5:1)*(has('daf')?2:1)/5000)*5000:0;
 function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?"La banque refuse : montant maximum atteint. Fais plus de chiffre d'affaires.":"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;mv(5000,'Prêt bancaire','loan');st.mLoan+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;mv(-5000,'Remboursement du prêt','loan');st.mLoan-=5000}save();render()}
 function rename(){showModal(`<h3>Nom de ta société</h3><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">Enregistrer</button>`)}
@@ -2787,10 +2896,10 @@ const pvWorth=()=>{const V=pv();return V.own.filter(o=>PRIV[o.k]).reduce((a,o)=>
 // budget du mois : mêmes postes que privMonth() + salaire et loyers
 function pvBudget(){const V=pv(),inc=[],out=[],G={};
   if(st.adm.bce&&patSal())inc.push(['💶 Ton salaire de patron (net)',patSal()]);
-  const rent=V.own.reduce((a,o)=>a+((!o.lou||o.louOk)?rentOf(o):0),0);if(rent)inc.push(['🔑 Loyers de tes biens',rent]);if(V.vsoc&&st.srl){const cc=V.own.reduce((a,o)=>a+(PRIV[o.k]&&['car','occ'].includes(PRIV[o.k].c)?PRIV[o.k].m||0:0),0);if(cc>0)inc.push(['🚗 Voiture de société (frais payés par ta SRL, ATN déduit)',Math.round(cc*.8)])}
+  const rent=V.own.reduce((a,o)=>a+rentOf(o),0);if(rent)inc.push(['🔑 Loyers de tes biens',rent]);if(V.vsoc&&st.srl){const cc=V.own.reduce((a,o)=>a+(PRIV[o.k]&&['car','occ'].includes(PRIV[o.k].c)?PRIV[o.k].m||0:0),0);if(cc>0)inc.push(['🚗 Voiture de société (frais payés par ta SRL, ATN déduit)',Math.round(cc*.8)])}
   out.push([ownsHome()?'🛒 Vie courante (courses, énergie, GSM…)':'🛒 Vie courante + loyer de ton logement',ownsHome()?850:1650]);
   const GN={reno:'🔨 Ma maison (entretien, énergie)',home:'🏠 Logements (précompte, assurance, énergie)',loc:'🏬 Biens loués (précompte, assurance, gestion)',car:'🚗 Voitures (assurance, taxe, carburant)',occ:'🚗 Voitures (assurance, taxe, carburant)',moto:'🏍️ Motos et loisirs',boat:'⛵ Bateaux (port, entretien)',lux:'💎 Luxe (pension, entretien)',fam:'👨‍👩‍👧 Famille et abonnements'};
-  let sav=0;for(const o of V.own){const P=PRIV[o.k];if(!P)continue;if(P.m<0){sav-=P.m}else if(P.m){const g=GN[o.lou&&P.c==='home'?'loc':P.c]||'Autres';G[g]=(G[g]||0)+P.m}if(o.loan)G['🏦 Crédits hypothécaires']=(G['🏦 Crédits hypothécaires']||0)+o.pay}
+  let sav=0;for(const o of V.own){const P=PRIV[o.k];if(!P)continue;if(P.m<0){sav-=P.m}else if(P.m){const g=GN[o.lou&&P.c==='home'?'loc':P.c]||'Autres';G[g]=(G[g]||0)+pCharge(o)}const lf=louFee(o),lt=louTaxM(o);if(lf)G['🏢 Agence / plateforme de location']=(G['🏢 Agence / plateforme de location']||0)+lf;if(lt)G['🧾 Impôt sur les loyers (1 fois par an)']=(G['🧾 Impôt sur les loyers (1 fois par an)']||0)+lt;if(o.loan)G['🏦 Crédits hypothécaires']=(G['🏦 Crédits hypothécaires']||0)+o.pay}
   if(sav)inc.push(['☀️ Économies sur les factures (solaire, isolation…)',sav]);for(const g in G)out.push([g,G[g]]);if(V.cash<0)out.push(['🔴 Intérêts du découvert privé (9 %)',Math.round(-V.cash*.09/12)]);
   const ti=inc.reduce((a,x)=>a+x[1],0),to=out.reduce((a,x)=>a+x[1],0);return{inc,out,ti,to}}
 const PGRP=[['🏠 Immobilier',['home','loc']],['🔨 Ma maison',['reno']],['🖼️ Collections',['coll']],['🚗 Véhicules',['car','occ','moto']],['⛵ Bateaux',['boat']],['💎 Luxe',['lux']],['🌌 Démesure',['ult']],['👨‍👩‍👧 Famille et abonnements',['fam']]];
@@ -2802,25 +2911,26 @@ function pvHome(net,worth){const V=pv(),hap=pvHappy(net),own=V.own.filter(o=>PRI
   if(net<0&&!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--or)"><b>⏳ Pas encore de salaire</b><div class="mut sm" style="margin-top:4px">Ta société n’est pas encore inscrite à la BCE : elle ne peut pas encore te payer. Ta vie (${eur(-net)}/mois) est payée par ton compte privé en attendant. Inscris-la vite pour commencer à facturer.</div><button class="btn w" style="margin-top:8px" onclick="privClose();tab('ch')">🏢 Aller à mon entreprise</button></div>`;
   else if(net<0){const need=Math.min(100000,Math.ceil((patSal()-net)/100)*100),canRent=own.filter(o=>PRIV[o.k].hr&&!o.lou&&!(PRIV[o.k].home&&myHome()===o));
     h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Tu dépenses ${eur(-net)} de plus que tu gagnes chaque mois</b><div class="mut sm" style="margin-top:4px">Ton compte privé va fondre. Le plus simple :</div><button class="btn w" style="margin-top:8px" onclick="setSal(${need})">💶 Mettre mon salaire à ${eur(need)} net</button>${canRent.length?`<button class="btn s w" style="margin-top:6px" onclick="pvGo('biens')">🔑 Mettre un bien en location (${canRent.length} possible${canRent.length>1?'s':''})</button>`:''}${st.srl?`<div class="mut sm" style="margin-top:6px">Ta SRL paiera ± ${eur(Math.round(need/.55))} brut par mois pour ce salaire.</div>`:''}</div>`}
+  for(const o of own.filter(o=>o.lou&&o.lz&&o.lz.t&&o.lz.t.un&&!o.lz.t.jp&&o.lz.m!=='ag'))h+=`<div class="card acc" style="--ac:var(--or)"><b>⚠️ Loyer impayé : ${pShort(PRIV[o.k].n)}</b><div class="mut sm" style="margin-top:4px">${esc(o.lz.t.n)} te doit ${eur(o.lz.t.ua)} (${o.lz.t.un} mois). Tu gères toi-même ce bien : à toi de réagir.</div><button class="btn w" style="margin-top:8px" onclick="pBien(${o.id})">Voir le bien</button></div>`;
   const W=V.wh||[];if(W.length>=2)h+=`<div class="card"><div class="row"><span class="mut sm" style="flex:1">Ton patrimoine, mois après mois</span><b class="${W[W.length-1]>=W[0]?'money':'neg'} sm">${W[W.length-1]>=W[0]?'+':''}${eur(W[W.length-1]-W[0])}</b></div>${spark(W,300,60)}</div>`;
   return h+fortuneCard()}
 function pThumb(k,ic){const c=IMC[k];if(!c&&IMG[k]&&!IMH[k])try{loadImg(k)}catch(e){}if(c&&c.src&&!c.none)return`<img src="${c.src}" alt="" referrerpolicy="no-referrer" onclick="event.stopPropagation();pPhoto('${k}')" onerror="this.style.display='none'" style="width:58px;height:58px;border-radius:12px;object-fit:cover;flex:none;margin-right:10px;cursor:zoom-in">`;return`<div class="ic">${ic}</div>`}
 function pPhoto(k){clk();showModal(photo(k)+`<button class="btn s w" style="margin-top:10px" onclick="closeM()">Fermer</button>`)}
 const pShort=n=>n.replace(/ \(.*$/,'');
-function pBiens(own){const val=own.reduce((a,o)=>a+pValue(o),0),rents=own.reduce((a,o)=>{const r=rentOf(o);return a+(r&&(!o.lou||o.louOk)?r:0)},0);
+function pBiens(own){const val=own.reduce((a,o)=>a+pValue(o),0),rents=own.reduce((a,o)=>a+rentOf(o),0);
   let h=`<div class="pvtiles"><div><span>💎 Valeur</span><b>${eur(val)}</b></div><div><span>💸 Coûtent / mois</span><b class="neg">−${eur(privMonthly())}</b></div><div><span>🔑 Loyers / mois</span><b class="money">+${eur(rents)}</b></div></div><p class="mut sm" style="margin:2px 4px 8px">👆 Touche un bien pour le vendre, le louer ou voir le détail.</p>`;
   for(const [g,cs] of PGRP){const L=own.filter(o=>cs.includes(PRIV[o.k].c));if(!L.length)continue;h+=`<h2>${g} · ${L.length}</h2><div class="card" style="padding:4px 12px">`;
-    for(const o of L){const P=PRIV[o.k],v=pValue(o),gn=v-o.price,r=rentOf(o);const stt=P.rent?'🔑 loué':o.lou?(o.louEnd?'📨 préavis en cours':st.day<(o.louFrom||0)?'🔎 cherche un locataire':'🔑 loué'):P.home&&myHome()===o?'🏡 tu y habites':'';
-      h+=`<div class="row" style="padding:9px 0;border-top:1px solid var(--line);cursor:pointer;flex-wrap:nowrap" onclick="pBien(${o.id})"><span style="font-size:24px">${P.ic}</span><div style="flex:1;min-width:0"><b class="sm">${pShort(P.n)}</b><div class="mut" style="font-size:12px">${stt?stt+' · ':''}${P.m>0?'−'+eur(P.m)+'/mois':P.m<0?'+'+eur(-P.m)+'/mois':''}${r&&(P.rent||o.lou&&o.louOk)?' · +'+eur(r)+' loyer':''}${o.loan?' · crédit '+eur(o.loan):''}</div></div><div style="text-align:right;white-space:nowrap">${P.keep||P.sub?'<span class="mut sm">›</span>':`<b class="sm">${eur(v)}</b><div style="font-size:12px" class="${gn>=0?'money':'neg'}">${gn>=0?'+':''}${eur(gn)}</div>`}</div></div>`}
+    for(const o of L){const P=PRIV[o.k],v=pValue(o),gn=v-o.price,r=rentOf(o);const stt=louStat(o),ch=pCharge(o);
+      h+=`<div class="row" style="padding:9px 0;border-top:1px solid var(--line);cursor:pointer;flex-wrap:nowrap" onclick="pBien(${o.id})"><span style="font-size:24px">${P.ic}</span><div style="flex:1;min-width:0"><b class="sm">${pShort(P.n)}</b><div class="mut" style="font-size:12px">${stt?stt+' · ':''}${ch>0?'−'+eur(ch)+'/mois':ch<0?'+'+eur(-ch)+'/mois':''}${r?' · +'+eur(r)+' loyer':''}${o.loan?' · crédit '+eur(o.loan):''}</div></div><div style="text-align:right;white-space:nowrap">${P.keep||P.sub?'<span class="mut sm">›</span>':`<b class="sm">${eur(v)}</b><div style="font-size:12px" class="${gn>=0?'money':'neg'}">${gn>=0?'+':''}${eur(gn)}</div>`}</div></div>`}
     h+='</div>'}
   return h}
-function pBien(id){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=PRIV[o.k],v=pValue(o),fee=P.c==='home'?Math.round(v*.03):0,net=v-fee-(o.loan||0),gn=v-o.price,r=rentOf(o);clk();
+function pBien(id){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;louFix(o);const P=PRIV[o.k],SV=pSellVal(o),v=pValue(o),fee=SV.fee,net=SV.net,gn=v-o.price,r=rentOf(o),ch=pCharge(o);clk();
   const rows=[];if(!P.keep&&!P.sub){rows.push(['Acheté',eur(o.price)+' · '+dstr(o.day)+' '+date(o.day).getFullYear()],['Vaut aujourd’hui',`<b class="${gn>=0?'money':'neg'}">${eur(v)} (${gn>=0?'+':''}${eur(gn)})</b>`])}else rows.push(['Depuis le',dstr(o.day)+' '+date(o.day).getFullYear()]);
-  if(P.m)rows.push([P.m>0?'Te coûte':'Te fait économiser',eur(Math.abs(P.m))+'/mois']);if(r)rows.push(P.rent?['Loyer reçu',eur(r)+'/mois · ✅ loué']:['Loyer',eur(r)+'/mois'+(o.lou?(o.louOk&&!o.louEnd?' · ✅ loué':' · locataire cherché'):' si tu le loues')]);if(o.loan)rows.push(['Crédit restant',eur(o.loan)+' · '+eur(o.pay)+'/mois']);
+  if(ch)rows.push([ch>0?(o.lou&&P.hr&&ch<P.m?'Te coûte (propriétaire bailleur)':'Te coûte'):'Te fait économiser',eur(Math.abs(ch))+'/mois']);if(P.rent&&r)rows.push(['Loyer reçu',eur(r)+'/mois · ✅ loué']);if(o.loan)rows.push(['Crédit restant',eur(o.loan)+' · '+eur(o.pay)+'/mois']);
   let b='';
   if(P.sub)b+=`<button class="btn r w" style="padding:13px" onclick="pSell(${id})">✂️ Résilier · tu économises ${eur(P.m)}/mois</button>`;
-  else if(!P.keep)b+=`<button class="btn w" style="padding:13px" onclick="pSell(${id})">💰 Vendre · tu reçois ${eur(net)}</button><div class="mut sm" style="margin:4px 2px 0">${gn>=0?`Tu gagnes ${eur(gn)} par rapport au prix d’achat.`:`Tu perds ${eur(-gn)} par rapport au prix d’achat.`}${fee?` Frais d’agence ± 3 % : ${eur(fee)}.`:''}${o.loan?` Le crédit restant (${eur(o.loan)}) est remboursé à la vente.`:''}</div>`;
-  if(P.hr)b+=`<button class="btn s w" style="padding:12px;margin-top:8px" onclick="pRent(${id});pBien(${id})">${!o.lou?`🔑 Mettre en location · +${eur(r||P.hr)}/mois`:o.louEnd?'⏳ Préavis en cours (départ le '+dstr(o.louEnd)+')':st.day<(o.louFrom||0)?'✕ Annuler la mise en location':'🏠 Récupérer le bien (préavis 6 mois)'}</button>`;
+  else if(!P.keep)b+=`<button class="btn w" style="padding:13px" onclick="pSell(${id})">💰 Vendre · tu reçois ${eur(net)}</button><div class="mut sm" style="margin:4px 2px 0">${gn>=0?`Tu gagnes ${eur(gn)} par rapport au prix d’achat.`:`Tu perds ${eur(-gn)} par rapport au prix d’achat.`}${fee?` Frais d’agence ± 3 % : ${eur(fee)}.`:''}${o.loan?` Le crédit restant (${eur(o.loan)}) est remboursé à la vente.`:''}${SV.occ?` Vendu avec le locataire (l’acheteur reprend le bail) : prix −8 %.`:''}</div>`;
+  if(P.hr&&!P.rent)b+=louCard(o);
   if(P.rent)b+=`<div class="card" style="margin-top:8px;background:var(--card2)"><div class="sm">🔑 <b>Déjà en location</b> : une agence immobilière gère ce bien pour toi et trouve les locataires. Le loyer (${eur(r)}/mois) arrive le 1er du mois sur ton compte privé (± 1 mois sur 20 sans locataire, et parfois une réparation à payer).</div></div>`;
   if(P.flip&&!o.rv)b+=o.rw?`<div class="tags" style="margin-top:8px"><span class="tag o">🔨 Travaux en cours jusqu’au ${dstr(o.rw)}</span></div>`:`<button class="btn g w" style="padding:12px;margin-top:8px" onclick="flipGo(${id})">🔨 Rénover (60 000 €) · vaudra ± ${eur(v*1.75)}</button>`;
   if(P.keep)b+=`<div class="mut sm">Ça fait partie de ta vie : ça ne se vend pas.</div>`;
@@ -2958,7 +3068,7 @@ function pvMonth5(){for(const f of[ccMonth,repMonth,flipMonth,sickMonth])try{f()
 function rPv(){const V=pv(),own=V.own.filter(o=>PRIV[o.k]),worth=pvWorth(),B=pvBudget(),net=B.ti-B.to;
   const lv=LVL.filter(l=>worth>=l[0]).pop(),li=LVL.indexOf(lv),nx=LVL[li+1],pr=nx?Math.max(0,Math.min(1,(worth-Math.max(0,lv[0]))/(nx[0]-Math.max(0,lv[0])))):1;
   const h0=myHome(),ic=c=>own.filter(o=>c.includes(PRIV[o.k].c)).map(o=>PRIV[o.k].ic),kids=own.filter(o=>o.k==='enfant').length,pets=own.filter(o=>o.k==='chien'||o.k==='chat').map(o=>PRIV[o.k].ic);
-  const lou=own.filter(o=>rentOf(o)&&(!o.lou||o.louOk));
+  const lou=own.filter(o=>rentOf(o));
   let h='';
   if(pvSec==='hold')return rHold();
   if(pvSec==='bourse')return rBourse();
@@ -4917,7 +5027,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-13.6";
+var APPV="2026-11-13.7";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
