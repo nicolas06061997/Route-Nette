@@ -18,5 +18,8 @@ Jouer : https://nicolas06061997.github.io/Route-Nette/ (installable sur le tél�
 ## 2e entreprise : société de nettoyage
 Page « Mes entreprises » : Route Nette est gratuite ; la société de nettoyage se débloque pour 25 millions € (compte privé). Titres-services, bureaux, commerces, écoles, hôpitaux (marchés publics), vitres et chantiers ponctuels, personnel avec absences et départs, matériel, banque et impôts. Même calendrier et même vie privée.
 
+## 3e entreprise : chaîne de magasins
+Débloquée pour 75 M€ (compte privé ou holding). On ouvre une supérette dans une ville wallonne et on gère tout : ± 95 produits en 10 rayons (TVA 6 / 21 %), 8 fournisseurs (prix, minimum, frais de livraison, jours et délai, fiabilité, paiement), commandes avec calendrier de livraison et quantités conseillées, contrôle à la réception (manquants, casse, température), réserve et rayons, dates de péremption, prix par rayon et promotions, personnel (caissières, réassort, étudiants, gérante), TVA, ISOC, prêt et dividendes vers la holding.
+
 ## Sauvegarde
 Automatique dans le téléphone (`routenette-save`). Code de sauvegarde à exporter / importer dans Entreprise → Plus.

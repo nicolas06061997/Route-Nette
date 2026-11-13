@@ -186,7 +186,7 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
   <div id="logo" onclick="if(st&&curTab==='cl'&&st.cl){click();clCareerUI()}else if(st&&st.adm.bce){click();careerUI()}" style="cursor:pointer"><span id="lt">RN</span><span id="lvl">1</span></div>
   <div id="tinfo"><div id="tname"></div><div id="tsub"></div></div>
   <div id="hubb" onclick="if(st){click();hubSec='main';tab('hub')}" title="Mes entreprises">🏢</div>
-  <div id="bell" onclick="if(st)(curTab==='cl'&&st.cl?clNotifUI():notifUI())">🔔<b id="bellN"></b></div>
+  <div id="bell" onclick="if(st)(curTab==='cl'&&st.cl?clNotifUI():curTab==='sh'&&st.shop?shNotifUI():notifUI())">🔔<b id="bellN"></b></div>
   <div id="cash"></div>
 </header>
 <div id="scene">
@@ -1331,7 +1331,7 @@ function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);let late=Math.max(0,delay-30);if(late&&has('recouv')){const d2=Math.round(late*.3);rsAdd('recd',late-d2);delay=30+d2;late=d2}st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl,late})}
 let TICKING=0,WBI=null;
 const wById=id=>(WBI||(WBI=new Map(st.workers.map(w=>[w.id,w])))).get(id);
-function tick(){TICKING=1;WBI=null;GESTC=null;SPWC.clear();try{tick0();if(st.cl)try{clTick()}catch(e){console.error(e)}try{hPoolDay()}catch(e){}}finally{TICKING=0;WBI=null}save();renderTick()}
+function tick(){TICKING=1;WBI=null;GESTC=null;SPWC.clear();try{tick0();if(st.cl)try{clTick()}catch(e){console.error(e)}if(st.shop)try{shTick()}catch(e){console.error(e)}try{hPoolDay()}catch(e){}}finally{TICKING=0;WBI=null}save();renderTick()}
 function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
@@ -2004,7 +2004,7 @@ function megaMonth(){const M=st.mega;if(!M)return;let tot=0;
 function megaGift(k,ok){const G=GIFTS.find(x=>x.k===k),V=pv(),M=mg();if(!G||(M.gk||[]).includes(k))return;if(V.cash<G.c)return toastMsg(`Il faut ${eur(G.c)} sur ton compte privé.`);
   if(!ok)return ask(`${G.n}\nDon : ${eur(G.c)} (de ton compte privé)\nRéputation personnelle +${G.r} et image de ton entreprise\nRéduction d’impôt plafonnée : surtout pour l’histoire.`,()=>megaGift(k,1),{ic:G.ic,ok:'Faire ce don'});
   V.cash-=G.c;M.gift=(M.gift||0)+G.c;(M.gk||(M.gk=[])).push(k);V.rp=clamp((V.rp??20)+G.r,0,100);st.rep=clamp(st.rep+Math.round(G.r/5),0,100);st.fond=(st.fond||0)+G.c;pEv(`${G.ic} Don historique : ${G.n} (${eur(G.c)}).`,0,true);log(`${G.ic} Ton don de ${eur(G.c)} fait la une des journaux.`);confetti(200);goals();save();render()}
-function richRank(){let me=0;try{const V=pv();me=Math.round(pvWorth()+Math.max(0,grpValue())+(st.cl?clVal():0))}catch(e){}const L=[...RICH.map(r=>({n:r[0],v:r[1]})),{n:'Toi',v:me,me:1}].sort((a,b)=>b.v-a.v);return{L,pos:L.findIndex(x=>x.me)+1,me}}
+function richRank(){let me=0;try{const V=pv();me=Math.round(pvWorth()+Math.max(0,grpValue())+(st.cl?clVal():0)+(st.shop?shVal():0))}catch(e){}const L=[...RICH.map(r=>({n:r[0],v:r[1]})),{n:'Toi',v:me,me:1}].sort((a,b)=>b.v-a.v);return{L,pos:L.findIndex(x=>x.me)+1,me}}
 let megaSec='ov';
 const mDef=(t,k)=>t==='c'?CONC[k]:t==='g'?GIANT[k]:INDUS[k];
 const mInc=(t,D)=>t==='i'?D.inc:D.p*D.y/12;
@@ -2565,6 +2565,7 @@ let lastTab=null;
 // pendant le jeu rapide, la liste (surtout l'Équipe avec ses portraits) n'est redessinée que toutes les 0,8 à 1,5 s : plus fluide sur téléphone
 let lastPaneT=0;function renderTick(){if(curTab==='pv'&&pvSec==='casino')return render(true);const now=performance.now(),gap=speed>=3?1500:speed===2?800:0;render(gap&&now-lastPaneT<gap&&!modalOpen)}
 function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();
+  if(curTab==='sh'&&st.shop){$('#hub').classList.remove('on');$('#priv').classList.remove('on');document.body.classList.remove('pvmode');return shRender(headOnly)}
   if(curTab==='cl'&&st.cl){$('#hub').classList.remove('on');$('#priv').classList.remove('on');document.body.classList.remove('pvmode');return clRender(headOnly)}
   cashFx();$('#cash').classList.toggle('neg',st.cash<0);try{const nN=notifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0)}catch(e){}
   $('#tname').textContent=st.name;$('#lt').textContent=st.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'RN';{const n=Object.keys(st.goals).length;$('#lvl').textContent=n+1;$('#logo').style.setProperty('--lv',Math.round(n/GOALS.length*100)+'%')}
@@ -2577,7 +2578,7 @@ function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();
   cleanReports();const nR=st.reports.filter(r=>!r.done).length;if(nR)$('[data-t=eq]').insertAdjacentHTML('beforeend',`<span class="bd">${nR}</span>`);
   if(nWait)$('[data-t=ch]').insertAdjacentHTML('beforeend',`<span class="bd">${nWait}</span>`);
   if(nJob&&!st.contracts.length)$('[data-t=pb]').insertAdjacentHTML('beforeend',`<span class="bd">${nJob}</span>`);
-  const hubOn=curTab==='hub'||(curTab==='cl'&&!st.cl);$('#hub').classList.toggle('on',hubOn);
+  const hubOn=curTab==='hub'||(curTab==='cl'&&!st.cl)||(curTab==='sh'&&!st.shop);$('#hub').classList.toggle('on',hubOn);
   if(hubOn){$('#priv').classList.remove('on');document.body.classList.remove('pvmode');if(headOnly===true)return;lastPaneT=performance.now();const P=$('#hubpane'),y=P.scrollTop;P.innerHTML=rHub();P.scrollTop=y;return}
   const tb0=$('#tabs');if(tb0.style.display==='none'){tb0.style.display='';$('#cltabs').style.display='none';shownCash=null;cashFx()}
   const pvOn=curTab==='pv';$('#priv').classList.toggle('on',pvOn);document.body.classList.toggle('pvmode',pvOn);
@@ -2808,7 +2809,7 @@ const HINV={imm:{n:'Immeuble de rapport (8 appartements à Namur)',ic:'🏢',p:1
   etf:{n:'Portefeuille d’actions (gestion discrétionnaire)',ic:'📈',p:250000,r:.07,v:.045,d:'± 7 %/an en moyenne, avec des hauts et des bas. Plus-values sur actions exonérées pour une holding (sous conditions).'},
   pme:{n:'30 % d’une PME familiale (participation)',ic:'🤝',p:750000,y:.07,d:'Dividendes ± 7 %/an, exonérés (RDT). Petit risque de faillite de la PME.'},
   sta:{n:'Ticket « business angel » dans une start-up belge',ic:'🚀',p:50000,d:'Très risqué : 6 fois sur 10 tout est perdu, mais une start-up sur dix rapporte 10 à 30 fois la mise. Résultat dans 3 à 7 ans.'}};
-const phVal=()=>{const H=ph();return H?Math.round(H.cash+H.inv.reduce((a,x)=>a+x.v,0)+(H.part||[]).reduce((a,x)=>a+x.v,0)+(H.loan?(H.loan.rn||0)+(H.loan.cl||0):0)):0};
+const phVal=()=>{const H=ph();return H?Math.round(H.cash+H.inv.reduce((a,x)=>a+x.v,0)+(H.part||[]).reduce((a,x)=>a+x.v,0)+(H.loan?(H.loan.rn||0)+(H.loan.cl||0)+(H.loan.sh||0):0)):0};
 function phGo(ok){const V=pv();if(V.ph)return;return hCreateUI();if(V.cash<20000)return toastMsg('Il faut 20 000 € sur ton compte privé (notaire, comptable, capital).');
   if(!ok)return ask(`Créer ta holding personnelle ?\nCoût : 20 000 € (notaire, comptable, capital)\nTes parts de ta SRL sont apportées dans la holding.\nLes dividendes de ta SRL y remontent sans impôt (RDT) : tu les réinvestis avant de les sortir.`,()=>phGo(1),{ic:'🏦',ok:'Créer ma holding'});
   V.cash-=20000;V.ph={d:st.day,cash:0,inv:[],mg:0,tot:0};pEv('🏦 Ta holding personnelle est créée !');goals();save();render()}
@@ -2897,7 +2898,7 @@ function sellCo(ok){const V=pv(),val=Math.round(grpValue()*.9),H=V.ph&&hH().own.
   if(!ok)return ask(`Vendre ton entreprise ?\nPrix proposé par un grand groupe : ${eur(val)} (90 % de la valeur du groupe)\n${H?'Vendue par ta holding : plus-value exonérée, l’argent va dans ta holding':'Taxe belge sur les plus-values (10 % au-delà d’1 million €) : '+eur(tax)}\nTu reçois : ${eur(net)}\n⚠️ Tu repars ensuite de zéro avec une nouvelle petite entreprise (tu gardes ta vie privée, tes succès et ta carrière).`,()=>sellCo(1),{ic:'🏁',ok:'Vendre mon entreprise',danger:1});
   if(H){H.cash+=net+(H.loan.rn||0);H.loan.rn=0;H.own.rn=0;hLog(`🏁 ${st.name} vendue ${eur(val)} : l’argent est dans la holding (plus-value exonérée).`)}else V.cash+=net;V.cash+=V.cc||0;V.cc=0;V.sold=(V.sold||0)+1;pEv(`🏁 Tu as vendu ton entreprise pour ${eur(val)} !`,0,true);log(`🏁 Entreprise vendue pour ${eur(val)}. Une nouvelle aventure commence.`);
   try{relaunch()}catch(e){}goals();save();render()}
-function fortuneCard(){const V=pv(),pr=pvWorth()-(V.ph?phVal():0),hd=V.ph?phVal():0,co=Math.max(0,Math.round(grpValue()))+(st.cl?clVal():0);const tot=pr+hd+co;
+function fortuneCard(){const V=pv(),pr=pvWorth()-(V.ph?phVal():0),hd=V.ph?phVal():0,co=Math.max(0,Math.round(grpValue()))+(st.cl?clVal():0)+(st.shop?shVal():0);const tot=pr+hd+co;
   return`<div class="card"><div class="mut sm">💎 Ta fortune totale</div><b style="font-size:22px">${eur(tot)}</b><div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin:8px 0;background:var(--card2)">${[[pr,'#4fdc7a'],[hd,'#b48cff'],[co,'#ff9a1f']].map(([v,c])=>`<div style="width:${tot>0?Math.max(0,v)/tot*100:0}%;background:${c}"></div>`).join('')}</div><div class="sm"><span style="color:#4fdc7a">■</span> Privé ${eur(pr)} · <span style="color:#b48cff">■</span> Holding ${eur(hd)} · <span style="color:#ff9a1f">■</span> ${st.cl?'Tes sociétés':'Ta société'} ${eur(co)}</div></div>`}
 function ccCard(){const V=pv(),c=V.cc||0;if(!st.srl)return'';return`<div class="card"><b>🔁 Compte courant avec ta société</b><div class="mut sm">${c>0?`Ta société te doit <b>${eur(c)}</b> (tu reçois 5 %/an d’intérêts, précompte 30 %).`:c<0?`Tu dois <b class="neg">${eur(-c)}</b> à ta société (6 %/an d’intérêts à payer).`:'Tu peux prêter de l’argent à ta société quand elle en manque, ou emprunter à ta société (à rembourser).'}</div>
   <div class="row" style="margin-top:8px">${[10000,50000,250000].map(a=>`<button class="btn s" style="padding:6px 9px;font-size:12px" ${V.cash<a?'disabled':''} onclick="ccMove(${a})">Prêter ${eur(a)}</button>`).join('')}</div>
@@ -3293,7 +3294,7 @@ cv.addEventListener('pointerdown',e=>{const c=selC();if(!c)return;const b=cv.get
 
 /* ---------- Boucle ---------- */
 const SPD=[0,4500,1800,600];let acc=0,prevT=performance.now();
-function loop(now){const dt=Math.min(250,now-prevT);prevT=now;if(playing&&!modalOpen&&speed&&!st.over){acc+=dt;if(acc>=SPD[speed]){acc=0;tick()}}if(curTab==='cl'&&st&&st.cl){try{clDraw(now/1000)}catch(e){}}else draw(now/1000);requestAnimationFrame(loop)}
+function loop(now){const dt=Math.min(250,now-prevT);prevT=now;if(playing&&!modalOpen&&speed&&!st.over){acc+=dt;if(acc>=SPD[speed]){acc=0;tick()}}if(curTab==='cl'&&st&&st.cl){try{clDraw(now/1000)}catch(e){}}else if(curTab==='sh'&&st&&st.shop){try{shDraw(now/1000)}catch(e){}}else draw(now/1000);requestAnimationFrame(loop)}
 render();
 function fullScreen(){try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).then(()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(e){}setTimeout(rs,300)}).catch(()=>{});else if(d.webkitRequestFullscreen)d.webkitRequestFullscreen()}catch(e){}}
 addEventListener('scroll',()=>{if(scrollY)scrollTo(0,0)});
@@ -3726,6 +3727,9 @@ function clSoc(){const C=st.cl,L=C.lastPl;let h=`<div class="card" style="cursor
   h+=clAnCard()+clSiteCard()+clRankCard();
   const n=Object.keys(C.goals).length;h+=`<h2>🏆 Succès · ${n} / ${CLG.length}</h2><div class="card">${clBar(n/CLG.length*100,'linear-gradient(90deg,var(--or),var(--ye))')}${CLG.map(([k,t])=>`<div class="sm" style="padding:4px 0">${C.goals[k]?'✅':'⬜'} ${t}</div>`).join('')}</div>`;
   return h}
+function hubShopCard(){const V=pv(),H=hH(),S=st.shop;if(!st.shUnlock){const mx=Math.max(V.cash,H?H.cash:0),p=clamp(mx/SH_PRICE*100,0,100);return`<div class="card hubc lock"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🛒</span><div style="flex:1;min-width:0"><b style="font-size:17px">Chaîne de magasins</b><div class="mut sm">Supérettes, supermarchés : stock, fournisseurs, livraisons, prix…</div></div><span class="tag">🔒 ${eur(SH_PRICE)}</span></div>${clBar(p,'linear-gradient(90deg,var(--or),var(--ye))')}<div class="mut sm" style="margin-top:6px">Ton compte privé : ${eur(V.cash)}${H?` · ta holding : ${eur(H.cash)}`:''} (${Math.floor(p)} %).</div>${mx>=SH_PRICE?`<button class="btn w" style="margin-top:10px" onclick="shUnlock()">🔓 Débloquer · ${eur(SH_PRICE)}</button>`:`<button class="btn s w" style="margin-top:10px" disabled>Il manque ${eur(SH_PRICE-mx)}</button>`}</div>`}
+  if(!S)return`<div class="card hubc"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🛒</span><div style="flex:1;min-width:0"><b style="font-size:17px">Chaîne de magasins</b><div class="mut sm">Débloquée ✓ · pas encore créée</div></div></div><button class="btn w" style="margin-top:10px" onclick="shCreateUI()">Créer ma chaîne</button></div>`;
+  return`<div class="card hubc" onclick="click();tab('sh')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🛒</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(S.name)}</b><div class="mut sm">Magasins · ${S.st.length} magasin${S.st.length>1?'s':''}</div></div><span class="tag g">Ouverte</span></div><div class="mgrid">${clTile('Compte',eur(S.cash),S.cash<0?'neg':'money')}${clTile('Personnel',S.staff.length)}${clTile('Valeur',eur(shVal()))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`}
 function rHub(){const V=pv();if(hubSec==='hold'&&V.ph)return rHold2();const rn=`<div class="card hubc" onclick="click();tab('ch')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🦺</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(st.name)}</b><div class="mut sm">Parcs, jardins et routes · gratuit</div></div><span class="tag g">Ouverte</span></div><div class="mgrid">${clTile('Compte',eur(st.cash),st.cash<0?'neg':'money')}${clTile('Personnel',ownW())}${clTile('Valeur',eur(Math.max(0,grpValue())))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`;
   let c2;const C=st.cl;
   if(!st.clUnlock){const p=clamp(Math.max(V.cash,hH()?hH().cash:0)/CL_PRICE*100,0,100);c2=`<div class="card hubc lock"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🧽</span><div style="flex:1;min-width:0"><b style="font-size:17px">Société de nettoyage</b><div class="mut sm">Bureaux, titres-services, écoles, hôpitaux, vitres…</div></div><span class="tag">🔒 ${eur(CL_PRICE)}</span></div>${clBar(p,'linear-gradient(90deg,var(--or),var(--ye))')}<div class="mut sm" style="margin-top:6px">Ton compte privé : ${eur(V.cash)} / ${eur(CL_PRICE)} (${Math.floor(p)} %)${hH()?` · ta holding : ${eur(hH().cash)}`:''}. ${hH()?'La holding peut payer.':'Verse-toi des dividendes, ou crée ta holding pour payer avec les bénéfices de Route Nette.'}</div>
@@ -3734,6 +3738,7 @@ function rHub(){const V=pv();if(hubSec==='hold'&&V.ph)return rHold2();const rn=`
   else c2=`<div class="card hubc" onclick="click();tab('cl')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🧽</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(C.name)}</b><div class="mut sm">Nettoyage · ${stars(C.rep)} ${Math.round(C.rep)}</div></div><span class="tag g">Ouverte</span></div><div class="mgrid">${clTile('Compte',eur(C.cash),C.cash<0?'neg':'money')}${clTile('Personnel',clStaffN())}${clTile('Valeur',eur(clVal()))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`;
   return`<div class="hubt"><div style="font-size:13px;opacity:.75">Bonjour patron 👋</div><h1 style="margin:2px 0 4px;font-size:24px">Mes entreprises</h1><div class="sm" style="opacity:.8">${dstr(st.day)} ${date(st.day).getFullYear()} · le temps passe pour toutes tes sociétés</div></div>${hubHoldCard()}${rn}${c2}
   <div class="card hubc" onclick="click();tab('pv')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:34px">🏡</span><div style="flex:1"><b>Ma vie privée</b><div class="mut sm">Compte privé : ${eur(V.cash)}</div></div><span style="font-size:20px">›</span></div></div>
+  ${hubShopCard()}
   <div class="card" style="opacity:.6"><div class="row"><span style="font-size:30px">❔</span><div style="flex:1"><b>Prochaine entreprise</b><div class="mut sm">Bientôt…</div></div></div></div>`}
 
 /* ---------- v2 : profondeur (décisions, plaintes, visites, accidents, carrière, locaux, concurrents) ---------- */
@@ -3960,7 +3965,7 @@ function hLog(t,imp){const H=hH();if(!H)return;H.log.unshift({d:st.day,t});if(H.
 const hVvpr=()=>{const y=(st.day-(hH().d||0))/365;return y<1?.3:y<2?.2:.15};
 const hPartVal=()=>(hH().part||[]).reduce((a,x)=>a+x.v,0);
 const hLoans=()=>{const L=hH().loan;return(L.rn||0)+(L.cl||0)};
-const hGroupVal=()=>{const H=hH();if(!H)return 0;return Math.round(phVal()+(H.own.rn?Math.max(0,grpValue()):0)+(H.own.cl&&st.cl?clVal():0))};
+const hGroupVal=()=>{const H=hH();if(!H)return 0;return Math.round(phVal()+(H.own.rn?Math.max(0,grpValue()):0)+(H.own.cl&&st.cl?clVal():0)+(H.own.sh&&st.shop?shVal():0))};
 // phVal (déjà utilisé dans la fortune) = ce que la holding possède elle-même : trésorerie, placements, participations, prêts
 function hCreateUI(){const V=pv();if(!st.srl&&!st.cl)return toastMsg('Il faut au moins une SRL : Route Nette doit d’abord passer en SRL (± 120 000 € de chiffre d’affaires).');
   const caps=[20000,100000,1e6,1e7,1e8].filter(c=>c+2500<=V.cash);
@@ -3972,21 +3977,20 @@ function hCreateUI(){const V=pv();if(!st.srl&&!st.cl)return toastMsg('Il faut au
 function hCreate(cap){const V=pv();if(V.ph)return;if(V.cash<cap+2500)return toastMsg('Pas assez sur ton compte privé.');const nm=((($('#hnm')||{}).value||'Ma holding').trim().slice(0,26)||'Ma holding')+' SRL';
   V.cash-=cap+2500;V.ph={d:st.day,cash:cap,inv:[],mg:0,tot:0};const H=hFix(V.ph);H.name=nm;H.own={rn:st.srl?1:0,cl:st.cl?1:0};hLog(`🏛️ Création de ${nm} (capital ${eur(cap)}). Tes sociétés lui appartiennent maintenant.`);
   closeM();hubSec='hold';hSec='grp';try{confetti(140)}catch(e){}goals();save();render()}
-function hApport(k){const H=hH();if(!H)return;if(k==='rn'&&!st.srl)return toastMsg('Route Nette doit d’abord être une SRL.');H.own[k]=1;hLog(`📜 Apport en nature : ${k==='rn'?st.name:st.cl.name} appartient maintenant à ta holding.`,1);save();render()}
+function hApport(k){const H=hH();if(!H)return;if(k==='rn'&&!st.srl)return toastMsg('Route Nette doit d’abord être une SRL.');const E=hEnt(k);if(!E)return;H.own[k]=1;hLog(`📜 Apport en nature : ${E.n} appartient maintenant à ta holding.`,1);save();render()}
 // dividendes vers la holding
-function hUp(k,a){const H=hH();if(!H||!H.own[k])return;a=Math.round(a);if(!(a>0))return;
-  if(k==='rn'){if(a>canPay())return toastMsg(`${st.name} doit garder 3 mois de charges : maximum ${eur(canPay())}.`);mv(-a,'Dividende vers la holding (exonéré, RDT)','priv');st.mCapex+=a}
-  else{if(!st.cl)return;if(a>clCanPay())return toastMsg(`${st.cl.name} doit garder 3 mois de charges : maximum ${eur(clCanPay())}.`);clMv(-a,'Dividende vers la holding (exonéré, RDT)','priv')}
-  H.cash+=a;H.tot+=a;H.divIn=(H.divIn||0)+a;click();hLog(`💸 ${eur(a)} remontés de ${k==='rn'?st.name:st.cl.name} vers la holding, sans impôt.`);save();render()}
-const hMax=k=>k==='rn'?canPay():st.cl?clCanPay():0;
-// financer une société : prêt ou augmentation de capital
-function hLend(k,a){const H=hH();if(!H||!H.own[k])return;a=Math.round(Math.min(a,H.cash));if(a<1000)return toastMsg('La holding n’a pas assez de trésorerie.');H.cash-=a;H.loan[k]=(H.loan[k]||0)+a;
-  if(k==='rn')mv(a,'Prêt de la holding (4 %/an)','loan');else clMv(a,'Prêt de la holding (4 %/an)','loan');click();hLog(`🏦 La holding prête ${eur(a)} à ${k==='rn'?st.name:st.cl.name} (4 %/an).`);save();render()}
-function hCall(k){const H=hH();const due=H.loan[k]||0;if(!due)return;const can=Math.min(due,hMax(k));if(can<1000)return toastMsg('La société n’a pas assez de trésorerie pour rembourser (elle garde 3 mois de charges).');
-  if(k==='rn')mv(-can,'Remboursement du prêt de la holding','loan');else clMv(-can,'Remboursement du prêt de la holding','loan');H.loan[k]-=can;H.cash+=can;click();hLog(`🏦 ${k==='rn'?st.name:st.cl.name} rembourse ${eur(can)} à la holding.`);save();render()}
-function hCapital(k,a,ok){const H=hH();if(!H||!H.own[k])return;a=Math.round(Math.min(a,H.cash));if(a<1000)return toastMsg('La holding n’a pas assez de trésorerie.');
-  if(!ok)return ask(`Augmentation de capital ?\nSociété : ${k==='rn'?st.name:st.cl.name}\nMontant : ${eur(a)}\nL’argent reste dans la société pour toujours (pas d’intérêts, pas de remboursement). Il améliore ses fonds propres : la banque prête plus facilement.`,()=>hCapital(k,a,1),{ic:'📈',ok:'Augmenter le capital'});
-  H.cash-=a;H.cap[k]=(H.cap[k]||0)+a;if(k==='rn')mv(a,'Augmentation de capital par la holding','loan');else clMv(a,'Augmentation de capital par la holding','priv');closeM();hLog(`📈 Augmentation de capital de ${eur(a)} dans ${k==='rn'?st.name:st.cl.name}.`,1);save();render()}
+const HKS=['rn','cl','sh'];
+function hEnt(k){if(k==='rn')return{n:st.name,ic:'🦺',cash:st.cash,mv:(a,l,c)=>mv(a,l,c),cost:a=>{},max:canPay(),val:Math.max(0,grpValue()),res:((st.mHist||[]).slice(-1)[0]||{}).res||0,tab:'ch'};
+  if(k==='cl')return st.cl?{n:st.cl.name,ic:'🧽',cash:st.cl.cash,mv:(a,l,c)=>clMv(a,l,c),cost:a=>{st.cl.pl.cost+=a},max:clCanPay(),val:clVal(),res:st.cl.lastPl?st.cl.lastPl.res:0,tab:'cl'}:null;
+  if(k==='sh')return st.shop?{n:st.shop.name,ic:'🛒',cash:st.shop.cash,mv:(a,l,c)=>shMv(a,l,c),cost:a=>{st.shop.pl.cost+=a},max:shCanPay(),val:shVal(),res:st.shop.lastPl?st.shop.lastPl.res:0,tab:'sh'}:null;return null}
+function hUp(k,a){const H=hH(),E=hEnt(k);if(!H||!H.own[k]||!E)return;a=Math.round(a);if(!(a>0))return;if(a>E.max)return toastMsg(`${E.n} doit garder ses charges : maximum ${eur(E.max)}.`);
+  E.mv(-a,'Dividende vers la holding (exonéré, RDT)','priv');if(k==='rn')st.mCapex+=a;H.cash+=a;H.tot+=a;H.divIn=(H.divIn||0)+a;click();hLog(`💸 ${eur(a)} remontés de ${E.n} vers la holding, sans impôt.`);save();render()}
+const hMax=k=>{const E=hEnt(k);return E?E.max:0};
+function hLend(k,a){const H=hH(),E=hEnt(k);if(!H||!H.own[k]||!E)return;a=Math.round(Math.min(a,H.cash));if(a<1000)return toastMsg('La holding n’a pas assez de trésorerie.');H.cash-=a;H.loan[k]=(H.loan[k]||0)+a;E.mv(a,'Prêt de la holding (4 %/an)','loan');click();hLog(`🏦 La holding prête ${eur(a)} à ${E.n} (4 %/an).`);save();render()}
+function hCall(k){const H=hH(),E=hEnt(k);const due=H.loan[k]||0;if(!due||!E)return;const can=Math.min(due,E.max);if(can<1000)return toastMsg('La société n’a pas assez de trésorerie pour rembourser.');E.mv(-can,'Remboursement du prêt de la holding','loan');H.loan[k]-=can;H.cash+=can;click();hLog(`🏦 ${E.n} rembourse ${eur(can)} à la holding.`);save();render()}
+function hCapital(k,a,ok){const H=hH(),E=hEnt(k);if(!H||!H.own[k]||!E)return;a=Math.round(Math.min(a,H.cash));if(a<1000)return toastMsg('La holding n’a pas assez de trésorerie.');
+  if(!ok)return ask(`Augmentation de capital ?\nSociété : ${E.n}\nMontant : ${eur(a)}\nL’argent reste dans la société pour toujours (pas d’intérêts, pas de remboursement). Il améliore ses fonds propres : la banque prête plus facilement.`,()=>hCapital(k,a,1),{ic:'📈',ok:'Augmenter le capital'});
+  H.cash-=a;H.cap[k]=(H.cap[k]||0)+a;E.mv(a,'Augmentation de capital par la holding',k==='rn'?'loan':'priv');closeM();hLog(`📈 Augmentation de capital de ${eur(a)} dans ${E.n}.`,1);save();render()}
 // sortir de l'argent vers toi
 function hOut(a,ok){const H=hH(),V=pv();if(!H)return;a=Math.min(Math.round(a),Math.round(H.cash));if(a<=0)return;const t=hVvpr(),net=Math.round(a*(1-t));
   if(!ok)return ask(`Dividende de la holding vers toi ?\nMontant : ${eur(a)}\nPrécompte mobilier (${Math.round(t*100)} %${t<.3?', VVPR-bis':''}) : ${eur(a-net)}\nSur ton compte privé : ${eur(net)}\nNe sors que ce dont tu as besoin : le reste continue de travailler dans la holding.`,()=>hOut(a,1),{ic:'💶',ok:'Me verser'});
@@ -4007,15 +4011,14 @@ function hSellCl(ok){const C=st.cl,H=hH(),V=pv();if(!C)return;const val=Math.rou
   if(viaH){H.cash+=val+(H.loan.cl||0);H.loan.cl=0;H.own.cl=0}else V.cash+=val-tax;hLog(`🏁 ${C.name} est vendue ${eur(val)}${viaH?' (dans la holding, exonéré)':''}.`,1);st.cl=null;closeM();save();render()}
 // chaque mois
 function hPoolDay(){const H=pv().ph;if(!H||!H.pool||H.cash<5000)return;hFix(H);
-  if(H.own.rn&&st.cash<0){const a=Math.round(Math.min(H.cash,-st.cash+20000));if(a>=1000){H.cash-=a;H.loan.rn=(H.loan.rn||0)+a;mv(a,'Prêt automatique de la holding (filet de sécurité)','loan');hLog(`🛟 La holding prête ${eur(a)} à ${st.name} qui était dans le rouge.`)}}
-  if(H.own.cl&&st.cl&&st.cl.cash<0){const a=Math.round(Math.min(H.cash,-st.cl.cash+20000));if(a>=1000){H.cash-=a;H.loan.cl=(H.loan.cl||0)+a;clMv(a,'Prêt automatique de la holding (filet de sécurité)','loan');st.cl.crisis=0;st.cl.red=0;hLog(`🛟 La holding prête ${eur(a)} à ${st.cl.name} qui était dans le rouge.`)}}}
+  for(const k of HKS){const E=hEnt(k);if(!E||!H.own[k]||E.cash>=0)continue;const a=Math.round(Math.min(H.cash,-E.cash+20000));if(a<1000)continue;H.cash-=a;H.loan[k]=(H.loan[k]||0)+a;E.mv(a,'Prêt automatique de la holding (filet de sécurité)','loan');if(k==='cl'){st.cl.crisis=0;st.cl.red=0}if(k==='sh'){st.shop.crisis=0;st.shop.red=0}hLog(`🛟 La holding prête ${eur(a)} à ${E.n} qui était dans le rouge.`)}}
 function hMonth(){const H=hH();if(!H)return;const V=pv();
   // frais de gestion facturés aux sociétés
-  for(const k of['rn','cl']){const f=H.mf[k]||0;if(!f||!H.own[k])continue;if(k==='rn'){if(st.cash>f){mv(-f,'Frais de gestion facturés par la holding','fix');H.cash+=f;H.pl.rev+=f}}else if(st.cl&&st.cl.cash>f){clMv(-f,'Frais de gestion facturés par la holding','fix');st.cl.pl.cost+=f;H.cash+=f;H.pl.rev+=f}}
+  for(const k of HKS){const f=H.mf[k]||0,E=hEnt(k);if(!f||!H.own[k]||!E||E.cash<=f)continue;E.mv(-f,'Frais de gestion facturés par la holding','fix');E.cost(f);H.cash+=f;H.pl.rev+=f}
   // intérêts des prêts intra-groupe (4 %/an)
-  for(const k of['rn','cl']){const L=H.loan[k]||0;if(!L)continue;if(k==='cl'&&!st.cl){H.loan.cl=0;continue}const i=Math.round(L*.04/12);if(k==='rn')mv(-i,'Intérêts du prêt de la holding (4 %/an)','fix');else{clMv(-i,'Intérêts du prêt de la holding (4 %/an)','fix');st.cl.pl.cost+=i}H.cash+=i;H.pl.rev+=i}
+  for(const k of HKS){const L=H.loan[k]||0,E=hEnt(k);if(!L)continue;if(!E){H.loan[k]=0;continue}const i=Math.round(L*.04/12);E.mv(-i,'Intérêts du prêt de la holding (4 %/an)','fix');E.cost(i);H.cash+=i;H.pl.rev+=i}
   // remontée automatique d'une partie du bénéfice
-  for(const k of['rn','cl']){const p=H.auto[k]||0;if(!p||!H.own[k])continue;const res=k==='rn'?((st.mHist||[]).slice(-1)[0]||{}).res||0:st.cl&&st.cl.lastPl?st.cl.lastPl.res:0;const a=Math.round(Math.min(Math.max(0,res)*p,hMax(k)));if(a>=1000)hUp(k,a)}
+  for(const k of HKS){const p=H.auto[k]||0,E=hEnt(k);if(!p||!H.own[k]||!E)continue;const a=Math.round(Math.min(Math.max(0,E.res)*p,E.max));if(a>=1000)hUp(k,a)}
   // salaire du dirigeant payé par la holding
   if(H.sal>0){const gross=Math.round(H.sal/.55);if(H.cash>=gross){H.cash-=gross;H.pl.cost+=gross;V.cash+=H.sal;V.tr=(V.tr||0)+H.sal}else hLog('⚠️ La holding n’a pas assez de trésorerie pour payer ton salaire.',1)}
   // frais de la holding
@@ -4037,7 +4040,7 @@ function hubHoldCard(){const H=hH(),V=pv();if(!H)return`<div class="card hubc" o
 function hOrg(){const H=hH(),box=(ic,t,s,on,act)=>`<div onclick="${act||''}" style="flex:1;min-width:0;background:${on?'#1d3a28':'#1a2320'};border:1px solid ${on?'#3f8f5a':'#ffffff22'};border-radius:12px;padding:8px;text-align:center;cursor:pointer"><div style="font-size:22px">${ic}</div><b style="font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t}</b><div class="mut" style="font-size:11px">${s}</div></div>`;
   return`<div class="card"><div style="display:flex;justify-content:center"><div style="width:45%">${box('👤','Toi','100 % des parts',1,"tab('pv')")}</div></div><div style="text-align:center;opacity:.6;line-height:1.1">│</div>
   <div style="display:flex;justify-content:center"><div style="width:62%">${box('🏛️',esc(H.name),eur(phVal()),1)}</div></div><div style="text-align:center;opacity:.6;line-height:1.1">┌──────┴──────┐</div>
-  <div style="display:flex;gap:6px">${box('🦺',esc(st.name),H.own.rn?'100 % · '+eur(Math.max(0,grpValue())):st.srl?'à apporter':'pas encore SRL',H.own.rn,"tab('ch')")}${st.cl?box('🧽',esc(st.cl.name),H.own.cl?'100 % · '+eur(clVal()):'à apporter',H.own.cl,"tab('cl')"):box('🧽','Nettoyage',st.clUnlock?'à créer':'verrouillé',0,"hubSec='main';render()")}${H.part.length?box('🤝',H.part.length+' PME',eur(hPartVal()),1,"hSec='part';render()"):''}</div></div>`}
+  <div style="display:flex;gap:6px">${box('🦺',esc(st.name),H.own.rn?'100 % · '+eur(Math.max(0,grpValue())):st.srl?'à apporter':'pas encore SRL',H.own.rn,"tab('ch')")}${st.cl?box('🧽',esc(st.cl.name),H.own.cl?'100 % · '+eur(clVal()):'à apporter',H.own.cl,"tab('cl')"):box('🧽','Nettoyage',st.clUnlock?'à créer':'verrouillé',0,"hubSec='main';render()")}${st.shop?box('🛒',esc(st.shop.name),H.own.sh?'100 % · '+eur(shVal()):'à apporter',H.own.sh,"tab('sh')"):''}${H.part.length?box('🤝',H.part.length+' PME',eur(hPartVal()),1,"hSec='part';render()"):''}</div></div>`}
 function hTile(l,v,c){return clTile(l,v,c)}
 function rHold2(){const H=hH(),V=pv();if(!H){hubSec='main';return rHub()}const L=H.lastPl;
   let h=`<div class="row" style="margin-bottom:8px"><button class="btn s" onclick="hubSec='main';click();render()">← Mes entreprises</button><span style="flex:1"></span><span class="tag v">🏛️ Holding</span></div>
@@ -4048,9 +4051,10 @@ function rHold2(){const H=hH(),V=pv();if(!H){hubSec='main';return rHub()}const L
     const sub=(k,ic,n,cash,val,res,max)=>`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:26px">${ic}</span><div style="flex:1;min-width:0"><b>${esc(n)}</b><div class="mut sm">${H.own[k]?'Détenue à 100 % par la holding':'Pas encore apportée'}</div></div>${H.own[k]?'':`<button class="btn s" onclick="hApport('${k}')">Apporter</button>`}</div><div class="mgrid">${clTile('Compte',eur(cash),cash<0?'neg':'money')}${clTile('Mois passé',(res>=0?'+':'')+eur(res),res<0?'neg':'money')}${clTile('Valeur',eur(val))}</div>${H.own[k]?`<div class="mut" style="font-size:12px;margin-top:6px">Prêt de la holding : ${eur(H.loan[k]||0)} · capital apporté : ${eur(H.cap[k]||0)} · frais de gestion : ${eur(H.mf[k]||0)}/mois · peut remonter ${eur(max)}</div>`:''}</div>`;
     h+=`<h2>Tes sociétés</h2>`+sub('rn','🦺',st.name,st.cash,Math.max(0,grpValue()),((st.mHist||[]).slice(-1)[0]||{}).res||0,canPay());
     if(st.cl)h+=sub('cl','🧽',st.cl.name,st.cl.cash,clVal(),st.cl.lastPl?st.cl.lastPl.res:0,clCanPay());else h+=`<div class="card" style="opacity:.75"><b>🧽 Société de nettoyage</b><div class="mut sm">${st.clUnlock?'Débloquée : crée-la depuis Mes entreprises (la holding peut payer le capital).':'Pas encore débloquée (25 M€, payables par la holding).'}</div></div>`;
+    if(st.shop)h+=sub('sh','🛒',st.shop.name,st.shop.cash,shVal(),st.shop.lastPl?st.shop.lastPl.res:0,shCanPay());
     h+=`<div class="card"><b>💡 Pourquoi c’est intéressant</b><div class="mut sm" style="margin-top:4px">Sans holding, sortir 1 000 000 € de tes sociétés te coûte jusqu’à 300 000 € de précompte. Avec la holding, ils remontent <b>sans impôt</b> : tu les réinvestis (autre société, immeuble, PME) et tu ne paies que sur ce que tu te verses vraiment.</div></div>`}
   else if(hSec==='flux'){
-    const ent=k=>k==='rn'?{n:st.name,ic:'🦺'}:{n:st.cl.name,ic:'🧽'};const ks=['rn',...(st.cl?['cl']:[])].filter(k=>H.own[k]);
+    const ent=k=>hEnt(k);const ks=HKS.filter(k=>H.own[k]&&hEnt(k));
     if(!ks.length)h+=`<div class="card"><p class="mut">Apporte d’abord une société à la holding (onglet Groupe).</p></div>`;
     for(const k of ks){const E=ent(k),mx=hMax(k);h+=`<h2>${E.ic} ${esc(E.n)}</h2><div class="card"><b class="sm">💸 Remonter un dividende (0 % d’impôt, RDT)</b><div class="mut" style="font-size:12px">Maximum aujourd’hui : ${eur(mx)} (la société garde 3 mois de charges).</div><div class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap">${[50000,500000,5e6].map(a=>`<button class="btn s" style="padding:6px 9px;font-size:12px" ${mx<a?'disabled':''} onclick="hUp('${k}',${a})">${eur(a)}</button>`).join('')}${mx>=1000?`<button class="btn s" style="padding:6px 9px;font-size:12px" onclick="hUp('${k}',${mx})">Tout (${eur(mx)})</button>`:''}</div>
       <div class="mut" style="font-size:12px;margin-top:8px">Remontée automatique chaque mois (part du bénéfice du mois passé) :</div>${clSeg(H.auto[k]||0,[[0,'Non'],[.25,'25 %'],[.5,'50 %'],[.75,'75 %']],'x').replace(/st\.cl\.x=/g,`hH().auto.${k}=`)}
@@ -4077,15 +4081,334 @@ function rHold2(){const H=hH(),V=pv();if(!H){hubSec='main';return rHub()}const L
     <div class="card"><b class="sm">✏️ Nom de la holding</b><div class="row" style="margin-top:6px"><input type="text" id="hren" value="${esc(H.name)}" maxlength="30" style="flex:1"><button class="btn s" onclick="hH().name=($('#hren').value||'Ma holding').slice(0,30);save();render()">OK</button></div></div>`}
   return h}
 
+/* ================= 3e ENTREPRISE : CHAÎNE DE MAGASINS (st.shop) — lot 1 =================
+   Supérette → chaîne. Produits (TVA 6/21 %), fournisseurs avec jours de livraison, minimums, fiabilité ;
+   bons de commande avec jour de livraison choisi ; réception et contrôle ; réserve + rayon ; lots et dates limites ;
+   ventes du jour selon clients, jour, saison, météo, prix, promotions ; personnel ; argent (TVA, ISOC, banque).
+   Chiffres : estimations de jeu (salaires CP 202/201 estimés, prix d'achat ± prix de gros 2026). */
+const SH_PRICE=75e6;
+const SHR={fl:{n:'Fruits et légumes',ic:'🥬',t:'frais',tva:.06,co:1.40},bo:{n:'Boulangerie',ic:'🥖',t:'amb',tva:.06,co:1.45},cr:{n:'Crèmerie',ic:'🥛',t:'frais',tva:.06,co:1.28},vi:{n:'Boucherie et charcuterie',ic:'🥩',t:'frais',tva:.06,co:1.32},su:{n:'Surgelés',ic:'🧊',t:'surg',tva:.06,co:1.32},ep:{n:'Épicerie',ic:'🥫',t:'amb',tva:.06,co:1.28},bs:{n:'Boissons',ic:'🥤',t:'amb',tva:.21,co:1.25},hy:{n:'Hygiène et entretien',ic:'🧴',t:'amb',tva:.21,co:1.38},sn:{n:'Snacks et confiserie',ic:'🍫',t:'amb',tva:.06,co:1.35},nf:{n:'Non-alimentaire',ic:'🔋',t:'amb',tva:.21,co:1.45}};
+// clé|rayon|nom|prix d'achat HTVA à l'unité|colis|conservation (jours)|ventes/jour pour 300 clients|saison (s été, w hiver, x fêtes, p Pâques, 0)|météo (h chaud, c froid, 0)|élasticité
+const SHPD=`pom|fl|Pommes (kg)|1.35|10|21|18|0|0|1.2
+ban|fl|Bananes (kg)|1.05|18|6|22|0|0|1.1
+tom|fl|Tomates (kg)|1.90|6|7|14|s|h|1.2
+sal|fl|Salade|0.55|12|4|10|s|h|1.3
+car|fl|Carottes (kg)|0.75|10|20|9|w|c|1.0
+pdt|fl|Pommes de terre (5 kg)|2.60|6|40|8|w|0|0.8
+oig|fl|Oignons (kg)|0.85|10|30|6|0|0|0.9
+ora|fl|Oranges (kg)|1.40|15|14|9|w|0|1.2
+fra|fl|Fraises (500 g)|1.90|10|3|7|s|h|1.5
+cit|fl|Citrons (filet)|1.10|12|20|4|0|0|1.0
+pai|bo|Pain gris tranché|1.15|10|2|38|0|0|0.6
+bag|bo|Baguette|0.42|20|1|32|0|0|0.7
+cro|bo|Croissants (x4)|1.20|10|2|12|0|0|1.1
+pch|bo|Pains au chocolat (x4)|1.45|10|2|8|0|0|1.1
+cou|bo|Cramique|1.80|8|4|4|0|0|1.0
+mil|cr|Lait demi-écrémé (1 L)|0.72|12|10|30|0|0|0.6
+yao|cr|Yaourts nature (x6)|1.30|12|21|12|0|0|0.9
+yaf|cr|Yaourts aux fruits (x4)|1.25|12|21|10|0|0|1.0
+beu|cr|Beurre (250 g)|1.75|20|45|9|0|0|0.8
+gou|cr|Gouda en tranches|1.85|12|25|10|0|0|0.9
+cam|cr|Camembert|1.40|12|20|5|0|0|1.0
+oeu|cr|Œufs (x12)|2.30|10|25|11|p|0|0.8
+cfr|cr|Crème fraîche|1.05|12|20|5|w|c|1.0
+jus|cr|Jus d’orange frais (1 L)|1.50|8|12|6|0|0|1.1
+fro|cr|Fromage blanc|1.10|12|18|5|0|0|1.0
+hac|vi|Haché porc-bœuf (500 g)|3.10|8|3|10|0|0|1.1
+pou|vi|Filets de poulet (500 g)|4.20|8|5|9|0|0|1.1
+jam|vi|Jambon cuit (tranches)|1.95|12|10|13|0|0|0.9
+sau|vi|Saucisses de campagne (x4)|2.40|10|6|6|s|h|1.3
+sal2|vi|Salami (tranches)|1.70|12|20|7|0|0|1.0
+pat|vi|Pâté de campagne|1.30|12|15|5|w|0|1.0
+bbq|vi|Assortiment barbecue|6.80|6|4|3|s|h|1.6
+ste|vi|Steak de bœuf (2 pièces)|6.20|6|4|4|0|0|1.3
+fri|su|Frites surgelées (1 kg)|1.60|10|365|9|0|0|1.0
+piz|su|Pizzas surgelées|1.95|10|365|8|0|0|1.2
+gla|su|Glaces (bac 1 L)|2.40|8|365|4|s|h|1.6
+leg|su|Légumes surgelés|1.20|12|365|5|0|0|1.0
+poi|su|Poisson pané|2.30|10|365|4|0|0|1.1
+crg|su|Cônes glacés (x6)|2.70|8|365|3|s|h|1.6
+pas|ep|Spaghetti (500 g)|0.65|20|720|12|0|0|0.9
+riz|ep|Riz (1 kg)|1.30|12|720|6|0|0|0.9
+sau2|ep|Sauce tomate|0.95|12|540|8|0|0|1.0
+con|ep|Conserves de légumes|0.70|24|720|8|0|0|0.9
+caf|ep|Café moulu (500 g)|3.40|12|360|8|0|0|0.8
+the|ep|Thé (x25)|1.10|12|540|3|w|c|1.0
+cer|ep|Céréales du petit-déjeuner|1.85|12|270|7|0|0|1.1
+far|ep|Farine (1 kg)|0.55|10|360|3|x|0|0.9
+suc|ep|Sucre (1 kg)|0.80|10|720|4|0|0|0.8
+hui|ep|Huile de tournesol (1 L)|1.60|12|360|5|0|0|0.9
+may|ep|Mayonnaise|1.40|12|180|6|s|h|1.0
+sou|ep|Soupe en brique|1.20|12|300|5|w|c|1.1
+con2|ep|Confiture|1.50|12|360|4|0|0|1.0
+cho2|ep|Pâte à tartiner|2.10|12|270|6|0|0|1.1
+eau|bs|Eau plate (6 x 1,5 L)|1.70|1|540|16|s|h|0.9
+eag|bs|Eau pétillante (6 x 1 L)|1.90|1|540|8|s|h|1.0
+col|bs|Cola (1,5 L)|1.05|6|270|14|s|h|1.1
+lim|bs|Limonade (1,5 L)|0.80|6|270|8|s|h|1.2
+jua|bs|Jus de pomme (1 L)|0.85|6|270|7|0|0|1.1
+bie|bs|Bières blondes (24 x 25 cl)|11.50|1|270|4|s|h|1.3
+bis|bs|Bière spéciale (6 x 33 cl)|5.20|4|270|5|x|0|1.2
+vin|bs|Vin rouge|3.60|6|720|5|x|0|1.2
+vib|bs|Vin blanc|3.40|6|720|4|s|h|1.2
+cav|bs|Crémant|5.50|6|720|2|x|0|1.4
+pap|hy|Papier toilette (x8)|2.90|6|1500|6|0|0|0.8
+ess|hy|Essuie-tout (x4)|2.10|6|1500|4|0|0|0.8
+les|hy|Lessive liquide|6.20|4|1080|3|0|0|0.9
+liq|hy|Liquide vaisselle|1.20|12|1080|4|0|0|0.9
+sav|hy|Savon pour les mains|1.05|12|1080|3|0|0|0.9
+dou|hy|Gel douche|1.60|12|1080|4|0|0|1.0
+den|hy|Dentifrice|1.30|12|1080|4|0|0|1.0
+sha|hy|Shampoing|2.10|12|1080|3|0|0|1.0
+coc|hy|Couches bébé (paquet)|7.80|4|1080|2|0|0|0.8
+sac|hy|Sacs poubelle|2.20|10|1500|3|0|0|0.8
+chi|sn|Chips (sachet)|1.05|20|150|12|s|h|1.2
+chc|sn|Chocolat au lait (tablette)|1.15|20|300|9|x|0|1.1
+bis2|sn|Biscuits|1.10|20|240|9|0|0|1.1
+bon|sn|Bonbons|1.20|20|360|5|x|0|1.2
+cac|sn|Cacahuètes|1.40|15|240|4|s|0|1.1
+spe|sn|Speculoos|1.30|20|270|5|x|0|1.1
+oeuc|sn|Œufs en chocolat|2.60|12|180|2|p|0|1.4
+gauf|sn|Gaufres de Liège (x6)|1.70|12|30|6|0|0|1.1
+pil|nf|Piles (x4)|3.20|12|1800|2|x|0|1.0
+amp|nf|Ampoules LED|2.80|12|1800|1|w|0|1.0
+cha|nf|Charbon de bois (5 kg)|4.20|6|1800|2|s|h|1.4
+cart|nf|Cartes de vœux|1.50|20|1800|1|x|0|1.2
+bou|nf|Bougies|1.80|12|1800|1|w|0|1.1
+rasq|nf|Rasoirs jetables|2.60|12|1800|1|0|0|1.0`;
+const SHP={};for(const l of SHPD.split('\n')){const a=l.trim().split('|');if(a.length<10)continue;SHP[a[0]]={k:a[0],r:a[1],n:a[2],bp:+a[3],pk:+a[4],life:+a[5],base:+a[6],sea:a[7],wx:a[8],el:+a[9]}}
+const SHF={
+  wal:{n:'Grossiste Wallodis',ic:'🚚',r:['ep','bs','hy','sn','nf','su','cr'],px:1.00,min:300,fee:45,free:800,days:[1,3,5],lead:1,rel:.92,q:.9,pay:30,d:'Le grossiste à tout faire : presque tout le sec, un peu de frais. Pratique, prix moyens.'},
+  bc:{n:'Centrale Belgacentrale',ic:'🏭',r:['ep','bs','hy','sn','nf','su','cr','vi'],px:.90,min:2500,fee:0,free:0,days:[2,4],lead:2,rel:.97,q:.92,pay:45,d:'Les meilleurs prix, mais gros minimum de commande et seulement deux jours de livraison.'},
+  mm:{n:'Marché matinal de Namur',ic:'🧺',r:['fl'],px:.95,min:100,fee:35,free:0,days:[1,2,3,4,5,6],lead:1,rel:.85,q:.82,pay:0,d:'Fruits et légumes livrés tôt le matin. Prix qui bougent avec les saisons, qualité variable. Payé comptant.'},
+  lp:{n:'Laiterie des Prés',ic:'🐄',r:['cr'],px:.98,min:150,fee:20,free:0,days:[1,3,5],lead:1,rel:.96,q:.95,pay:30,d:'Crèmerie de qualité, très fiable.'},
+  bi:{n:'Boulangerie industrielle du Condroz',ic:'🥐',r:['bo'],px:1.00,min:50,fee:0,free:0,days:[1,2,3,4,5,6],lead:1,rel:.94,q:.88,pay:15,d:'Pain et viennoiseries livrés chaque matin avant l’ouverture.'},
+  bm:{n:'Brasserie et boissons Mosane',ic:'🍺',r:['bs'],px:.92,min:400,fee:30,free:1000,days:[2,5],lead:2,rel:.93,q:.9,pay:30,d:'Boissons moins chères en volume. Livraisons lourdes : prévois la place.'},
+  pl:{n:'Producteurs locaux (circuit court)',ic:'🌾',r:['fl','cr','vi'],px:1.22,min:80,fee:15,free:0,days:[3,6],lead:2,rel:.88,q:1.08,pay:0,d:'Plus cher, mais produits plus frais (ils se gardent plus longtemps) et clients ravis. Payé comptant.'},
+  vd:{n:'Viandes Dethier',ic:'🔪',r:['vi'],px:.97,min:200,fee:25,free:600,days:[2,4,6],lead:1,rel:.93,q:.93,pay:30,d:'Grossiste en viandes et charcuterie, chaîne du froid irréprochable.'}};
+const SHT={sup:{n:'Supérette de quartier',ic:'🏪',m2:150,cli:320,rent:2500,cap:{amb:2500,frais:700,surg:350},en:1600},supv:{n:'Supérette de ville',ic:'🏬',m2:300,cli:620,rent:5000,cap:{amb:5000,frais:1400,surg:700},en:2800,lv:3},sm:{n:'Supermarché',ic:'🛒',m2:1200,cli:1500,rent:14000,cap:{amb:16000,frais:4500,surg:2200},en:8500,lv:8}};
+const SHTOWN=[['Namur',1.1,.9],['Liège',1.15,1.1],['Charleroi',1.0,1.0],['Mons',.95,.9],['Ciney',.85,.7],['Dinant',.85,.75],['Arlon',.9,.8],['Wavre',1.1,1.0],['Huy',.9,.85],['Marche-en-Famenne',.85,.75]];
+const SHRL={caisse:{n:'Caissier, caissière',ic:'🧾',brut:15.20,k:1.40,hw:[20,25,30,38]},rayon:{n:'Employé(e) de rayon',ic:'📦',brut:15.20,k:1.40,hw:[20,25,30,38]},etud:{n:'Étudiant(e) jobiste',ic:'🎓',brut:12.50,k:1.08,hw:[8,12,16]},gerant:{n:'Gérant(e) de magasin',ic:'🧑‍💼',brut:21.50,k:1.38,hw:[38]}};
+// ---- état
+const shp=()=>st.shop;
+function shNew(nm,cap,town){const S={v:1,name:nm,found:st.day,cash:cap,idx:1,rep:45,diff:'n',st:[],cur:0,ord:[],inv:[],mv:[],mon:{},pl:{rev:0,cost:0,tvaC:0,tvaD:0},lastPl:null,caM:[],mH:[],log:[],loss:0,nid:1,staff:[],cand:[],goals:{},auto:{rec:1,ord:0,ag:1},rel:{},loan:0,salAcc:0,promo:{},cov:7,safe:2,price:{}};for(const r in SHR)S.price[r]=SHR[r].co;S.st.push(shStore('sup',town||'Namur',S));S.staff.push({id:S.nid++,n:'Toi',r:'caisse',boss:1,hw:45,sk:1,rel:1,mot:1,store:S.st[0].id,day:st.day});return S}
+function shStore(k,town,S){const T=SHT[k],TW=SHTOWN.find(t=>t[0]===town)||SHTOWN[0],s={id:(S||st.shop).nid++,k,town,d:st.day,stock:{},sat:65,rep:45,open:[1,2,3,4,5,6],exp:{},lost:{},sold:{},hist:[],todayCli:0,todayCA:0};for(const p in SHP)s.stock[p]={sh:0,rs:0,lots:[]};return s}
+const shCur=()=>{const S=st.shop;return S.st[Math.min(S.cur||0,S.st.length-1)]};
+function shMv(a,l,cat){const S=st.shop;a=Math.round(a*100)/100;S.cash+=a;S.mv.unshift({d:st.day,a,l});if(S.mv.length>90)S.mv.length=90;S.mon[cat]=(S.mon[cat]||0)+a}
+function shLog(t,imp){const S=st.shop;S.log.unshift({d:st.day,t});if(S.log.length>70)S.log.length=70;if(imp&&curTab==='sh')toastMsg(t,2)}
+// ---- prix
+const shBuy=(p,f)=>{const F=SHF[f],P=SHP[p],S=st.shop,rl=(S.rel&&S.rel[f])||50,sea=SHP[p].r==='fl'&&f==='mm'?1+.15*Math.sin((month()-2)/12*6.283):1;return +(P.bp*F.px*sea*(S.idx||1)*(1-(rl-50)/1000)).toFixed(3)};
+const shRef=p=>+(SHP[p].bp*(st.shop.idx||1)).toFixed(3);
+const shPrice=p=>{const P=SHP[p],R0=SHR[P.r],S=st.shop,co=S.price[P.r]||R0.co;let v=shRef(p)*co*(1+R0.tva);const pr=S.promo[p];if(pr&&st.day<pr.end)v*=(1-pr.pct);return Math.round(v*100)/100};
+const shPriceIdx=r=>(st.shop.price[r]||SHR[r].co)/SHR[r].co;
+// ---- calendrier
+const shOpenDay=(s,d)=>s.open.includes(date(d).getDay())&&!ferie(date(d));
+function shDelDays(f,from,n){const F=SHF[f],L=[];for(let d=from+F.lead;L.length<(n||6)&&d<from+F.lead+21;d++){if(F.days.includes(date(d).getDay()))L.push(d)}return L}
+// ---- ventes moyennes et quantité conseillée
+function shAvg(s,p){const h=s.sold[p];if(!h||!h.length)return SHP[p].base*2.6*(SHT[s.k].cli/300)*.9;return h.reduce((a,b)=>a+b,0)/h.length*1.04}
+const shExp=(s,p,from,to)=>{const a=shAvg(s,p)/1.04;let t=0;for(let d=from;d<to;d++)if(shOpenDay(s,d))t+=a*SHWD[date(d).getDay()];return t};
+function shIncoming(s,p,until){return st.shop.ord.filter(o=>o.store===s.id&&o.st!=='done'&&o.st!=='cancel'&&(until===undefined||o.dd<until)).reduce((a,o)=>{const L=o.lines.find(x=>x.p===p);return a+(L?L.packs*SHP[p].pk:0)},0)}
+function shSuggest(s,p,f,dd){const S=st.shop,P=SHP[p],next=shDelDays(f,dd+1,1),gap=next.length?next[0]-dd:3,safe=P.life<=3?0:S.safe*Math.min(1,P.life/7),horizon=Math.min(Math.max(1,Math.floor(P.life*.9)),gap+safe);const have=s.stock[p].sh+s.stock[p].rs+shIncoming(s,p,dd)-shExp(s,p,st.day,dd);const need=shExp(s,p,dd,dd+Math.ceil(horizon))*(horizon/Math.ceil(horizon)||1)-Math.max(0,have);return need>P.pk*.4?Math.ceil(need/P.pk):0}
+// ---- saison et météo
+function shSeason(p){const P=SHP[p],m=month();if(P.sea==='s')return m>=5&&m<=8?1.6:m===4||m===9?1.15:.65;if(P.sea==='w')return m>=11||m<=2?1.4:m===3||m===10?1.1:.75;if(P.sea==='x')return m===12?2.6:m===11?1.4:.85;if(P.sea==='p')return m===3||m===4?2:.8;return 1}
+function shWx(p){const P=SHP[p],w=WX[st.wx].k;if(P.wx==='h')return w==='sun'?(month()>=5&&month()<=8?1.5:1.15):w==='rain'||w==='storm'?.7:1;if(P.wx==='c')return w==='snow'||w==='rain'?1.3:w==='sun'?.85:1;return 1}
+const SHWD=[0,.82,.88,.92,1.0,1.18,1.45];
+// ---- commandes
+let shDraft=null;
+function shNewOrder(f){const S=st.shop,s=shCur(),dd=shDelDays(f,st.day,1)[0];shDraft={f,store:s.id,dd,lines:{}};for(const p in SHP)if(SHF[f].r.includes(SHP[p].r)){const q=shSuggest(s,p,f,dd);if(q>0)shDraft.lines[p]=q}shOrderUI()}
+function shOrderUI(){const D=shDraft;if(!D)return;const S=st.shop,F=SHF[D.f],s=S.st.find(x=>x.id===D.store),days=shDelDays(D.f,st.day,6);let tot=0;for(const p in D.lines)tot+=D.lines[p]*SHP[p].pk*shBuy(p,D.f);const fee=F.free&&tot>=F.free?0:F.fee,disc=tot>=15000?.05:tot>=5000?.03:0;
+  const ps=Object.keys(SHP).filter(p=>F.r.includes(SHP[p].r));const room=shRoom(s);
+  showModal(`<h3>${F.ic} Commande · ${F.n}</h3><div class="mut sm">${SHT[s.k].ic} ${esc(s.town)} · minimum ${eur(F.min)} · livraison ${F.free?`gratuite dès ${eur(F.free)}`:F.fee?eur(F.fee):'gratuite'} · paiement ${F.pay?F.pay+' jours':'comptant'}</div>
+  <div class="mut sm" style="margin-top:8px">📅 Jour de livraison :</div><div class="row" style="flex-wrap:wrap;gap:6px;margin-top:4px">${days.map(d=>`<button class="btn s" style="padding:6px 9px;font-size:12px;${d===D.dd?'outline:2px solid var(--or);background:#3a2a10':''}" onclick="shDraft.dd=${d};shOrderUI()">${['dim','lun','mar','mer','jeu','ven','sam'][date(d).getDay()]} ${dstr(d)}</button>`).join('')}</div>
+  <div class="row" style="margin-top:8px;gap:6px"><button class="btn s" style="font-size:12px;padding:6px 9px" onclick="shSuggestAll()">✨ Quantités conseillées</button><button class="btn s" style="font-size:12px;padding:6px 9px" onclick="shDraft.lines={};shOrderUI()">Vider</button></div>
+  <div style="max-height:46vh;overflow:auto;margin-top:8px">${Object.keys(SHR).filter(r=>F.r.includes(r)).map(r=>`<div class="mut" style="font-size:12px;margin:8px 0 2px">${SHR[r].ic} ${SHR[r].n}</div>`+ps.filter(p=>SHP[p].r===r).map(p=>{const P=SHP[p],q=D.lines[p]||0,k=s.stock[p],cov=shAvg(s,p)?((k.sh+k.rs)/shAvg(s,p)):99;return`<div class="row" style="padding:4px 0;border-top:1px solid var(--line);flex-wrap:nowrap;gap:6px"><div style="flex:1;min-width:0"><b style="font-size:12.5px">${P.n}</b><div class="mut" style="font-size:11px">stock ${k.sh+k.rs} · ${cov<1.5?'<span class="neg">'+cov.toFixed(1)+' j</span>':cov.toFixed(1)+' j'} · colis de ${P.pk} · ${eur2(shBuy(p,D.f))}/u</div></div><button class="mini" onclick="shQ('${p}',-1)">−</button><b style="width:26px;text-align:center">${q}</b><button class="mini" onclick="shQ('${p}',1)">+</button></div>`}).join('')).join('')}</div>
+  <div class="card" style="margin-top:8px">${[['Marchandises',eur(tot)],['Remise de volume',disc?'−'+eur(tot*disc):'—'],['Livraison',fee?eur(fee):'gratuite'],['Total HTVA',eur(tot*(1-disc)+fee)],['Place en réserve',`${room.amb} sec · ${room.frais} frais · ${room.surg} surgelé`]].map(([a,b])=>`<div class="row sm" style="padding:2px 0"><span class="mut" style="flex:1">${a}</span><b>${b}</b></div>`).join('')}${tot<F.min?`<div class="sm neg">Minimum de commande pas atteint (${eur(F.min)}).</div>`:''}</div>
+  <div class="row" style="gap:6px;margin-top:8px"><button class="btn s" style="flex:1" onclick="shDraft=null;closeM()">Annuler</button><button class="btn" style="flex:2" ${tot<F.min||!tot?'disabled':''} onclick="shSend()">Envoyer la commande</button></div>`)}
+function shQ(p,d){const D=shDraft;D.lines[p]=Math.max(0,(D.lines[p]||0)+d);if(!D.lines[p])delete D.lines[p];shOrderUI()}
+function shSuggestAll(){const D=shDraft,s=st.shop.st.find(x=>x.id===D.store);D.lines={};for(const p in SHP)if(SHF[D.f].r.includes(SHP[p].r)){const q=shSuggest(s,p,D.f,D.dd);if(q>0)D.lines[p]=q}shOrderUI()}
+function shRoom(s){const R0={amb:0,frais:0,surg:0},cap=SHT[s.k].cap;for(const p in s.stock){const k=s.stock[p];R0[SHR[SHP[p].r].t]+=k.rs+k.sh*.0}for(const o of st.shop.ord)if(o.store===s.id&&o.st!=='done'&&o.st!=='cancel')for(const L of o.lines)R0[SHR[SHP[L.p].r].t]+=L.packs*SHP[L.p].pk;return{amb:Math.max(0,Math.round(cap.amb-R0.amb)),frais:Math.max(0,Math.round(cap.frais-R0.frais)),surg:Math.max(0,Math.round(cap.surg-R0.surg))}}
+function shSend(silent){const D=shDraft,S=st.shop;if(!D)return;const lines=Object.entries(D.lines).filter(([p,q])=>q>0).map(([p,q])=>({p,packs:q,px:shBuy(p,D.f)}));if(!lines.length)return;
+  const o={id:S.nid++,f:D.f,store:D.store,dd:D.dd,d:st.day,st:'cmd',lines};S.ord.push(o);shDraft=null;if(!silent){closeM();click();shLog(`📝 Commande envoyée à ${SHF[o.f].n} (livraison le ${dstr(o.dd)}).`);save();render()}return o}
+function shCancel(id){const S=st.shop,o=S.ord.find(x=>x.id===id);if(!o||o.st!=='cmd')return toastMsg('Trop tard : la commande est déjà confirmée.');o.st='cancel';click();save();render()}
+// arrivée : écarts réels (manquants, casse, température), sauf contrôle, tout passe
+function shArrive(o){const F=SHF[o.f],un=1-F.rel;o.st='arr';o.arr=st.day;for(const L of o.lines){L.got=L.packs;L.pb='';const r=Math.random();if(r<un*.35){L.got=Math.max(0,L.packs-RI(1,Math.max(1,L.packs)));L.pb='manquant'}else if(r<un*.5){L.pb='casse';L.br=Math.ceil(L.packs*SHP[L.p].pk*R(.05,.2))}else if(SHR[SHP[L.p].r].t!=='amb'&&r<un*.65)L.pb='température'}shLog(`🚚 Livraison arrivée : ${F.n}. À contrôler.`,1)}
+function shReceive(id,mode){const S=st.shop,o=S.ord.find(x=>x.id===id);if(!o||o.st!=='arr')return;const s=S.st.find(x=>x.id===o.store),F=SHF[o.f];let amt=0,issues=0;
+  for(const L of o.lines){let units=L.got*SHP[L.p].pk;const refuse=mode==='ctrl'&&L.pb&&L.pb!=='manquant';if(mode==='ctrl'&&L.pb)issues++;
+    if(refuse){continue}if(L.pb==='casse')units-=L.br||0;const billed=mode==='ctrl'?units:L.packs*SHP[L.p].pk;amt+=billed*L.px;L.tv=billed*L.px*SHR[SHP[L.p].r].tva;
+    const life=SHP[L.p].life*F.q*(L.pb==='température'?.5:1)*(o.f==='pl'?1.25:1);const k=s.stock[L.p];k.rs+=Math.max(0,units);if(units>0)k.lots.push([units,st.day+Math.max(1,Math.round(life))]);if(L.pb==='température'&&mode!=='ctrl')s.coldRisk=(s.coldRisk||0)+1}
+  const tot=o.lines.reduce((a,L)=>a+L.packs*SHP[L.p].pk*L.px,0),fee=F.free&&tot>=F.free?0:F.fee,disc=tot>=15000?.05:tot>=5000?.03:0;amt=amt*(1-disc)+fee;
+  const tv=o.lines.reduce((a,L)=>a+(L.tv||0),0)*(1-disc);S.inv.push({id:S.nid++,f:o.f,a:Math.round(amt+tv),due:st.day+F.pay,l:`Facture ${F.n} (commande du ${dstr(o.d)})`});S.pl.cost+=fee;S.pl.tvaD+=tv;o.st='done';o.ctrl=mode==='ctrl';o.amt=Math.round(amt);
+  S.rel[o.f]=clamp((S.rel[o.f]||50)+1,0,100);if(mode==='ctrl'&&issues)shLog(`✅ Livraison ${F.n} contrôlée : ${issues} problème(s) refusé(s) ou corrigé(s) sur la facture.`);else if(mode!=='ctrl'&&o.lines.some(L=>L.pb))shLog(`⚠️ Livraison ${F.n} acceptée sans contrôle : erreurs payées quand même.`);
+  if(curTab==='sh'){click();save();render()}}
+// ---- simulation d'un jour
+function shTick(){const S=st.shop;if(!S||S.over)return;const d=st.day,x=date(d),dom=x.getDate(),wd=x.getDay();if(dom===1)shMonth();
+  S.salAcc+=shPayroll()*12/365;
+  // factures fournisseurs payées à l'échéance (prélèvement)
+  for(let i=S.inv.length-1;i>=0;i--){const v=S.inv[i];if(d>=v.due){shMv(-v.a,v.l,'achat');S.inv.splice(i,1)}}
+  // commandes : confirmation, livraison (parfois en retard)
+  for(const o of S.ord){if(o.st==='cmd'&&d>=o.d+1)o.st='conf';if((o.st==='conf'||o.st==='cmd')&&d>=o.dd){if(Math.random()<(1-SHF[o.f].rel)*.5&&!o.late){o.late=1;o.dd=d+1;shLog(`⏳ ${SHF[o.f].n} a du retard : livraison demain.`,1)}else shArrive(o)}
+    if(o.st==='arr'){const so=S.st.find(s=>s.id===o.store);if(so&&shMgr(so)&&S.auto.rec)shReceive(o.id,'ctrl');else if(d>o.arr)shReceive(o.id,'all')}}
+  S.ord=S.ord.filter(o=>!(o.st==='done'&&d-o.d>40)&&o.st!=='cancel');
+  for(const s of S.st){
+    // dates limites : les plus vieux lots partent en premier
+    let exp=0;s.stock&&Object.keys(s.stock).forEach(p=>{const k=s.stock[p];while(k.lots.length&&k.lots[0][1]<=d){const q=k.lots[0][0];k.lots.shift();exp+=q*shRef(p);const fromSh=Math.min(k.sh,q);k.sh-=fromSh;k.rs=Math.max(0,k.rs-(q-fromSh));s.exp[p]=(s.exp[p]||0)+q}});
+    if(exp>0){S.pl.loss=(S.pl.loss||0)+exp;s.todayExp=exp}else s.todayExp=0;
+    if(!shOpenDay(s,d)){s.todayCli=0;s.todayCA=0;continue}
+    shSellDay(s,d,wd)}
+  if(wd===1)shCandGen();
+  if(S.auto.ord&&S.staff.some(w=>w.r==='gerant'))shAutoOrder();
+  shGoals()}
+function shMgr(s){return st.shop.staff.some(w=>w.r==='gerant'&&w.store===s.id&&!(w.abs>0))}
+function shHours(s){const H={caisse:0,rayon:0};for(const w of st.shop.staff){if(w.store!==s.id||w.abs>0)continue;const h=w.hw/6*(w.sk||1);if(w.boss){H.caisse+=h*.5;H.rayon+=h*.5}else if(w.r==='etud'){H.caisse+=h*.5;H.rayon+=h*.5}else if(w.r==='gerant'){H.rayon+=h*.3}else H[w.r]+=h}return H}
+function shRestock(s,capR){const cap=Math.max(12,Math.round(SHT[s.k].m2/150*36));const ps=Object.keys(SHP).sort((a,b)=>s.stock[a].sh/(cap+SHP[a].base)-s.stock[b].sh/(cap+SHP[b].base));for(const p of ps){if(capR<=0)break;const k=s.stock[p],want=Math.min(k.rs,Math.max(0,cap*(1+SHP[p].base/8)-k.sh));const m=Math.min(want,capR);k.sh+=m;k.rs-=m;capR-=m}return capR}
+function shSellDay(s,d,wd){const S=st.shop,T=SHT[s.k],TW=SHTOWN.find(t=>t[0]===s.town)||SHTOWN[0];const H0=shHours(s);let capR=shRestock(s,H0.rayon*140*.55)+H0.rayon*140*.45;
+  let cli=T.cli*TW[1]*SHWD[wd]*(.55+s.sat/110)*(.7+s.rep/170)*(1.25-.25*TW[2])*R(.92,1.08)*(month()===12?1.12:1);
+  // prix trop chers = moins de clients
+  const pidx=Object.keys(SHR).reduce((a,r)=>a+shPriceIdx(r),0)/Object.keys(SHR).length;cli*=Math.max(.55,1-(pidx-1)*1.4);
+  const H=shHours(s),capCli=H.caisse*40;let aband=0;if(cli>capCli){aband=Math.round((cli-capCli)*.6);cli-=aband}cli=Math.max(0,Math.round(cli));
+  let ca=0,dem=0,lost=0,tvaC=0;const ratio=cli/300;
+  for(const p in SHP){const P=SHP[p],k=s.stock[p];const pr=shPrice(p),ref=shRef(p)*SHR[P.r].co*(1+SHR[P.r].tva),pf=Math.pow(Math.max(.4,ref/pr),P.el*1.6);
+    const promo=S.promo[p]&&d<S.promo[p].end?1+S.promo[p].pct*2.5:1;let q=P.base*2.6*ratio*shSeason(p)*shWx(p)*pf*promo*R(.75,1.25);q=Math.round(q);dem+=q;
+    if(q>k.sh&&k.rs>0&&capR>0){const m=Math.min(q-k.sh,k.rs,capR);k.sh+=m;k.rs-=m;capR-=m}const sold=Math.min(q,k.sh);k.sh-=sold;let rem=sold;while(rem>0&&k.lots.length){const t=Math.min(rem,k.lots[0][0]);k.lots[0][0]-=t;rem-=t;if(!k.lots[0][0])k.lots.shift()}
+    if(q>sold){lost+=q-sold;s.lost[p]=(s.lost[p]||0)+(q-sold)}const h=s.sold[p]||(s.sold[p]=[]);h.push(q/SHWD[wd]);if(h.length>14)h.shift();
+    const v=sold*pr;ca+=v;tvaC+=v-v/(1+SHR[P.r].tva);S.pl.cost+=sold*shRef(p)}
+  // vols (démarque inconnue ± 1,2 %)
+  const theft=ca*.012*(S.sec?.4:1);S.pl.loss=(S.pl.loss||0)+theft*.75;
+  // réassort : le personnel remplit les rayons depuis la réserve
+  shRestock(s,Math.max(0,capR));
+  // satisfaction : disponibilité, attente, prix, fraîcheur
+  const avail=dem?1-lost/dem:1,queue=aband?Math.min(1,aband/Math.max(1,cli)):0,q=100*avail*(1-queue*.8)*Math.max(.6,1-(pidx-1)*1.2)*(s.coldRisk?.9:1);s.sat=clamp(s.sat+(q-s.sat)*.05,0,100);s.rep=clamp(s.rep+(s.sat-s.rep)*.01,0,100);
+  const ht=ca-tvaC;S.pl.rev+=ht;S.pl.tvaC+=tvaC;shMv(ca,'Ventes en caisse','vente');shMv(-ca*.002,'Frais de paiement par carte','fix');S.pl.cost+=ca*.002;
+  s.todayCli=cli;s.todayCA=Math.round(ca);s.todayLost=lost;s.todayAband=aband;s.hist.push({d,ca:Math.round(ca),cli});if(s.hist.length>60)s.hist.shift();S.caDay=(S.caDay||0)+ht}
+// ---- personnel
+const shWage=w=>w.boss?0:SHRL[w.r].brut*(st.shop.idx||1)*SHRL[w.r].k*w.hw*52/12;
+const shPayroll=()=>st.shop.staff.reduce((a,w)=>a+shWage(w),0);
+function shPerson(r){const f=Math.random()<.65,P=SHRL[r];return{id:st.shop.nid++,n:pick(f?CLPF:CLPM)+' '+pick(NOMS),r,f:f?1:0,hw:pick(P.hw),sk:+R(.85,1.15).toFixed(2),rel:+R(.6,1.05).toFixed(2),mot:.85,age:r==='etud'?RI(18,24):RI(19,60),town:pick(TOWNS),exp:RI(0,14)}}
+function shCandGen(){const S=st.shop,n=6+Math.min(12,Math.floor(S.staff.length/10));S.cand=Array.from({length:n},()=>shPerson(pick(['caisse','caisse','rayon','rayon','etud','etud','gerant'])))}
+function shHire(id){const S=st.shop,i=S.cand.findIndex(p=>p.id===id);if(i<0)return;const p=S.cand.splice(i,1)[0];p.store=shCur().id;p.day=st.day;S.staff.push(p);click();shLog(`👋 ${p.n} est engagé(e) : ${SHRL[p.r].n.toLowerCase()} à ${shCur().town} (${p.hw} h/semaine).`);save();render()}
+function shFire(id,ok){const S=st.shop,w=S.staff.find(x=>x.id===id);if(!w||w.boss)return;const ind=Math.round(shWage(w)*.25*(1+Math.min(3,(st.day-w.day)/365)));if(!ok)return ask(`Licencier ${w.n} ?\nFonction : ${SHRL[w.r].n}\nIndemnité de préavis : ${eur(ind)}`,()=>shFire(id,1),{ic:'✋',ok:'Licencier',danger:1});S.staff.splice(S.staff.indexOf(w),1);shMv(-ind,'Indemnité de préavis — '+w.n,'sal');S.pl.cost+=ind;closeM();save();render()}
+// ---- commandes automatiques (gérant)
+function shAutoOrder(){const S=st.shop;for(const s of S.st){if(!shMgr(s)&&!S.staff.some(w=>w.r==='acheteur'))continue;for(const f in SHF){const F=SHF[f];const dd0=shDelDays(f,st.day,1)[0];if(S.ord.some(o=>o.f===f&&o.store===s.id&&o.st!=='done'&&o.st!=='cancel'&&o.dd===dd0))continue;if(f==='pl'||(f==='bc'&&S.st.length<2&&!S.useBc))continue;const dd=shDelDays(f,st.day,1)[0];
+  const lines={};let tot=0;for(const p in SHP){if(!F.r.includes(SHP[p].r))continue;if(shBest(p)!==f)continue;const q=shSuggest(s,p,f,dd);if(q>0){lines[p]=q;tot+=q*SHP[p].pk*shBuy(p,f)}}if(tot>=F.min){shDraft={f,store:s.id,dd,lines};shSend(1);shLog(`🧑‍💼 La gérante commande chez ${F.n} pour ${eur(tot)} (livraison le ${dstr(dd)}).`)}}}}
+function shBest(p){const S=st.shop,L=Object.keys(SHF).filter(f=>SHF[f].r.includes(SHP[p].r)&&f!=='pl'&&(f!=='bc'||S.st.length>1||S.useBc));return L.sort((a,b)=>shBuy(p,a)-shBuy(p,b))[0]}
+// ---- mois
+function shFixedL(){const S=st.shop,L=[],n=S.staff.length;for(const s of S.st){const T=SHT[s.k];L.push([`${T.ic} Loyer ${s.town}`,T.rent],[`⚡ Énergie ${s.town} (frigos, éclairage)`,T.en])}
+  L.push(['Assurance incendie et marchandises',220*S.st.length],['Secrétariat social',15*Math.max(0,n-1)],['Comptable et logiciel de caisse',380+60*S.st.length]);if(S.sec)L.push(['Agent de sécurité',S.sec*2800]);if(S.loan)L.push(['Intérêts du prêt (5,5 %/an)',S.loan*.055/12]);return L}
+const shFixedM=()=>shFixedL().reduce((a,x)=>a+x[1],0);
+const shOver=()=>25000+Math.min(3e6,(S=>S.caM.slice(-12).reduce((a,b)=>a+b,0))(st.shop)*.08);
+const shReserve=()=>Math.round(2*(shPayroll()+shFixedM()));
+const shCanPay=()=>Math.max(0,Math.round(st.shop.cash-shReserve()-st.shop.inv.reduce((a,v)=>a+v.a,0)));
+const shStockVal=()=>st.shop.st.reduce((a,s)=>a+Object.keys(s.stock).reduce((b,p)=>b+(s.stock[p].sh+s.stock[p].rs)*shRef(p),0),0);
+const shCa12=()=>st.shop.caM.slice(-12).reduce((a,b)=>a+b,0)+st.shop.pl.rev;
+const shVal=()=>{const S=st.shop;if(!S)return 0;return Math.max(0,Math.round(S.cash-S.loan-S.inv.reduce((a,v)=>a+v.a,0)+shStockVal()+S.st.length*60000+shCa12()*.35))};
+function shMonth(){const S=st.shop;
+  if(S.salAcc>0){shMv(-S.salAcc,'Salaires du mois (coût employeur)','sal');S.pl.cost+=S.salAcc;S.salAcc=0}
+  for(const [l,a] of shFixedL()){shMv(-a,l,'fix');S.pl.cost+=a}
+  const tva=Math.round(S.pl.tvaC-S.pl.tvaD);if(tva)shMv(-tva,tva>0?'TVA à payer (collectée − déductible)':'TVA récupérée','tva');
+  if(S.cash<0){const i=-S.cash*.09/12;shMv(-i,'Intérêts du découvert (9 %/an)','fix');S.pl.cost+=i}
+  if(S.loan>0){const r=Math.min(S.loan,Math.max(500,S.loan*.02));S.loan-=r;shMv(-r,'Remboursement du prêt','loan')}
+  const res=S.pl.rev-S.pl.cost-(S.pl.loss||0);let tax=0;if(res<0)S.loss+=-res;else{const u=Math.min(S.loss,res);S.loss-=u;tax=Math.round((res-u)*.25)}if(tax>0)shMv(-tax,'Impôt des sociétés (25 %)','tax');
+  S.lastPl={rev:Math.round(S.pl.rev),cost:Math.round(S.pl.cost),loss:Math.round(S.pl.loss||0),tax,res:Math.round(res-tax)};S.caM.push(Math.round(S.pl.rev));if(S.caM.length>24)S.caM.shift();S.mH.push(S.lastPl.res);if(S.mH.length>36)S.mH.shift();S.pl={rev:0,cost:0,tvaC:0,tvaD:0,loss:0};S.lastMon=S.mon;S.mon={};
+  if(date(st.day).getMonth()===0){S.idx=+((S.idx||1)*1.02).toFixed(4);shLog('📈 Indexation de janvier : salaires et prix d’achat +2 %.',1)}
+  for(const w of S.staff.slice()){if(w.boss)continue;if(Math.random()<.025*(1.5-(w.mot||.85))){S.staff.splice(S.staff.indexOf(w),1);shLog(`🚪 ${w.n} quitte le magasin.`)}}
+  if(S.cash<-shOver()){S.red=(S.red||0)+1;if(S.red>=2){S.crisis=1;shLog('🚨 Ta chaîne de magasins ne peut plus payer ses dettes.',1)}}else S.red=0}
+// ---- prix et promotions
+function shSetCo(r,v){st.shop.price[r]=Math.max(1.0,+(v).toFixed(2));click();save();render()}
+function shPromo(p,pct){const S=st.shop;if(S.promo[p]&&st.day<S.promo[p].end){delete S.promo[p];click();save();return render()}const pr=shRef(p)*(S.price[SHP[p].r]||1)*(1-pct);if(pr<shRef(p))return toastMsg('Interdit : vente à perte (prix sous le prix d’achat).');S.promo[p]={pct,end:st.day+14};shLog(`🏷️ Promotion −${Math.round(pct*100)} % sur ${SHP[p].n} pendant 14 jours.`);click();save();render()}
+// ---- argent avec la holding / le privé
+function shDiv(a,ok){const S=st.shop;a=Math.round(a);if(!(a>0))return;if(hH()&&hH().own.sh)return hUp('sh',a);if(a>shCanPay())return toastMsg(`La chaîne doit garder 2 mois de charges et ses factures : maximum ${eur(shCanPay())}.`);const t=.3,net=Math.round(a*.7);if(!ok)return ask(`Dividende vers toi ?\nMontant brut : ${eur(a)}\nPrécompte (30 %) : ${eur(a-net)}\nSur ton compte privé : ${eur(net)}`,()=>shDiv(a,1),{ic:'💶',ok:'Verser'});shMv(-a,'Dividende versé','priv');pv().cash+=net;closeM();save();render()}
+function shLoan(a){const S=st.shop,mx=Math.max(0,Math.round(50000+shCa12()*.15-S.loan));a=Math.min(a,mx);if(a<1000)return toastMsg('La banque ne prête plus pour l’instant.');S.loan+=a;shMv(a,'Prêt bancaire (5,5 %/an)','loan');click();save();render()}
+// ---- succès (lot 1)
+const SHG=[['s1','Ouvre ton premier magasin',S=>true],['s2','Reçois ta première livraison',S=>S.ord.some(o=>o.st==='done')||S.stats1],['s3','Fais 10 000 € de ventes en un jour',S=>S.st.some(s=>s.todayCA>=10000)],['s4','Une satisfaction de 85',S=>S.st.some(s=>s.sat>=85)],['s5','Un mois avec moins de 1 % de pertes',S=>S.lastPl&&S.lastPl.rev>20000&&S.lastPl.loss<S.lastPl.rev*.01],['s6','Engage une gérante',S=>S.staff.some(w=>w.r==='gerant')],['s7','Chiffre d’affaires de 1 M€ sur 12 mois',S=>shCa12()>=1e6],['s8','Un mois avec 10 000 € de bénéfice',S=>S.lastPl&&S.lastPl.res>=10000]];
+function shGoals(){const S=st.shop;for(const [k,t,f] of SHG)if(!S.goals[k]){let ok=false;try{ok=f(S)}catch(e){}if(ok){S.goals[k]=st.day;shLog(`🏆 Succès : ${t}`,1);try{confetti(80)}catch(e){}}}}
+// ---- déblocage et création
+function shUnlock(ok,by){const V=pv(),H=hH();if(st.shUnlock)return shCreateUI();if(!by&&H&&H.cash>=SH_PRICE)return showModal(`<h3>🛒 Ouvrir ta 3e entreprise</h3><p class="sm">Prix pour débloquer : <b>${eur(SH_PRICE)}</b>. Qui paie ?</p><div style="display:grid;gap:8px"><button class="btn w" onclick="closeM();shUnlock(1,'h')">🏛️ Ma holding (${eur(H.cash)}) — conseillé</button><button class="btn s w" ${V.cash<SH_PRICE?'disabled':''} onclick="closeM();shUnlock(1,'p')">👤 Mon compte privé (${eur(V.cash)})</button><button class="btn s w" onclick="closeM()">Annuler</button></div>`);
+  if(by==='h'){if(!H||H.cash<SH_PRICE)return toastMsg('Pas assez dans la holding.');H.cash-=SH_PRICE;hLog(`🛒 La holding paie ${eur(SH_PRICE)} pour ouvrir la 3e entreprise.`)}else{if(V.cash<SH_PRICE)return toastMsg(`Il faut ${eur(SH_PRICE)}.`);if(!ok)return ask(`Ouvrir ta 3e entreprise ?\nPrix : ${eur(SH_PRICE)} (compte privé)`,()=>shUnlock(1,'p'),{ic:'🛒',ok:'Débloquer'});V.cash-=SH_PRICE}st.shUnlock=1;save();shCreateUI()}
+let shTownSel='Namur';
+function shCreateUI(){const V=pv(),H=hH(),nm0=($('#shnm')||{}).value;showModal(`<h3>🛒 Crée ta chaîne de magasins</h3><p class="mut sm">Tu ouvres une supérette de quartier (150 m²). Elle est vide : passe tes premières commandes chez les fournisseurs, choisis le jour de livraison, contrôle les livraisons, remplis les rayons et vends.</p>
+  <p class="mut">Nom de l’enseigne :</p><input type="text" id="shnm" value="${esc(nm0||pick(['Proxi','Mon Épicier','Au Panier','Fraîcheur','Le Comptoir'])+' '+pick(['Wallon','du Coin','Malin','Plus']))}" maxlength="26">
+  <p class="mut" style="margin-top:8px">Ville du premier magasin :</p><div class="row" style="flex-wrap:wrap;gap:6px">${SHTOWN.map(t=>`<button class="btn s" style="padding:6px 9px;font-size:12px;${shTownSel===t[0]?'outline:2px solid var(--or)':''}" onclick="shTownSel='${t[0]}';shCreateUI()">${t[0]}</button>`).join('')}</div>
+  <p class="mut" style="margin-top:8px">Capital de départ :</p><div class="row" style="flex-wrap:wrap;gap:6px">${[100000,250000,1e6].filter(c=>c<=V.cash).map(c=>`<button class="btn s" onclick="shCreate(${c})">👤 ${eur(c)}</button>`).join('')}${H?[250000,1e6,5e6].filter(c=>c<=H.cash).map(c=>`<button class="btn s" onclick="shCreate(${c},'h')">🏛️ ${eur(c)}</button>`).join(''):''}</div><p class="mut" style="font-size:12px">👤 = ton compte privé · 🏛️ = ta holding (la chaîne lui appartient)</p>`)}
+function shCreate(cap,by){const V=pv(),H=hH();if(by==='h'){if(!H||H.cash<cap)return toastMsg('Pas assez dans la holding.');H.cash-=cap}else{if(V.cash<cap)return toastMsg('Pas assez sur ton compte privé.');V.cash-=cap}const nm=(($('#shnm')||{}).value||'Mon magasin').trim().slice(0,26)||'Mon magasin';
+  st.shop=shNew(nm,cap,shTownSel);shCandGen();if(H){hFix(H);H.own.sh=1;if(by==='h'){H.cap.sh=(H.cap.sh||0)+cap;hLog(`🛒 La holding crée ${nm} avec ${eur(cap)}.`)}}pEv(`🛒 Création de ${nm} (${eur(cap)}).`,0);closeM();curTab='sh';shSec='home';save();render();
+  showModal(`<h3>🛒 Bienvenue chez ${esc(nm)}</h3><div class="card"><div style="margin:4px 0">1️⃣ <b>Commandes</b> : choisis un fournisseur, les quantités et le jour de livraison. Commence par le pain, la crèmerie, les fruits et légumes et l’épicerie.</div><div style="margin:4px 0">2️⃣ <b>Réception</b> : quand le camion arrive, contrôle la livraison (manquants, casse, froid).</div><div style="margin:4px 0">3️⃣ <b>Stock</b> : surveille les ruptures et les dates limites.</div><div style="margin:4px 0">4️⃣ <b>Équipe</b> : engage une caissière et un employé de rayon, puis une gérante (elle commande et contrôle à ta place).</div></div><button class="btn w" onclick="closeM()">C’est parti !</button>`)}
+/* ---------- interface ---------- */
+let shSec='home',shRay='all';
+function shTabs(){const S=st.shop,s=shCur();return[['home','🏠','Accueil'],['stock','📦','Stock'],['cmd','📝','Commandes'],['four','🚚','Fournisseurs'],['mag','🏪','Magasin'],['team','👥','Équipe'],['soc','📊','Société']].map(([k,i,l])=>{let b='';if(k==='cmd'){const n=S.ord.filter(o=>o.st==='arr').length;if(n)b=`<span class="bd">${n}</span>`}if(k==='stock'){const n=Object.keys(SHP).filter(p=>s.stock[p].sh+s.stock[p].rs===0).length;if(n)b=`<span class="bd">${n}</span>`}return`<button class="${shSec===k?'on':''}" onclick="shSec='${k}';click();$('#pane').scrollTop=0;render()"><b>${i}</b>${l}${b}</button>`}).join('')}
+function shRender(headOnly){const S=st.shop,s=shCur();$('#tname').textContent='🛒 '+S.name;$('#lt').textContent=S.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'MG';$('#lvl').textContent=Object.keys(S.goals).length+1;
+  $('#tsub').textContent=`${stars(s.rep)} ${Math.round(s.rep)} · ${S.st.length} magasin${S.st.length>1?'s':''} · ${S.staff.length} pers.`;const ca=$('#cash');ca.textContent=eur(S.cash);ca.classList.toggle('neg',S.cash<0);shownCash=null;
+  const nN=shNotifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0);
+  const dx=date(st.day),k=shOpenDay(s,st.day)?null:(dx.getDay()===0?'Fermé (dimanche)':'Fermé');$('#hudW').textContent=(k?'🔒 ':WX[st.wx].ic+' ')+dstr(st.day)+' '+dx.getFullYear()+(k?' · '+k:'');$('#hudJob').textContent=`🛒 ${s.todayCli||0} clients · ${eur(s.todayCA||0)}`;
+  document.querySelectorAll('[data-sp]').forEach(b=>b.classList.toggle('on',+b.dataset.sp===speed));$('#tabs').style.display='none';const ct=$('#cltabs');ct.style.display='';const tb=shTabs();if(ct.innerHTML!==tb)ct.innerHTML=tb;
+  if(headOnly===true)return;lastPaneT=performance.now();const P=$('#pane'),y=P.scrollTop,key='sh'+shSec;P.classList.toggle('enter',lastTab!==key);lastTab=key;const fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=rSh();P.scrollTop=y}
+function rSh(){const S=st.shop;if(S.crisis&&S.crisD!==st.day&&!modalOpen){S.crisD=st.day;setTimeout(shCrisisUI,50)}return({home:shHome,stock:shStock,cmd:shCmd,four:shFour,mag:shMag,team:shTeam,soc:shSoc})[shSec]()}
+function shNotifs(){const S=st.shop,L=[];if(!S)return L;for(const o of S.ord)if(o.st==='arr')L.push(['🚚','Livraison à contrôler : '+SHF[o.f].n,"shSec='cmd'"]);const s=shCur(),rup=Object.keys(SHP).filter(p=>s.stock[p].sh+s.stock[p].rs===0).length;if(rup)L.push(['🔴',rup+' produits en rupture',"shSec='stock'"]);if(S.crisis)L.push(['🚨','Cessation de paiement',"shSec='soc'"]);return L}
+function shNotifUI(){const L=shNotifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${L.length?`<div class="card" style="padding:4px 12px">${L.map(([i,t,a])=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:nowrap"><span style="font-size:22px">${i}</span><span class="sm" style="flex:1">${t}</span><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="${a};closeM();render()">Voir</button></div>`).join('')}</div>`:'<p class="mut">Rien à traiter.</p>'}<button class="btn w" onclick="closeM()">Fermer</button>`)}
+function shCrisisUI(){const S=st.shop,need=Math.round(-S.cash+30000);showModal(`<h3>🚨 Cessation de paiement</h3><p>${esc(S.name)} a ${eur(-S.cash)} de dettes.</p><button class="btn w" ${pv().cash<need?'disabled':''} onclick="pv().cash-=${need};st.shop.cash+=${need};st.shop.crisis=0;st.shop.red=0;closeM();render()">Apporter ${eur(need)} de mon compte privé</button><p></p><button class="btn s w" onclick="closeM()">Plus tard</button><p></p><button class="btn r w" onclick="shBankrupt()">Déclarer la faillite</button>`)}
+function shBankrupt(){try{const H=hH();if(H){H.own.sh=0;H.loan.sh=0}}catch(e){}pEv(`⚖️ Faillite de ${st.shop.name}.`,0,true);st.shop=null;closeM();curTab='hub';save();render()}
+function shStoreSel(){const S=st.shop;if(S.st.length<2)return'';return`<div class="seg">${S.st.map((s,i)=>`<button class="${(S.cur||0)===i?'on':''}" onclick="st.shop.cur=${i};click();render()">${SHT[s.k].ic} ${s.town}</button>`).join('')}</div>`}
+function shHome(){const S=st.shop,s=shCur(),L=S.lastPl;const rup=Object.keys(SHP).filter(p=>s.stock[p].sh+s.stock[p].rs===0),bas=Object.keys(SHP).filter(p=>{const k=s.stock[p],a=shAvg(s,p);return k.sh+k.rs>0&&(k.sh+k.rs)<a*1.5}),near=Object.keys(SHP).filter(p=>s.stock[p].lots.some(l=>l[1]-st.day<=1));
+  let h=shStoreSel()+`<div class="pvtiles">${clTile('🛒 Clients aujourd’hui',s.todayCli||0)}${clTile('💶 Ventes du jour',eur(s.todayCA||0),'money')}${clTile('😊 Satisfaction',Math.round(s.sat)+' / 100')}</div>`;
+  const T=[];const go=(t,sec,b)=>T.push(`<div class="row" style="padding:7px 0;border-top:1px solid var(--line)"><div style="flex:1" class="sm">${t}</div><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="shSec='${sec}';click();render()">${b}</button></div>`);
+  const arr=S.ord.filter(o=>o.st==='arr');if(arr.length)go(`🚚 ${arr.length} livraison${arr.length>1?'s':''} à contrôler`,'cmd','Contrôler');if(rup.length)go(`🔴 ${rup.length} produit${rup.length>1?'s':''} en rupture (ventes perdues)`,'stock','Voir');if(bas.length)go(`🟠 ${bas.length} produit${bas.length>1?'s':''} bientôt en rupture`,'cmd','Commander');if(near.length)go(`⏳ ${near.length} produit${near.length>1?'s':''} périment demain`,'stock','Voir');if(!S.ord.some(o=>o.st!=='done'))go('📝 Aucune commande en cours','cmd','Commander');
+  const H=shHours(s);if((s.todayAband||0)>0)go(`🧾 ${s.todayAband} clients sont partis à cause de l’attente en caisse`,'team','Engager');
+  if(T.length)h+=`<h2>À faire maintenant</h2><div class="card" style="padding:4px 12px">${T.join('')}</div>`;
+  h+=`<div class="card"><div class="mgrid" style="margin-top:0">${clTile('📈 Mois passé',L?(L.res>=0?'+':'')+eur(L.res):'—',L&&L.res<0?'neg':'money')}${clTile('🗑️ Pertes du jour',eur(s.todayExp||0))}${clTile('❌ Ventes perdues',(s.todayLost||0)+' art.')}</div><div class="mut sm" style="margin-top:8px">Heures de caisse ${Math.round(H.caisse)} h/j (± ${Math.round(H.caisse*40)} clients) · réassort ${Math.round(H.rayon)} h/j (± ${Math.round(H.rayon*140)} articles).</div></div>`;
+  if(s.hist.length>=2){const D=s.hist.slice(-30).map(x=>x.ca);h+=`<div class="card"><div class="row"><span class="mut sm" style="flex:1">Ventes des 30 derniers jours</span><b class="sm money">${eur(D[D.length-1])}</b></div>${spark(D,300,60)}</div>`}
+  h+=`<h2>Journal</h2><div class="card" style="padding:4px 12px">${S.log.slice(0,12).map(l=>`<div class="sm" style="padding:6px 0;border-top:1px solid var(--line)"><span class="mut">${dstr(l.d)}</span> · ${l.t}</div>`).join('')||'<p class="mut">Rien pour l’instant.</p>'}</div>`;return h}
+function shStock(){const S=st.shop,s=shCur();let h=shStoreSel()+`<div class="seg" style="overflow-x:auto">${[['all','Tout'],...Object.keys(SHR).map(r=>[r,SHR[r].ic])].map(([k,l])=>`<button class="${shRay===k?'on':''}" onclick="shRay='${k}';click();render()">${l}</button>`).join('')}</div>`;
+  const room=shRoom(s),cap=SHT[s.k].cap;h+=`<div class="card"><div class="mut sm">Réserve libre : ${room.amb}/${cap.amb} sec · ${room.frais}/${cap.frais} frais · ${room.surg}/${cap.surg} surgelé · valeur du stock ${eur(shStockVal())}</div></div>`;
+  for(const r of Object.keys(SHR).filter(r=>shRay==='all'||shRay===r)){const ps=Object.keys(SHP).filter(p=>SHP[p].r===r);h+=`<h2>${SHR[r].ic} ${SHR[r].n} · TVA ${Math.round(SHR[r].tva*100)} %</h2><div class="card" style="padding:4px 10px">${ps.map(p=>{const P=SHP[p],k=s.stock[p],a=shAvg(s,p),tot=k.sh+k.rs,cov=a?tot/a:99,c=tot===0?'var(--rd)':cov<1.5?'var(--or)':cov>30&&P.life>30?'var(--vi)':'var(--gr)',nx=k.lots.length?k.lots[0][1]-st.day:null,pr=S.promo[p]&&st.day<S.promo[p].end;
+    return`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);flex-wrap:nowrap;gap:6px"><span style="width:8px;height:30px;border-radius:4px;background:${c};flex:none"></span><div style="flex:1;min-width:0"><b style="font-size:12.5px">${P.n}</b>${pr?' <span class="tag o">promo</span>':''}<div class="mut" style="font-size:11px">rayon ${k.sh} · réserve ${k.rs} · ${a.toFixed(1)}/j · ${tot?cov.toFixed(1)+' j':'<span class="neg">rupture</span>'}${nx!==null&&P.life<60?` · ${nx<=1?'<span class="neg">périme '+(nx<=0?'aujourd’hui':'demain')+'</span>':'date dans '+nx+' j'}`:''}</div></div><div style="text-align:right"><b style="font-size:12.5px">${eur2(shPrice(p))}</b><div style="font-size:10.5px" class="mut">achat ${eur2(shRef(p))}</div></div><button class="btn s" style="padding:4px 7px;font-size:11px" onclick="shPromo('${p}',.2)">${pr?'✕':'−20 %'}</button></div>`}).join('')}</div>`}
+  return h}
+function shCmd(){const S=st.shop,s=shCur();let h=shStoreSel();const arr=S.ord.filter(o=>o.st==='arr'&&o.store===s.id);
+  if(arr.length)h+=`<h2>🚚 Livraisons à contrôler (${arr.length})</h2>`+arr.map(o=>{const F=SHF[o.f],pb=o.lines.filter(L=>L.pb);return`<div class="card acc" style="--ac:var(--or)"><b>${F.ic} ${F.n}</b><div class="mut sm">${o.lines.length} lignes · arrivée le ${dstr(o.arr)}</div>${pb.length?pb.map(L=>`<div class="sm" style="margin-top:4px">${L.pb==='manquant'?'❌':L.pb==='casse'?'💥':'🌡️'} ${SHP[L.p].n} : ${L.pb==='manquant'?`${L.got}/${L.packs} colis livrés`:L.pb==='casse'?`${L.br} unités cassées`:'chaîne du froid rompue (refuser)'}</div>`).join(''):'<div class="sm" style="margin-top:4px">Le contrôle ne trouve aucun problème… à vérifier !</div>'}<div class="row" style="margin-top:8px;gap:6px"><button class="btn" style="flex:2" onclick="shReceive(${o.id},'ctrl')">🔍 Contrôler et accepter le bon</button><button class="btn s" style="flex:1" onclick="shReceive(${o.id},'all')">Tout accepter</button></div><div class="mut" style="font-size:11.5px;margin-top:4px">Contrôler : tu ne paies que ce qui est arrivé en bon état. Tout accepter : rapide, mais les erreurs sont payées.</div></div>`}).join('');
+  h+=`<h2>📝 Nouvelle commande</h2><div class="card" style="padding:4px 12px">${Object.keys(SHF).map(f=>{const F=SHF[f],nx=shDelDays(f,st.day,1)[0];return`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:nowrap"><span style="font-size:24px">${F.ic}</span><div style="flex:1;min-width:0"><b class="sm">${F.n}</b><div class="mut" style="font-size:11.5px">${F.r.map(r=>SHR[r].ic).join(' ')} · min ${eur(F.min)} · prochaine livraison ${['dim','lun','mar','mer','jeu','ven','sam'][date(nx).getDay()]} ${dstr(nx)}</div></div><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="shNewOrder('${f}')">Commander</button></div>`}).join('')}</div>`;
+  const en=S.ord.filter(o=>o.store===s.id&&(o.st==='cmd'||o.st==='conf'));if(en.length)h+=`<h2>⏳ En cours (${en.length})</h2><div class="card" style="padding:4px 12px">${en.map(o=>`<div class="row sm" style="padding:6px 0;border-top:1px solid var(--line)"><span style="flex:1">${SHF[o.f].ic} ${SHF[o.f].n} · ${o.lines.length} lignes · ${o.st==='cmd'?'envoyée':'confirmée'}</span><b>${['dim','lun','mar','mer','jeu','ven','sam'][date(o.dd).getDay()]} ${dstr(o.dd)}</b>${o.st==='cmd'?`<button class="btn s" style="padding:4px 7px;font-size:11px;margin-left:6px" onclick="shCancel(${o.id})">✕</button>`:''}</div>`).join('')}</div>`;
+  const done=S.ord.filter(o=>o.st==='done'&&o.store===s.id).slice(-8).reverse();if(done.length)h+=`<h2>✅ Reçues</h2><div class="card" style="padding:4px 12px">${done.map(o=>`<div class="row sm" style="padding:6px 0;border-top:1px solid var(--line)"><span style="flex:1">${SHF[o.f].ic} ${SHF[o.f].n} · ${dstr(o.arr||o.dd)}${o.ctrl?' · contrôlée':''}</span><b>${eur(o.amt||0)}</b></div>`).join('')}</div>`;
+  h+=`<div class="card"><b class="sm">⚙️ Réglages des commandes</b><div class="mut" style="font-size:12px">Stock de sécurité en plus : ${S.safe} jour(s).</div>${clSeg(S.safe,[[0,'0 j'],[1,'1 j'],[2,'2 j'],[4,'4 j']],'x').replace(/st\.cl\.x=/g,'st.shop.safe=')}<label class="row sm" style="gap:6px;margin-top:8px"><input type="checkbox" ${S.auto.ord?'checked':''} onchange="st.shop.auto.ord=this.checked?1:0;save()"> La gérante passe les commandes toute seule ${S.staff.some(w=>w.r==='gerant')?'':'(il faut d’abord une gérante)'}</label><label class="row sm" style="gap:6px;margin-top:4px"><input type="checkbox" ${S.useBc?'checked':''} onchange="st.shop.useBc=this.checked?1:0;save()"> Utiliser aussi Belgacentrale (gros minimum)</label></div>`;
+  return h}
+function shFour(){const S=st.shop;return Object.keys(SHF).map(f=>{const F=SHF[f],rl=Math.round(S.rel[f]||50);return`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:28px">${F.ic}</span><div style="flex:1;min-width:0"><b>${F.n}</b><div class="mut sm">${F.d}</div></div></div><div class="mgrid">${clTile('Prix',F.px<.95?'bas':F.px>1.1?'élevé':'moyen')}${clTile('Minimum',eur(F.min))}${clTile('Fiabilité',Math.round(F.rel*100)+' %')}</div><div class="mut" style="font-size:12px;margin-top:6px">${F.r.map(r=>SHR[r].ic+' '+SHR[r].n).join(' · ')}<br>Livre le ${F.days.map(d=>['dim','lun','mar','mer','jeu','ven','sam'][d]).join(', ')} · délai ${F.lead} j · livraison ${F.free?`gratuite dès ${eur(F.free)}`:F.fee?eur(F.fee):'gratuite'} · paiement ${F.pay?F.pay+' jours':'comptant'} · qualité ${Math.round(F.q*100)} %</div><div class="row" style="margin-top:6px"><span class="sm" style="flex:1">Relation ${rl}/100</span>${clBar(rl).replace('margin-top:6px','margin-top:0;flex:2')}</div><button class="btn s w" style="margin-top:8px" onclick="shNewOrder('${f}')">Commander</button></div>`}).join('')+(S.inv.length?`<h2>🧾 Factures à payer (${S.inv.length})</h2><div class="card" style="padding:4px 12px">${S.inv.slice().sort((a,b)=>a.due-b.due).map(v=>`<div class="row sm" style="padding:6px 0;border-top:1px solid var(--line)"><span style="flex:1">${v.l}</span><span class="mut" style="margin-right:6px">${dstr(v.due)}</span><b>${eur(v.a)}</b></div>`).join('')}</div>`:'')}
+function shMag(){const S=st.shop,s=shCur(),T=SHT[s.k];let h=shStoreSel()+`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:34px">${T.ic}</span><div style="flex:1"><b>${T.n} · ${esc(s.town)}</b><div class="mut sm">${T.m2} m² · loyer ${eur(T.rent)}/mois · énergie ± ${eur(T.en)}/mois · ouvert du lundi au samedi</div></div></div><div class="mgrid">${clTile('Satisfaction',Math.round(s.sat))}${clTile('Réputation',Math.round(s.rep))}${clTile('Clients/jour',s.todayCli||0)}</div></div>`;
+  h+=`<h2>💶 Prix par rayon</h2><div class="card"><div class="mut sm">Coefficient = prix de vente HTVA ÷ prix d’achat. Plus haut = plus de marge, mais moins de clients. Jamais sous 1,00 (vente à perte interdite).</div>${Object.keys(SHR).map(r=>{const co=S.price[r]||SHR[r].co;return`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);margin-top:6px"><span style="flex:1" class="sm">${SHR[r].ic} ${SHR[r].n}</span><button class="mini" onclick="shSetCo('${r}',${co}-.02)">−</button><b style="width:48px;text-align:center" class="sm ${co>SHR[r].co*1.08?'neg':co<SHR[r].co*.94?'money':''}">×${co.toFixed(2)}</b><button class="mini" onclick="shSetCo('${r}',${co}+.02)">+</button></div>`}).join('')}<div class="mut" style="font-size:11.5px;margin-top:6px">Marge brute visée dans l’alimentation : 20 à 28 % (coefficients ± 1,25 à 1,40).</div></div>`;
+  h+=`<div class="card"><b class="sm">🛡️ Sécurité</b><div class="mut" style="font-size:12px">Un agent de sécurité (± 2 800 €/mois) divise les vols par 2,5.</div><button class="btn s" style="margin-top:6px" onclick="st.shop.sec=st.shop.sec?0:1;click();save();render()">${S.sec?'✅ Agent présent — le retirer':'Engager un agent'}</button></div>`;return h}
+function shTeam(){const S=st.shop,s=shCur(),H=shHours(s);let h=shStoreSel()+`<div class="card"><div class="mut sm">Besoin estimé : ± ${Math.ceil((s.todayCli||SHT[s.k].cli)/40)} h de caisse et ± ${Math.ceil(Object.keys(SHP).reduce((a,p)=>a+shAvg(s,p),0)/140)} h de réassort par jour. Tu as ${Math.round(H.caisse)} h de caisse et ${Math.round(H.rayon)} h de rayon.</div></div>`;
+  h+=`<h2>Candidats (${S.cand.length})</h2>`+S.cand.slice(0,10).map(p=>{const R0=SHRL[p.r];return`<div class="card"><div class="row" style="flex-wrap:nowrap;gap:10px">${clAva(p,42)}<div style="flex:1;min-width:0"><b class="sm">${esc(p.n)}</b><div class="mut" style="font-size:12px">${R0.ic} ${R0.n} · ${p.age} ans · ${p.town} · ${p.exp} an(s) d’expérience · ${p.hw} h/sem.</div><div style="font-size:12px">${clFeel(p)}</div></div></div><div class="row" style="margin-top:6px"><span class="mut" style="flex:1;font-size:12px">${eur2(R0.brut*(S.idx||1))}/h brut · ${eur(shWage(p))}/mois</span><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="shHire(${p.id})">Engager</button></div></div>`}).join('');
+  h+=`<h2>Ton équipe (${S.staff.length})</h2><div class="card" style="padding:4px 12px">${S.staff.map(w=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);flex-wrap:nowrap;gap:8px">${clAva(w,34)}<div style="flex:1;min-width:0"><b class="sm">${esc(w.n)}</b><div class="mut" style="font-size:11.5px">${SHRL[w.r].ic} ${w.boss?'Patron(ne) au magasin':SHRL[w.r].n} · ${w.hw} h/sem.${!w.boss?' · '+eur(shWage(w))+'/mois':''}</div></div>${w.boss?'':`<button class="btn s" style="padding:5px 8px;font-size:11px" onclick="shFire(${w.id})">✋</button>`}</div>`).join('')}</div>`;return h}
+function shSoc(){const S=st.shop,L=S.lastPl;let h=`<div class="card"><div class="mgrid" style="margin-top:0">${clTile('Compte',eur(S.cash),S.cash<0?'neg':'money')}${clTile('Factures à payer',eur(S.inv.reduce((a,v)=>a+v.a,0)))}${clTile('CA 12 mois',eur(shCa12()))}</div><div class="mgrid">${clTile('Salaires / mois',eur(shPayroll()))}${clTile('Frais fixes / mois',eur(shFixedM()))}${clTile('Valeur',eur(shVal()))}</div>${L?`<div class="mut sm" style="margin-top:8px">Mois passé : ventes HTVA ${eur(L.rev)}, coûts ${eur(L.cost)}, pertes et vols ${eur(L.loss)}, impôt ${eur(L.tax)} → <b class="${L.res<0?'neg':'money'}">${L.res>=0?'+':''}${eur(L.res)}</b> (marge nette ${L.rev?(L.res/L.rev*100).toFixed(1):0} %)</div>`:''}
+  <details style="margin-top:8px"><summary class="sm">Frais fixes du mois</summary>${shFixedL().map(([l,a])=>`<div class="row sm" style="padding:3px 0"><span style="flex:1">${l}</span><b>${eur(a)}</b></div>`).join('')}</details><details style="margin-top:6px"><summary class="sm">Relevé de compte</summary>${S.mv.slice(0,30).map(m=>`<div class="row sm" style="padding:3px 0"><span class="mut" style="width:52px">${dstr(m.d)}</span><span style="flex:1">${m.l}</span><b class="${m.a<0?'neg':'money'}">${m.a>0?'+':''}${eur(m.a)}</b></div>`).join('')}</details></div>`;
+  h+=`<h2>Banque</h2><div class="card"><div class="mut sm">Découvert autorisé : ${eur(shOver())} · prêt : ${eur(S.loan)}.</div><div class="row" style="margin-top:8px;gap:6px">${[25000,100000,500000].map(a=>`<button class="btn s" style="padding:6px 9px;font-size:12px" onclick="shLoan(${a})">Emprunter ${eur(a)}</button>`).join('')}</div></div>`;
+  const cp=shCanPay(),own=hH()&&hH().own.sh;h+=`<h2>${own?'🏛️ Vers ta holding':'💶 Vers toi'}</h2><div class="card"><div class="mut sm">Maximum : ${eur(cp)} (la chaîne garde 2 mois de charges et de quoi payer ses fournisseurs). ${own?'Sans impôt (RDT).':'Précompte 30 %.'}</div><div class="row" style="margin-top:8px;gap:6px">${[10000,100000,1e6].map(a=>`<button class="btn s" style="padding:6px 9px;font-size:12px" ${cp<a?'disabled':''} onclick="shDiv(${a})">${eur(a)}</button>`).join('')}</div></div>`;
+  const n=Object.keys(S.goals).length;h+=`<h2>🏆 Succès · ${n} / ${SHG.length}</h2><div class="card">${SHG.map(([k,t])=>`<div class="sm" style="padding:3px 0">${S.goals[k]?'✅':'⬜'} ${t}</div>`).join('')}</div>`;return h}
+/* ---------- décor : façade du magasin, clients, camion de livraison ---------- */
+let shCam=0;
+function shDraw(t){if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs();g.setTransform(Math.min(2,devicePixelRatio||1),0,0,Math.min(2,devicePixelRatio||1),0,0);g.globalAlpha=1;const S=st.shop;if(!S)return;const s=shCur();
+  const pal=PAL[season()],wk=WX[st.wx].k,yW=CH*.80,yR=CH*.84;shCam+=.15;camX=shCam;
+  const sk=SKY[wk];let gr=g.createLinearGradient(0,0,0,CH*.6);gr.addColorStop(0,sk[0]);gr.addColorStop(.7,sk[1]);gr.addColorStop(1,sk[2]);g.fillStyle=gr;g.fillRect(0,0,CW,CH*.6+2);
+  const cc=wk==='storm'?'rgba(70,80,95,.9)':wk==='rain'?'rgba(150,160,172,.9)':'rgba(255,255,255,.88)';for(const cl of clouds){const x=((cl.x+t*6*cl.s)%(CW+260)+CW+260)%(CW+260)-130,y=CH*cl.y*.8,sc=cl.s;g.fillStyle=cc;g.beginPath();g.ellipse(x,y,30*sc,10*sc,0,0,7);g.ellipse(x+12*sc,y-5*sc,18*sc,12*sc,0,0,7);g.fill()}
+  hills(.08,CH*.5,CH*.18,pal.hillF,1.3);hills(.22,CH*.56,CH*.12,pal.hillN,4.1);rect(0,CH*.62,CW,yW-CH*.62,pal.grass2||'#7fb069');
+  for(let i=0;i<6;i++){const x=i*150-((shCam*.5)%150);house(x+20,CH*.64,1,'#efe6d6','#a5442f')}
+  // le magasin
+  const bw=Math.min(300,CW*.62),bx=CW*.5-bw/2,bh=CH*.34,by=yW-bh;rect(bx,by,bw,bh,'#f2efe8');rect(bx,by,bw,18,'#2f8a4a');g.fillStyle='#fff';g.font='900 12px Nunito,sans-serif';g.textAlign='center';g.fillText(S.name.slice(0,24),bx+bw/2,by+13);g.textAlign='left';
+  const fill=Object.keys(SHP).reduce((a,p)=>a+Math.min(1,s.stock[p].sh/20),0)/Object.keys(SHP).length;
+  for(let i=0;i<4;i++){const wx=bx+12+i*(bw-24)/4,ww=(bw-24)/4-8;rect(wx,by+26,ww,bh-40,'#cfe6f3');for(let r=0;r<3;r++){rect(wx+4,by+38+r*((bh-50)/3),ww-8,3,'#8a6b4a');for(let c=0;c<6;c++)if(hh(i*31+r*7+c)<fill)rect(wx+6+c*(ww-12)/6,by+28+r*((bh-50)/3),(ww-12)/6-2,9,['#e05a5a','#ffd23f','#5ab55a','#3d8bd6','#f39c34'][(i+r+c)%5])}}
+  rect(bx+bw/2-14,yW-34,28,34,'#5a6b7d');
+  rect(0,yW,CW,yR-yW,'#c9ced3');rect(0,yR,CW,CH-yR,'#4a5058');for(let i=0;i<12;i++)rect(i*60-(shCam%60),yR+(CH-yR)/2-1,30,3,'#f2f2f2');
+  // camion de livraison les jours de livraison
+  if(S.ord.some(o=>o.store===s.id&&(o.st==='arr'||(o.dd===st.day&&o.st!=='done'))))van(bx-30,CH-4,t,1);
+  // clients
+  const n=Math.min(10,Math.round((s.todayCli||0)/60)+(shOpenDay(s,st.day)?2:0));for(let i=0;i<n;i++){const dir=i%2?1:-1,x=((i*83+t*(16+i*2)*dir)%(CW+60)+CW+60)%(CW+60)-30;worker(x,yW+3,t,{walk:1,ph:i,vest:['#e05a5a','#3d8bd6','#7a4fa0','#2f8a6a','#e0b23a'][i%5],helm:['#2b1b10','#a8743f','#1c1c1c'][i%3],skin:i%4,s:.85});if(i%3===0)rr(x+5,yW-14,7,8,2,'#f2f2f2')}
+  if(wk==='rain'||wk==='storm'){g.strokeStyle='rgba(200,220,240,.5)';g.lineWidth=1;g.beginPath();for(let i=0;i<60;i++){const x=(hh(i)*CW+t*40)%CW,y=(hh(i*7)*CH+t*300)%CH;g.moveTo(x,y);g.lineTo(x-3,y+9)}g.stroke()}}
+
 requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-13.2";
+var APPV="2026-11-13.3";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
-(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 1.4 · "+APPV})();
+(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 1.5 · "+APPV})();
 function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){});
  fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
   if(!j||!j.v||j.v===APPV){if(man)say("Le jeu est à jour ✓ (version "+APPV+")");return}
