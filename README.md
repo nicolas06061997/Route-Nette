@@ -20,6 +20,7 @@ Page « Mes entreprises » : Route Nette est gratuite ; la société de nettoyag
 
 ## 3e entreprise : chaîne de magasins
 Débloquée pour 75 M€ (compte privé ou holding). On ouvre une supérette dans une ville wallonne et on gère tout : ± 95 produits en 10 rayons (TVA 6 / 21 %), 8 fournisseurs (prix, minimum, frais de livraison, jours et délai, fiabilité, paiement), commandes avec calendrier de livraison et quantités conseillées, contrôle à la réception (manquants, casse, température), réserve et rayons, dates de péremption, prix par rayon et promotions, personnel (caissières, réassort, étudiants, gérante), TVA, ISOC, prêt et dividendes vers la holding.
+Puis la chaîne grandit (onglet 🚀 Groupe) : nouveaux magasins (supérette de ville, supermarché), entrepôt central et camions, transferts de stock, concurrents à racheter et classement, carrière (niveaux, défis du mois, projets, grands projets), marque propre, drive et livraison à domicile, franchise, rachat de l'agence d'intérim. Et la gestion fine : folder promo, commandes permanentes, inventaire, anti-gaspi, contrôles AFSCA, décisions du patron, intérim, rapports, formations, syndicats (CP 202), assurances et procès.
 
 ## Sauvegarde
 Automatique dans le téléphone (`routenette-save`). Code de sauvegarde à exporter / importer dans Entreprise → Plus.
