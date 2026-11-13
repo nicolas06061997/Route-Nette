@@ -163,6 +163,12 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
 #splash p{margin:0;color:#cfe6d6;font-size:15px;max-width:340px}
 #splash .btn{min-width:230px;font-size:18px;padding:14px 20px}
 #splash .ver{font-size:12px;color:var(--mut);margin-top:6px}
+#splash .menu{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:4px}
+#splash .soon{display:inline-block;font-size:11px;font-weight:900;background:#ffd79a;color:#3a2200;border-radius:8px;padding:2px 7px;margin-left:6px;vertical-align:2px}
+#intro{position:fixed;inset:0;z-index:50;background:#0b1530;transition:opacity .55s}
+body.introon #ins,body.introon #upd{visibility:hidden}
+#intro canvas{width:100%;height:100%;display:block}
+#intro button{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom) + 18px);background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:8px 16px;font:800 14px Nunito,sans-serif;cursor:pointer}
 /* --- Installation et mises à jour --- */
 #upd,#ins{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 76px);z-index:60;display:none;align-items:center;gap:10px;background:#1c3626;border:1px solid var(--or);color:var(--tx);border-radius:16px;padding:10px 12px;box-shadow:var(--sh);max-width:736px;margin:auto}
 #upd.on,#ins.on{display:flex}#upd>div,#ins>div{flex:1}#upd small,#ins small{display:block;font-weight:600;opacity:.85;font-size:13px}
@@ -215,10 +221,15 @@ input[type=text],textarea{width:100%;padding:11px;border-radius:12px;border:1px 
   <svg width="120" height="120" viewBox="0 0 512 512" aria-hidden="true"><use href="#lg"/></svg>
   <h1>Route Nette</h1>
   <p>Pars de zéro, monte ton entreprise d'entretien des routes et décroche les marchés publics du SPW.</p>
-  <button class="btn" id="play">▶ Jouer</button>
+  <div class="menu">
+  <button class="btn" id="play">▶️ Histoire</button>
+  <button class="btn s" id="mpb" onclick="mpSoon()">🌐 Multijoueur<span class="soon">Bientôt</span></button>
+  <button class="btn s" onclick="optUI()">⚙️ Options</button>
   <button class="btn s" id="insp" style="display:none" onclick="showIns(1)">📲 Installer le jeu</button>
+  </div>
   <div class="ver" id="ver"></div>
 </div>
+<div id="intro"><canvas id="introc"></canvas><button onclick="introEnd()">Passer ⏭</button></div>
 <svg width="0" height="0" style="position:absolute"><defs><g id="lg">
   <defs><linearGradient id="lgb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ec7ff"/><stop offset=".62" stop-color="#bfe9ff"/></linearGradient></defs>
   <rect width="512" height="512" rx="112" fill="url(#lgb)"/>
@@ -3342,6 +3353,77 @@ $('#play').onclick=()=>{fullScreen();playing=true;setTimeout(friendHash,700);$('
   if(!st.started){st.started=true;save();showModal(`<h3>🦺 Bienvenue dans Route Nette</h3><p>Tu pars de <b>zéro</b> : ${eur(st.cash)} d'économies, ta vieille voiture, une pince, des gants et des sacs.</p>
   <div class="card"><div style="margin:4px 0">1️⃣ <b>Inscris-toi à la BCE</b> pour pouvoir facturer.</div><div style="margin:4px 0">2️⃣ Fais des <b>petits boulots</b> (déchets, pelouses, haies…) et économise.</div><div style="margin:4px 0">3️⃣ Achète tes <b>machines</b>, engage des <b>ouvriers</b>.</div><div style="margin:4px 0">4️⃣ RC, VCA, camionnette : remets offre aux <b>marchés publics du SPW</b>, face aux autres entreprises.</div><div style="margin:4px 0">5️⃣ Engage Angélique (aide-comptable), des gestionnaires de chantier, des directeurs… et décroche l'agréation 🏆</div></div>
   <p class="mut">Prix HTVA, salaires et règles des marchés publics comme en Belgique. Nom de ta société :</p><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">C'est parti !</button>`)}};
+/* ---------- Animation de lancement + menu (Histoire · Multijoueur · Options) ----------
+   Dessinée sur un canvas (pas de fichier vidéo). Complète 1 fois par jour, puis version courte ; désactivable dans Options (rn-intro-off). */
+let IRAF=0,IEND=0;
+function introRun(force){const el=$('#intro'),c=$('#introc');if(!el||!c)return;let last='',off='';try{last=localStorage.getItem('rn-intro')||'';off=localStorage.getItem('rn-intro-off')||''}catch(e){}
+  const today=new Date().toDateString();if(off&&!force){el.style.display='none';return}
+  const T0=(!force&&last===today)?3.4:0,D=6.2;try{localStorage.setItem('rn-intro',today)}catch(e){}
+  el.style.display='block';el.style.opacity='1';IEND=0;document.body.classList.add('introon');cancelAnimationFrame(IRAF);
+  const g2=c.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1);let W=0,H=0;
+  const fit=()=>{const w=c.clientWidth||innerWidth,h=c.clientHeight||innerHeight;if(w!==W||h!==H){W=w;H=h;c.width=W*dpr;c.height=H*dpr}};
+  const L=(a,b,k)=>a+(b-a)*k,cl=k=>Math.max(0,Math.min(1,k)),ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+  const mix=(a,b,k)=>{const p=x=>[parseInt(x.slice(1,3),16),parseInt(x.slice(3,5),16),parseInt(x.slice(5,7),16)],A=p(a),B=p(b);return'rgb('+A.map((v,i)=>Math.round(L(v,B[i],k))).join(',')+')'};
+  const stars=Array.from({length:40},(_,i)=>[(i*97%100)/100,(i*53%60)/100,(i%3)+1]);
+  let start=performance.now(),played=0;
+  const wheel=(x,y,r,a)=>{g2.fillStyle='#1d1f22';g2.beginPath();g2.arc(x,y,r,0,7);g2.fill();g2.strokeStyle='#9aa0a6';g2.lineWidth=2;g2.beginPath();g2.moveTo(x-Math.cos(a)*r*.6,y-Math.sin(a)*r*.6);g2.lineTo(x+Math.cos(a)*r*.6,y+Math.sin(a)*r*.6);g2.stroke()};
+  function frame(now){if(IEND)return;fit();const t=T0+(now-start)/1000;g2.setTransform(dpr,0,0,dpr,0,0);
+    const s=Math.min(W,H*0.75)/400,ry=H*.66,rh=Math.max(46,H*.13),k=ease(cl((t-1.1)/1.9));
+    // ciel, étoiles, soleil
+    const sk=g2.createLinearGradient(0,0,0,ry);sk.addColorStop(0,mix('#0b1530','#5ec7ff',k));sk.addColorStop(1,mix('#26365c','#ffd9a8',k*.8));g2.fillStyle=sk;g2.fillRect(0,0,W,ry);
+    g2.fillStyle='rgba(255,255,255,'+(1-k)+')';stars.forEach(([x,y,r])=>{g2.fillRect(x*W,y*ry,r*.8,r*.8)});
+    g2.fillStyle='#ffd56b';g2.beginPath();g2.arc(W*.86,L(ry*1.05,ry*.16,k),24*s,0,7);g2.fill();
+    // collines
+    g2.fillStyle=mix('#14301c','#5fb845',k);g2.beginPath();g2.moveTo(0,ry);for(let x=0;x<=W;x+=20)g2.lineTo(x,ry-18*s-Math.sin(x/90)*14*s-Math.sin(x/37)*5*s);g2.lineTo(W,ry);g2.fill();
+    // route + herbe
+    g2.fillStyle=mix('#1f2226','#3c4148',k);g2.fillRect(0,ry,W,rh);g2.fillStyle=mix('#173a1f','#4fa83c',k);g2.fillRect(0,ry+rh,W,H-ry-rh);
+    g2.fillStyle='rgba(255,255,255,.85)';const off2=(t*60)%80;for(let x=-off2;x<W;x+=80)g2.fillRect(x,ry+rh/2-3,44,6);
+    // panneau travaux (clignote la nuit)
+    const px=W*.12,py=ry-6;g2.fillStyle='#7a7a7a';g2.fillRect(px-2,py-46*s,4,46*s);g2.fillStyle='#ff7a00';g2.beginPath();g2.moveTo(px,py-84*s);g2.lineTo(px+22*s,py-46*s);g2.lineTo(px-22*s,py-46*s);g2.fill();g2.fillStyle='#fff';g2.font='900 '+Math.round(20*s)+'px Nunito,sans-serif';g2.textAlign='center';g2.fillText('!',px,py-52*s);
+    if(Math.floor(t*3)%2===0){g2.fillStyle='rgba(255,190,40,'+(1-k*.6)+')';g2.beginPath();g2.arc(px,py-90*s,6*s,0,7);g2.fill()}
+    // flèche lumineuse (remorque)
+    const ax=W*.86,ay=ry+rh*.35;g2.fillStyle='#ffcc00';g2.fillRect(ax-30*s,ay-62*s,60*s,42*s);g2.fillStyle='#222';g2.fillRect(ax-26*s,ay-58*s,52*s,34*s);
+    if(Math.floor(t*2.5)%2===0){g2.fillStyle='#ffa31a';for(let i=0;i<3;i++){const cx=ax+16*s-i*14*s;g2.beginPath();g2.moveTo(cx,ay-41*s);g2.lineTo(cx-10*s,ay-51*s);g2.lineTo(cx-10*s,ay-46*s);g2.lineTo(cx-4*s,ay-41*s);g2.lineTo(cx-10*s,ay-36*s);g2.lineTo(cx-10*s,ay-31*s);g2.fill()}}
+    g2.fillStyle='#ffcc00';g2.fillRect(ax-4*s,ay-20*s,8*s,18*s);wheel(ax,ay+4*s,7*s,0);
+    // camionnette qui arrive
+    const vx=L(-160*s,W*.42,ease(cl((t-1.1)/1.8))),vy=ry+rh*.42,va=t*8;
+    g2.fillStyle='#f4f6f8';g2.fillRect(vx-60*s,vy-46*s,92*s,40*s);g2.beginPath();g2.moveTo(vx+32*s,vy-40*s);g2.lineTo(vx+52*s,vy-24*s);g2.lineTo(vx+56*s,vy-6*s);g2.lineTo(vx+32*s,vy-6*s);g2.fill();
+    g2.fillStyle='#8fd3ff';g2.beginPath();g2.moveTo(vx+35*s,vy-37*s);g2.lineTo(vx+49*s,vy-25*s);g2.lineTo(vx+35*s,vy-25*s);g2.fill();g2.fillStyle='#ff7a00';g2.fillRect(vx-60*s,vy-22*s,116*s,6*s);
+    if(k<.6){g2.fillStyle='rgba(255,240,180,'+(.7-k)+')';g2.beginPath();g2.moveTo(vx+56*s,vy-14*s);g2.lineTo(vx+150*s,vy-30*s);g2.lineTo(vx+150*s,vy+4*s);g2.fill()}
+    wheel(vx-38*s,vy-4*s,9*s,va);wheel(vx+34*s,vy-4*s,9*s,va);
+    // ouvrier qui balaie
+    if(t>2.7){const wx=vx-90*s,wy=vy-6*s,sw=Math.sin(t*7)*8*s;g2.strokeStyle='#ff7a00';g2.lineWidth=7*s;g2.beginPath();g2.moveTo(wx,wy-22*s);g2.lineTo(wx,wy-44*s);g2.stroke();g2.strokeStyle='#2b3a55';g2.lineWidth=5*s;g2.beginPath();g2.moveTo(wx,wy-22*s);g2.lineTo(wx-5*s,wy);g2.moveTo(wx,wy-22*s);g2.lineTo(wx+5*s,wy);g2.stroke();g2.fillStyle='#f1c27d';g2.beginPath();g2.arc(wx,wy-51*s,6*s,0,7);g2.fill();g2.fillStyle='#ffcc00';g2.fillRect(wx-7*s,wy-60*s,14*s,4*s);g2.strokeStyle='#8a5a2b';g2.lineWidth=3*s;g2.beginPath();g2.moveTo(wx+2*s,wy-38*s);g2.lineTo(wx+16*s+sw,wy+2*s);g2.stroke();g2.fillStyle='#c9a227';g2.fillRect(wx+9*s+sw,wy,16*s,4*s)}
+    // balayeuse qui « nettoie » l'écran
+    const bx=L(-200*s,W+220*s,cl((t-3.2)/1.5)),by=ry+rh*.95;
+    g2.fillStyle='rgba(60,48,36,'+(.5-.15*k)+')';g2.fillRect(Math.max(0,bx+60*s),0,W,H);
+    if(t>3.1&&t<4.9){g2.fillStyle='#ff7a00';g2.fillRect(bx-70*s,by-56*s,100*s,46*s);g2.fillStyle='#fff';g2.fillRect(bx+30*s,by-70*s,34*s,58*s);g2.fillStyle='#8fd3ff';g2.fillRect(bx+36*s,by-64*s,22*s,22*s);g2.fillStyle='#ffcc00';g2.fillRect(bx+40*s,by-76*s,14*s,6*s);
+      g2.save();g2.translate(bx+48*s,by-6*s);g2.rotate(t*14);g2.strokeStyle='#c9a227';g2.lineWidth=3*s;for(let i=0;i<8;i++){g2.rotate(Math.PI/4);g2.beginPath();g2.moveTo(0,0);g2.lineTo(13*s,0);g2.stroke()}g2.restore();wheel(bx-48*s,by-8*s,10*s,t*9);wheel(bx+10*s,by-8*s,10*s,t*9);
+      g2.fillStyle='rgba(220,220,220,.35)';for(let i=0;i<5;i++){g2.beginPath();g2.arc(bx-80*s-i*18*s,by-10*s-((t*40+i*13)%30)*s,(6+i*2)*s,0,7);g2.fill()}}
+    // titre
+    if(t>4.2){const q=ease(cl((t-4.2)/.6));if(!played){played=1;try{snd(523,.14,'triangle',.06,.001);snd(659,.14,'triangle',.06,.12);snd(784,.28,'triangle',.06,.24)}catch(e){}}
+      g2.save();g2.globalAlpha=q;g2.translate(W/2,H*.34);g2.scale(.7+.3*q,.7+.3*q);g2.textAlign='center';g2.font='900 '+Math.round(Math.min(58,W/6.5))+'px Nunito,sans-serif';
+      const tg=g2.createLinearGradient(0,-40,0,10);tg.addColorStop(0,'#ffffff');tg.addColorStop(1,'#ffd79a');g2.fillStyle='rgba(0,0,0,.35)';g2.fillText('Route Nette',2,4);g2.fillStyle=tg;g2.fillText('Route Nette',0,0);
+      g2.font='800 '+Math.round(Math.min(18,W/22))+'px Nunito,sans-serif';g2.fillStyle='#fff';g2.fillText('Entretien des routes · Wallonie',0,34);g2.restore()}
+    if(t>=D-.55&&!el.dataset.f){el.dataset.f=1;el.style.opacity='0'}
+    if(t>=D){introEnd();return}
+    IRAF=requestAnimationFrame(frame)}
+  el.dataset.f='';IRAF=requestAnimationFrame(frame);
+  el.onclick=e=>{if(e.target.tagName!=='BUTTON'&&performance.now()-start>600)introEnd()}}
+function introEnd(){IEND=1;cancelAnimationFrame(IRAF);document.body.classList.remove('introon');const el=$('#intro');if(!el)return;el.style.opacity='0';setTimeout(()=>{if(IEND)el.style.display='none'},350)}
+function mpSoon(){clk();showModal(`<h3>🌐 Multijoueur · bientôt</h3><p>Le mode multijoueur arrive dans une prochaine mise à jour :</p>
+  <div class="card"><div style="margin:4px 0">🔑 Crée une partie et donne le <b>code à 6 lettres</b> à tes amis (jusqu'à 10).</div><div style="margin:4px 0">🏛️ Tout le monde se bat pour les <b>mêmes marchés publics</b>, avec des entreprises robots.</div><div style="margin:4px 0">🌙 La partie reste <b>toujours en ligne</b> : chacun joue quand il veut.</div><div style="margin:4px 0">🏆 Le premier qui finit le jeu à <b>100 %</b> gagne.</div></div>
+  <p class="mut sm">En attendant, ta partie continue en mode ▶️ Histoire.</p><button class="btn w" onclick="closeM()">OK</button>`)}
+function optUI(){let off='';try{off=localStorage.getItem('rn-intro-off')||''}catch(e){}
+  showModal(`<h3>⚙️ Options</h3><div class="card"><div class="row">
+  <button class="btn s" onclick="st.snd=st.snd?0:1;save();optUI()">${st.snd?'🔊 Son activé':'🔇 Son coupé'}</button>
+  <button class="btn s" onclick="st.ntf={all:'imp',imp:'off',off:'all'}[st.ntf||'imp'];save();optUI()">${{all:'💬 Messages : tous',imp:'💬 Messages : importants',off:'💬 Messages : aucun'}[st.ntf||'imp']}</button>
+  <button class="btn s" onclick="introTog()">${off?'🎬 Intro : désactivée':'🎬 Intro : activée'}</button>
+  <button class="btn s" onclick="closeM();introRun(1)">▶️ Revoir l'intro</button></div></div>
+  <div class="card"><b class="sm">💾 Ma partie</b><div class="row" style="margin-top:8px"><button class="btn s" onclick="exportSave()">💾 Sauvegarde</button><button class="btn s" onclick="importUI()">📥 Charger</button><button class="btn s" onclick="restorePrev()">🛟 Copie d’avant</button></div></div>
+  <div class="card"><div class="row"><button class="btn s" onclick="closeM();chkV(1)">🔄 Vérifier les mises à jour</button></div><div class="mut sm" style="margin-top:6px">${esc($('#ver')?$('#ver').textContent:'')}</div></div>
+  <button class="btn w" onclick="closeM()">Fermer</button>`)}
+function introTog(){try{if(localStorage.getItem('rn-intro-off'))localStorage.removeItem('rn-intro-off');else localStorage.setItem('rn-intro-off','1')}catch(e){}optUI()}
+introRun();
 /* ================= 2e ENTREPRISE : SOCIÉTÉ DE NETTOYAGE (st.cl) =================
    Même calendrier que Route Nette, même vie privée (pv()), compte en banque séparé (st.cl.cash).
    Chiffres belges 2026 : titre-service wallon 10,60 € (1/7/2026) + intervention régionale ± 17 € (estimation) ;
@@ -4835,11 +4917,11 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-13.5";
+var APPV="2026-11-13.6";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
-(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 1.7 · "+APPV})();
+(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 1.8 · "+APPV})();
 function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){});
  fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
   if(!j||!j.v||j.v===APPV){if(man)say("Le jeu est à jour ✓ (version "+APPV+")");return}
