@@ -2268,7 +2268,7 @@ const PRIV={
   loc_kot:{c:'loc',n:'Kot étudiant à Louvain-la-Neuve',ic:'🎓',p:145000,m:175,rent:480,dep:-.03},
   loc_mais:{c:'loc',n:'Maison 3 chambres à louer (Wallonie)',ic:'🏠',p:269550,m:330,rent:1000,dep:-.03},
   loc_garage:{c:'loc',n:'Garage fermé à louer',ic:'🚪',p:27000,m:20,rent:85,dep:-.02},
-  loc_imm:{c:'loc',n:'Immeuble de rapport (4 appartements)',ic:'🏬',p:690000,m:1000,rent:3300,dep:-.03},
+  loc_imm:{c:'loc',n:'Immeuble de rapport (4 appartements)',ic:'🏬',p:690000,m:1000,rent:3300,dep:-.03,u:4},
   loc_cell:{c:'loc',n:'Cellule commerciale en centre-ville',ic:'🏪',p:300000,m:450,rent:1500,dep:-.02},
   vigne:{c:'loc',n:'Château viticole à Saint-Émilion (15 ha, vente du vin)',ic:'🍇',p:25000000,m:70000,rent:125000,dep:-.02},
   bureaux:{c:'loc',n:'Immeuble de bureaux loué à Namur (2 500 m²)',ic:'🏢',p:6500000,m:9000,rent:36000,dep:-.01},
@@ -2315,7 +2315,8 @@ const louSai=o=>!!(PRIV[o.k]&&PRIV[o.k].hrn);
 // gestionnaire de tes locations (employé privé) : remplace l'agence, sans commission
 const GLT=[{n:'1 jour / semaine',cap:4,c:800},{n:'Mi-temps',cap:10,c:1950},{n:'Temps plein',cap:30,c:3900},{n:'Temps plein + assistante',cap:999,c:7400}];
 const gl=()=>pv().gl||null,glSk=()=>gl()?gl().sk:1,glCap=()=>gl()?GLT[gl().tr].cap:0;
-const glN=()=>pv().own.filter(o=>o.lou&&o.lz&&(o.lz.m==='gl'||o.lz.sai&&gl())).length;
+const glU=o=>(PRIV[o.k]&&PRIV[o.k].u)||1;
+const glN=()=>gl()?pv().own.reduce((a,o)=>a+(o.lou&&o.lz&&(o.lz.m==='gl'||o.lz.sai)?1:o.gm&&PRIV[o.k]&&PRIV[o.k].rent?glU(o):0),0):0;
 const louSaiC=()=>gl()?.12:LOU_SAI;
 const louWho=m=>m==='gl'&&gl()?gl().n.split(' ')[0]+', ton gestionnaire,':m==='ag'?'l’agence':'tu';
 const louGest=m=>m==='gl'&&gl()?'🧑‍💼 '+gl().n:m==='ag'?'🏢 agence (8 %)':'🙋 toi-même';
@@ -2334,7 +2335,7 @@ function rentOf(o){const P=PRIV[o.k];if(!P)return 0;if(P.rent)return Math.round(
 // frais d'agence / plateforme par mois, impôt (moyenne par mois), charges du propriétaire
 function louFee(o){const z=o.lou&&o.lz;if(!z)return 0;if(z.sai)return Math.round(louMkt(o)*louSaiC());return z.m==='ag'&&z.t?Math.round(z.t.r*LOU_AG):0}
 function louTaxM(o){const P=PRIV[o.k],z=o.lou&&o.lz;return z&&(z.sai||z.t)?Math.round(P.hr*LOU_TAX):0}
-function pCharge(o){const P=PRIV[o.k];if(!P||!P.m)return 0;if(P.m<0||P.rent||!P.hr||!o.lou)return P.m;const z=o.lz||{};if(z.sai)return P.m;return Math.round(P.m*(z.t?.35:.5))}
+function pCharge(o){const P=PRIV[o.k];if(!P||!P.m)return 0;if(P.rent)return P.m-(o.gm&&gl()?Math.min(P.m,Math.round(rentOf(o)*LOU_AG)):0);if(P.m<0||!P.hr||!o.lou)return P.m;const z=o.lz||{};if(z.sai)return P.m;return Math.round(P.m*(z.t?.35:.5))}
 const louNet=o=>rentOf(o)-louFee(o)-louTaxM(o)-pCharge(o);
 function louDelay(m,lv){return Math.max(3,Math.round((m==='moi'?RI(30,75):RI(14,40))*[.5,1,2.2][lv]/(m==='gl'?glSk():1)))}
 // statut en quelques mots (liste des biens)
@@ -2409,18 +2410,18 @@ let glT=0;
 const glCost=()=>gl()?Math.round(GLT[gl().tr].c*(st.idx||1)):0;
 const glStars=sk=>sk<.95?'★★☆☆':sk<1.08?'★★★☆':'★★★★';
 function glCands(){const V=pv();if(!V.glC||st.day-V.glC.d>30)V.glC={d:st.day,L:[0,1,2].map(()=>({n:pick(PREN)+' '+pick(NOMS),sk:+R(.85,1.2).toFixed(2),y:RI(2,20),age:RI(26,58),from:pick(['une agence immobilière de Namur','un syndic d’immeubles à Liège','une banque (crédits hypothécaires)','la gestion locative d’une grosse agence à Charleroi','une société de logements publics','un notaire à Wavre'])}))};return V.glC.L}
-function glSave(){const g=gl();if(!g)return 0;let a=0;for(const o of pv().own){const z=o.lou&&o.lz;if(!z)continue;if(z.sai)a+=louMkt(o)*(LOU_SAI-.12);else if(z.m==='gl')a+=(z.t?z.t.r:z.ask)*(LOU_AG+1.21/48)+40}return Math.round(a)}
+function glSave(){const g=gl();if(!g)return 0;let a=0;for(const o of pv().own){const z=o.lou&&o.lz;if(!z)continue;if(z.sai)a+=louMkt(o)*(LOU_SAI-.12);else if(z.m==='gl')a+=(z.t?z.t.r:z.ask)*(LOU_AG+1.21/48)+40}for(const o of pv().own)if(o.gm&&PRIV[o.k]&&PRIV[o.k].rent)a+=rentOf(o)*(LOU_AG+.03);return Math.round(a)}
 function glUI(t){const V=pv(),g=gl();clk();if(t!==undefined)glT=t;const row=(a,b,c)=>`<div class="askr"><span>${a}</span><b class="${c||''}">${b}</b></div>`;
   let h=`<div class="ask"><div class="askh"><div class="askic">🧑‍💼</div><h3>Gestionnaire de tes locations</h3></div>`;
-  const nH=V.own.filter(o=>PRIV[o.k]&&PRIV[o.k].hr&&!PRIV[o.k].rent).length;
+  const nH=V.own.filter(o=>PRIV[o.k]&&(PRIV[o.k].hr||PRIV[o.k].rent)).reduce((a,o)=>a+(PRIV[o.k].rent?glU(o):1),0);
   if(g){const sv=glSave();h+=`${row('Nom',esc(g.n)+' '+glStars(g.sk))}${row('Depuis le',dstr(g.d)+' '+date(g.d).getFullYear())}${row('Contrat',GLT[g.tr].n)}${row('Salaire (coût total)','−'+eur(glCost())+'/mois')}${row('Biens gérés',glN()+' / '+(glCap()>99?'∞':glCap()))}${row('Frais d’agence économisés','+'+eur(sv)+'/mois','money')}${row('Bilan',(sv-glCost()>=0?'+':'')+eur(sv-glCost())+'/mois',sv-glCost()>=0?'money':'neg')}
-    <p class="askp">${esc(g.n.split(' ')[0])} cherche les locataires, vérifie leurs revenus, fait les états des lieux, encaisse les loyers, envoie les mises en demeure, va chez le juge de paix si besoin et négocie avec les artisans (réparations −15 %). Pour les locations de vacances, il gère les réservations (commission 12 % au lieu de 20 %).</p>
+    <p class="askp">${esc(g.n.split(' ')[0])} cherche les locataires, vérifie leurs revenus, fait les états des lieux, encaisse les loyers, envoie les mises en demeure, va chez le juge de paix si besoin et négocie avec les artisans (réparations −15 %). Pour les locations de vacances, il gère les réservations (commission 12 % au lieu de 20 %). Il gère aussi tes immeubles de rapport, kots, garages et bureaux loués à la place de l’agence (−8 % de frais, logements vides 2× moins souvent ; un immeuble de 4 appartements compte pour 4).</p>
     <div class="mut sm" style="margin:10px 0 4px">Contrat</div><div class="chips">${GLT.map((T,i)=>`<button class="${g.tr===i?'on':''}" onclick="glTier(${i})">${T.n} · ${T.cap>99?'∞':T.cap} biens · ${eur(Math.round(T.c*(st.idx||1)))}</button>`).join('')}</div>
     <div class="row" style="flex-wrap:nowrap;margin-top:6px"><span class="sm" style="flex:1">🔁 Mettre en location tout seul les biens vides (pas ta maison)</span><button class="btn s" style="padding:6px 12px" onclick="pv().gl.auto=pv().gl.auto?0:1;save();glUI()">${g.auto?'✅ Oui':'❌ Non'}</button></div>
     ${sv<glCost()?`<div class="askw">⚠️ Pour l’instant il coûte plus qu’il ne te fait gagner. Il devient rentable avec plus de biens loués (ou un contrat plus petit).</div>`:''}
     <div class="row" style="margin-top:16px;flex-wrap:nowrap"><button class="btn r" style="flex:1" onclick="glFire()">Licencier</button><button class="btn s" style="flex:1.5" onclick="closeM()">Fermer</button></div></div>`;return showModal(h)}
   const L=glCands(),c=Math.round(GLT[glT].c*(st.idx||1));
-  h+=`<p class="askp">Un employé à toi (payé par ton compte privé) qui remplace l’agence : plus de commission (1 mois de loyer par locataire + 8 %), locataires vérifiés, impayés suivis, réparations moins chères, et il peut louer tout seul tes biens vides. ${(()=>{const L=V.own.filter(o=>PRIV[o.k]&&PRIV[o.k].hr&&!PRIV[o.k].rent),av=L.length?L.reduce((a,o)=>a+(louSai(o)?louMkt(o)*.08:louMkt(o)*(LOU_AG+1.21/48)+40),0)/L.length:130,n=Math.ceil(c/av);return n<=L.length?`Avec tes ${L.length} biens à louer, il est <b>rentable</b> (il te fait économiser ± ${eur(Math.round(av*L.length))}/mois de frais).`:`Rentable à partir de ± ${n} biens loués comme les tiens (tu en as ${L.length}). Comme en vrai : pour 1 ou 2 maisons, l’agence coûte moins cher.`})()}</p>
+  h+=`<p class="askp">Un employé à toi (payé par ton compte privé) qui remplace l’agence pour tes maisons louées et tes immeubles de rapport : plus de commission (1 mois de loyer par locataire + 8 %), locataires vérifiés, impayés suivis, réparations moins chères, et il peut louer tout seul tes biens vides. ${(()=>{const L=V.own.filter(o=>PRIV[o.k]&&(PRIV[o.k].hr||PRIV[o.k].rent)),av=L.length?L.reduce((a,o)=>a+(PRIV[o.k].rent?rentOf(o)*(LOU_AG+.03):louSai(o)?louMkt(o)*.08:louMkt(o)*(LOU_AG+1.21/48)+40),0)/L.length:130,n=Math.ceil(c/av);return n<=L.length?`Avec tes ${L.length} biens à louer, il est <b>rentable</b> (il te fait économiser ± ${eur(Math.round(av*L.length))}/mois de frais).`:`Rentable à partir de ± ${n} biens loués comme les tiens (tu en as ${L.length}). Comme en vrai : pour 1 ou 2 maisons, l’agence coûte moins cher.`})()}</p>
   <div class="mut sm" style="margin:10px 0 4px">1. Quel contrat ?</div><div class="chips">${GLT.map((T,i)=>`<button class="${glT===i?'on':''}" onclick="glUI(${i})">${T.n}</button>`).join('')}</div>
   ${row('Biens qu’il peut gérer',GLT[glT].cap>99?'sans limite':'jusqu’à '+GLT[glT].cap)}${row('Coût (salaire + ONSS)',eur(c)+'/mois')}${row('Tes biens à louer',nH)}
   <div class="mut sm" style="margin:12px 0 4px">2. Choisis parmi les candidats</div>`;
@@ -2430,13 +2431,24 @@ function glHire(i,ok){const V=pv();if(gl())return;const w=glCands()[i];if(!w)ret
   if(!ok)return ask(`Engager ${w.n} ?\nContrat : ${GLT[glT].n}\nCoût : ${eur(c)}/mois\nPayé par : ton compte privé\nSur ton compte : ${eur(V.cash)}\nTes biens loués par une agence ou par toi passent chez ${w.n.split(' ')[0]} (maximum ${cap>99?'tous':cap}). Les baux et les locataires ne changent pas.`,()=>glHire(i,1),{ic:'🧑‍💼',ok:'Engager'});
   V.gl={n:w.n,sk:w.sk,tr:glT,d:st.day,auto:1};V.glC=null;let n=0;
   for(const o of V.own){const z=o.lou&&o.lz;if(!z||z.sai||z.m==='gl'||(z.t&&z.t.jp))continue;if(glN()>=glCap())break;z.m='gl';n++}
+  for(const o of V.own){const P=PRIV[o.k];if(!P||!P.rent||o.gm)continue;if(glN()+glU(o)>glCap())continue;o.gm=1;n++}
   pEv(`🧑‍💼 Tu engages ${w.n} pour gérer tes locations (${GLT[glT].n}, ${eur(c)}/mois)${n?' : il reprend '+n+' bien'+(n>1?'s':''):''}.`,0,true);try{glAuto()}catch(e){}save();render();glUI()}
 function glTier(t){const g=gl();if(!g||g.tr===t)return;if(glN()>GLT[t].cap)return toastMsg(`Il gère ${glN()} biens : ce contrat est limité à ${GLT[t].cap}. Rends d’abord des biens à l’agence.`);g.tr=t;pEv(`🧑‍💼 Nouveau contrat pour ${g.n} : ${GLT[t].n} (${eur(glCost())}/mois).`,0,false);save();render();glUI()}
 function glFire(ok){const V=pv(),g=gl();if(!g)return;const m=Math.min(6,1+Math.floor((st.day-g.d)/365)),ind=glCost()*m;
   if(!ok)return ask(`Licencier ${g.n} ?\nPréavis payé : ${m} mois\nIndemnité : ${eur(ind)}\nTes biens qu’il gère repassent à une agence (1 mois de loyer + 8 %).`,()=>glFire(1),{ic:'🧑‍💼',ok:'Licencier',danger:1});
-  V.cash-=ind;for(const o of V.own)if(o.lz&&o.lz.m==='gl')o.lz.m='ag';delete V.gl;pEv(`🧑‍💼 ${g.n} quitte ton service (indemnité ${eur(ind)}). Tes locations repassent à l’agence.`,-ind,true);save();render()}
+  V.cash-=ind;for(const o of V.own){if(o.lz&&o.lz.m==='gl')o.lz.m='ag';delete o.gm}delete V.gl;pEv(`🧑‍💼 ${g.n} quitte ton service (indemnité ${eur(ind)}). Tes locations repassent à l’agence.`,-ind,true);save();render()}
+// immeubles de rapport : gérés par une agence (comprise dans les charges) ou par ton gestionnaire
+function glBldCard(o){const P=PRIV[o.k],g=gl(),r=rentOf(o),on=o.gm&&g;let h=`<div class="card" style="margin-top:8px;background:var(--card2)"><b>🔑 Loué · ${on?'🧑‍💼 géré par '+esc(g.n):'🏢 géré par une agence'}</b><div class="mut sm" style="margin:4px 0">Loyer${P.u?'s ('+P.u+' logements)':''} : <b>${eur(r)}/mois</b>, versé le 1er du mois sur ton compte privé. ${on?'Pas de frais d’agence, ± 1 mois sur 50 sans locataire.':'Frais d’agence (± '+eur(Math.round(r*LOU_AG))+'/mois) compris dans les charges, ± 1 mois sur 20 sans locataire.'}</div>`;
+  if(on)h+=`<button class="btn s w" style="padding:11px;margin-top:6px" onclick="glBld(${o.id},0)">🏢 Rendre à l’agence</button>`;
+  else if(g)h+=`<button class="btn g w" style="padding:11px;margin-top:6px" onclick="glBld(${o.id},1)">🧑‍💼 Confier à ${esc(g.n.split(' ')[0])} · −${eur(Math.round(r*LOU_AG))}/mois de frais</button>`;
+  else h+=`<button class="btn s w" style="padding:11px;margin-top:6px" onclick="glUI()">🧑‍💼 Engager un gestionnaire pour ne plus payer l’agence</button>`;
+  return h+'</div>'}
+function glBld(id,on){const o=pv().own.find(x=>x.id===id);if(!o||!PRIV[o.k].rent)return;const nm=pShort(PRIV[o.k].n);
+  if(on){if(!gl())return;if(glN()+glU(o)>glCap())return toastMsg(`${gl().n.split(' ')[0]} est complet (${glN()} / ${glCap()}) : passe-le à un contrat plus grand.`);o.gm=1;delete o.glNo;pEv(`🧑‍💼 ${gl().n} gère maintenant ${nm}.`,0,false)}
+  else{delete o.gm;o.glNo=1;pEv(`🏢 ${nm} : rendu à l’agence.`,0,false)}clk();save();render();pBien(id)}
 // chaque lundi : il met en location les biens vides (pas la maison où tu habites, pas un bien acheté il y a moins de 14 jours)
 function glAuto(){const V=pv(),g=gl();if(!g||!g.auto)return;const h=myHome();
+  for(const o of V.own){const P=PRIV[o.k];if(!P||!P.rent||o.gm||o.glNo||glN()+glU(o)>glCap())continue;o.gm=1;pEv(`🧑‍💼 ${g.n} reprend la gestion de ${pShort(P.n)} (plus d’agence).`,0,false)}
   for(const o of V.own){if(glN()>=glCap())break;const P=PRIV[o.k];if(!P||!P.hr||P.rent||o.lou||o.rw||o===h||st.day-o.day<14||o.glNo)continue;louStart0(o,'gl',1)}}
 function louAct(id,a,ok){const V=pv(),o=V.own.find(x=>x.id===id);if(!o||!o.lou)return;louFix(o);const P=PRIV[o.k],z=o.lz,t=z&&z.t,nm=pShort(P.n);if(!z)return;
   const back=()=>{clk();save();render();pBien(id)};
@@ -2692,7 +2704,7 @@ function privInvest(){const V=pv(),I=V.inv||(V.inv={sav:0,etf:0,gold:0,pens:0});
     if(P.hr&&!P.rent){louAcc=louAcc||{n:0,a:0};try{louMonth(o)}catch(e){}continue}
     const r=rentOf(o);if(!r)continue;
     if(month()===1&&(o.iy||0)<date(st.day).getFullYear()){o.iy=date(st.day).getFullYear();if(st.day-o.day>300){o.ix=(o.ix||1)*1.02;pEv(`📈 Indexation du loyer de ${P.n} : ${eur(Math.round(r*1.02))}/mois.`)}}
-    if(Math.random()<.05){pEv(`🏚️ ${P.n} : pas de locataire ce mois-ci.`);continue}rent+=r}
+    if(Math.random()<(o.gm&&gl()?.02:.05)){pEv(`🏚️ ${P.n} : pas de locataire ce mois-ci.`);continue}rent+=r}
   if(louAcc&&louAcc.n)pEv(`🔑 Loyers et réservations de tes biens (${louAcc.n} bien${louAcc.n>1?'s':''}, frais d’agence déduits) : +${eur(louAcc.a)}`,louAcc.a,false);louAcc=null;try{louTaxTick()}catch(e){}
   if(rent){V.cash+=rent;V.rentT=(V.rentT||0)+rent;pEv(`🔑 Loyers de tes immeubles : +${eur(rent)}`,0)}
   if(month()===1&&V.pensY){const back=Math.round(V.pensY*.3);V.cash+=back;pEv(`👴 Réduction d'impôt épargne-pension : +${eur(back)}`);V.pensY=0}}
@@ -2961,9 +2973,9 @@ function pPhoto(k){clk();showModal(photo(k)+`<button class="btn s w" style="marg
 const pShort=n=>n.replace(/ \(.*$/,'');
 function pBiens(own){const val=own.reduce((a,o)=>a+pValue(o),0),rents=own.reduce((a,o)=>a+rentOf(o),0);
   let h=`<div class="pvtiles"><div><span>💎 Valeur</span><b>${eur(val)}</b></div><div><span>💸 Coûtent / mois</span><b class="neg">−${eur(privMonthly())}</b></div><div><span>🔑 Loyers / mois</span><b class="money">+${eur(rents)}</b></div></div><p class="mut sm" style="margin:2px 4px 8px">👆 Touche un bien pour le vendre, le louer ou voir le détail.</p>`;
-  if(own.some(o=>PRIV[o.k].hr&&!PRIV[o.k].rent)||gl()){const g=gl();h+=`<div class="card" style="cursor:pointer" onclick="glUI()"><div class="row" style="flex-wrap:nowrap"><span style="font-size:28px">🧑‍💼</span><div style="flex:1;min-width:0"><b class="sm">${g?esc(g.n)+' gère tes locations':'Engager un gestionnaire pour tes locations'}</b><div class="mut" style="font-size:12px">${g?glN()+' / '+(glCap()>99?'∞':glCap())+' biens · −'+eur(glCost())+'/mois · économise ± '+eur(glSave())+'/mois d’agence':'Il remplace l’agence : plus de commission, il loue tout seul tes biens vides'}</div></div><span class="mut sm">›</span></div></div>`}
+  if(own.some(o=>PRIV[o.k].hr||PRIV[o.k].rent)||gl()){const g=gl();h+=`<div class="card" style="cursor:pointer" onclick="glUI()"><div class="row" style="flex-wrap:nowrap"><span style="font-size:28px">🧑‍💼</span><div style="flex:1;min-width:0"><b class="sm">${g?esc(g.n)+' gère tes locations':'Engager un gestionnaire pour tes locations'}</b><div class="mut" style="font-size:12px">${g?glN()+' / '+(glCap()>99?'∞':glCap())+' biens · −'+eur(glCost())+'/mois · économise ± '+eur(glSave())+'/mois d’agence':'Il remplace l’agence : plus de commission, il loue tout seul tes biens vides'}</div></div><span class="mut sm">›</span></div></div>`}
   for(const [g,cs] of PGRP){const L=own.filter(o=>cs.includes(PRIV[o.k].c));if(!L.length)continue;h+=`<h2>${g} · ${L.length}</h2><div class="card" style="padding:4px 12px">`;
-    for(const o of L){const P=PRIV[o.k],v=pValue(o),gn=v-o.price,r=rentOf(o);const stt=louStat(o),ch=pCharge(o);
+    for(const o of L){const P=PRIV[o.k],v=pValue(o),gn=v-o.price,r=rentOf(o);const stt=louStat(o)+(P.rent&&o.gm&&gl()?' · 🧑‍💼':''),ch=pCharge(o);
       h+=`<div class="row" style="padding:9px 0;border-top:1px solid var(--line);cursor:pointer;flex-wrap:nowrap" onclick="pBien(${o.id})"><span style="font-size:24px">${P.ic}</span><div style="flex:1;min-width:0"><b class="sm">${pShort(P.n)}</b><div class="mut" style="font-size:12px">${stt?stt+' · ':''}${ch>0?'−'+eur(ch)+'/mois':ch<0?'+'+eur(-ch)+'/mois':''}${r?' · +'+eur(r)+' loyer':''}${o.loan?' · crédit '+eur(o.loan):''}</div></div><div style="text-align:right;white-space:nowrap">${P.keep||P.sub?'<span class="mut sm">›</span>':`<b class="sm">${eur(v)}</b><div style="font-size:12px" class="${gn>=0?'money':'neg'}">${gn>=0?'+':''}${eur(gn)}</div>`}</div></div>`}
     h+='</div>'}
   return h}
@@ -2974,7 +2986,7 @@ function pBien(id){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;louFix(o
   if(P.sub)b+=`<button class="btn r w" style="padding:13px" onclick="pSell(${id})">✂️ Résilier · tu économises ${eur(P.m)}/mois</button>`;
   else if(!P.keep)b+=`<button class="btn w" style="padding:13px" onclick="pSell(${id})">💰 Vendre · tu reçois ${eur(net)}</button><div class="mut sm" style="margin:4px 2px 0">${gn>=0?`Tu gagnes ${eur(gn)} par rapport au prix d’achat.`:`Tu perds ${eur(-gn)} par rapport au prix d’achat.`}${fee?` Frais d’agence ± 3 % : ${eur(fee)}.`:''}${o.loan?` Le crédit restant (${eur(o.loan)}) est remboursé à la vente.`:''}${SV.occ?` Vendu avec le locataire (l’acheteur reprend le bail) : prix −8 %.`:''}</div>`;
   if(P.hr&&!P.rent)b+=louCard(o);
-  if(P.rent)b+=`<div class="card" style="margin-top:8px;background:var(--card2)"><div class="sm">🔑 <b>Déjà en location</b> : une agence immobilière gère ce bien pour toi et trouve les locataires. Le loyer (${eur(r)}/mois) arrive le 1er du mois sur ton compte privé (± 1 mois sur 20 sans locataire, et parfois une réparation à payer).</div></div>`;
+  if(P.rent)b+=glBldCard(o);
   if(P.flip&&!o.rv)b+=o.rw?`<div class="tags" style="margin-top:8px"><span class="tag o">🔨 Travaux en cours jusqu’au ${dstr(o.rw)}</span></div>`:`<button class="btn g w" style="padding:12px;margin-top:8px" onclick="flipGo(${id})">🔨 Rénover (60 000 €) · vaudra ± ${eur(v*1.75)}</button>`;
   if(P.keep)b+=`<div class="mut sm">Ça fait partie de ta vie : ça ne se vend pas.</div>`;
   const pc=IMC[o.k];showModal(`${pc&&pc.src&&!pc.none?photo(o.k):''}<div class="hd" style="margin-top:6px"><div class="ic">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3>${o.lou?'<span class="tag g">🔑 En location</span>':P.home&&myHome()===o?'<span class="tag v">🏡 Tu habites ici</span>':''}</div></div>
@@ -5070,7 +5082,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-13.8";
+var APPV="2026-11-13.9";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
