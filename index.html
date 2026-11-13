@@ -938,7 +938,7 @@ function euSwap(k,i){const F=fil()[k],c=euCands&&euCands[i];if(!F||!c)return;F.c
 // effets temporaires (mods) et permanents (fixP) sur une filiale
 const euMod=(F,rv,fix,n,t)=>{(F.mods||(F.mods=[])).push({rv,fix,n,t})};
 const euRlAdd=(F,v)=>{F.rl=clamp(euRL(F)+v,0,100)};
-function euMonth(){const H=st.hold;for(const k in fil()){const F=fil()[k],C=EU[k],D=euD(F),sk=(F.dir&&F.dir.sk)||1;F.m++;const L=F.lv,dt=euDet(k),mch=F.mach||0,rp=Math.max(6,(D.ramp||17)-Math.min(6,Math.floor(dt/2)));
+function euMonth(){euHoldAuto();const H=st.hold;for(const k in fil()){const F=fil()[k],C=EU[k],D=euD(F),sk=(F.dir&&F.dir.sk)||1;F.m++;const L=F.lv,dt=euDet(k),mch=F.mach||0,rp=Math.max(6,(D.ramp||17)-Math.min(6,Math.floor(dt/2)));
     let mR=1,mF=1;for(const m of F.mods||[]){mR*=m.rv;mF*=m.fix}
     const pot=C.pot*(L===1?1:L===2?1.7:2.5),fix=Math.round(C.fix*(L===1?1:L===2?1.45:2)*D.fix*(F.fixP||1)*mF*(H?.95:1)),ramp=Math.max(.08,Math.min(1,(F.m-1)/rp));
     const mo=month(),sea=mo===12||mo<=2?.7:mo>=4&&mo<=9?1.12:1;let ev='';let rv=pot*ramp*sea*R(.8,1.2)*D.rv*sk*(.9+euRL(F)/500)*mR*((F.tr||0)>0?.85:1)*(1+Math.min(.3,.03*dt))*(1+Math.min(.3,.03*mch));
@@ -957,7 +957,7 @@ function euMonth(){const H=st.hold;for(const k in fil()){const F=fil()[k],C=EU[k
     const DD=st.dec||(st.dec=[]);if(F.m>2&&!DD.some(d=>d.f===k)&&Math.random()<.2){const T=pick(EUDEC.filter(x=>x.c===k||x.c==='*'));if(T){DD.push({id:st.nid++,k:T.k,exp:st.day+45,f:k,t:`${C.f} ${C.n} — ${T.t}`});log(`📬 ${C.f} Décision à prendre pour ta filiale ${C.n} (🏆 Entreprise → Empire).`)}}
     if(F.cash<0){const inj=-F.cash+Math.round(fix*.5);mv(-inj,'Apport en capital : filiale '+C.n,'buy');st.mCapex+=inj;F.inv+=inj;F.cash+=inj;log(`${C.f} La filiale ${C.n} manque d’argent : la société belge lui verse ${eur(inj)}.`,false)}
     else if(H){const a=Math.round(F.cash-fix);if(a>=5000){F.cash-=a;F.div+=a;H.tot=(H.tot||0)+a;mv(a,'Dividende via la holding : '+C.n,'in');st.mCapex-=a}}}
-  if(H)mv(-6000,'Frais de la holding européenne','fix')}
+  if(H&&!H.auto)mv(-6000,'Frais de la holding européenne','fix')}
 // appels d'offres à l'étranger
 const EUTN={fr:['Entretien des accotements de la RN2 (Aisne)','Fauchage des routes départementales du Nord','Viabilité hivernale du Pas-de-Calais'],lu:['Entretien des routes de la commune de Luxembourg-Ville','Déneigement de l’A1 (Ponts et Chaussées)','Espaces verts du Kirchberg'],
   nl:['Entretien des digues de Zélande (Rijkswaterstaat)','Fauchage des bords de l’A2','Propreté des aires de l’A12'],de:['Entretien de l’A3 près de Cologne (Autobahn GmbH)','Service d’hiver de la Ruhr','Fauchage des routes fédérales B1 et B51'],
@@ -982,7 +982,8 @@ function euMach(k,t){const F=fil()[k];if(!F||freeEq(t)<1)return toastMsg('Cette 
   const v=Math.round(eqVal(t)/Math.max(1,st.eq[t]||1));st.eq[t]--;if(!st.eq[t])delete st.eq[t];F.mach=(F.mach||0)+1;F.inv+=v;(F.mlist||(F.mlist=[])).push(t);click();log(`🚚 ${EQ[t].n} envoyé(e) à ta filiale ${EU[k].n}.`,false);save();render();euFiche(k)}
 function euMachUI(k){const L=Object.keys(st.eq).filter(t=>st.eq[t]>0&&freeEq(t)>0&&EQ[t].p>=2000).sort((a,b)=>EQ[b].p-EQ[a].p);
   showModal(`<h3>🚚 Envoyer une machine en ${EU[k].f}</h3><p class="mut sm">Chaque machine envoyée donne +3 % de chiffre d’affaires à la filiale (maximum +30 %). Elle quitte ton parc belge.</p>${L.map(t=>`<div class="row" style="padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1">${EQ[t].ic} ${EQ[t].n} <span class="mut sm">(${st.eq[t]})</span></span><button class="btn s" style="padding:6px 10px" onclick="euMach('${k}','${t}')">Envoyer</button></div>`).join('')||'<p class="mut">Aucune machine libre.</p>'}<button class="btn s w" style="margin-top:10px" onclick="euFiche('${k}')">← Retour</button>`)}
-// holding européenne (dès 4 filiales)
+// filiales : gérées par la holding de groupe (plus de holding européenne séparée à acheter)
+function euHoldAuto(){try{const G=pv().ph;if(G&&hFix(G).own.rn&&!st.hold&&Object.keys(fil()).length)st.hold={d:st.day,tot:0,auto:1}}catch(e){}}
 function holdGo(ok){if(st.hold)return;if(Object.keys(fil()).length<4)return toastMsg('Il faut au moins 4 filiales.');if(st.cash<250000)return toastMsg('Il faut 250 000 € sur le compte.');
   if(!ok)return ask(`Créer ta holding européenne ?\nCoût : 250 000 € (avocats fiscalistes, notaire)\nFrais : 6 000 €/mois\nLes bénéfices des filiales remontent tout seuls chaque mois (exonérés)\nServices partagés : frais fixes des filiales −5 %\nValeur du groupe : +15 % de la valeur des filiales`,()=>holdGo(1),{ic:'🏦',ok:'Créer la holding'});
   mv(-250000,'Création de la holding européenne','buy');st.hold={d:st.day,tot:0};log('🏦 Ta holding européenne est créée : les filiales lui remontent leurs bénéfices chaque mois.');confetti(160);goals();save();render()}
@@ -1039,7 +1040,7 @@ function euCard(){const F=fil(),ks=Object.keys(F);if(!ks.length&&caRecent()<5000
   let h=`<div class="card acc" style="--ac:var(--vi)"><div class="hd"><div class="ic" style="--ac2:#3d2c66">🌍</div><div style="flex:1;min-width:0"><h3>Filiales en Europe</h3><div class="mut sm">${ks.length?ks.length+' pays · touche un drapeau pour voir sa fiche':'Développe ton entreprise à l’étranger (gros investissement).'}</div></div></div>${euMap()}`;
   for(const k of ks){const C=EU[k],f=F[k],L=f.last,D=euD(f),dec=(st.dec||[]).some(d=>d.f===k);
     h+=`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);cursor:pointer" onclick="euFiche('${k}')"><span style="font-size:26px">${C.f}</span><div style="flex:1;min-width:0"><b>${C.n.split(' (')[0]}</b> <span class="tag v">niv. ${f.lv}</span>${dec?' <span class="tag r">📬 décision</span>':''}<div class="mut sm">${D.ic} ${esc((f.dir&&f.dir.n)||D.n)} · ⭐ ${Math.round(euRL(f))}</div></div><b class="${L&&L.net<0?'neg':'money'}" style="white-space:nowrap">${L?(L.net>=0?'+':'')+eur(L.net):'—'}</b></div>`}
-  if(ks.length>=4||st.hold)h+=`<div class="card" style="margin-top:10px;background:var(--card2)">${st.hold?`<b>🏦 Holding européenne</b><div class="mut sm">Bénéfices remontés automatiquement : ${eur(st.hold.tot||0)} · frais des filiales −5 % · +${eur(holdVal())} de valeur du groupe</div>`:`<b>🏦 Holding européenne</b><div class="mut sm">Tu as ${ks.length} filiales : regroupe-les dans une holding (bénéfices remontés tout seuls, frais −5 %, valeur du groupe +15 %).</div><button class="btn w" style="margin-top:8px" onclick="holdGo()">Créer la holding (250 000 €)</button>`}</div>`;
+  euHoldAuto();if(ks.length||st.hold)h+=`<div class="card" style="margin-top:10px;background:var(--card2)">${st.hold?`<b>${st.hold.auto?'🏛️ Filiales gérées par ta holding de groupe':'🏦 Holding européenne'}</b><div class="mut sm">Bénéfices remontés automatiquement : ${eur(st.hold.tot||0)} · frais des filiales −5 % · +${eur(holdVal())} de valeur du groupe</div>`:`<b>🏛️ Tes filiales et ta holding</b><div class="mut sm">Crée ta holding de groupe (page Mes entreprises) et apporte-lui ${esc(st.name)} : elle s’occupe aussi de tes filiales (bénéfices remontés tout seuls, frais −5 %, valeur du groupe +15 %), sans frais en plus.</div><button class="btn w" style="margin-top:8px" onclick="hubSec='hold';tab('hub')">${pv().ph?'Ouvrir ma holding':'Créer ma holding'}</button>`}</div>`;
   return h+`<button class="btn s" style="margin-top:10px" onclick="click();euUI()">🌍 ${ks.length?'Ouvrir dans un autre pays':'Voir les pays'}</button></div>`}
 function euFicheOps(k,F){const T=F.tn,dt=euDet(k);let h='<h2>🏛️ Appels d’offres</h2>';
   if(T){h+=`<div class="card acc" style="--ac:var(--bl)"><b>${esc(T.n)}</b><div class="mut sm">± ${eur(T.v)} sur ${T.dur} mois · ouverture des offres le ${dstr(T.end)}</div>${T.co?`<div class="tags" style="margin-top:6px"><span class="tag g">✅ Offre remise à ${Math.round(T.co*100)} % du prix estimé · ${Math.round(euWin(F,T.co)*100)} % de chances</span></div><div class="mut sm" style="margin-top:4px">Tu peux encore changer d’avis :</div>`:`<div class="mut sm" style="margin-top:4px">Choisis ton prix. Sans réponse, ton directeur remettra une offre lui-même.</div>`}
@@ -1666,7 +1667,7 @@ const GOALS=[
   {k:'h50',t:'Présent dans les 6 pays d’Europe',ok:()=>Object.keys(st.fil||{}).length>=6},
   {k:'h51',t:'Une filiale avec 80 de réputation locale',ok:()=>Object.values(st.fil||{}).some(f=>(f.rl??40)>=80)},
   {k:'h52',t:'Gagne 10 appels d’offres à l’étranger',ok:()=>((st.ck||{}).euwon||0)>=10},
-  {k:'h53',t:'Crée ta holding européenne',ok:()=>!!st.hold},
+  {k:'h53',t:'Fais gérer tes filiales par une holding',ok:()=>!!st.hold},
   {k:'h54',t:'Filiales dans les 10 pays',ok:()=>Object.keys(st.fil||{}).length>=10},
   {k:'h55',t:'Signe 5 contrats d’entretien',ok:()=>((st.ck||{}).acn||0)>=5},
   {k:'h56',t:'Deviens n°1 du classement wallon',ok:()=>{try{const me=caRecent();return me>0&&(st.riv||[]).every(r=>rivCA(rivP(r))<me)}catch(e){return false}}},
@@ -2757,17 +2758,18 @@ const pShort=n=>n.replace(/ \(.*$/,'');
 function pBiens(own){const val=own.reduce((a,o)=>a+pValue(o),0),rents=own.reduce((a,o)=>{const r=rentOf(o);return a+(r&&(!o.lou||o.louOk)?r:0)},0);
   let h=`<div class="pvtiles"><div><span>💎 Valeur</span><b>${eur(val)}</b></div><div><span>💸 Coûtent / mois</span><b class="neg">−${eur(privMonthly())}</b></div><div><span>🔑 Loyers / mois</span><b class="money">+${eur(rents)}</b></div></div><p class="mut sm" style="margin:2px 4px 8px">👆 Touche un bien pour le vendre, le louer ou voir le détail.</p>`;
   for(const [g,cs] of PGRP){const L=own.filter(o=>cs.includes(PRIV[o.k].c));if(!L.length)continue;h+=`<h2>${g} · ${L.length}</h2><div class="card" style="padding:4px 12px">`;
-    for(const o of L){const P=PRIV[o.k],v=pValue(o),gn=v-o.price,r=rentOf(o);const stt=o.lou?(o.louEnd?'📨 préavis en cours':st.day<(o.louFrom||0)?'🔎 cherche un locataire':'🔑 loué'):P.home&&myHome()===o?'🏡 tu y habites':'';
-      h+=`<div class="row" style="padding:9px 0;border-top:1px solid var(--line);cursor:pointer;flex-wrap:nowrap" onclick="pBien(${o.id})"><span style="font-size:24px">${P.ic}</span><div style="flex:1;min-width:0"><b class="sm">${pShort(P.n)}</b><div class="mut" style="font-size:12px">${stt?stt+' · ':''}${P.m>0?'−'+eur(P.m)+'/mois':P.m<0?'+'+eur(-P.m)+'/mois':''}${r&&(!o.lou||o.louOk)&&o.lou?' · +'+eur(r)+' loyer':''}${o.loan?' · crédit '+eur(o.loan):''}</div></div><div style="text-align:right;white-space:nowrap">${P.keep||P.sub?'<span class="mut sm">›</span>':`<b class="sm">${eur(v)}</b><div style="font-size:12px" class="${gn>=0?'money':'neg'}">${gn>=0?'+':''}${eur(gn)}</div>`}</div></div>`}
+    for(const o of L){const P=PRIV[o.k],v=pValue(o),gn=v-o.price,r=rentOf(o);const stt=P.rent?'🔑 loué':o.lou?(o.louEnd?'📨 préavis en cours':st.day<(o.louFrom||0)?'🔎 cherche un locataire':'🔑 loué'):P.home&&myHome()===o?'🏡 tu y habites':'';
+      h+=`<div class="row" style="padding:9px 0;border-top:1px solid var(--line);cursor:pointer;flex-wrap:nowrap" onclick="pBien(${o.id})"><span style="font-size:24px">${P.ic}</span><div style="flex:1;min-width:0"><b class="sm">${pShort(P.n)}</b><div class="mut" style="font-size:12px">${stt?stt+' · ':''}${P.m>0?'−'+eur(P.m)+'/mois':P.m<0?'+'+eur(-P.m)+'/mois':''}${r&&(P.rent||o.lou&&o.louOk)?' · +'+eur(r)+' loyer':''}${o.loan?' · crédit '+eur(o.loan):''}</div></div><div style="text-align:right;white-space:nowrap">${P.keep||P.sub?'<span class="mut sm">›</span>':`<b class="sm">${eur(v)}</b><div style="font-size:12px" class="${gn>=0?'money':'neg'}">${gn>=0?'+':''}${eur(gn)}</div>`}</div></div>`}
     h+='</div>'}
   return h}
 function pBien(id){const V=pv(),o=V.own.find(x=>x.id===id);if(!o)return;const P=PRIV[o.k],v=pValue(o),fee=P.c==='home'?Math.round(v*.03):0,net=v-fee-(o.loan||0),gn=v-o.price,r=rentOf(o);click();
   const rows=[];if(!P.keep&&!P.sub){rows.push(['Acheté',eur(o.price)+' · '+dstr(o.day)+' '+date(o.day).getFullYear()],['Vaut aujourd’hui',`<b class="${gn>=0?'money':'neg'}">${eur(v)} (${gn>=0?'+':''}${eur(gn)})</b>`])}else rows.push(['Depuis le',dstr(o.day)+' '+date(o.day).getFullYear()]);
-  if(P.m)rows.push([P.m>0?'Te coûte':'Te fait économiser',eur(Math.abs(P.m))+'/mois']);if(r)rows.push(['Loyer possible',eur(r)+'/mois'+(o.lou?(o.louOk&&!o.louEnd?' · ✅ loué':' · en cours'):'')]);if(o.loan)rows.push(['Crédit restant',eur(o.loan)+' · '+eur(o.pay)+'/mois']);
+  if(P.m)rows.push([P.m>0?'Te coûte':'Te fait économiser',eur(Math.abs(P.m))+'/mois']);if(r)rows.push(P.rent?['Loyer reçu',eur(r)+'/mois · ✅ loué']:['Loyer',eur(r)+'/mois'+(o.lou?(o.louOk&&!o.louEnd?' · ✅ loué':' · locataire cherché'):' si tu le loues')]);if(o.loan)rows.push(['Crédit restant',eur(o.loan)+' · '+eur(o.pay)+'/mois']);
   let b='';
   if(P.sub)b+=`<button class="btn r w" style="padding:13px" onclick="pSell(${id})">✂️ Résilier · tu économises ${eur(P.m)}/mois</button>`;
   else if(!P.keep)b+=`<button class="btn w" style="padding:13px" onclick="pSell(${id})">💰 Vendre · tu reçois ${eur(net)}</button><div class="mut sm" style="margin:4px 2px 0">${gn>=0?`Tu gagnes ${eur(gn)} par rapport au prix d’achat.`:`Tu perds ${eur(-gn)} par rapport au prix d’achat.`}${fee?` Frais d’agence ± 3 % : ${eur(fee)}.`:''}${o.loan?` Le crédit restant (${eur(o.loan)}) est remboursé à la vente.`:''}</div>`;
   if(P.hr)b+=`<button class="btn s w" style="padding:12px;margin-top:8px" onclick="pRent(${id});pBien(${id})">${!o.lou?`🔑 Mettre en location · +${eur(r||P.hr)}/mois`:o.louEnd?'⏳ Préavis en cours (départ le '+dstr(o.louEnd)+')':st.day<(o.louFrom||0)?'✕ Annuler la mise en location':'🏠 Récupérer le bien (préavis 6 mois)'}</button>`;
+  if(P.rent)b+=`<div class="card" style="margin-top:8px;background:var(--card2)"><div class="sm">🔑 <b>Déjà en location</b> : une agence immobilière gère ce bien pour toi et trouve les locataires. Le loyer (${eur(r)}/mois) arrive le 1er du mois sur ton compte privé (± 1 mois sur 20 sans locataire, et parfois une réparation à payer).</div></div>`;
   if(P.flip&&!o.rv)b+=o.rw?`<div class="tags" style="margin-top:8px"><span class="tag o">🔨 Travaux en cours jusqu’au ${dstr(o.rw)}</span></div>`:`<button class="btn g w" style="padding:12px;margin-top:8px" onclick="flipGo(${id})">🔨 Rénover (60 000 €) · vaudra ± ${eur(v*1.75)}</button>`;
   if(P.keep)b+=`<div class="mut sm">Ça fait partie de ta vie : ça ne se vend pas.</div>`;
   const pc=IMC[o.k];showModal(`${pc&&pc.src&&!pc.none?photo(o.k):''}<div class="hd" style="margin-top:6px"><div class="ic">${P.ic}</div><div style="flex:1;min-width:0"><h3>${P.n}</h3>${o.lou?'<span class="tag g">🔑 En location</span>':P.home&&myHome()===o?'<span class="tag v">🏡 Tu habites ici</span>':''}</div></div>
@@ -4079,7 +4081,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-13.1";
+var APPV="2026-11-13.2";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
