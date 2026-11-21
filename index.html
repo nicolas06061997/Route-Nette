@@ -1611,7 +1611,7 @@ function cvOf(w){const g=rng(strHash('cv|'+w.n+'|'+w.r));const R0=ROLES[w.r];con
   return{age,xp,town,parc,dipl:pick2r(g,DIPL[w.r]||['CESS']),lic,lang,atouts,ref,lz}}
 function cvUI(kind,ix){let w,act='';clk();
   if(kind==='cand'){w=st.cand[ix];if(!w)return;act=`<div class="row" style="margin-top:12px"><button class="btn" onclick="tryHire('cand',${ix})">✅ Engager</button>${w.itv?'':`<button class="btn s" onclick="interview(${ix})">🗣️ Entretien d'embauche</button>`}<button class="btn s" onclick="closeM()">Fermer</button></div>`}
-  else if(kind==='role'){const r=ix,R0=ROLES[r];w={n:nextName(r),r,sk:1,day:R0.day,skin:strHash(nextName(r))%SKIN.length,base:1};act=`<div class="row" style="margin-top:12px"><button class="btn" onclick="tryHire('role','${r}')">✅ Engager</button><button class="btn s" onclick="closeM()">Fermer</button></div>`}
+  else if(kind==='role'){const r=ix,R0=ROLES[r];w={n:nextName(r),r,sk:1,day:Math.round(R0.day*(st.idx||1)),skin:strHash(nextName(r))%SKIN.length,base:1};const F=bureauMoney(),af=F.avg+roleGain(r,F)-roleCost(r);act=`${st.adm.bce&&F.n&&!roleAfford(r,F)?`<div class="card acc" style="--ac:var(--rd);margin:14px 0 0"><b>⚠️ Attention à ton argent</b><div class="sm" style="margin-top:4px">Ton entreprise ${F.avg>=0?'gagne':'perd déjà'} ± ${eur(Math.abs(F.avg))}/mois${st.workers.some(w=>!w.boss&&!w.it&&st.day-(w.hd||0)<62)?' (salaires des dernières embauches compris)':''}. Avec ce salaire (${eur(roleCost(r))}/mois), elle <b>perdrait ± ${eur(Math.max(0,-af))}/mois</b>. Tu peux engager quand même, mais surveille ton compte.</div></div>`:''}<div class="row" style="margin-top:12px"><button class="btn" onclick="tryHire('role','${r}')">✅ Engager</button><button class="btn s" onclick="closeM()">Fermer</button></div>`}
   else{w=st.workers.find(x=>x.id===ix);if(!w)return;act='<button class="btn s w" style="margin-top:12px" onclick="closeM()">Fermer</button>'}
   const R0=ROLES[w.r],cv=cvOf(w);const f=isF(w.n);
   showModal(`<div class="cv"><div class="row" style="gap:14px;align-items:center">${avatar(w,96)}<div style="flex:1;min-width:0"><div class="mut sm">CURRICULUM VITAE</div><h3 style="margin:2px 0">${esc(w.n)}</h3><div class="mut">${cv.age} ans · ${cv.town}</div><div class="tag o" style="margin-top:6px">${R0.n}</div></div></div>
@@ -1625,7 +1625,7 @@ function cvUI(kind,ix){let w,act='';clk();
   <div id="cvmsg"></div><h2>Coût employeur</h2><div class="sm"><b>${eur(w.day*WDM)}</b> par mois (${eur(w.day)} par jour ouvrable)</div></div>${act}`)}
 // Pourquoi on ne peut pas engager (message clair dans le CV)
 function hireBlock(kind,ix){if(!st.adm.bce)return"Ton entreprise n'est pas encore inscrite à la BCE : sans numéro d'entreprise, tu ne peux engager personne. Va dans 📊 Entreprise → Démarches.";
-  let cost,w;if(kind==='cand'){w=st.cand[ix];if(!w)return'Ce candidat a trouvé un autre travail.';cost=monthly(w)}else{const R0=ROLES[ix];if(!R0.multi&&has(ix))return'Ce poste est déjà occupé.';if(R0.need&&ownW()<R0.need)return`Il faut au moins ${R0.need} personnes dans l'entreprise pour ce poste (tu en as ${ownW()}).`;cost=R0.day*WDM}
+  let cost,w;if(kind==='cand'){w=st.cand[ix];if(!w)return'Ce candidat a trouvé un autre travail.';cost=monthly(w)}else{const R0=ROLES[ix];if(!R0.multi&&has(ix))return'Ce poste est déjà occupé.';if(R0.need&&ownW()<R0.need)return`Il faut au moins ${R0.need} personnes dans l'entreprise pour ce poste (tu en as ${ownW()}).`;cost=roleCost(ix)}
   if(st.cash<0)return`Ton compte est dans le rouge (${eur(st.cash)}). La banque et l'ONSS ne te laisseront pas engager tant que tu as des dettes. Termine des chantiers, attends les paiements ou prends un prêt (📊 Entreprise → Banque).`;
   if(st.cash<cost)return`Il faut avoir sur ton compte de quoi payer au moins un mois de salaire : ${eur(cost)}. Tu as ${eur(st.cash)}, il te manque ${eur(cost-st.cash)}.`;
   return null}
@@ -2880,8 +2880,19 @@ function bureauPrio(){const n=ownW(),pub=running().filter(c=>!JOBS[c.j].p),late=
   set('rh',n>=5?48:20);set('achat',n>=12?40:12);set('qhse',pub.length>=3?45:14);set('rsoc',n>=10?36:10);set('juriste',n>=10?33:10);
   set('comm',25);set('hiver',HIVJ&&pub.some(c=>HIVJ.includes(c.j))?44:11);set('assist',n>=8?30:10);set('gardien',Object.keys(st.eq||{}).length>=6?28:9);set('form',n>=6?32:11);set('dirc',n>=10?46:24);
   const lk=r=>!st.adm.bce||(ROLES[r].need&&n<ROLES[r].need);
-  const L=Object.keys(S).filter(r=>ROLES[r]&&(ROLES[r].multi||!has(r)));L.sort((a,b)=>lk(a)-lk(b)||S[b]-S[a]);
-  return L.map((r,i)=>[r,i<3&&S[r]>=55&&W[r]?W[r]:''])}
+  // peut-on le payer ? bénéfice moyen des derniers mois − coût du poste (+ ce que le poste rapporte vraiment), et assez d'argent de côté
+  const F=bureauMoney(),ok=r=>roleAfford(r,F);
+  const L=Object.keys(S).filter(r=>ROLES[r]&&(ROLES[r].multi||!has(r)));
+  const key=r=>lk(r)?3:ok(r)?(S[r]>=55?0:1):2;L.sort((a,b)=>key(a)-key(b)||S[b]-S[a]);
+  let k=0;return L.map(r=>{const good=!lk(r)&&ok(r)&&S[r]>=55&&W[r]&&k<3;if(good)k++;return[r,good?W[r]:'',ok(r),S[r]>=55&&W[r]?W[r]:'']})}
+const roleCost=r=>Math.round(ROLES[r].day*(st.idx||1))*WDM;
+// argent disponible pour engager : bénéfice moyen des 3 derniers mois et réserve au-delà de 3 mois de charges
+function bureauMoney(){const H=(st.mHist||[]).slice(-3),prod=H.length?H.reduce((a,x)=>a+(x.prod||0),0)/H.length:0;let avg=H.length?H.reduce((a,x)=>a+(x.res||0),0)/H.length:0;
+  // les personnes engagées ces 2 derniers mois ne sont pas encore (ou pas entièrement) dans les bilans : on retire leur salaire
+  for(const w of st.workers)if(!w.boss&&!w.it&&w.hd!==undefined&&st.day-w.hd<62)avg-=w.day*WDM*(st.day-w.hd<31?1:.5);return{avg,prod,room:canPay(),n:H.length}}
+// ce qu'un poste rapporte vraiment chaque mois (estimation prudente) : la plupart ne rapportent pas d'argent directement
+function roleGain(r,F){if(r==='gest'&&mgmtLoad()>mgmtCap())return F.prod*.2;if(r==='compta')return has('compta')?0:250;if(r==='dirt')return F.prod*.06;if(r==='cond'&&running().some(c=>!JOBS[c.j].p&&lateBy(c)>3))return F.prod*.05;return 0}
+function roleAfford(r,F){F=F||bureauMoney();const c=roleCost(r);if(st.cash<=0||F.n<1)return false;return F.avg+roleGain(r,F)-c>=0&&F.room>=c*2||F.room>=c*12}
 function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew.forEach(i=>busy.set(i,c)));
   let h=goalCard()+`<div class="kpi" style="margin-bottom:12px"><div><span>Personnel</span><b>${ownW()}</b></div><div><span>Masse salariale / mois</span><b>${eur(payroll()*WDM)}</b></div><div><span>Encadrement (charge)</span><b>${nb1(mgmtLoad())} / ${mgmtCap()}</b></div><div><span>Offres en parallèle</span><b>${myOffers()} / ${offerCap()}</b></div></div>`;
   h+=`<div class="card"><div class="row"><b style="flex:1">🤖 Équipes automatiques</b><button class="btn ${st.autoStaff!==0?'g':'s'}" style="padding:6px 10px" onclick="st.autoStaff=st.autoStaff===0?1:0;save();render()">${st.autoStaff!==0?'Activé':'Désactivé'}</button></div><div class="mut sm" style="margin-top:4px">Ton chef d'équipe envoie lui-même les ouvriers libres sur les chantiers en attente ou en pause (marchés publics en premier), et loue le matériel s'il manque.</div></div>`;
@@ -2912,10 +2923,12 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
   else if(eqTab==='bureau'){const office=st.workers.filter(w=>ROLES[w.r].cat!=='ouv');
     h+=`<h2>Encadrement, bureau et direction</h2>`;if(!office.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, factures, chantiers. Toi seul, tu peux suivre 2 chantiers et 2 offres en même temps.</p>';{const nO=Math.min(office.length,pgN('off',20));office.slice(0,nO).forEach(w=>h+=card(w));h+=pgBtn('off',20,nO,office.length)}
     h+=`<h2>Postes à pourvoir</h2>`;
-    h+=`<p class="mut sm" style="margin:0 4px 10px">Classés selon ce dont ton entreprise a besoin maintenant : le plus utile en haut.</p>`;
-    for(const [r,why] of bureauPrio()){const R0=ROLES[r];const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
-      h+=`<div class="card ${why&&!lock?'acc':''}" style="${why&&!lock?'--ac:var(--or);':''}${lock?'opacity:.6':''}">${why&&!lock?`<div class="tag o" style="margin-bottom:6px">⭐ Conseillé : ${why}</div>`:''}<div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(R0.day*WDM)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>
-      <button class="btn w" style="margin-top:10px" ${lock?'disabled':''} onclick="cvUI('role','${r}')">${R0.need&&ownW()<R0.need?`🔒 À partir de ${R0.need} personnes`:R0.multi&&has(r)?'📄 CV d’un gestionnaire de plus':'📄 Voir le CV'}</button></div>`}}
+    {const F=bureauMoney(),P=bureauPrio(),any=P.some(x=>x[2]&&!(!st.adm.bce||(ROLES[x[0]].need&&ownW()<ROLES[x[0]].need)));
+     h+=`<div class="card acc" style="--ac:${any?'var(--gr)':'var(--rd)'}"><b>💶 Ce que tu peux te permettre</b><div class="sm" style="margin-top:4px">${F.n?`Ton entreprise ${F.avg>=0?'gagne':'perd'} en moyenne <b class="${F.avg>=0?'money':'neg'}">${eur(Math.abs(F.avg))}/mois</b> (${F.n} dernier${F.n>1?'s':''} mois${st.workers.some(w=>!w.boss&&!w.it&&st.day-(w.hd||0)<62)?', salaires des dernières embauches compris':''}).`:'Pas encore de bilan : attends la fin de ton premier mois.'} Argent en plus de tes 3 mois de charges : <b>${eur(F.room)}</b>.</div>
+     <div class="mut sm" style="margin-top:4px">${any?'✅ Les postes marqués « Conseillé » sont utiles <b>et</b> payables : après l’embauche, ton entreprise reste en positif.':'⚠️ Pour l’instant, <b>n’engage personne au bureau</b> : un employé coûte 3 000 à 8 600 €/mois et ton entreprise ne gagne pas encore assez. Fais d’abord des chantiers rentables avec tes ouvriers.'}</div></div>`;
+    for(const [r,why,can,use] of P){const R0=ROLES[r];const lock=!st.adm.bce||(R0.need&&ownW()<R0.need),c=roleCost(r),after=F.avg+roleGain(r,F)-c;
+      h+=`<div class="card ${why&&!lock?'acc':''}" style="${why&&!lock?'--ac:var(--or);':''}${lock?'opacity:.6':!can?'opacity:.8':''}">${why&&!lock?`<div class="tag o" style="margin-bottom:6px">⭐ Conseillé : ${why}</div>`:!lock&&!can&&use?`<div class="tag" style="margin-bottom:6px">⏳ Utile (${use}), mais trop cher pour l’instant</div>`:''}<div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(c)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>${!lock&&F.n?`<div class="sm" style="margin-top:6px">Après l’embauche, ton entreprise ${after>=0?'gagnerait':'perdrait'} ± <b class="${after>=0?'money':'neg'}">${eur(Math.abs(after))}/mois</b>${roleGain(r,F)?` (il/elle rapporte ± ${eur(roleGain(r,F))}/mois)`:''}.</div>`:''}
+      <button class="btn w ${!lock&&!can?'s':''}" style="margin-top:10px" ${lock?'disabled':''} onclick="cvUI('role','${r}')">${R0.need&&ownW()<R0.need?`🔒 À partir de ${R0.need} personnes`:R0.multi&&has(r)?'📄 CV d’un gestionnaire de plus':'📄 Voir le CV'}</button></div>`}}}
   else{h+=`<h2>Candidats (nouveaux chaque lundi${has('rh')?', trouvés par Sophie':''})</h2><p class="mut sm" style="margin:0 4px 10px">Coût employeur : salaire brut (barèmes 2026 de la commission paritaire 145.04 — parcs et jardins, 16,00 à 18,87 €/h brut) + ONSS + pécules de vacances. Pour engager, il faut de quoi payer un mois.</p>`;
     st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd">${avatar(w,52)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${ROLES[w.r].n} · ${eur(monthly(w))}/mois</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div>${ROLES[w.r].d?`<div class="mut sm" style="margin-top:6px">${ROLES[w.r].d}</div>`:''}<button class="btn w" style="margin-top:10px" onclick="cvUI('cand',${i})">📄 Voir le CV</button></div>`);
     if(!st.cand.length)h+='<p class="mut">Plus de candidats cette semaine. Nouveaux CV lundi !</p>'}
@@ -5112,7 +5125,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-21.1";
+var APPV="2026-11-21.2";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
