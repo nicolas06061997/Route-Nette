@@ -554,9 +554,13 @@ function save(force){if(NOSAVE||!st)return;if(TICKING&&!force)return;const now=D
 let saveErr=0;
 setInterval(()=>{if(savePend)save(1)},2000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-addEventListener('visibilitychange',()=>{if(document.hidden&&st){save(1);if(typeof speed!=='undefined'&&speed){speed=0;pausedAway=1;try{render()}catch(e){}}}else if(typeof pausedAway!=='undefined'&&pausedAway){pausedAway=0;setTimeout(()=>toastMsg('⏸ Jeu en pause pendant ton absence. Appuie sur ▶ pour reprendre.'),300)}});
+// en quittant l'appli : une seule sauvegarde légère (la compression des grosses parties se fait en arrière-plan), pas de redessin
+let quitT=0;function saveQuit(){if(!st||NOSAVE)return;const now=Date.now();if(now-quitT<5000)return;quitT=now;let j;try{j=JSON.stringify(st)}catch(e){return}
+  if(j.length<LZMIN){try{localStorage.setItem(SAVE,j);lzWr=++lzSeq;lastSave=now;savePend=0}catch(e){save(1)}return}
+  const q=++lzSeq;lastSave=now;savePend=0;if(!lzSend({k:SAVE,j,b:false,q}))save(1)}
+addEventListener('visibilitychange',()=>{if(document.hidden&&st){if(typeof speed!=='undefined'&&speed){speed=0;pausedAway=1}saveQuit()}else if(typeof pausedAway!=='undefined'&&pausedAway){pausedAway=0;try{render()}catch(e){}setTimeout(()=>toastMsg('⏸ Jeu en pause pendant ton absence. Appuie sur ▶ pour reprendre.'),300)}});
 var pausedAway=0;
-addEventListener('pagehide',()=>{if(st)save(1)});
+addEventListener('pagehide',()=>{if(st)saveQuit()});
 
 /* ---------- Calendrier belge ---------- */
 const date=d=>new Date(2027,2,1+d);
@@ -5252,7 +5256,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-21.9";
+var APPV="2026-11-21.10";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
