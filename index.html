@@ -2152,13 +2152,44 @@ function buyTier(t,tr,ok){const e=EQ[t],T=TIERS[tr],pr=tierPrice(t,tr),nm=tierNa
   mv(-pr,`Achat : ${nm}`,'buy');st.mCapex+=pr;st.eq[t]=(st.eq[t]||0)+1;tq(t)[tr]++;log(`🛒 ${T.ic} Achat : ${e.ic} ${nm}`,false);kaching();goals();save();render()}
 function buy(t){const e=EQ[t];if(st.cash<e.p)return toastMsg(`Pas assez d'argent : il manque ${eur(e.p-st.cash)}.`);mv(-e.p,'Achat : '+e.n,'buy');st.mCapex+=e.p;st.eq[t]=(st.eq[t]||0)+1;log(`🛒 Achat : ${e.ic} ${e.n}`,false);kaching();goals();save();render()}
 // gestionnaire du parc matériel et des achats (Thierry Wauters)
-function achBuy(t,why){const p=EQ[t].p;mv(-p,'Achat par le gestionnaire du parc : '+EQ[t].n,'buy');st.mCapex+=p;st.eq[t]=(st.eq[t]||0)+1;(st.useD||(st.useD={}))[t]=st.day;rsAdd('ach',1);log(`🛒 Thierry (parc matériel) achète ${EQ[t].ic||''} ${EQ[t].n} : ${why}.`,false)}
-function achatNeed(){if(!has('achat'))return;for(const c of st.contracts){if(c.st!=='wait')continue;const P=eqPlan(c.j);for(const t of P.miss)if(EQ[t]&&canPay()>EQ[t].p)achBuy(t,'il manquait pour démarrer '+JOBS[c.j].n)}}
-function achatTick(){if(!has('achat'))return;const RD=st.rentD||(st.rentD={}),U=st.useD||(st.useD={}),W=st.wear||(st.wear={});
-  for(const t in RD){if(RD[t]>=6&&EQ[t]&&canPay()>EQ[t].p*1.5)achBuy(t,`tu le louais ${RD[t]} jours ces deux dernières semaines`);RD[t]=Math.floor(RD[t]/2)}
+function achLog(t){const L=st.achL||(st.achL=[]);L.unshift({d:st.day,t});if(L.length>12)L.length=12;log('🛒 '+t,false)}
+// argent libre pour Thierry : compte − salaires déjà dus − un mois de frais fixes + 30 % du découvert de base (comme Fabienne)
+const achMoney=()=>st.cash-(st.salAcc||0)-fixedM()+odBase()*.3;
+const achOk=p=>achMoney()>=p*1.1;
+function achBuy(t,why){const p=EQ[t].p;mv(-p,'Achat par le gestionnaire du parc : '+EQ[t].n,'buy');st.mCapex+=p;st.eq[t]=(st.eq[t]||0)+1;(st.useD||(st.useD={}))[t]=st.day;rsAdd('ach',1);rsAdd('achi',p);achLog(`Thierry achète ${EQ[t].ic||''} ${EQ[t].n} (${eur(p)}) : ${why}.`)}
+// ce que Thierry voudrait acheter maintenant, du plus urgent au moins urgent : [machine, raison, priorité]
+function achWants(){const out=[],seen=new Set();const add=(t,why,pr)=>{if(!EQ[t]||seen.has(t))return;seen.add(t);out.push([t,why,pr])};
+  // 1. un chantier signé attend une machine qu'on ne peut pas louer
+  for(const c of st.contracts){if(c.st!=='wait')continue;for(const t of eqPlan(c.j).miss)add(t,'il manque pour démarrer '+JOBS[c.j].n,1)}
+  // 2. un marché public ouvert où il ne manque que du matériel (il faut le posséder pour remettre offre)
+  for(const t of st.tenders){if(t.status!=='open'||t.my)continue;const R=spwReq(t),bad=R.filter(x=>!x.ok);if(!bad.length)continue;
+    const miss=JOBS[t.j].need.filter(k=>!(st.eq[k]>0));if(!miss.length||bad.length!==miss.length)continue;
+    const cost=miss.reduce((a,k)=>a+EQ[k].p,0);if(cost>t.est*.6)continue;for(const k of miss)add(k,`pour pouvoir remettre offre au marché ${JOBS[t.j].n} (${eur(t.est)})`,2)}
+  // 3. des petits boulots qu'on refuse faute de machine (au moins 2 demandes, ou une machine bon marché)
+  const J={};for(const o of st.jobs||[]){if(!st.adm.bce)break;const m=JOBS[o.j].need.filter(k=>!(st.eq[k]>0));if(m.length!==1)continue;const k=m[0];(J[k]||(J[k]={n:0,v:0})).n++;J[k].v+=o.price}
+  for(const k in J){if(J[k].n>=3||EQ[k].p<=J[k].v*1.5)add(k,`${J[k].n} demande${J[k].n>1?'s':''} de petits boulots en attente (${eur(J[k].v)}) en ont besoin`,3)}
+  return out}
+function achatNeed(){if(!has('achat')||(st.achMode||'all')==='off')return;let n=0;for(const [t,why] of achWants()){if(n>=3)break;if(achOk(EQ[t].p)){achBuy(t,why);n++}}}
+function achatTick(){if(!has('achat'))return;const M=st.achMode||'all';if(M==='off')return;const RD=st.rentD||(st.rentD={}),U=st.useD||(st.useD={}),W=st.wear||(st.wear={});
+  // machines louées souvent : acheter coûte moins cher que louer
+  for(const t in RD){if(RD[t]>=6&&EQ[t]&&achOk(EQ[t].p))achBuy(t,`tu le louais ${RD[t]} jours ces deux dernières semaines (${eur(RD[t]*(RENT[t]||0))} de location)`);RD[t]=Math.floor(RD[t]/2)}
   for(const k in st.eq){if(!(st.eq[k]>0)||!EQ[k])continue;if(U[k]===undefined)U[k]=st.day;
-    if((W[k]||0)>=85&&freeEq(k)>0){const q=tq(k),std=st.eq[k]-q[2]-q[3],tr=std>0?1:q[2]>0?2:3,p=tr===1?EQ[k].p:tierPrice(k,tr),v=Math.round(p*.55*(1-W[k]/200));const w0=Math.round(W[k]);if(canPay()>p-v){mv(v,'Reprise de la machine usée : '+EQ[k].n,'buy');st.mCapex-=v;mv(-p,'Machine neuve (remplacement) : '+EQ[k].n,'buy');st.mCapex+=p;W[k]=0;rsAdd('achr',1);log(`🛒 Thierry remplace ${EQ[k].n} usé(e) à ${w0} % : reprise ${eur(v)}, neuve ${eur(p)}.`,false)}}
-    else if(st.eq[k]>1&&freeEq(k)>0&&st.day-U[k]>120){sell(k,1);U[k]=st.day;rsAdd('achs',1);log(`🛒 Thierry revend un(e) ${EQ[k].n} qui ne servait plus depuis 4 mois.`,false)}}}
+    if((W[k]||0)>=85&&freeEq(k)>0){const q=tq(k),std=st.eq[k]-q[2]-q[3],tr=std>0?1:q[2]>0?2:3,p=tr===1?EQ[k].p:tierPrice(k,tr),v=Math.round(p*.55*(1-W[k]/200));const w0=Math.round(W[k]);if(achOk(p-v)){mv(v,'Reprise de la machine usée : '+EQ[k].n,'buy');st.mCapex-=v;mv(-p,'Machine neuve (remplacement) : '+EQ[k].n,'buy');st.mCapex+=p;W[k]=0;rsAdd('achr',1);rsAdd('achi',p-v);achLog(`Thierry remplace ${EQ[k].n} usé(e) à ${w0} % : reprise ${eur(v)}, neuve ${eur(p)}.`)}}
+    else if(M==='all'&&st.eq[k]>1&&freeEq(k)>0&&st.day-U[k]>120){const q=tq(k),std=st.eq[k]-q[2]-q[3],tr=std>0?1:q[2]>0?2:3,v=Math.round((tr===1?EQ[k].p:tierPrice(k,tr))*.55);sell(k,1);U[k]=st.day;rsAdd('achs',1);achLog(`Thierry revend un(e) ${EQ[k].n} qui ne servait plus depuis 4 mois (+${eur(v)}).`)}}}
+function achStatus(){const w=achWants(),m=Math.max(0,Math.round(achMoney()));
+  if(w.length){const [t,why]=w[0],p=EQ[t].p;return achOk(p)?`🛒 Il va acheter ${EQ[t].n} (${eur(p)}) : ${why}.`:`⏳ Il voudrait acheter ${EQ[t].n} (${eur(p)}) ${why}, mais il attend d’avoir l’argent (libre maintenant : ${eur(m)}, il lui faut ${eur(Math.round(p*1.1))}).`+(w.length>1?` ${w.length-1} autre${w.length>2?'s':''} achat${w.length>2?'s':''} en attente.`:'')}
+  const RD=st.rentD||{},W=st.wear||{};const r=Object.keys(RD).filter(t=>RD[t]>=3&&EQ[t]).sort((a,b)=>RD[b]-RD[a])[0];
+  const u=Object.keys(st.eq||{}).filter(k=>st.eq[k]>0&&EQ[k]&&(W[k]||0)>=70).sort((a,b)=>W[b]-W[a])[0];
+  if(r)return`👀 Il surveille ${EQ[r].n} : loué(e) ${RD[r]} jours ces 2 dernières semaines (il achète dès 6 jours).`;
+  if(u)return`👀 Il surveille ${EQ[u].n} usé(e) à ${Math.round(W[u])} % (il la remplace dès 85 %).`;
+  return '✅ Rien à acheter : toutes les machines dont tu as besoin sont là.'}
+function achCard(){if(!has('achat'))return'';const m=st.achMode||'all',L=st.achL||[],R=st.rs||{};
+  return`<div class="card acc" style="--ac:var(--bl)"><div class="row"><b style="flex:1">🛒 Thierry gère le parc matériel</b></div><div class="mut sm" style="margin-top:4px">Chaque jour il achète ce qui bloque un chantier, un marché public ou des petits boulots ; le lundi il achète ce que tu loues souvent, remplace les machines usées et revend celles qui ne servent plus. Ce qu’il a le droit de faire :</div>
+  <div style="margin-top:6px">${[['all','Acheter et revendre'],['buy','Seulement acheter'],['off','Rien (pause)']].map(([k,l])=>`<span class="chip ${m===k?'on':''}" onclick="st.achMode='${k}';clk();save();render()">${l}</span>`).join('')}</div>
+  <div class="sm" style="margin-top:8px;padding:8px 10px;background:#0f1f15;border-radius:10px">${m==='off'?'⏸ En pause : il ne fait rien.':esc(achStatus())}</div>
+  <div class="kpi" style="margin-top:8px"><div><span>Achetées</span><b>${nb(R.ach||0)}</b></div><div><span>Remplacées</span><b>${nb(R.achr||0)}</b></div><div><span>Revendues</span><b>${nb(R.achs||0)}</b></div><div><span>Investi</span><b>${eur(R.achi||0)}</b></div><div><span>Carburant économisé</span><b>${eur(R.achv||0)}</b></div></div>
+  <div class="mut sm" style="margin-top:6px">Il garde toujours de quoi payer les salaires déjà dus et un mois de frais fixes.</div>
+  ${L.length?`<div style="margin-top:8px">${L.slice(0,5).map(x=>`<div class="sm" style="padding:3px 0;border-top:1px solid #ffffff10"><span class="mut">${dstr(x.d)}</span> ${esc(x.t)}</div>`).join('')}</div>`:'<div class="mut sm" style="margin-top:6px">Pas encore d’achat.</div>'}</div>`}
 function sell(t,ok){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const q=tq(t),std=(st.eq[t]||0)-q[2]-q[3],tr=std>0?1:q[2]>0?2:3,v=Math.round((tr===1?EQ[t].p:tierPrice(t,tr))*.55);if(!ok)return ask(`Revendre ce matériel ?\nMachine : ${EQ[t].n}\nPrix d’achat : ${eur(EQ[t].p)}\nTu reçois (± 55 %) : ${eur(v)}`,()=>sell(t,1),{ic:EQ[t].ic||'🚜',ok:'Revendre',img:photo('eq_'+t)});st.eq[t]--;if(tr>1)q[tr]--;mv(v,'Revente : '+EQ[t].n,'buy');st.mCapex-=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
 function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);mv(-a.p,a.n,'buy');st.adm[k]=1;log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
 function clsOk(u){return!!(st.adm.vca&&st.adm.rc)&&st.stats.ca>=u.ca&&ownW()>=u.w&&st.rep>=u.r&&st.cash>=u.c&&(!u.dir||u.dir.every(has))}
@@ -3064,7 +3095,7 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
     st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd">${avatar(w,52)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${ROLES[w.r].n} · ${eur(monthly(w))}/mois</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div>${ROLES[w.r].d?`<div class="mut sm" style="margin-top:6px">${ROLES[w.r].d}</div>`:''}<button class="btn w" style="margin-top:10px" onclick="cvUI('cand',${i})">📄 Voir le CV</button></div>`);
     if(!st.cand.length)h+='<p class="mut">Plus de candidats cette semaine. Nouveaux CV lundi !</p>'}
   return h}
-function rMt(){let h=goalCard()+siteCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
+function rMt(){let h=goalCard()+achCard()+siteCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
   // regroupés par type : du petit matériel aux véhicules, et du moins cher au plus cher dans chaque groupe
   const EQG=[['🚚 Véhicules',['van','fourgon','benne','benne19','nacelle','hydro','balayeuse']],['🚛 Camions spéciaux (autoroutes)',['tma','laveuse','balaygr','epandeur','tunnel','marqauto']],['🚜 Engins et machines',['tracteur','telesc','tondap','pelle','chargeuse','rouleau','broyeur','traceuse','saleuse','batteuse','hydroseed','desherb']],['🚧 Signalisation et remorques',['fleche','signal','remorque']]];
   const inG=new Set(EQG.flatMap(g=>g[1]));EQG.push(['🧰 Petit matériel',Object.keys(EQ).filter(k=>!inG.has(k))]);EQG.reverse();
@@ -5256,7 +5287,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-21.10";
+var APPV="2026-11-21.11";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
