@@ -346,8 +346,8 @@ const ROLES={
   gardien:{n:'Agent de gardiennage (société agréée)',ic:'🛡️',cat:'enc',day:210,who:'Gardiennage Meuse Sécurité (contrat)',d:'Surveille le dépôt la nuit : 80 % de vols en moins.'},
   form:{n:'Formateur interne (mi-temps)',ic:'🎓',cat:'bur',day:140,who:'Jean-Luc Dethier',d:'Tous les 5 à 6 mois, il forme un de tes ouvriers (le moins formé d’abord) : +6 % d’efficacité et un certificat. Après 2 formations, un ouvrier de cat. 1 devient qualifié (cat. 3) — mais son salaire augmente aussi.'},
   plan:{n:'Chargée de clientèle et planning',ic:'📞',cat:'bur',day:180,who:'Manon Lecocq',d:'Répond aux clients et accepte elle-même les petits boulots rentables dès qu’une équipe est libre (le matériel doit être à toi).'},
-  orga:{n:'Responsable de l’organisation (bureau)',ic:'🧭',cat:'bur',day:260,who:'Véronique Lemmens',d:'Engage elle-même le personnel de bureau dont tu as vraiment besoin (seulement si l’entreprise peut le payer) et se sépare de ceux qui ne servent plus (préavis payé). Tu choisis ce qu’elle a le droit de faire.'},
-  terr:{n:'Responsable des équipes de terrain',ic:'🧑‍🏭',cat:'enc',day:270,who:'Fabienne Henrotte',d:'Tous les jours, engage elle-même autant d’ouvriers qu’il en faut (chantiers sans équipe, retards, petits boulots refusés faute de monde) et se sépare de ceux qui n’ont plus de travail ou qui ne rapportent pas assez (préavis payé). Tu choisis ce qu’elle a le droit de faire.'},
+  orga:{n:'Responsable de l’organisation (bureau)',ic:'🧭',cat:'bur',day:260,who:'Véronique Lemmens',d:'Conseillée à partir d’une quinzaine de personnes (son salaire est lourd pour une petite entreprise). Engage elle-même le personnel de bureau dont tu as vraiment besoin (seulement si l’entreprise peut le payer) et se sépare de ceux qui ne servent plus (préavis payé). Tu choisis ce qu’elle a le droit de faire.'},
+  terr:{n:'Responsable des équipes de terrain',ic:'🧑‍🏭',cat:'enc',day:270,who:'Fabienne Henrotte',d:'Conseillée à partir d’une quinzaine d’ouvriers (son salaire est lourd pour une petite entreprise). Tous les jours, engage elle-même autant d’ouvriers qu’il en faut (chantiers sans équipe, retards, petits boulots refusés faute de monde) et se sépare de ceux qui n’ont plus de travail ou qui ne rapportent pas assez (préavis payé). Tu choisis ce qu’elle a le droit de faire.'},
   recru:{n:'Chargée de recrutement',ic:'🎯',cat:'bur',day:250,who:'Élodie Masson',d:'Note tes intérimaires (1 à 5 étoiles), te propose d’engager en CDI les meilleurs, renvoie à l’agence ceux qui ne sont pas sérieux, et recrute des ouvriers quand tu as besoin d’intérimaires depuis longtemps.'},
   chefp:{n:'Chef du personnel',ic:'👔',cat:'bur',day:260,who:'Patrick Hennen',d:'S’occupe des rapports de chantier à ta place : primes aux ouvriers qui travaillent très bien, recadrages et avertissements écrits aux autres. Il te signale les licenciements sans décider seul.'},
   recouv:{n:'Responsable du recouvrement',ic:'💰',cat:'bur',day:245,who:'Sandrine Delhaye',d:'Relance les clients qui paient en retard : les factures en retard arrivent bien plus vite, et elle réclame les intérêts de retard et l’indemnité forfaitaire de 40 € (loi belge sur les retards de paiement).'},
@@ -1942,7 +1942,7 @@ function rIt(){const L=itList(),busy=new Map();st.contracts.forEach(c=>c.st==='r
 // nouveaux métiers : bonus des ouvriers spécialisés et effets mensuels des employés
 const PAVJ=['trottoirs','pmr','pontage','p_allee'],MARQJ=['marquage','marq_auto'],AUTJ=['autoroute','marq_auto','deneig_auto','balay_auto','epareuse_auto','cloture'],HIVJ=['deneig','deneig_auto','depots_sel','p_neige','p_selpk'];
 function specB(c,crew){let f=1;const hasR=r=>crew.some(w=>w.r===r);if(PAVJ.includes(c.j)&&hasR('paveur'))f*=1.15;if(MARQJ.includes(c.j)&&hasR('peintre'))f*=1.2;if(AUTJ.includes(c.j)&&hasR('signal'))f*=1.1;if(HIVJ.includes(c.j)&&has('hiver')){f*=1.15;rsAdd('hiv',1)}if(st.mega){if(['panneaux','glis_pose','cloture'].includes(c.j)&&indOn('pann'))f*=1.1;if(HIVJ.includes(c.j)&&indOn('sel'))f*=1.1}return f}
-function rolesMonth(){for(const f of[indexTick,bigEvTick,acMonth,rivMonth,megaMonth,pvMonth4,hMonth,pvMonth5,pvWorthTick])try{f()}catch(e){console.error(e)}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
+function rolesMonth(){for(const f of[costWarnMonth,indexTick,bigEvTick,acMonth,rivMonth,megaMonth,pvMonth4,hMonth,pvMonth5,pvWorthTick])try{f()}catch(e){console.error(e)}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
 /* ---------- Indexation, contrats d'entretien, concurrents, grands événements, astuces, notifications ---------- */
 // Indexation automatique des salaires (Belgique) : chaque 1er janvier ; les prix du marché suivent à 90 %
 const pIdx=()=>1+((st.idx||1)-1)*.9;
@@ -2161,7 +2161,10 @@ function clsOk(u){return!!(st.adm.vca&&st.adm.rc)&&st.stats.ca>=u.ca&&ownW()>=u.
 function upCls(){const u=CLS[st.cls+1];if(!u||!clsOk(u))return;mv(-u.c,'Dossier d’agréation','buy');st.cls++;log(`🏅 Agréation ${u.n} (catégorie G — routes) : marchés de travaux ${u.max>=1e11?'sans limite de montant':`jusqu'à ${eur(u.max)}`} !`);kaching();goals();save();render()}
 // la banque regarde le chiffre d'affaires récent (année en cours ou année précédente)
 const caRecent=()=>{const y=date(st.day).getFullYear(),Y=st.caY||{};return Math.max(Y[y]||0,Y[y-1]||0)};
-const overdraft=()=>Math.round(Math.min(150000,20000+caRecent()*.1)/1000)*1000;
+const odBase=()=>Math.round(Math.min(150000,20000+caRecent()*.1)/1000)*1000;
+// crédit de caisse sur créances (avance sur factures) : la banque prête aussi 50 % des factures que les clients te doivent
+const odRec=()=>Math.round(Math.min(2e6,(st.inv||[]).reduce((a,v)=>a+(v.caut?0:v.amt),0)*.5)/1000)*1000;
+const overdraft=()=>odBase()+odRec();
 
 /* =====================================================================
    VIE PRIVÉE — compte privé séparé de la société (comme en vrai).
@@ -2870,6 +2873,8 @@ function orgIdle(w){const r=w.r;if(r==='gest')return(st.orgG||0)>=8&&st.day-(w.h
 const TERRK=['man','qual','chauf','engin','grimp','ramas','signal','paveur','peintre','chef'];
 const terM=()=>{const k=gmKey();if(!st.terM||st.terM.k!==k)st.terM={k,h:0,f:0};return st.terM};
 function terLog(t){const L=st.terL||(st.terL=[]);L.unshift({d:st.day,t});if(L.length>12)L.length=12;log('🧑‍🏭 '+t)}
+// argent vraiment libre : compte − salaires déjà dus − frais fixes du 1er + une petite partie du découvert autorisé
+const terMoney=()=>st.cash-(st.salAcc||0)-fixedM()+odBase()*.3;
 const terSafe=w=>w.boss||w.leg||w.it||w.det||w.off>st.day||/ton enfant/.test(w.n)||w.r==='etu';
 // ce qui manque : chantiers sans équipe valide, marchés publics en retard, petits boulots faisables refusés faute de monde
 function terNeed(){const R={n:0,pc:0,op:0,gr:0,why:[]};const free=freeW().filter(w=>!w.boss&&!w.it&&!(w.r==='etu'&&(w.hy||0)>=650));let fN=free.length,fPC=free.filter(w=>w.pc).length,fOP=free.filter(w=>w.r==='engin').length,fGR=free.filter(w=>w.r==='grimp').length;
@@ -2879,7 +2884,9 @@ function terNeed(){const R={n:0,pc:0,op:0,gr:0,why:[]};const free=freeW().filter
   const SJ=st.jobs.filter(o=>!jobMiss(o).length),sj=SJ.length,sw=SJ.reduce((a,o)=>a+JOBS[o.j].minW,0);R.smallRaw=sj&&sw>fN?sw-fN:0;
   // petits boulots : seulement si le manque dure depuis 3 jours ouvrables et que presque tout le monde travaille déjà
   const own=fieldOwn().filter(w=>!w.boss&&!w.it&&!w.det&&!(w.off>st.day)),busy=own.length-free.filter(w=>!w.it).length;R.occ=own.length?busy/own.length:1;
-  if(R.smallRaw&&(st.terSS||0)>=3&&R.occ>=.85){R.n+=R.smallRaw;R.small=sj}
+  // limite pour les petits boulots : 10 % d'ouvriers en plus par semaine (les chantiers et marchés publics n'ont pas de limite)
+  const W=st.terWk&&st.terWk.k===Math.floor(st.day/7)?st.terWk:{n:0},capW=Math.max(1,Math.ceil(own.length*.1))-W.n;
+  if(R.smallRaw&&(st.terSS||0)>=5&&(st.terOcc??R.occ)>=.9&&capW>0){const k=Math.min(R.smallRaw,capW);R.n+=k;R.small=sj;R.smallN=k}
   R.tot=R.n+R.pc+R.op+R.gr;return R}
 const terQ=w=>{const q=w.pq;if(!q||q.days<25)return null;return q.rev/q.days/Math.max(1,w.day)};
 const terP=w=>{const q=w.pq;if(!q||q.days<25)return null;return q.rev/q.days}; // production par jour travaillé
@@ -2898,20 +2905,24 @@ function terPlan(){const R=terNeed(),F=bureauMoney(),own=fieldOwn().filter(w=>!t
       const L=(r?[r,r,r]:['man','qual','man','qual','ramas']).map(mk).filter(Boolean).sort((a,b)=>b.w.sk/b.w.day-a.w.sk/a.w.day);if(L[0]){hires.push(L[0]);return L[0]}return null};
     for(const[r,n]of[['chauf',R.pc],['engin',R.op],['grimp',R.gr]])for(let k=0;k<n;k++)pick(x=>x.w.r===r||(r==='chauf'&&x.w.pc),r);
     for(let k=0;k<R.n;k++)pick(x=>x.w.r!=='chef',null)}
-  let money=st.cash,afford=[];for(const h of hires){const c=monthly(h.w);if(money>=c*2){afford.push(h);money-=c}}
+  let money=terMoney(),afford=[];for(const h of hires){const c=monthly(h.w);if(money>=c*1.5){afford.push(h);money-=c}}
   // départs : sans chantier depuis longtemps (et rien ne manque), ne rapporte pas assez, ou l'entreprise perd de l'argent
   const needSpec=w=>(w.pc&&own.filter(x=>x.pc).length<=1&&st.contracts.some(c=>JOBS[c.j].pc))||(w.r==='engin'&&own.filter(x=>x.r==='engin').length<=1&&st.contracts.some(c=>JOBS[c.j].op))||(w.r==='grimp'&&own.filter(x=>x.r==='grimp').length<=1&&st.contracts.some(c=>JOBS[c.j].gr));
+  const idleD=w=>{const I=w.id0;return I&&st.day-(I.t??-99)<=8?st.day-I.d:0};
   const old=own.filter(w=>st.day-(w.hd||0)>=90&&!needSpec(w));const fires=[];
+  const fresh=own.filter(w=>st.day-(w.hd||0)<90&&st.day-(w.hd||0)>=35&&!needSpec(w));
   const doable=has('plan')?0:st.jobs.filter(o=>!jobMiss(o).length).length,freeOwn=freeW().filter(w=>!terSafe(w)).length,keep=Math.max(2,Math.ceil(own.length*.15));let room=doable?0:freeOwn-keep;
-  for(const w of old){if(room<=0)break;const I=w.id0,idle=I&&st.day-(I.t??-99)<=8?st.day-I.d:0;if(idle>=60&&R.tot===0&&(!winter||F.avg<0)){fires.push({w,why:`sans chantier depuis ${Math.round(idle/7)} semaines`});room--}}
+  for(const w of old){if(room<=0)break;const idle=idleD(w);if(idle>=60&&R.tot===0&&(!winter||F.avg<0)){fires.push({w,why:`sans chantier depuis ${Math.round(idle/7)} semaines`});room--}}
+  for(const w of fresh){if(room<=0)break;const idle=idleD(w);if(idle>=35&&R.tot===0){fires.push({w,why:`engagé(e) il y a moins de 3 mois et sans chantier depuis ${Math.round(idle/7)} semaines (préavis court)`});room--}}
   // comparé à ses collègues : un ouvrier qui rapporte beaucoup moins que les autres (paresseux, lent)
   const Q=own.map(terP).filter(q=>q!==null).sort((a,b)=>a-b),med=Q.length>=4?Q[Q.length>>1]:null,pc=w=>Math.round(terP(w)/med*100);
   if(med)for(const w of old){if(fires.some(f=>f.w===w))continue;const p=terP(w);if(p!==null&&p<med*.5&&terQ(w)<1)fires.push({w,why:`produit ${pc(w)} % de ce que produisent ses collègues et ne rapporte même pas son salaire (3 derniers mois)`})}
   if(med&&F.n>=2&&F.avg<0&&!fires.length){const w=old.filter(w=>terQ(w)!==null&&terQ(w)<1&&terP(w)<med*.75).sort((a,b)=>terQ(a)-terQ(b))[0];if(w)fires.push({w,why:`l’entreprise perd de l’argent et il/elle ne rapporte pas son salaire (${pc(w)} % de la production moyenne)`})}
   return{R,hires,afford,fires,F,doable,freeOwn,med}}
-function terrTick(){if(!has('terr'))return;terSnap();const mode=st.terMode||'all';if(mode==='off'||!st.adm.bce)return;st.terSS=terNeed().smallRaw?(st.terSS||0)+1:0;const P=terPlan();rsAdd('tern',1);
+function terrTick(){if(!has('terr'))return;terSnap();const mode=st.terMode||'all';if(mode==='off'||!st.adm.bce)return;{const N0=terNeed();st.terSS=N0.smallRaw?(st.terSS||0)+1:0;st.terOcc=st.terOcc===undefined?N0.occ:st.terOcc*.9+N0.occ*.1}const P=terPlan();rsAdd('tern',1);
   const got=[];for(const h of P.afford.slice().sort((a,b)=>b.i-a.i)){const w=h.w;if(h.i>=0){if(st.cand[h.i]!==w)continue;st.cand.splice(h.i,1)}
     ck('hire');w.mot=w.base;w.hd=st.day;w.age=cvOf(w).age;st.workers.push(w);got.push(w)}
+  if(got.length&&P.R.smallN){const wk=Math.floor(st.day/7);if(!st.terWk||st.terWk.k!==wk)st.terWk={k:wk,n:0};st.terWk.n+=Math.min(got.length,P.R.smallN)}
   if(got.length){rsAdd('terh',got.length);terM().h+=got.length;terLog(`Fabienne a engagé ${got.length>3?got.length+' ouvriers':got.map(w=>w.n+' ('+ROLES[w.r].n.split(' (')[0].toLowerCase()+')').join(', ')} : ${terWhy(P.R)}.`);goals();return}
   if(mode!=='all'||P.R.tot>0&&P.fires.every(f=>!/salaire/.test(f.why)))return;
   const gone=[];let tot=0;for(const f of P.fires){const w=f.w,pre=preavisCost(w);if(st.cash<pre)break;mv(-pre,'Préavis de '+w.n,'sal');tot+=pre;(st.terF||(st.terF={}))[w.r]=st.day;dropW(w);gone.push(f)}
@@ -2919,20 +2930,24 @@ function terrTick(){if(!has('terr'))return;terSnap();const mode=st.terMode||'all
 function terWhy(R){const L=[];if(R.pc)L.push(`${R.pc} chantier(s) sans chauffeur permis C`);if(R.op)L.push(`${R.op} sans conducteur d’engins`);if(R.gr)L.push(`${R.gr} sans élagueur-grimpeur`);if(R.n&&R.why.length)L.push(`${R.why.length} chantier(s) attendent une équipe`);if(R.late)L.push(`${R.late} marché(s) public(s) en retard`);if(R.small)L.push(`${R.small} petits boulots refusés faute de monde`);return L.join(', ')||'il manque du monde'}
 function terStatus(){const P=terPlan(),R=P.R;let a='';
   if(R.tot>0){if(P.afford.length)a=`👉 Au prochain jour ouvrable, elle engagera ${P.afford.length} ouvrier(s) : ${terWhy(R)}.`;
-    else if(P.hires.length)a=`⏸ Il manque du monde (${terWhy(R)}), mais il faut au moins 2 mois de salaire sur le compte pour engager.`;
+    else if(P.hires.length)a=`⏸ Il manque du monde (${terWhy(R)}), mais il n’y a pas assez d’argent libre : il faut 1,5 mois de salaire en plus des salaires et frais déjà dus le 1er du mois.`;
     else a=`⏸ Il manque du monde (${terWhy(R)}).`}
-  else if(R.smallRaw)a=`⏳ Des petits boulots attendent, mais ${R.occ<.85?`${Math.round((1-R.occ)*100)} % de tes ouvriers sont encore libres`:'le manque ne dure que depuis peu'} : elle attend avant d’engager pour eux.`;
+  else if(R.smallRaw)a=`⏳ Des petits boulots attendent, mais ${(st.terOcc??R.occ)<.9?`tes ouvriers ne sont occupés qu’à ${Math.round((st.terOcc??R.occ)*100)} % ces derniers jours`:(st.terSS||0)<5?'le manque ne dure que depuis peu':'elle a déjà engagé 10 % d’ouvriers en plus cette semaine pour les petits boulots'} : elle attend avant d’engager pour eux.`;
   else a=P.doable&&P.freeOwn?`💡 ${P.freeOwn} ouvrier(s) sans chantier alors que ${P.doable} petit(s) boulot(s) attendent dans 🧰 Boulots : accepte-les${has('plan')?'':' (ou engage Manon, qui les accepte pour toi)'}. Fabienne ne renvoie personne tant qu’il y a du travail.`:'✅ Assez d’ouvriers pour le travail actuel.';
   if((st.terMode||'all')==='all'&&P.fires.length&&!(R.tot>0&&P.fires.every(f=>!/salaire/.test(f.why))))a+=` Elle va se séparer de ${P.fires.length>3?P.fires.length+' ouvriers':P.fires.map(f=>f.w.n).join(', ')} : ${P.fires[0].why}.`;return a}
 function terStats(){const own=fieldOwn().filter(w=>!w.boss),fr=new Set(freeW().map(w=>w.id)),ce=own.filter(w=>fr.has(w.id)&&(w.ce||0)>0).length,free=own.filter(w=>fr.has(w.id)).length,off=own.filter(w=>w.off>st.day).length,det=own.filter(w=>w.det).length,on=own.length-free-off-det,it=st.workers.reduce((a,w)=>a+(w.it?1:0),0),R=st.rs||{},M=terM();
   return`<div class="kpi" style="margin-top:10px"><div><span>👷 Ouvriers maintenant</span><b>${nb(own.length)}</b></div><div><span>🦺 Sur un chantier</span><b class="money">${nb(on)}</b></div><div><span>💤 Sans chantier</span><b>${nb(free-ce)}${ce?` <span class="mut sm">+ ${nb(ce)} au chômage temp.</span>`:''}</b></div><div><span>🤕 Absents · ✈️ détachés${it?' · 🦺 intérim':''}</span><b>${nb(off)} · ${nb(det)}${it?' · '+nb(it):''}</b></div>
   <div><span>✅ Engagés ce mois-ci</span><b class="money">+${nb(M.h)}</b></div><div><span>📤 Renvoyés ce mois-ci</span><b class="${M.f?'neg':''}">−${nb(M.f)}</b></div><div><span>✅ Engagés depuis le début</span><b>${nb(R.terh||0)}</b></div><div><span>📤 Renvoyés depuis le début</span><b>${nb(R.terf||0)}</b></div></div>`}
+// avertissement : un poste de gestion trop cher pour la taille de l'entreprise
+function costWarn(r,nm){const F=bureauMoney(),c=roleCost(r);if(!F.n||!F.prod)return'';const pc=c/F.prod;if(pc<.12&&F.avg>=0)return'';
+  return`<div class="sm" style="margin-top:8px;padding:8px 10px;background:#5c3a0e;color:#ffd79a;border-radius:10px">💸 ${nm} coûte ${eur(c)}/mois, soit ${Math.round(pc*100)} % de ce que produisent tes ouvriers (${eur(F.prod)}/mois)${F.avg<0?` et ton entreprise perd ± ${eur(-F.avg)}/mois`:''}. Elle est rentable dans une entreprise plus grande (± 25 ouvriers et des marchés publics). Si tu perds de l’argent, la mettre en pause n’arrête pas son salaire : il faudrait la licencier.</div>`}
+function costWarnMonth(){const F=bureauMoney();if(!F.n||!F.prod||F.avg>=0)return;for(const[r,nm]of[['terr','Fabienne'],['orga','Véronique']])if(has(r)&&roleCost(r)/F.prod>=.12)log(`💸 ${nm} coûte ${Math.round(roleCost(r)/F.prod*100)} % de ce que produisent tes ouvriers et l’entreprise perd de l’argent : elle est trop chère pour la taille actuelle de l’entreprise (👷 Équipe → 🏢 Bureau).`)}
 function terCard(){if(!has('terr'))return'';const m=st.terMode||'all',L=st.terL||[];
   return`<div class="card acc" style="--ac:var(--or)"><b>🧑‍🏭 Fabienne gère les ouvriers</b><div class="mut sm" style="margin-top:4px">Tous les jours ouvrables, elle engage les ouvriers qui manquent (CV de la semaine ou directement au Forem et par annonces, sans limite) et se sépare de ceux qui ne servent plus. Ce qu’elle a le droit de faire :</div>
   <div style="margin-top:6px">${[['all','Engager et licencier'],['hire','Seulement engager'],['off','Rien (pause)']].map(([k,l])=>`<span class="chip ${m===k?'on':''}" onclick="st.terMode='${k}';clk();save();render()">${l}</span>`).join('')}</div>
-  ${terStats()}
+  ${terStats()}${costWarn('terr','Fabienne')}
   <div class="sm" style="margin-top:8px;padding:8px 10px;background:#0f1f15;border-radius:10px">${m==='off'?'⏸ En pause : elle ne fait rien.':esc(terStatus())}</div>
-  <div class="mut sm" style="margin-top:6px">Elle n’engage jamais quelqu’un avec une mauvaise référence ni sans 2 mois de salaire sur le compte, garde toujours au moins un chauffeur, un conducteur d’engins et un élagueur si tes chantiers en ont besoin, ne licencie jamais le patron, Jason, tes enfants, les étudiants ni quelqu’un engagé il y a moins de 3 mois. En hiver, elle garde les ouvriers sans chantier (chômage temporaire).</div>
+  <div class="mut sm" style="margin-top:6px">Elle n’engage jamais quelqu’un avec une mauvaise référence ni sans argent libre (en comptant les salaires et frais du 1er du mois), garde toujours au moins un chauffeur, un conducteur d’engins et un élagueur si tes chantiers en ont besoin, ne licencie jamais le patron, Jason, tes enfants, les étudiants ni quelqu’un engagé il y a moins de 3 mois. En hiver, elle garde les ouvriers sans chantier (chômage temporaire).</div>
   ${L.length?`<div style="margin-top:8px">${L.slice(0,5).map(x=>`<div class="sm" style="padding:3px 0;border-top:1px solid #ffffff10"><span class="mut">${dstr(x.d)}</span> ${esc(x.t)}</div>`).join('')}</div>`:'<div class="mut sm" style="margin-top:6px">Pas encore de changement.</div>'}</div>`}
 function orgaTick(){if(!has('orga'))return;const mode=st.orgaMode||'all';if(mode==='off')return;bureauPrio();const S=BPS,F=bureauMoney(),FD=st.orgF||(st.orgF={});
   st.orgG=cnt('gest')&&mgmtCap()-3-mgmtLoad()>=1.5?(st.orgG||0)+1:0;
@@ -2946,7 +2961,7 @@ function orgaTick(){if(!has('orga'))return;const mode=st.orgaMode||'all';if(mode
   // 2) se séparer d'un poste qui ne sert plus (un seul par semaine, jamais un poste obligatoire)
   let tgt=null,txt='';for(const r in why){const o=why[r];if(orgReq(r))continue;tgt=o.w;txt=o.x;break}
   // 3) l'entreprise perd de l'argent depuis des mois : le poste le moins utile part
-  if(!tgt&&F.n>=2&&F.avg<0){const c=office.filter(w=>!orgReq(w.r)&&st.day-(w.hd||0)>=90&&(S[w.r]??99)<35).sort((a,b)=>(S[a.r]??99)-(S[b.r]??99))[0];if(c){tgt=c;txt='l’entreprise perd de l’argent et ce poste est le moins utile en ce moment'}}
+  if(!tgt&&F.n>=2&&F.avg<0){const heavy=F.prod&&officeCost()>F.prod*.35;const c=office.filter(w=>!orgReq(w.r)&&st.day-(w.hd||0)>=90&&((S[w.r]??99)<35||heavy)).sort((a,b)=>(S[a.r]??99)-(S[b.r]??99))[0];if(c){tgt=c;txt=heavy?'l’entreprise perd de l’argent et le bureau coûte trop cher par rapport à ce que produisent les ouvriers':'l’entreprise perd de l’argent et ce poste est le moins utile en ce moment'}}
   if(!tgt)return;const pre=preavisCost(tgt);if(st.cash<pre)return;mv(-pre,'Préavis de '+tgt.n,'sal');FD[tgt.r]=st.day;if(st.orgS)delete st.orgS[tgt.r];dropW(tgt);rsAdd('orgf',1);
   orgLog(`Véronique s’est séparée de ${tgt.n} (${ROLES[tgt.r].n}) : ${txt}. Préavis payé : ${eur(pre)}.`)}
 function orgStatus(){bureauPrio();const S=BPS,F=bureauMoney(),FD=st.orgF||{},lk=r=>ROLES[r].need&&ownW()<ROLES[r].need;
@@ -2957,11 +2972,12 @@ function orgStatus(){bureauPrio();const S=BPS,F=bureauMoney(),FD=st.orgF||{},lk=
   if(!F.n)return`⏸ Elle attend le premier bilan du mois pour savoir ce que l’entreprise peut payer (besoin : ${ROLES[r].n.toLowerCase()}).`;
   if(st.cash<=0)return`⏸ Elle voudrait engager un(e) ${ROLES[r].n.toLowerCase()}, mais ton compte est dans le rouge.`;
   if(F.avg+roleGain(r,F)-c<0)return`⏸ Elle voudrait engager un(e) ${ROLES[r].n.toLowerCase()}, mais l’entreprise perdrait ± ${eur(c-F.avg-roleGain(r,F))}/mois.`;
+  if(!officeOk(r,F))return`⏸ Elle voudrait engager un(e) ${ROLES[r].n.toLowerCase()}, mais le bureau coûterait plus de 30 % de ce que produisent tes ouvriers (${eur(officeCost()+c)} pour ${eur(F.prod)}/mois) : il faut d’abord plus de chantiers.`;
   return`⏸ Elle voudrait engager un(e) ${ROLES[r].n.toLowerCase()}, mais il faut au moins ${eur(c*2)} sur le compte (2 mois de salaire).`}
 function orgaCard(){if(!has('orga'))return'';const m=st.orgaMode||'all',L=st.orgL||[];
   return`<div class="card acc" style="--ac:var(--bl)"><div class="row"><b style="flex:1">🧭 Véronique organise le bureau</b></div><div class="mut sm" style="margin-top:4px">Chaque lundi, elle regarde ce dont l’entreprise a besoin. Ce qu’elle a le droit de faire :</div>
   <div style="margin-top:6px">${[['all','Engager et licencier'],['hire','Seulement engager'],['off','Rien (pause)']].map(([k,l])=>`<span class="chip ${m===k?'on':''}" onclick="st.orgaMode='${k}';clk();save();render()">${l}</span>`).join('')}</div>
-  <div class="sm" style="margin-top:8px;padding:8px 10px;background:#0f1f15;border-radius:10px">${m==='off'?'⏸ En pause : elle ne fait rien.':esc(orgStatus())}</div>
+  <div class="sm" style="margin-top:8px;padding:8px 10px;background:#0f1f15;border-radius:10px">${m==='off'?'⏸ En pause : elle ne fait rien.':esc(orgStatus())}</div>${costWarn('orga','Véronique')}
   <div class="mut sm" style="margin-top:6px">Elle n’engage que si l’entreprise peut payer le salaire, et ne touche jamais aux postes obligatoires (directeurs de ta classe, aide-comptable dès 6 personnes, conseiller en prévention dès 15).</div>
   ${L.length?`<div style="margin-top:8px">${L.slice(0,5).map(x=>`<div class="sm" style="padding:3px 0;border-top:1px solid #ffffff10"><span class="mut">${dstr(x.d)}</span> ${esc(x.t)}</div>`).join('')}</div>`:'<div class="mut sm" style="margin-top:6px">Pas encore de changement.</div>'}</div>`}
 function bureauPrio(){const n=ownW(),pub=running().filter(c=>!JOBS[c.j].p),late=pub.filter(c=>{try{return lateBy(c)>3}catch(e){return 0}}).length;
@@ -3000,7 +3016,10 @@ function bureauMoney(){const H=(st.mHist||[]).slice(-3),prod=H.length?H.reduce((
   for(const w of st.workers)if(!w.boss&&!w.it&&ROLES[w.r]&&ROLES[w.r].cat!=='ouv'&&w.hd!==undefined&&st.day-w.hd<62)avg-=w.day*WDM*(st.day-w.hd<31?1:.5);return{avg,prod,room:canPay(),n:H.length}}
 // ce qu'un poste rapporte vraiment chaque mois (estimation prudente) : la plupart ne rapportent pas d'argent directement
 function roleGain(r,F){if(r==='gest'&&mgmtLoad()>mgmtCap())return F.prod*.2;if(r==='compta')return has('compta')?0:250;if(r==='dirt')return F.prod*.06;if(r==='cond'&&running().some(c=>!JOBS[c.j].p&&lateBy(c)>3))return F.prod*.05;return 0}
-function roleAfford(r,F){F=F||bureauMoney();const c=roleCost(r);if(st.cash<=0||F.n<1)return false;return F.avg+roleGain(r,F)-c>=0&&st.cash>=c*2||F.room>=c*12}
+const officeCost=()=>st.workers.reduce((a,w)=>a+(!w.it&&ROLES[w.r]&&ROLES[w.r].cat!=='ouv'?w.day*WDM:0),0);
+// frais de bureau raisonnables : au plus 30 % de la production moyenne (comme dans le secteur), sauf poste obligatoire
+const officeOk=(r,F)=>orgReq(r)&&r!=='orga'&&r!=='terr'||!F.prod||officeCost()+roleCost(r)<=F.prod*.3;
+function roleAfford(r,F){F=F||bureauMoney();const c=roleCost(r);if(st.cash<=0||F.n<1)return false;return(F.avg+roleGain(r,F)-c>=0&&st.cash-(st.salAcc||0)>=c*2&&officeOk(r,F))||F.room>=c*12}
 function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew.forEach(i=>busy.set(i,c)));
   let h=goalCard()+`<div class="kpi" style="margin-bottom:12px"><div><span>Personnel</span><b>${ownW()}</b></div><div><span>Masse salariale / mois</span><b>${eur(payroll()*WDM)}</b></div><div><span>Encadrement (charge)</span><b>${nb1(mgmtLoad())} / ${mgmtCap()}</b></div><div><span>Offres en parallèle</span><b>${myOffers()} / ${offerCap()}</b></div></div>`;
   h+=`<div class="card"><div class="row"><b style="flex:1">🤖 Équipes automatiques</b><button class="btn ${st.autoStaff!==0?'g':'s'}" style="padding:6px 10px" onclick="st.autoStaff=st.autoStaff===0?1:0;save();render()">${st.autoStaff!==0?'Activé':'Désactivé'}</button></div><div class="mut sm" style="margin-top:4px">Ton chef d'équipe envoie lui-même les ouvriers libres sur les chantiers en attente ou en pause (marchés publics en premier), et loue le matériel s'il manque.</div></div>`;
@@ -3364,7 +3383,7 @@ function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
   if(biTab==='arg')h+=dashCard()+`${monNow()}${bilanCard()}
   <h2>Frais fixes (prélevés le 1er du mois)</h2><div class="card"><table>${fl.map(x=>`<tr><td>${x[0]}</td><td>${eur(x[1])}</td></tr>`).join('')||'<tr><td class="mut">Rien pour le moment</td><td></td></tr>'}<tr><td>Salaires (coût employeur)</td><td>${eur(payroll()*WDM)}</td></tr>${aidList().map(x=>`<tr><td>🤝 ${x[0]}</td><td class="money">-${eur(x[1])}</td></tr>`).join('')}<tr><td><b>Total par mois</b></td><td class="neg">${eur(fixedM()+payroll()*WDM-aidList().reduce((a,x)=>a+x[1],0))}</td></tr></table><p class="mut sm">Les ouvriers sont payés uniquement les jours ouvrables (pas les week-ends, jours fériés, congés du bâtiment). Les jours d'intempéries : chômage temporaire payé par l'ONEM.</p></div>
   ${st.lastTax?`<h2>Impôts et cotisations (${st.lastTax.mn})</h2><div class="card"><table><tr><td>Bénéfice du mois (après amortissement des machines sur 5 ans)</td><td>${eur(st.lastTax.profit)}</td></tr><tr><td>${st.srl?'Cotisations sociales du dirigeant':'Cotisations sociales d’indépendant (20,5 %, minimum 290 €)'}</td><td>${eur(st.lastTax.cot)}</td></tr><tr><td>${st.srl?'Impôt des sociétés (20 à 25 %)':'Impôt sur le revenu (versement anticipé)'}</td><td>${eur(st.lastTax.imp)}</td></tr></table></div>`:''}
-  <h2>Banque</h2><div class="card"><div class="mut sm">${st.adm.bce?`Crédit en cours : <b>${eur(st.loan)}</b> à 5 %/an · maximum ${eur(loanMax())} (selon ton chiffre d'affaires${has('daf')?', ton DAF':''}${has('compta')?', ton comptable':''})`:"La banque prête seulement aux entreprises inscrites à la BCE."}</div><div class="row" style="margin-top:10px"><button class="btn s" onclick="loan(1)" ${st.adm.bce?'':'disabled'}>Emprunter 5 000 €</button><button class="btn s" onclick="loan(-1)" ${st.loan<=0?'disabled':''}>Rembourser 5 000 €</button></div><p class="mut sm">Crédit de caisse (découvert autorisé) : ${eur(overdraft())}, il augmente avec ton chiffre d'affaires. Compte sous 0 € = dettes ONSS : plus le droit de remettre offre. Sous la limite : tribunal de l'entreprise.</p></div>
+  <h2>Banque</h2><div class="card"><div class="mut sm">${st.adm.bce?`Crédit en cours : <b>${eur(st.loan)}</b> à 5 %/an · maximum ${eur(loanMax())} (selon ton chiffre d'affaires${has('daf')?', ton DAF':''}${has('compta')?', ton comptable':''})`:"La banque prête seulement aux entreprises inscrites à la BCE."}</div><div class="row" style="margin-top:10px"><button class="btn s" onclick="loan(1)" ${st.adm.bce?'':'disabled'}>Emprunter 5 000 €</button><button class="btn s" onclick="loan(-1)" ${st.loan<=0?'disabled':''}>Rembourser 5 000 €</button></div><p class="mut sm">Crédit de caisse (découvert autorisé) : ${eur(overdraft())}${odRec()?` = ${eur(odBase())} selon ton chiffre d'affaires + ${eur(odRec())} d’avance sur les factures que tes clients te doivent (50 %)`:', il augmente avec ton chiffre d’affaires et avec les factures que tes clients te doivent'}. Compte sous 0 € = dettes ONSS : plus le droit de remettre offre. Sous la limite : tribunal de l'entreprise.</p></div>
   ${releve()}`;
   else if(biTab==='soc')h+=`<div class="card"><div class="hd"><div class="ic" style="--ac2:linear-gradient(135deg,#ff9a1f,#ff6a00)">🏢</div><div style="flex:1;min-width:0"><h3>${esc(st.name)}</h3><div class="mut sm">Fondée le ${dstr(st.found||0)} ${date(st.found||0).getFullYear()} · ${dlong(st.day)}</div></div><button class="btn s" style="padding:7px 10px" onclick="rename()">✏️</button></div>
   <div class="kpi" style="margin-top:12px"><div><span>Compte en banque</span><b class="${st.cash<0?'neg':'money'}">${eur(st.cash)}</b></div><div><span>Factures à recevoir</span><b>${eur(toRecv())}</b></div><div><span>Chiffre d'affaires ${date(st.day).getFullYear()}</span><b>${eur((st.caY||{})[date(st.day).getFullYear()]||0)}</b></div><div><span>Chiffre d'affaires depuis la création</span><b>${eur(st.stats.ca)}</b></div><div><span>Réputation</span><b>${stars(st.rep)}</b></div><div><span>Chantiers terminés</span><b>${st.stats.done}</b></div><div><span>Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div></div>${st.career?`<div class="mut sm" style="margin-top:10px">🧳 Ta carrière avec tes anciennes sociétés : ${eur(st.career.ca)} de chiffre d'affaires, ${nb(st.career.done)} chantiers, ${st.career.won} marchés gagnés. Tes références de chantiers te suivent.</div>`:''}</div>
@@ -5233,7 +5252,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-21.8";
+var APPV="2026-11-21.9";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
