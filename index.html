@@ -548,11 +548,11 @@ function save(force){if(NOSAVE||!st)return;if(TICKING&&!force)return;const now=D
     // mémoire pleine : on libère la place prise par le cache des photos et la copie bak, puis on réessaie
     saveFull(()=>{localStorage.setItem(SAVE,j);lzWr=++lzSeq})}return}
   // grosse partie : sauvegarde compressée (en arrière-plan, au plus toutes les 4 s ; tout de suite si forcée)
-  if(!force&&now-lastSave<4000){savePend=1;return}lastSave=now;savePend=0;const q=++lzSeq,b=st.day%5===0;
-  if(!force&&lzSend({k:SAVE,j,b,q}))return;
+  const soft=!force||force===2;if(soft&&now-lastSave<4000){savePend=1;return}lastSave=now;savePend=0;const q=++lzSeq,b=st.day%5===0;
+  if(soft&&lzSend({k:SAVE,j,b,q}))return;
   let z;try{z=LZ.z(j)}catch(e){return}try{lzPut(SAVE,z);if(b)lzPut(BAK,z);lzWr=q;saveErr=0}catch(e){saveFull(()=>{lzPut(SAVE,z);lzWr=q})}}
 let saveErr=0;
-setInterval(()=>{if(savePend)save(1)},2000);
+setInterval(()=>{if(savePend)save(2)},2000); // rattrapage : en arrière-plan pour les grosses parties (avant : compression sur l'écran principal toutes les 2 s)
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 // en quittant l'appli : une seule sauvegarde légère (la compression des grosses parties se fait en arrière-plan), pas de redessin
 let quitT=0;function saveQuit(){if(!st||NOSAVE)return;const now=Date.now();if(now-quitT<5000)return;quitT=now;let j;try{j=JSON.stringify(st)}catch(e){return}
@@ -586,7 +586,8 @@ function snd(f,d,type,v,delay){if(!st||!st.snd)return;if(!delay){const n=perform
 const kaching=()=>{snd(880,.08,'triangle',.07);snd(1320,.2,'triangle',.07,.08)};
 const clk=()=>snd(520,.05,'square',.03),click=clk; // dans un onclick="…", clk() serait le clic du bouton lui-même (le bouton s'exécutait 2 fois) : toujours utiliser clk()
 const esc=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-const has=r=>st.workers.some(w=>w.r===r);
+let HASC=null,HASN=-1,HASW=null;const hasReset=()=>{HASC=null};
+const has=r=>{if(!HASC||HASN!==st.workers.length||HASW!==st.workers){HASC=new Set();for(const w of st.workers)HASC.add(w.r);HASN=st.workers.length;HASW=st.workers}return HASC.has(r)};
 const cnt=r=>st.workers.filter(w=>w.r===r).length;
 const ownW=()=>st.workers.reduce((a,w)=>a+(w.it?0:1),0);
 const field=()=>st.workers.filter(w=>ROLES[w.r].cat==='ouv');
@@ -1303,14 +1304,15 @@ const SPWC=new Map();
 const PG={};const pgN=(k,d)=>PG[k]||d;
 const pgBtn=(k,d,shown,total)=>shown<total?`<button class="btn s w" style="margin:4px 0 12px" onclick="PG['${k}']=${shown}+${d};clk();render()">Voir ${Math.min(d,total-shown)} de plus (${total-shown} restant${total-shown>1?'s':''})</button>`:'';
 function spwReq(t){if(SPWC.has(t.id))return SPWC.get(t.id);const r=spwReq0(t);SPWC.set(t.id,r);return r}
-function spwReq0(t){const J=JOBS[t.j];const r=[];const fw=field();
+let SPWF=null;function spwF(){if(!SPWF){const fw=field(),R=new Set();let pc=false;for(const w of fw){R.add(w.r);if(w.pc)pc=true}SPWF={n:fw.length,pc,R}}return SPWF}
+function spwReq0(t){const J=JOBS[t.j];const r=[];const F=spwF();
   r.push({ok:!!st.adm.bce,tx:'🧾 BCE'});r.push({ok:!!st.adm.rc,tx:'🛡️ RC pro'});r.push({ok:!!st.adm.vca,tx:'🦺 VCA'});
   r.push({ok:st.cash>=0,tx:'📄 ONSS et impôts en ordre'});
   if(t.cls>0)r.push({ok:st.cls>=t.cls||(!!t.am&&st.cls>=t.cls-1),tx:`🏅 Agréation ${CLS[t.cls].n.toLowerCase()}`});
   if(t.proc==='po'){r.push({ok:(st.refs[t.j]||0)>=2,tx:`📁 2 références similaires (${st.refs[t.j]||0})`});r.push({ok:st.stats.ca>=t.est*.5,tx:`💶 CA ≥ ${eur(t.est*.5)}`})}
   else if(t.proc==='pn'&&t.est>60000)r.push({ok:(st.refs[t.j]||0)>=1,tx:`📁 1 référence similaire (${st.refs[t.j]||0})`});
-  r.push({ok:fw.length>=J.minW,tx:`👷 ${J.minW} personnes sur chantier`});
-  if(J.pc)r.push({ok:hasPC(fw),tx:'🪪 Permis C'});if(J.op)r.push({ok:fw.some(w=>w.r===J.op),tx:"🦾 Conducteur d'engins"});if(J.gr)r.push({ok:fw.some(w=>w.r==='grimp'),tx:'🧗 Élagueur-grimpeur'});
+  r.push({ok:F.n>=J.minW,tx:`👷 ${J.minW} personnes sur chantier`});
+  if(J.pc)r.push({ok:F.pc,tx:'🪪 Permis C'});if(J.op)r.push({ok:F.R.has(J.op),tx:"🦾 Conducteur d'engins"});if(J.gr)r.push({ok:F.R.has('grimp'),tx:'🧗 Élagueur-grimpeur'});
   for(const k of J.need)r.push({ok:(st.eq[k]||0)>0,tx:EQ[k].ic+' '+EQ[k].n});
   return r}
 const reqHtml=r=>'<div class="req">'+r.map(x=>`<span style="color:${x.ok?'#9df0b7':'#ffaaa4'}">${x.ok?'✅':'❌'} ${x.tx}</span>`).join('')+'</div>';
@@ -1388,7 +1390,7 @@ function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);let late=Math.max(0,delay-30);if(late&&has('recouv')){const d2=Math.round(late*.3);rsAdd('recd',late-d2);delay=30+d2;late=d2}st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl,late})}
 let TICKING=0,WBI=null;
 const wById=id=>(WBI||(WBI=new Map(st.workers.map(w=>[w.id,w])))).get(id);
-function tick(){TICKING=1;WBI=null;GESTC=null;SPWC.clear();try{tick0();if(st.cl)try{clTick()}catch(e){console.error(e)}if(st.shop)try{shTick()}catch(e){console.error(e)}try{hPoolDay()}catch(e){}}finally{TICKING=0;WBI=null}save();renderTick()}
+function tick(){TICKING=1;WBI=null;GESTC=null;SPWC.clear();SPWF=null;HASC=null;try{tick0();if(st.cl)try{clTick()}catch(e){console.error(e)}if(st.shop)try{shTick()}catch(e){console.error(e)}try{hPoolDay()}catch(e){}}finally{TICKING=0;WBI=null}save();renderTick()}
 function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}try{louDay()}catch(e){}
   st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
@@ -1768,7 +1770,7 @@ const CERTS=['🌿 Débroussaillage et fauchage avancés','🚧 Signalisation de
 function trainOne(by){by=by||'Jean-Luc';const W=fieldOwn().filter(w=>!w.boss&&w.r!=='etu');if(!W.length)return log(`🎓 ${by} n’a personne à former : engage des ouvriers.`,false);
   W.sort((a,b)=>(a.cert||[]).length-(b.cert||[]).length||a.sk-b.sk);const w=W[0],C=CERTS.filter(c=>!(w.cert||[]).includes(c)),c=pick(C.length?C:CERTS);
   (w.cert||(w.cert=[])).push(c);const old=w.sk;w.sk=+Math.min(w.leg?2:1.5,w.sk+.06).toFixed(2);w.mot=Math.min(1,(w.mot||0)+.15);let promo='';
-  if(w.r==='man'&&w.cert.length>=2){w.r='qual';w.day=Math.max(w.day,Math.round(ROLES.qual.day*R(.98,1.03)));promo=` ${w.n.split(' ')[0]} devient ${isF(w.n)?'ouvrière qualifiée':'ouvrier qualifié'} (cat. 3) : son coût passe à ${eur(w.day)}/jour.`}
+  if(w.r==='man'&&w.cert.length>=2){w.r='qual';HASC=null;w.day=Math.max(w.day,Math.round(ROLES.qual.day*R(.98,1.03)));promo=` ${w.n.split(' ')[0]} devient ${isF(w.n)?'ouvrière qualifiée':'ouvrier qualifié'} (cat. 3) : son coût passe à ${eur(w.day)}/jour.`}
   rsAdd('form',1);log(`🎓 ${by} a formé ${w.n} : « ${c.slice(c.indexOf(' ')+1)} ». Efficacité ${Math.round(old*100)} % → ${Math.round(w.sk*100)} %.${promo}`)}
 function autoAccept(){const L=st.jobs.filter(o=>!jobMiss(o).length).sort((a,b)=>b.price/Math.max(1,b.q/JOBS[b.j].rate)-a.price/Math.max(1,a.q/JOBS[a.j].rate));
   if(!L.length)return;const FW=freeW().sort((a,b)=>b.sk-a.sk);let wait=st.contracts.filter(c=>c.st==='wait').reduce((a,c)=>a+JOBS[c.j].minW,0);
@@ -2818,7 +2820,7 @@ function cashFx(){const el=$('#cash');if(shownCash===null){shownCash=st.cash;el.
 let lastTab=null;
 // pendant le jeu rapide, la liste (surtout l'Équipe avec ses portraits) n'est redessinée que toutes les 0,8 à 1,5 s : plus fluide sur téléphone
 let lastPaneT=0;function renderTick(){if(curTab==='pv'&&pvSec==='casino')return render(true);const now=performance.now(),gap=speed>=3?1500:speed===2?800:0;render(gap&&now-lastPaneT<gap&&!modalOpen)}
-function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();
+function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();SPWF=null;HASC=null;
   if(curTab==='sh'&&st.shop){$('#hub').classList.remove('on');$('#priv').classList.remove('on');document.body.classList.remove('pvmode');return shRender(headOnly)}
   if(curTab==='cl'&&st.cl){$('#hub').classList.remove('on');$('#priv').classList.remove('on');document.body.classList.remove('pvmode');return clRender(headOnly)}
   cashFx();$('#cash').classList.toggle('neg',st.cash<0);try{const nN=notifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0)}catch(e){}
@@ -2942,7 +2944,8 @@ function terPlan(){const R=terNeed(),F=bureauMoney(),own=fieldOwn().filter(w=>!t
     for(let k=0;k<R.n;k++)pick(x=>x.w.r!=='chef',null)}
   let money=terMoney(),afford=[];for(const h of hires){const c=monthly(h.w);if(money>=c*1.5){afford.push(h);money-=c}}
   // départs : sans chantier depuis longtemps (et rien ne manque), ne rapporte pas assez, ou l'entreprise perd de l'argent
-  const needSpec=w=>(w.pc&&own.filter(x=>x.pc).length<=1&&st.contracts.some(c=>JOBS[c.j].pc))||(w.r==='engin'&&own.filter(x=>x.r==='engin').length<=1&&st.contracts.some(c=>JOBS[c.j].op))||(w.r==='grimp'&&own.filter(x=>x.r==='grimp').length<=1&&st.contracts.some(c=>JOBS[c.j].gr));
+  let nsPC=0,nsEn=0,nsGr=0;for(const x of own){if(x.pc)nsPC++;if(x.r==='engin')nsEn++;if(x.r==='grimp')nsGr++}const nsC={pc:st.contracts.some(c=>JOBS[c.j].pc),op:st.contracts.some(c=>JOBS[c.j].op),gr:st.contracts.some(c=>JOBS[c.j].gr)};
+  const needSpec=w=>(w.pc&&nsPC<=1&&nsC.pc)||(w.r==='engin'&&nsEn<=1&&nsC.op)||(w.r==='grimp'&&nsGr<=1&&nsC.gr);
   const idleD=w=>{const I=w.id0;return I&&st.day-(I.t??-99)<=8?st.day-I.d:0};
   const old=own.filter(w=>st.day-(w.hd||0)>=90&&!needSpec(w));const fires=[];
   const fresh=own.filter(w=>st.day-(w.hd||0)<90&&st.day-(w.hd||0)>=35&&!needSpec(w));
@@ -3446,6 +3449,7 @@ function mkTex(){const mk=(w,h,f)=>{const c=document.createElement('canvas');c.w
   TX.asph=g.createPattern(mk(96,48,(x,w,h)=>{x.fillStyle='#4a4f56';x.fillRect(0,0,w,h);for(let i=0;i<900;i++){const v=Math.random();x.fillStyle=v<.5?'rgba(0,0,0,.18)':'rgba(255,255,255,.10)';x.fillRect(Math.random()*w,Math.random()*h,1,1)}
     x.strokeStyle='rgba(20,20,20,.35)';x.lineWidth=.7;x.beginPath();x.moveTo(10,30);x.lineTo(22,26);x.lineTo(30,31);x.moveTo(60,10);x.lineTo(70,14);x.stroke()}),'repeat');
   TX.grass=g.createPattern(mk(64,32,(x,w,h)=>{for(let i=0;i<160;i++){const px=Math.random()*w,py=Math.random()*h;x.strokeStyle=Math.random()<.5?'rgba(0,60,0,.16)':'rgba(255,255,200,.12)';x.lineWidth=1;x.beginPath();x.moveTo(px,py);x.lineTo(px+R(-1.5,1.5),py-R(2,5));x.stroke()}}),'repeat')}
+let RSF=0; // la taille du décor est vérifiée toutes les 30 images (lire clientWidth forçait un recalcul de la page à chaque image) ; ResizeObserver/resize/orientation la mettent à jour tout de suite
 function rs(){const d=Math.min(2,devicePixelRatio||1);CW=cv.clientWidth;CH=cv.clientHeight;cv.width=Math.round(CW*d);cv.height=Math.round(CH*d);g.setTransform(d,0,0,d,0,0)}
 addEventListener('resize',rs);addEventListener('orientationchange',()=>setTimeout(rs,300));try{new ResizeObserver(()=>rs()).observe(cv)}catch(e){}rs();mkTex();
 function hh(n){n=(n^61)^(n>>>16);n=n+(n<<3)|0;n^=n>>>4;n=Math.imul(n,0x27d4eb2d);n^=n>>>15;return(n>>>0)/4294967296}
@@ -3579,7 +3583,7 @@ function branchPile(x,y){for(let k=0;k<5;k++)ln(x+k*3,y-2,x+16+k*2,y-12+k*2,'#6b
 function snowCover(x,y,w){rr(x,y-8,w+1,8,[5,5,0,0],'#fbfdff');rect(x,y-2,w+1,2,'#dfe8f0')}
 /* --- dessin principal --- */
 let carsTimer=0;
-function draw(t){if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs(); // téléphone tourné, plein écran… : on recalcule la taille
+function draw(t){if(++RSF>=30){RSF=0;if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs()} // téléphone tourné, plein écran… : on recalcule la taille
   g.setTransform(Math.min(2,devicePixelRatio||1),0,0,Math.min(2,devicePixelRatio||1),0,0);g.globalAlpha=1;
   const c=selC(),J=c?JOBS[c.j]:null,vk=J?J.vis:null,pal=PAL[season()],wk=WX[st.wx].k;
   const yHill=CH*.52,yFar=CH*.585,yRoad=CH*.625,yMid=CH*.71,yNear=CH*.80,yWork=CH*.935;
@@ -4352,7 +4356,7 @@ function clFix(C){if(!C.diff)C.diff='n';if(C.payP===undefined)C.payP=0;if(C.lp==
 let clCam=0;
 function clBuilding(x,y,w,h,col,roof,lit,sign){rect(x,y-h,w,h,col);rect(x,y-h-4,w,4,roof);const cols=Math.max(2,Math.floor(w/14)),rows=Math.max(2,Math.floor(h/16));for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const on=hh(x*7+r*13+c*31)<lit;rect(x+5+c*(w-8)/cols,y-h+6+r*(h-14)/rows,(w-8)/cols-5,(h-14)/rows-6,on?'#ffe9a8':'#7fa6c4')}rect(x+w/2-6,y-12,12,12,'#4d5a66');if(sign){g.fillStyle='#fff';g.font='800 8px Nunito,sans-serif';g.fillText(sign,x+3,y-h-7)}}
 function cleaner(x,y,t,o){worker(x,y,t,{walk:o.walk,ph:o.ph,vest:o.vest,helm:o.hair,skin:o.skin,s:o.s||1});const s=o.s||1;if(o.tool==='mop'){const k=Math.sin(t*5+(o.ph||0))*4;ln(x+3*s,y-26*s,x+(14+k)*s,y-1,'#c9a26b',1.8);rr(x+(10+k)*s,y-3,9*s,3,1,'#5b8fd6')}else if(o.tool==='cart'){rr(x+7*s,y-15*s,13*s,12*s,2,'#ffd23f');rr(x+9*s,y-20*s,4*s,5*s,1,'#2f79d9');rr(x+14*s,y-19*s,4*s,4*s,1,'#e05a8a');circ(x+9*s,y-2,1.8,'#333');circ(x+18*s,y-2,1.8,'#333')}else if(o.tool==='pole'){ln(x+2*s,y-30*s,x+18*s,y-90*s,'#d6dde4',2);rr(x+14*s,y-96*s,10*s,4*s,1,'#2f79d9')}}
-function clDraw(t){if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs();g.setTransform(Math.min(2,devicePixelRatio||1),0,0,Math.min(2,devicePixelRatio||1),0,0);g.globalAlpha=1;const C=st.cl;if(!C)return;
+function clDraw(t){if(++RSF>=30){RSF=0;if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs()}g.setTransform(Math.min(2,devicePixelRatio||1),0,0,Math.min(2,devicePixelRatio||1),0,0);g.globalAlpha=1;const C=st.cl;if(!C)return;
   const pal=PAL[season()],wk=WX[st.wx].k,yHill=CH*.5,yWalk=CH*.80,yRoad=CH*.84;clCam+=.25;const cam=clCam;
   const sk=SKY[wk];let gr=g.createLinearGradient(0,0,0,CH*.6);gr.addColorStop(0,sk[0]);gr.addColorStop(.7,sk[1]);gr.addColorStop(1,sk[2]);g.fillStyle=gr;g.fillRect(0,0,CW,CH*.6+2);
   if(wk==='sun'||wk==='cloud'){const sx2=CW*.84,sy2=CH*.13;const sg=g.createRadialGradient(sx2,sy2,0,sx2,sy2,60);sg.addColorStop(0,'rgba(255,248,200,.95)');sg.addColorStop(.25,'rgba(255,236,150,.55)');sg.addColorStop(1,'rgba(255,236,150,0)');g.fillStyle=sg;g.fillRect(sx2-60,sy2-60,120,120)}
@@ -5264,7 +5268,7 @@ function shEvtCard(){const E=shEvt(),N=shEvt(st.day+7).filter(e=>!E.some(x=>x.n=
 
 /* ---------- décor : façade du magasin, clients, camion de livraison ---------- */
 let shCam=0;
-function shDraw(t){if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs();g.setTransform(Math.min(2,devicePixelRatio||1),0,0,Math.min(2,devicePixelRatio||1),0,0);g.globalAlpha=1;const S=st.shop;if(!S)return;const s=shCur();
+function shDraw(t){if(++RSF>=30){RSF=0;if(cv.clientWidth!==CW||cv.clientHeight!==CH)rs()}g.setTransform(Math.min(2,devicePixelRatio||1),0,0,Math.min(2,devicePixelRatio||1),0,0);g.globalAlpha=1;const S=st.shop;if(!S)return;const s=shCur();
   const pal=PAL[season()],wk=WX[st.wx].k,yW=CH*.80,yR=CH*.84;shCam+=.15;camX=shCam;
   const sk=SKY[wk];let gr=g.createLinearGradient(0,0,0,CH*.6);gr.addColorStop(0,sk[0]);gr.addColorStop(.7,sk[1]);gr.addColorStop(1,sk[2]);g.fillStyle=gr;g.fillRect(0,0,CW,CH*.6+2);
   const cc=wk==='storm'?'rgba(70,80,95,.9)':wk==='rain'?'rgba(150,160,172,.9)':'rgba(255,255,255,.88)';for(const cl of clouds){const x=((cl.x+t*6*cl.s)%(CW+260)+CW+260)%(CW+260)-130,y=CH*cl.y*.8,sc=cl.s;g.fillStyle=cc;g.beginPath();g.ellipse(x,y,30*sc,10*sc,0,0,7);g.ellipse(x+12*sc,y-5*sc,18*sc,12*sc,0,0,7);g.fill()}
@@ -5287,7 +5291,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-21.11";
+var APPV="2026-11-21.12";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
