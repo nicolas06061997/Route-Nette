@@ -2868,6 +2868,7 @@ function orgIdle(w){const r=w.r;if(r==='gest')return(st.orgG||0)>=8&&st.day-(w.h
   if(!O[r]||O[r].v!==v){O[r]={v,d:st.day};return''}const lim=r==='form'?240:120;return st.day-O[r].d>=lim&&st.day-(w.hd||0)>=lim?`n’a plus rien eu à faire depuis ${Math.round((st.day-O[r].d)/30)} mois`:''}
 // Fabienne (terr) : chaque lundi, engage les ouvriers qui manquent et se sépare de ceux qui n'ont plus de travail ou ne rapportent pas assez
 const TERRK=['man','qual','chauf','engin','grimp','ramas','signal','paveur','peintre','chef'];
+const terM=()=>{const k=gmKey();if(!st.terM||st.terM.k!==k)st.terM={k,h:0,f:0};return st.terM};
 function terLog(t){const L=st.terL||(st.terL=[]);L.unshift({d:st.day,t});if(L.length>12)L.length=12;log('🧑‍🏭 '+t)}
 const terSafe=w=>w.boss||w.leg||w.it||w.det||w.off>st.day||/ton enfant/.test(w.n)||w.r==='etu';
 // ce qui manque : chantiers sans équipe valide, marchés publics en retard, petits boulots faisables refusés faute de monde
@@ -2911,10 +2912,10 @@ function terPlan(){const R=terNeed(),F=bureauMoney(),own=fieldOwn().filter(w=>!t
 function terrTick(){if(!has('terr'))return;terSnap();const mode=st.terMode||'all';if(mode==='off'||!st.adm.bce)return;st.terSS=terNeed().smallRaw?(st.terSS||0)+1:0;const P=terPlan();rsAdd('tern',1);
   const got=[];for(const h of P.afford.slice().sort((a,b)=>b.i-a.i)){const w=h.w;if(h.i>=0){if(st.cand[h.i]!==w)continue;st.cand.splice(h.i,1)}
     ck('hire');w.mot=w.base;w.hd=st.day;w.age=cvOf(w).age;st.workers.push(w);got.push(w)}
-  if(got.length){rsAdd('terh',got.length);terLog(`Fabienne a engagé ${got.length>3?got.length+' ouvriers':got.map(w=>w.n+' ('+ROLES[w.r].n.split(' (')[0].toLowerCase()+')').join(', ')} : ${terWhy(P.R)}.`);goals();return}
+  if(got.length){rsAdd('terh',got.length);terM().h+=got.length;terLog(`Fabienne a engagé ${got.length>3?got.length+' ouvriers':got.map(w=>w.n+' ('+ROLES[w.r].n.split(' (')[0].toLowerCase()+')').join(', ')} : ${terWhy(P.R)}.`);goals();return}
   if(mode!=='all'||P.R.tot>0&&P.fires.every(f=>!/salaire/.test(f.why)))return;
   const gone=[];let tot=0;for(const f of P.fires){const w=f.w,pre=preavisCost(w);if(st.cash<pre)break;mv(-pre,'Préavis de '+w.n,'sal');tot+=pre;(st.terF||(st.terF={}))[w.r]=st.day;dropW(w);gone.push(f)}
-  if(gone.length){rsAdd('terf',gone.length);terLog(gone.length>3?`Fabienne s’est séparée de ${gone.length} ouvriers (${gone[0].why}…). Préavis payés : ${eur(tot)}.`:gone.map(f=>`Fabienne s’est séparée de ${f.w.n} (${ROLES[f.w.r].n.split(' (')[0].toLowerCase()}) : ${f.why}. Préavis : ${eur(preavisCost(f.w))}.`).join(' '))}}
+  if(gone.length){rsAdd('terf',gone.length);terM().f+=gone.length;terLog(gone.length>3?`Fabienne s’est séparée de ${gone.length} ouvriers (${gone[0].why}…). Préavis payés : ${eur(tot)}.`:gone.map(f=>`Fabienne s’est séparée de ${f.w.n} (${ROLES[f.w.r].n.split(' (')[0].toLowerCase()}) : ${f.why}. Préavis : ${eur(preavisCost(f.w))}.`).join(' '))}}
 function terWhy(R){const L=[];if(R.pc)L.push(`${R.pc} chantier(s) sans chauffeur permis C`);if(R.op)L.push(`${R.op} sans conducteur d’engins`);if(R.gr)L.push(`${R.gr} sans élagueur-grimpeur`);if(R.n&&R.why.length)L.push(`${R.why.length} chantier(s) attendent une équipe`);if(R.late)L.push(`${R.late} marché(s) public(s) en retard`);if(R.small)L.push(`${R.small} petits boulots refusés faute de monde`);return L.join(', ')||'il manque du monde'}
 function terStatus(){const P=terPlan(),R=P.R;let a='';
   if(R.tot>0){if(P.afford.length)a=`👉 Au prochain jour ouvrable, elle engagera ${P.afford.length} ouvrier(s) : ${terWhy(R)}.`;
@@ -2923,9 +2924,13 @@ function terStatus(){const P=terPlan(),R=P.R;let a='';
   else if(R.smallRaw)a=`⏳ Des petits boulots attendent, mais ${R.occ<.85?`${Math.round((1-R.occ)*100)} % de tes ouvriers sont encore libres`:'le manque ne dure que depuis peu'} : elle attend avant d’engager pour eux.`;
   else a=P.doable&&P.freeOwn?`💡 ${P.freeOwn} ouvrier(s) sans chantier alors que ${P.doable} petit(s) boulot(s) attendent dans 🧰 Boulots : accepte-les${has('plan')?'':' (ou engage Manon, qui les accepte pour toi)'}. Fabienne ne renvoie personne tant qu’il y a du travail.`:'✅ Assez d’ouvriers pour le travail actuel.';
   if((st.terMode||'all')==='all'&&P.fires.length&&!(R.tot>0&&P.fires.every(f=>!/salaire/.test(f.why))))a+=` Elle va se séparer de ${P.fires.length>3?P.fires.length+' ouvriers':P.fires.map(f=>f.w.n).join(', ')} : ${P.fires[0].why}.`;return a}
+function terStats(){const own=fieldOwn().filter(w=>!w.boss),fr=new Set(freeW().map(w=>w.id)),ce=own.filter(w=>fr.has(w.id)&&(w.ce||0)>0).length,free=own.filter(w=>fr.has(w.id)).length,off=own.filter(w=>w.off>st.day).length,det=own.filter(w=>w.det).length,on=own.length-free-off-det,it=st.workers.reduce((a,w)=>a+(w.it?1:0),0),R=st.rs||{},M=terM();
+  return`<div class="kpi" style="margin-top:10px"><div><span>👷 Ouvriers maintenant</span><b>${nb(own.length)}</b></div><div><span>🦺 Sur un chantier</span><b class="money">${nb(on)}</b></div><div><span>💤 Sans chantier</span><b>${nb(free-ce)}${ce?` <span class="mut sm">+ ${nb(ce)} au chômage temp.</span>`:''}</b></div><div><span>🤕 Absents · ✈️ détachés${it?' · 🦺 intérim':''}</span><b>${nb(off)} · ${nb(det)}${it?' · '+nb(it):''}</b></div>
+  <div><span>✅ Engagés ce mois-ci</span><b class="money">+${nb(M.h)}</b></div><div><span>📤 Renvoyés ce mois-ci</span><b class="${M.f?'neg':''}">−${nb(M.f)}</b></div><div><span>✅ Engagés depuis le début</span><b>${nb(R.terh||0)}</b></div><div><span>📤 Renvoyés depuis le début</span><b>${nb(R.terf||0)}</b></div></div>`}
 function terCard(){if(!has('terr'))return'';const m=st.terMode||'all',L=st.terL||[];
   return`<div class="card acc" style="--ac:var(--or)"><b>🧑‍🏭 Fabienne gère les ouvriers</b><div class="mut sm" style="margin-top:4px">Tous les jours ouvrables, elle engage les ouvriers qui manquent (CV de la semaine ou directement au Forem et par annonces, sans limite) et se sépare de ceux qui ne servent plus. Ce qu’elle a le droit de faire :</div>
   <div style="margin-top:6px">${[['all','Engager et licencier'],['hire','Seulement engager'],['off','Rien (pause)']].map(([k,l])=>`<span class="chip ${m===k?'on':''}" onclick="st.terMode='${k}';clk();save();render()">${l}</span>`).join('')}</div>
+  ${terStats()}
   <div class="sm" style="margin-top:8px;padding:8px 10px;background:#0f1f15;border-radius:10px">${m==='off'?'⏸ En pause : elle ne fait rien.':esc(terStatus())}</div>
   <div class="mut sm" style="margin-top:6px">Elle n’engage jamais quelqu’un avec une mauvaise référence ni sans 2 mois de salaire sur le compte, garde toujours au moins un chauffeur, un conducteur d’engins et un élagueur si tes chantiers en ont besoin, ne licencie jamais le patron, Jason, tes enfants, les étudiants ni quelqu’un engagé il y a moins de 3 mois. En hiver, elle garde les ouvriers sans chantier (chômage temporaire).</div>
   ${L.length?`<div style="margin-top:8px">${L.slice(0,5).map(x=>`<div class="sm" style="padding:3px 0;border-top:1px solid #ffffff10"><span class="mut">${dstr(x.d)}</span> ${esc(x.t)}</div>`).join('')}</div>`:'<div class="mut sm" style="margin-top:6px">Pas encore de changement.</div>'}</div>`}
@@ -5228,7 +5233,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-21.7";
+var APPV="2026-11-21.8";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
