@@ -2856,6 +2856,32 @@ function rAo(){let h=goalCard()+workCard(1);const mine=st.tenders.filter(t=>t.my
     const all=[...st.riv.map(r=>({...r,busy:r.load.filter(e=>e>st.day).length})),{n:st.name,me:1,sz:st.cls>=2?2:st.cls?1:0,rep:st.rep,won:st.stats.won,ca:st.stats.ca,busy:running().filter(c=>!JOBS[c.j].p).length,jobs:Object.keys(st.refs)}].sort((a,b)=>b.won-a.won||b.ca-a.ca);
     for(const r of all)h+=`<div class="card ${r.me?'acc':''}"><div class="row"><b style="flex:1;${r.me?'color:var(--or2)':''}">${esc(r.n)}</b><span class="tag">${['Petite','Moyenne','Grande'][r.sz]}</span></div><div class="tags"><span class="tag">${stars(r.rep)}</span><span class="tag g">🏆 ${r.won} marchés</span><span class="tag">${eur(r.ca)}</span><span class="tag o">🦺 ${r.busy} en cours</span></div><div class="mut sm" style="margin-top:6px">${(r.jobs||[]).map(j=>JOBS[j]?JOBS[j].ic:'').join(' ')}</div></div>`}
   return h}
+// postes de bureau triés par besoin réel (le plus utile en haut), avec la raison pour les plus urgents
+function bureauPrio(){const n=ownW(),pub=running().filter(c=>!JOBS[c.j].p),late=pub.filter(c=>{try{return lateBy(c)>3}catch(e){return 0}}).length;
+  const nIt=st.workers.reduce((a,w)=>a+(w.it?1:0),0),nRp=st.reports.filter(r=>!r.done).length,maxW=Math.max(0,...Object.keys(st.eq||{}).filter(k=>st.eq[k]).map(wear));
+  const lateInv=(st.inv||[]).filter(v=>v.late).length,openT=st.tenders.filter(t=>t.status==='open'&&!t.my).length,smallJ=(st.jobs||[]).length;
+  const S={},W={};const set=(r,v,why)=>{S[r]=v;if(why)W[r]=why};
+  set('aide',n>=6?95:60,n>=6?'indispensable dès 6 personnes : tu es payé 10 jours plus vite':n>=2?'tes factures partent à temps, l’argent rentre plus vite':'');
+  set('gest',mgmtLoad()>=mgmtCap()?98:mgmtLoad()>=mgmtCap()-1?70:35,mgmtLoad()>=mgmtCap()?`tu suis déjà ${nb1(mgmtLoad())} chantiers sur ${mgmtCap()} possibles`:'');
+  set('plan',smallJ>=3?72:45,smallJ>=3?`${smallJ} petits boulots attendent une réponse`:'');
+  set('compta',n>=4?58:40,n>=4?'remplace la fiduciaire et la banque te prête plus':'');
+  set('secr',openT&&myOffers()>=offerCap()?85:st.adm.bce&&st.cls?42:28,openT&&myOffers()>=offerCap()?'tu ne peux plus remettre d’offres en plus':'');
+  set('metreur',openT&&myOffers()>=offerCap()?80:st.cls?40:26);
+  set('offre',pub.length||st.cls?55:22,pub.length?'remet les offres des marchés publics à ta place':'');
+  set('cond',late?88:pub.length>=3?50:20,late?`${late} marché${late>1?'s':''} public${late>1?'s':''} en retard`:'');
+  set('dirt',n>=10&&st.cls<2?90:30,n>=10&&st.cls<2?'obligatoire pour la classe 2':'');
+  set('daf',n>=10&&st.cls<2?89:30,n>=10&&st.cls<2?'obligatoire pour la classe 2':'');
+  set('prev',n>=15?87:20,n>=15?'obligatoire dès 15 personnes (moins d’accidents et de procès)':'');
+  set('meca',maxW>=60?75:Object.keys(st.eq||{}).length>=4?38:15,maxW>=60?`une machine est usée à ${Math.round(maxW)} %`:'');
+  set('flotte',maxW>=70&&has('meca')?65:18);
+  set('recru',nIt>=5?78:12,nIt>=5?`${nIt} intérimaires à noter`:'');
+  set('chefp',nRp>=4?77:14,nRp>=4?`${nRp} rapports de chantier à traiter`:'');
+  set('recouv',lateInv>=2?74:16,lateInv>=2?`${lateInv} factures payées en retard`:'');
+  set('rh',n>=5?48:20);set('achat',n>=12?40:12);set('qhse',pub.length>=3?45:14);set('rsoc',n>=10?36:10);set('juriste',n>=10?33:10);
+  set('comm',25);set('hiver',HIVJ&&pub.some(c=>HIVJ.includes(c.j))?44:11);set('assist',n>=8?30:10);set('gardien',Object.keys(st.eq||{}).length>=6?28:9);set('form',n>=6?32:11);set('dirc',n>=10?46:24);
+  const lk=r=>!st.adm.bce||(ROLES[r].need&&n<ROLES[r].need);
+  const L=Object.keys(S).filter(r=>ROLES[r]&&(ROLES[r].multi||!has(r)));L.sort((a,b)=>lk(a)-lk(b)||S[b]-S[a]);
+  return L.map((r,i)=>[r,i<3&&S[r]>=55&&W[r]?W[r]:''])}
 function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew.forEach(i=>busy.set(i,c)));
   let h=goalCard()+`<div class="kpi" style="margin-bottom:12px"><div><span>Personnel</span><b>${ownW()}</b></div><div><span>Masse salariale / mois</span><b>${eur(payroll()*WDM)}</b></div><div><span>Encadrement (charge)</span><b>${nb1(mgmtLoad())} / ${mgmtCap()}</b></div><div><span>Offres en parallèle</span><b>${myOffers()} / ${offerCap()}</b></div></div>`;
   h+=`<div class="card"><div class="row"><b style="flex:1">🤖 Équipes automatiques</b><button class="btn ${st.autoStaff!==0?'g':'s'}" style="padding:6px 10px" onclick="st.autoStaff=st.autoStaff===0?1:0;save();render()">${st.autoStaff!==0?'Activé':'Désactivé'}</button></div><div class="mut sm" style="margin-top:4px">Ton chef d'équipe envoie lui-même les ouvriers libres sur les chantiers en attente ou en pause (marchés publics en premier), et loue le matériel s'il manque.</div></div>`;
@@ -2886,8 +2912,9 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
   else if(eqTab==='bureau'){const office=st.workers.filter(w=>ROLES[w.r].cat!=='ouv');
     h+=`<h2>Encadrement, bureau et direction</h2>`;if(!office.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, factures, chantiers. Toi seul, tu peux suivre 2 chantiers et 2 offres en même temps.</p>';{const nO=Math.min(office.length,pgN('off',20));office.slice(0,nO).forEach(w=>h+=card(w));h+=pgBtn('off',20,nO,office.length)}
     h+=`<h2>Postes à pourvoir</h2>`;
-    for(const r of['aide','plan','offre','cond','recru','chefp','recouv','comm','rsoc','hiver','gest','secr','metreur','compta','rh','meca','prev','qhse','flotte','achat','juriste','assist','gardien','form','dirt','daf','dirc']){const R0=ROLES[r];if(!R0.multi&&has(r))continue;const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
-      h+=`<div class="card" style="${lock?'opacity:.6':''}"><div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(R0.day*WDM)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>
+    h+=`<p class="mut sm" style="margin:0 4px 10px">Classés selon ce dont ton entreprise a besoin maintenant : le plus utile en haut.</p>`;
+    for(const [r,why] of bureauPrio()){const R0=ROLES[r];const lock=!st.adm.bce||(R0.need&&ownW()<R0.need);
+      h+=`<div class="card ${why&&!lock?'acc':''}" style="${why&&!lock?'--ac:var(--or);':''}${lock?'opacity:.6':''}">${why&&!lock?`<div class="tag o" style="margin-bottom:6px">⭐ Conseillé : ${why}</div>`:''}<div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(R0.day*WDM)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>
       <button class="btn w" style="margin-top:10px" ${lock?'disabled':''} onclick="cvUI('role','${r}')">${R0.need&&ownW()<R0.need?`🔒 À partir de ${R0.need} personnes`:R0.multi&&has(r)?'📄 CV d’un gestionnaire de plus':'📄 Voir le CV'}</button></div>`}}
   else{h+=`<h2>Candidats (nouveaux chaque lundi${has('rh')?', trouvés par Sophie':''})</h2><p class="mut sm" style="margin:0 4px 10px">Coût employeur : salaire brut (barèmes 2026 de la commission paritaire 145.04 — parcs et jardins, 16,00 à 18,87 €/h brut) + ONSS + pécules de vacances. Pour engager, il faut de quoi payer un mois.</p>`;
     st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd">${avatar(w,52)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${ROLES[w.r].n} · ${eur(monthly(w))}/mois</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div>${ROLES[w.r].d?`<div class="mut sm" style="margin-top:6px">${ROLES[w.r].d}</div>`:''}<button class="btn w" style="margin-top:10px" onclick="cvUI('cand',${i})">📄 Voir le CV</button></div>`);
@@ -5085,7 +5112,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-15.1";
+var APPV="2026-11-21.1";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
