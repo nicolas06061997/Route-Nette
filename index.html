@@ -578,6 +578,8 @@ const isWork=d=>!dayKind(d);
 function addWork(d,n){let k=d;while(n>0){k++;if(isWork(k))n--}return k}
 
 /* ---------- Petits outils ---------- */
+// grosse entreprise (3 marchés publics ou plus en même temps) : les marchés publics vont dans le journal, sans fenêtre ni bulle
+const quietPub=()=>st.contracts.reduce((a,c)=>a+(JOBS[c.j]&&!JOBS[c.j].p?1:0),0)>=3;
 function log(t,toast){st.log.unshift({d:st.day,t});if(st.log.length>100)st.log.length=100;if(toast!==false)toastMsg(t,1)}
 function toastMsg(t,ev){const T=$('#toast');if(ev&&ev!==2&&(curTab==='cl'||curTab==='hub'||curTab==='sh'))return;const imp=/^(💶|🎉|🏆|🏅|❌|⚖️|🚨|💀|⚠️|🏛️|📊|🚫|⏸|🎊|📂)/u.test(t)||/Il faut|manque|Pas assez|refuse|d'abord|Code|copié|installé|à jour|connexion/.test(t);const N=ev?(st&&st.ntf||'imp'):'all';if(N==='off'&&!/Il faut|manque|Pas assez|refuse|d'abord/.test(t))return;if(N==='imp'&&!imp)return;while(T.children.length>=2)T.firstChild.remove();const d=document.createElement('div');d.innerHTML=t;if(/^(💶|🎉|✅|🏆|🏅|🌟|🎁|👍)/u.test(t))d.className='good';else if(/^(❌|⚖️|🔧|🚨|⚠️|💀|😠|📮|🚗|🤒)/u.test(t))d.className='bad';T.appendChild(d);setTimeout(()=>{d.style.opacity=0},2400);setTimeout(()=>d.remove(),2800)}
 let AC=null;
@@ -1358,7 +1360,7 @@ function openBids(t){const J=JOBS[t.j];const bids=[];
     bids.push({n:r.n,tot:Math.round(p*100)/100,vt:r.rep,irr:Math.random()<.07?'documents manquants':null})}
   if(t.my)bids.push({n:st.name,tot:t.my.tot,vt:clamp(st.rep+(has('dirt')?10:0)+(has('dirc')?10:0)+(ino('hvo')?5:0)+((st.fond||0)>=1e6?3:0),0,100),me:1,irr:null});
   bids.sort((a,b)=>a.tot-b.tot);t.bids=bids;t.status='opened';
-  if(t.my){const i=bids.findIndex(b=>b.me);log(`📂 Ouverture des offres (${J.n}, ${t.road}) : tu es ${i+1}e sur ${bids.length}. Décision le ${dstr(t.dec)}.`)}
+  if(t.my){const i=bids.findIndex(b=>b.me);log(`📂 Ouverture des offres (${J.n}, ${t.road}) : tu es ${i+1}e sur ${bids.length}. Décision le ${dstr(t.dec)}.`,quietPub()?false:undefined)}
 }
 function decide(t){const J=JOBS[t.j];const me=t.bids.find(b=>b.me);
   if(me){if(me.tot<t.est*.85){const ok=me.tot>=realCost(t)*.98;if(!ok)me.irr='offre anormalement basse non justifiée';else log(`📝 Le SPW a demandé de justifier ton prix bas : justification acceptée.`,false)}
@@ -1371,7 +1373,7 @@ function decide(t){const J=JOBS[t.j];const me=t.bids.find(b=>b.me);
   if(!t.my)return;
   const tbl=pvTable(t);
   if(w.me){awardMe(t)
-  }else{st.stats.lost++;t.lostD=st.day;t.wTot=w.tot;t.wN=w.n;log(`❌ Marché attribué à ${w.n} (${eur(w.tot)}). ${me&&me.irr?'Ton offre a été écartée : '+me.irr+'.':''}${recEligible(t)?' Tu peux introduire un recours avec un avocat (🏛️ Marchés → Mes offres).':''}`)}
+  }else{st.stats.lost++;t.lostD=st.day;t.wTot=w.tot;t.wN=w.n;log(`❌ Marché attribué à ${w.n} (${eur(w.tot)}). ${me&&me.irr?'Ton offre a été écartée : '+me.irr+'.':''}${recEligible(t)?' Tu peux introduire un recours avec un avocat (🏛️ Marchés → Mes offres).':''}`,quietPub()?false:undefined)}
 }
 function awardMe(t){const J=JOBS[t.j];const tbl=pvTable(t);st.stats.won++;confetti(200);
     const startBy=addWork(st.day,t.proc==='po'?15:10);
@@ -1379,7 +1381,7 @@ function awardMe(t){const J=JOBS[t.j];const tbl=pvTable(t);st.stats.won++;confet
     if(c.gar){const fee=Math.max(150,Math.round(c.gar*.015));mv(-fee,'Garantie bancaire (cautionnement 5 %)','fix');log(`🏦 Ta banque émet une garantie de ${eur(c.gar)} pour le cautionnement (commission ${eur(fee)}).`,false)}
     if(c.caut){mv(-c.caut,'Cautionnement bloqué','buy');st.mCapex+=c.caut;log(`🏦 Cautionnement de ${eur(c.caut)} constitué (bloqué jusqu'à la fin du chantier).`,false)}
     st.contracts.push(c);log(`🎉 Marché attribué : ${J.ic} ${J.n} (${t.road}) pour ${eur(t.my.tot)} !`,false);kaching();
-    if(has('cond')||has('offre'))log(`🎉 Marché gagné : ${J.n} (${t.road}) pour ${eur(t.my.tot)}. ${has('cond')?'Benoît':'Ton chef d’équipe'} organise le chantier.`);else showModal(`<h3>🎉 Marché attribué !</h3><div class="mut sm">${t.buyer}<br>Réf. ${t.ref}</div><div class="hd" style="margin-top:8px"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div><h2>Procès-verbal d'ouverture des offres</h2>${tbl}
+    if(has('cond')||has('offre')||quietPub())log(`🎉 Marché gagné : ${J.n} (${t.road}) pour ${eur(t.my.tot)}. ${has('cond')?'Benoît':'Ton chef d’équipe'} organise le chantier.`,quietPub()?false:undefined);else showModal(`<h3>🎉 Marché attribué !</h3><div class="mut sm">${t.buyer}<br>Réf. ${t.ref}</div><div class="hd" style="margin-top:8px"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div><h2>Procès-verbal d'ouverture des offres</h2>${tbl}
     <p>Ordre de commencer : <b>${dlong(startBy)}</b>.<br>Délai d'exécution : <b>${t.N} jours ouvrables</b>.${c.gar?`<br>Cautionnement : ${eur(c.gar)} (garantie bancaire).`:''}</p><div class="row"><button class="btn" onclick="closeM();startUI(${c.id})">Préparer le chantier</button><button class="btn s" onclick="closeM()">Plus tard</button></div>`);
 }
 function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr style="${b.irr?'opacity:.5':''}"><td>${t.win===b.n?'🏆 ':''}${b.me?'<b style="color:var(--or2)">'+esc(b.n)+'</b>':esc(b.n)}${b.irr&&t.status==='done'?'<div class="mut sm">'+b.irr+'</div>':''}</td><td>${eur2(b.tot)}</td></tr>`).join('')+'</table>'}
@@ -1433,7 +1435,7 @@ function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.work
     crew.forEach(w=>{w.sk=Math.min(w.leg?2:1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
     if(c.prog>=c.q-1e-6)finish(c);
   }
-  for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);mv(v.amt,'Paiement : '+v.from,v.caut?'buy':'in');if(v.late&&has('recouv')&&!v.caut){const it=Math.round(v.amt*.12*v.late/365+40);mv(it,'Intérêts de retard + indemnité (Sandrine)','in');rsAdd('reci',it)}if(v.caut)st.mCapex-=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`);kaching()}
+  for(const v of [...st.inv])if(st.day>=v.due){st.inv.splice(st.inv.indexOf(v),1);mv(v.amt,'Paiement : '+v.from,v.caut?'buy':'in');if(v.late&&has('recouv')&&!v.caut){const it=Math.round(v.amt*.12*v.late/365+40);mv(it,'Intérêts de retard + indemnité (Sandrine)','in');rsAdd('reci',it)}if(v.caut)st.mCapex-=v.amt;st.stats.earned+=v.amt;log(`💶 Paiement reçu : +${eur(v.amt)} — ${v.from}`,quietPub()?false:undefined);kaching()}
   for(const t of [...st.tenders]){if(t.status==='open'&&st.day>=t.bidEnd)openBids(t);if(t.status==='opened'&&st.day>=t.dec)decide(t)}
   st.tenders=st.tenders.filter(t=>t.status!=='done'||t.rec||(t.my&&st.day-t.dec<20));
   st.tenders=st.tenders.filter(t=>t.status!=='opened'||t.my||st.day-t.bidEnd<3);
@@ -1502,7 +1504,7 @@ function finish(c){const J=JOBS[c.j];st.contracts.splice(st.contracts.indexOf(c)
   st.stats.spw++;st.refs[c.j]=(st.refs[c.j]||0)+1;
   invoice(rest,payDelay(Math.random()<.75?RI(25,30):RI(31,55)),`SPW — décompte final (${J.n})`);
   if(c.caut){invoice(c.caut/2,30,'Libération de 50 % du cautionnement (réception provisoire)');invoice(c.caut/2,365,'Libération du solde du cautionnement (réception définitive)');st.inv.slice(-2).forEach(v=>v.caut=1)}
-  if(has('cond'))log(`✅ Réception provisoire : ${J.n} (${c.road}) terminé${late?' avec '+n+' j de retard':' dans les délais'}. Décompte final : ${eur(rest)}.`);else showModal(`<h3>✅ Réception provisoire</h3><div class="hd"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${c.road} — ${c.town}</div></div></div><table style="margin-top:10px">
+  if(has('cond')||quietPub())log(`✅ Réception provisoire : ${J.n} (${c.road}) terminé${late?' avec '+n+' j de retard':' dans les délais'}. Décompte final : ${eur(rest)}.`);else showModal(`<h3>✅ Réception provisoire</h3><div class="hd"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${c.road} — ${c.town}</div></div></div><table style="margin-top:10px">
   <tr><td>Montant du marché</td><td>${eur(c.price)}</td></tr><tr><td>États d'avancement déjà facturés</td><td>${eur(c.billed)}</td></tr>
   <tr><td>Délai : ${c.wd} / ${c.N} jours ouvrables</td><td>${late?'<span class="neg">'+n+' j de retard</span>':'✅'}</td></tr>
   ${fine?`<tr><td>Amende pour retard</td><td class="neg">-${eur(fine)}</td></tr>`:''}<tr><td><b>Décompte final</b> (délai légal : 30 jours)</td><td class="money">${eur(rest)}</td></tr>
@@ -5291,7 +5293,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-21.12";
+var APPV="2026-11-21.13";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
