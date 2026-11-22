@@ -1,4 +1,4 @@
-# Route Nette — version 1.1
+# Route Nette — version 2.0
 
 Jeu mobile (PWA, un seul fichier `index.html`) de gestion d'une entreprise d'entretien des routes en Wallonie.
 
@@ -16,10 +16,10 @@ Jouer : https://nicolas06061997.github.io/Route-Nette/ (installable sur le tél�
 - **Carrière** : 100 niveaux, défis du mois, 12 grands chantiers, 97 succès. Le jeu est « fini » à 100 %, et on peut continuer après.
 
 ## 2e entreprise : société de nettoyage
-Page « Mes entreprises » : Route Nette est gratuite ; la société de nettoyage se débloque pour 25 millions € (compte privé). Titres-services, bureaux, commerces, écoles, hôpitaux (marchés publics), vitres et chantiers ponctuels, personnel avec absences et départs, matériel, banque et impôts. Même calendrier et même vie privée.
+Page « Mes entreprises » : Route Nette est gratuite ; la société de nettoyage se débloque pour 2 millions € (compte privé ou holding). Titres-services, bureaux, commerces, écoles, hôpitaux (marchés publics), vitres et chantiers ponctuels, personnel avec absences et départs, matériel, banque et impôts. Même calendrier et même vie privée.
 
 ## 3e entreprise : chaîne de magasins
-Débloquée pour 75 M€ (compte privé ou holding). On ouvre une supérette dans une ville wallonne et on gère tout : ± 95 produits en 10 rayons (TVA 6 / 21 %), 8 fournisseurs (prix, minimum, frais de livraison, jours et délai, fiabilité, paiement), commandes avec calendrier de livraison et quantités conseillées, contrôle à la réception (manquants, casse, température), réserve et rayons, dates de péremption, prix par rayon et promotions, personnel (caissières, réassort, étudiants, gérante), TVA, ISOC, prêt et dividendes vers la holding.
+Débloquée pour 6 M€ (compte privé ou holding). On ouvre une supérette dans une ville wallonne et on gère tout : ± 95 produits en 10 rayons (TVA 6 / 21 %), 8 fournisseurs (prix, minimum, frais de livraison, jours et délai, fiabilité, paiement), commandes avec calendrier de livraison et quantités conseillées, contrôle à la réception (manquants, casse, température), réserve et rayons, dates de péremption, prix par rayon et promotions, personnel (caissières, réassort, étudiants, gérante), TVA, ISOC, prêt et dividendes vers la holding.
 Puis la chaîne grandit (onglet 🚀 Groupe) : nouveaux magasins (supérette de ville, supermarché), entrepôt central et camions, transferts de stock, concurrents à racheter et classement, carrière (niveaux, défis du mois, projets, grands projets), marque propre, drive et livraison à domicile, franchise, rachat de l'agence d'intérim. Et la gestion fine : folder promo, commandes permanentes, inventaire, anti-gaspi, contrôles AFSCA, décisions du patron, intérim, rapports, formations, syndicats (CP 202), assurances et procès.
 
 ## Sauvegarde

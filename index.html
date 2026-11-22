@@ -5659,11 +5659,11 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-22.1";
+var APPV="2026-11-22.2";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
-(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 1.8 · "+APPV})();
+(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 2.0 · "+APPV})();
 function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){});
  fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
   if(!j||!j.v||j.v===APPV){if(man)say("Le jeu est à jour ✓ (version "+APPV+")");return}
