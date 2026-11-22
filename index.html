@@ -27,12 +27,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--
 body{display:flex;flex-direction:column;height:100dvh;max-width:760px;margin:auto;background:linear-gradient(180deg,#0d1a14,#0a140f)}
 button{font-family:inherit}
 /* --- En-tête --- */
-#top{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;background:linear-gradient(180deg,#14281d,#0f2017);border-bottom:1px solid var(--line)}
-#logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--or),#ff6a00);display:grid;place-items:center;font-weight:900;color:#2a1600;font-size:15px;box-shadow:0 3px 10px rgba(255,140,0,.35);flex:none}
+#top{display:flex;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top) + 8px) 10px 8px;background:linear-gradient(180deg,#14281d,#0f2017);border-bottom:1px solid var(--line)}
+#logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--or),#ff6a00);display:grid;place-items:center;font-weight:900;color:#2a1600;font-size:15px;box-shadow:0 3px 10px rgba(255,140,0,.35);flex:none}
 #tinfo{flex:1;min-width:0}
-#tname{font-weight:900;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tname{font-weight:900;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tsub{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#cash{background:linear-gradient(135deg,#1f4d2e,#16371f);border:1px solid #2f7a45;border-radius:12px;padding:5px 10px;font-weight:900;font-size:17px;color:#b9ffd0;white-space:nowrap}
+#cash{background:linear-gradient(135deg,#1f4d2e,#16371f);border:1px solid #2f7a45;border-radius:12px;padding:4px 8px;font-weight:900;font-size:15.5px;color:#b9ffd0;white-space:nowrap}
 #cash.neg{background:linear-gradient(135deg,#5a1f1d,#3b1412);border-color:#9b3a35;color:#ffc2bd}
 /* --- Barre de scène --- */
 #scene{position:relative}
@@ -78,7 +78,7 @@ button{font-family:inherit}
 #cash{transition:transform .2s}
 .mgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}.mgrid>div{background:var(--card2);border-radius:12px;padding:7px 8px}.mgrid span{display:block;font-size:11px;color:var(--mut);font-weight:800}.mgrid b{display:block;font-size:13.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pvtiles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}.pvtiles>div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 8px;text-align:center}.pvtiles span{display:block;font-size:11.5px;color:var(--mut);font-weight:800}.pvtiles b{display:block;font-size:16px;font-weight:900;margin-top:2px;white-space:nowrap}details.card>summary{list-style:none}details.card>summary::-webkit-details-marker{display:none}
-#bell{position:relative;font-size:18px;padding:5px 6px;margin-right:4px;border-radius:12px;background:#ffffff10;cursor:pointer;opacity:.55}#bell.on{opacity:1;background:#ff9a1f33}#bellN{position:absolute;top:-4px;right:-4px;background:#ff5d57;color:#fff;font-size:11px;border-radius:9px;padding:0 5px;line-height:17px}#bellN:empty{display:none}
+#bell{position:relative;font-size:16px;padding:4px 5px;margin-right:2px;border-radius:12px;background:#ffffff10;cursor:pointer;opacity:.55}#bell.on{opacity:1;background:#ff9a1f33}#bellN{position:absolute;top:-4px;right:-4px;background:#ff5d57;color:#fff;font-size:11px;border-radius:9px;padding:0 5px;line-height:17px}#bellN:empty{display:none}
 #cash.up{animation:cup .6s}#cash.down{animation:cdown .6s}
 @keyframes cup{30%{transform:scale(1.12);box-shadow:0 0 18px rgba(79,220,122,.8)}}
 @keyframes cdown{30%{transform:scale(.94);box-shadow:0 0 18px rgba(255,93,87,.7)}}
@@ -119,7 +119,7 @@ nav .bd{position:absolute;top:1px;right:calc(50% - 22px);background:var(--rd);co
 #hub{position:fixed;top:0;bottom:0;left:0;right:0;max-width:760px;margin:auto;z-index:28;display:none;flex-direction:column;background:linear-gradient(180deg,#0d1a14,#0a140f)}
 #hub.on{display:flex;animation:pvin .25s ease-out}
 #hubpane{flex:1;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 16px) 12px 24px;-webkit-overflow-scrolling:touch}.hubt{padding:4px 4px 12px}.hubc{cursor:pointer}.hubc.lock{border-style:dashed}
-#hubb,#pvb{position:relative;font-size:17px;padding:5px 6px;margin-right:3px;border-radius:12px;background:#ffffff10;cursor:pointer}
+#hubb,#pvb{position:relative;font-size:16px;padding:4px 5px;margin-right:0;border-radius:12px;background:#ffffff10;cursor:pointer}
 .nw{display:inline-block;background:var(--gr);color:#06210f;border-radius:8px;font-size:9.5px;font-weight:900;padding:0 5px;margin-left:4px;vertical-align:middle}
 .bd.nwd{background:var(--gr);color:#06210f}
 .seg button.lk{opacity:.45}
@@ -252,6 +252,7 @@ const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const eur=n=>(n<0?'-':'')+Math.round(Math.abs(n)).toLocaleString('fr-BE')+' €';
+const eurH=n=>{const a=Math.abs(n),s=n<0?'-':'';return a>=1e9?s+(a/1e9).toLocaleString('fr-BE',{maximumFractionDigits:2})+' Md €':a>=1e6?s+(a/1e6).toLocaleString('fr-BE',{maximumFractionDigits:2})+' M €':eur(n)};
 const eur2=n=>n.toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
 const nb=n=>Math.round(n).toLocaleString('fr-BE');
 const nb1=n=>(+n).toLocaleString('fr-BE',{maximumFractionDigits:1});
@@ -381,10 +382,10 @@ const JOBS={
   p_plant:{p:1,n:'Plantation d’une haie',ic:'🌿',un:'m',rate:30,pu:22,need:['van'],minW:1,vis:'hedge',tool:'pelle',mo:[10,4],ac:'#4fc06a'},
   p_arbre:{p:1,n:'Abattage d’un arbre dans un jardin',ic:'🪓',un:'arbres',rate:2,pu:450,need:['trons','broyeur'],minW:2,vis:'trees',tool:'scie',ac:'#8a5a2b'},
   p_parking:{p:1,n:'Balayage d’un parking de supermarché',ic:'🛒',un:'m²',rate:15000,pu:.035,need:['balayeuse'],minW:1,pc:1,vis:'sweep',tool:'',mach:'balayeuse',ac:'#ffd23f'},
-  p_selpk:{p:1,n:'Déneigement d’un parking d’entreprise',ic:'🧂',un:'m²',rate:20000,pu:.05,need:['benne19','saleuse'],minW:1,pc:1,vis:'snow',tool:'',mach:'benne19',mo:[12,2],ac:'#bfe3ff'},
+  p_selpk:{p:1,n:'Déneigement d’un parking d’entreprise',ic:'🧂',un:'m²',rate:20000,pu:.05,need:['benne19','saleuse'],minW:1,pc:1,vis:'snow',tool:'',mach:'benne19',mo:[12,2],ac:'#bfe3ff',allw:1},
   p_graff:{p:1,n:'Enlèvement de graffitis sur une façade',ic:'🎨',un:'m²',rate:40,pu:14,need:['karcher'],minW:1,vis:'paving',tool:'lance',ac:'#c78bd9'},
   p_potager:{p:1,n:'Création d’un potager',ic:'🥕',un:'m²',rate:60,pu:3.5,need:[],minW:1,vis:'bush',tool:'pelle',mo:[3,6],ac:'#d9a066'},
-  p_neige:{p:1,n:'Déneigement de trottoirs',ic:'❄️',un:'m²',rate:300,pu:1.45,need:[],minW:1,vis:'snow',tool:'pelle',mo:[12,2],ac:'#bfe3ff'},
+  p_neige:{p:1,n:'Déneigement de trottoirs',ic:'❄️',un:'m²',rate:300,pu:1.45,need:[],minW:1,vis:'snow',tool:'pelle',mo:[12,2],ac:'#bfe3ff',allw:1},
   dechets:{n:'Ramassage des déchets le long des routes',main:'Ramassage manuel des déchets sur accotements et talus',ic:'🗑️',un:'km',q0:8,rate:2,pu:255,need:['van','signal'],minW:2,vis:'dechets',tool:'pince',ac:'#7bd88f',nat:'services',ex:{d:'Évacuation et mise en CET des déchets',u:'t',k:.12,pu:160,c:128}},
   panneaux:{n:'Nettoyage des panneaux de signalisation',main:'Nettoyage haute pression de panneaux de signalisation',ic:'🪧',un:'pièces',q0:80,rate:16,pu:23,need:['van','karcher','signal'],minW:2,vis:'signs',tool:'lance',ac:'#4fb3ff',nat:'services'},
   glissieres:{n:'Nettoyage des glissières de sécurité',main:'Nettoyage des glissières de sécurité (une face)',ic:'🛣️',un:'km',q0:4,rate:.8,pu:460,need:['van','karcher','signal','fleche'],minW:2,vis:'rail',tool:'lance',ac:'#a9b8c8',nat:'services'},
@@ -478,7 +479,8 @@ function defaults(){return{schema:SCHEMA,name:'Ma petite entreprise',cash:3000,r
   workers:[{id:1,n:'Toi',r:'boss',boss:1,sk:1,day:0,pc:0,skin:0,base:1,mot:1,hd:0,warn:0}],eq:{},tenders:[],jobs:[],contracts:[],inv:[],cand:[],log:[],
   stats:{won:0,lost:0,done:0,ca:0,spw:0,earned:0},refs:{},riv:null,priv:{cash:0,own:[],tr:0},salAcc:0,reports:[],mStart:3000,mCapex:0,mLoan:0,lastTax:null,srl:0,mon:{},mv:[],lastMon:null,goals:{},sel:null,wx:0,started:false,snd:1,over:false,itq:[],itAcc:0}}
 function migrate(s){const d=defaults();if(s.mStart===undefined)s.mStart=s.cash;
-  if(s.seen===undefined&&(s.day||0)>30)s.seen={ao:1,ac:1,it:1,emp:1};// vieilles parties : pas de badges « Nouveau » partout
+  if(s.seen===undefined&&(s.day||0)>30)s.seen={ao:1,ac:1,it:1,emp:1};
+  if(s.airbag===undefined&&(s.day||0)>60)s.airbag={done:1};// vieilles parties : la prime de lancement est passée// vieilles parties : pas de badges « Nouveau » partout
   for(const k in d)if(s[k]===undefined)s[k]=d[k];
   for(const k in d.stats)if(s.stats[k]===undefined)s.stats[k]=d.stats[k];
   if(!s.riv)s.riv=newRivals();
@@ -1374,10 +1376,10 @@ function genTender(forceJob,urgent){
   if(J.ex)postes.push({d:J.ex.d,u:J.ex.u,q:Math.max(1,Math.round(q*J.ex.k)),ref:+(J.ex.pu*pIdx()).toFixed(2),c:+(J.ex.c*pIdx()).toFixed(2)});
   postes.push({d:'Signalisation de chantier (mise en place, maintien, enlèvement)',u:'jour',q:Math.ceil(N*.8),ref:Math.round((J.need.includes('fleche')?135:80)*pIdx()),c:Math.round((J.need.includes('fleche')?105:62)*pIdx())});
   const est=Math.round(postes.reduce((a,p)=>a+p.q*p.ref*R(.95,1.08),0)*evF('e')/10)*10;
-  const crit=proc==='po'&&Math.random()<.4?'pvt':'prix';
+  const crit=(proc==='po'&&Math.random()<.45)||(proc==='pn'&&J.nat==='services'&&Math.random()<.2)?'pvt':'prix',wq=crit==='pvt'?(proc==='po'?pick([.2,.25,.3,.35]):.2):0;
   const bidEnd=st.day+(urgent?3:RI(10,20)),dec=bidEnd+(proc==='po'?RI(15,25):RI(5,12));
   st.tenders.push({id:st.nid++,j,q,est,N,nRef,postes,proc,crit,buyer:B[0],ref:`MI/${B[1]}/${date(st.day).getFullYear()}/${String(RI(100,980)).padStart(4,'0')}`,road:pick(B[2]),town:pick(B[3]),
-    bidEnd,dec,status:'open',my:null,bids:null,cls:clsFor(est,J.nat),caut:est>50000,urgent:!!urgent,noise:R(-.15,.15)});
+    bidEnd,dec,status:'open',my:null,bids:null,wq,cls:clsFor(est,J.nat),caut:est>50000,urgent:!!urgent,noise:R(-.15,.15)});
 }
 // Sélection qualitative et conditions pour remettre offre
 const SPWC=new Map();
@@ -1396,6 +1398,8 @@ function spwReq0(t){const J=JOBS[t.j];const r=[];const F=spwF();
   if(J.pc)r.push({ok:F.pc,tx:'🪪 Permis C'});if(J.op)r.push({ok:F.R.has(J.op),tx:"🦾 Conducteur d'engins"});if(J.gr)r.push({ok:F.R.has('grimp'),tx:'🧗 Élagueur-grimpeur'});
   for(const k of J.need)r.push({ok:(st.eq[k]||0)>0,tx:EQ[k].ic+' '+EQ[k].n});
   return r}
+const critTxt=t=>t.crit==='prix'?'Critère : prix (100 %)':`Prix ${Math.round(100-(t.wq||.2)*100)} % · qualité ${Math.round((t.wq||.2)*100)} %`;
+const mtCost=t=>Math.round(Math.min(15000,Math.max(400,t.est*.003))*(has('metreur')?.5:1)/10)*10;
 const reqSum=r=>{const m=r.filter(x=>!x.ok);return`<details class="more"${m.length&&m.length<=2?' open':''}><summary style="color:${m.length?'#ffaaa4':'#9df0b7'}">${m.length?`Il manque ${m.length} condition${m.length>1?'s':''} sur ${r.length}`:`✅ Les ${r.length} conditions sont remplies`}</summary>${reqHtml(r)}</details>`};
 const reqHtml=r=>'<div class="req">'+r.map(x=>`<span style="color:${x.ok?'#9df0b7':'#ffaaa4'}">${x.ok?'✅':'❌'} ${x.tx}</span>`).join('')+'</div>';
 function freeEq(t,ex){let u=0;for(const c of st.contracts)if(c.st==='run'&&c!==ex)u+=(c.own[t]||0);return(st.eq[t]||0)-u}
@@ -1407,16 +1411,17 @@ function eqPlan(j,ex){const own={},rent={},miss=[];let day=0;for(const t of JOBS
 function seenCost(t,p){const f=has('metreur')?1:1+t.noise;return p.c*f}
 function realCost(t){return t.postes.reduce((a,p)=>a+p.q*p.c,0)}
 function bidTotal(pu,t){return t.postes.reduce((a,p,i)=>a+p.q*(pu[i]||0),0)}
-let bidPU=[];
+let bidPU=[],bidMT=true;
 function bidUI(id){const t=st.tenders.find(x=>x.id===id);if(!t)return;const J=JOBS[t.j];clk();
   if(myOffers()>=offerCap())return showModal(`<h3>📂 Trop d'offres en préparation</h3><p>Tu as déjà ${myOffers()} offre(s) en cours (maximum ${offerCap()}).</p><p class="mut">Pour en remettre plus en même temps, engage une secrétaire, un métreur ou un directeur commercial (👷 Équipe).</p><button class="btn w" onclick="closeM()">OK</button>`);
   bidPU=t.postes.map(p=>+(seenCost(t,p)*1.35).toFixed(2));
   showModal(`<h3>Remettre offre</h3><div class="mut sm">${t.buyer}<br>Réf. ${t.ref} · ${PROC[t.proc].n}</div>
   <div class="hd" style="margin-top:8px"><div class="ic" style="--ac2:${J.ac}33">${J.ic}</div><div><b>${J.n}</b><div class="mut">${t.road} — ${t.town}</div></div></div>
-  <div class="tags"><span class="tag">⏱ ${t.N} jours ouvrables</span><span class="tag">${t.crit==='prix'?'Critère : prix (100 %)':'Prix 80 % · valeur technique 20 %'}</span>${t.proc==='po'?`<span class="tag b">Estimation publiée : ${eur(t.est)}</span>`:''}${t.caut?'<span class="tag o">Cautionnement 5 %</span>':''}</div>
+  <div class="tags"><span class="tag">⏱ ${t.N} jours ouvrables</span><span class="tag">${critTxt(t)}</span>${t.proc==='po'?`<span class="tag b">Estimation publiée : ${eur(t.est)}</span>`:''}${t.caut?'<span class="tag o">Cautionnement 5 %</span>':''}</div>
   <h2>Métré récapitulatif — tes prix unitaires</h2><div id="metre"></div>
   <div class="card" style="margin:10px 0" id="bm"></div>
   ${(()=>{const busyN=running().reduce((a,c)=>a+c.crew.length,0)+st.contracts.filter(c=>c.st==='wait').reduce((a,c)=>a+JOBS[c.j].minW,0)+st.tenders.filter(x=>x.my&&x.status!=='done').reduce((a,x)=>a+JOBS[x.j].minW,0),fw=field().length;return busyN+JOBS[t.j].minW>fw?`<div class="card acc" style="--ac:var(--rd);margin:8px 0"><b>⚠️ Attention à ton équipe</b><div class="sm" style="margin-top:4px">Si tu gagnes tous tes marchés en cours, il te faudra ${busyN+JOBS[t.j].minW} personnes : tu en as ${fw}. Un marché gagné et jamais commencé est résilié avec une pénalité de 5 %.</div></div>`:''})()}<p class="mut sm">${has('metreur')?'📐 Olivier, ton métreur, a calculé le prix de revient exact.':'⚠️ Sans métreur, ton prix de revient est une estimation (± 15 %).'} Conseil : prix de revient × 1,3 à 1,45 (coefficient de vente habituel) pour couvrir les frais généraux (bureau, salaires les jours sans chantier, impôts) et faire du bénéfice. Une offre trop basse (moins de 85 % de l'estimation) devra être justifiée.</p>
+  ${t.crit==='pvt'?`<label class="card" style="display:flex;gap:10px;align-items:flex-start;margin:8px 0;cursor:pointer"><input type="checkbox" id="bidmt" style="width:22px;height:22px;margin-top:2px" ${bidMT?'checked':''} onchange="bidMT=this.checked"><span class="sm"><b>📘 Joindre un mémoire technique</b> (méthodes, sécurité, environnement, planning) : ${eur(mtCost(t))}${has('metreur')?' (rédigé par ton métreur)':''}.<br><span class="mut">Ce marché note la qualité à ${Math.round((t.wq||.2)*100)} % : +15 points de valeur technique. Tes références dans ce métier comptent aussi (+1 point chacune, max 10).</span></span></label>`:''}
   <div class="row"><button class="btn" onclick="bidGo(${t.id})">📨 Déposer via e-Tendering</button><button class="btn s" onclick="closeM()">Annuler</button></div>`);
   drawMetre(id)}
 function drawMetre(id){const t=st.tenders.find(x=>x.id===id);
@@ -1428,7 +1433,7 @@ function setPU(id,i,v){bidPU[i]=Math.max(0,+(+String(v).replace(',','.')||0).toF
 function bidUpd(id){const t=st.tenders.find(x=>x.id===id);const tot=bidTotal(bidPU,t);const cost=t.postes.reduce((a,p)=>a+p.q*seenCost(t,p),0);const m=tot-cost;
   $('#bm').innerHTML=`<div class="row"><span>Total HTVA</span><b style="margin-left:auto;font-size:19px">${eur2(tot)}</b></div><div class="row mut sm"><span>TVA 21 %</span><span style="margin-left:auto">${eur2(tot*.21)}</span></div><div class="row mut sm"><span>Total TVAC</span><span style="margin-left:auto">${eur2(tot*1.21)}</span></div>
   <div class="row sm" style="margin-top:6px"><span>Prix de revient ${has('metreur')?'':'estimé'}</span><span style="margin-left:auto">${eur(cost)}</span></div><div class="row"><span>Bénéfice prévu</span><b style="margin-left:auto" class="${m>=0?'money':'neg'}">${eur(m)} (${cost?Math.round(m/cost*100):0} %)</b></div>`}
-function bidGo(id){const t=st.tenders.find(x=>x.id===id);ck('bid');if(myOffers()>=2)rsAdd('off',1);if(has('metreur'))rsAdd('metreur',1);const tot=bidTotal(bidPU,t);if(tot<=0)return;t.my={pu:[...bidPU],tot:Math.round(tot*100)/100,day:st.day};closeM();
+function bidGo(id){const t=st.tenders.find(x=>x.id===id);ck('bid');if(myOffers()>=2)rsAdd('off',1);if(has('metreur'))rsAdd('metreur',1);const tot=bidTotal(bidPU,t);if(tot<=0)return;t.my={pu:[...bidPU],tot:Math.round(tot*100)/100,day:st.day};if(t.crit==='pvt'&&bidMT){const c=mtCost(t);mv(-c,'Mémoire technique (offre '+t.ref+')','fix');t.my.mt=1}closeM();
   log(`📨 Offre déposée sur e-Tendering : ${eur(tot)} HTVA (${JOBS[t.j].n}). Ouverture des offres le ${dstr(t.bidEnd)}.`);snd(700,.1,'triangle',.05);save();render()}
 function withdraw(id){const t=st.tenders.find(x=>x.id===id);if(t&&t.status==='open'){t.my=null;save();render()}}
 // Séance d'ouverture des offres : les concurrents remettent leurs prix
@@ -1436,19 +1441,26 @@ function openBids(t){const J=JOBS[t.j];const bids=[];
   const pool=st.riv.filter(r=>r.n!==t.am&&r.jobs.includes(t.j)&&(r.sz>=1||t.est<143000)&&(r.sz>=2||t.est<900000));
   let n=t.proc==='fm'?RI(2,3):t.proc==='pn'?RI(2,5):RI(3,8);
   const sh=pool.sort(()=>Math.random()-.5).filter(r=>r.load.filter(e=>e>st.day).length<(r.sz+1)*3).slice(0,n);
-  for(const r of sh){const busy=r.load.filter(e=>e>st.day).length;const p=t.est*(r.ag+.05+R(-.05,.06)+busy*.02)*(itOwn()&&st.itComp===0?1.04:1)*(()=>{const y=rivP(r).sty;return y==='casse'?.96:y==='qual'?1.03:y==='hiver'&&HIVJ.includes(t.j)?.93:1})();
+  const rv=rivDisc(t.j);for(const r of sh){const busy=r.load.filter(e=>e>st.day).length;const p=t.est*(r.ag-.02-rv+R(-.05,.06)+busy*.02)*(itOwn()&&st.itComp===0?1.04:1)*(()=>{const y=rivP(r).sty;return y==='casse'?.96:y==='qual'?1.03:y==='hiver'&&HIVJ.includes(t.j)?.93:1})();
     bids.push({n:r.n,tot:Math.round(p*100)/100,vt:r.rep,irr:Math.random()<.07?'documents manquants':null})}
-  if(t.my)bids.push({n:st.name,tot:t.my.tot,vt:clamp(st.rep+(has('dirt')?10:0)+(has('dirc')?10:0)+(ino('hvo')?5:0)+((st.fond||0)>=1e6?3:0),0,100),me:1,irr:null});
+  if(t.my)bids.push({n:st.name,tot:t.my.tot,vt:clamp(st.rep+(has('dirt')?10:0)+(has('dirc')?10:0)+(ino('hvo')?5:0)+((st.fond||0)>=1e6?3:0)+(t.my.mt?15:0)+Math.min(10,st.refs[t.j]||0),0,100),me:1,mt:t.my.mt?1:0,irr:null});
   bids.sort((a,b)=>a.tot-b.tot);t.bids=bids;t.status='opened';
   if(t.my){const i=bids.findIndex(b=>b.me);log(`📂 Ouverture des offres (${J.n}, ${t.road}) : tu es ${i+1}e sur ${bids.length}. Décision le ${dstr(t.dec)}.`,quietPub()?false:undefined)}
 }
+/* ---------- Concurrents qui réagissent : quand tu gagnes beaucoup dans un métier, ils baissent leurs prix (guerre des prix) ---------- */
+const rvP=()=>st.rvP||(st.rvP={});
+const rivDisc=j=>Math.min(.06,.06*(rvP()[j]||0));
+function rivPush(j){const P=rvP(),b=P[j]||0;P[j]=Math.min(1,b+.12);if(b<.5&&P[j]>=.5)log(`⚔️ Tes concurrents réagissent : tu gagnes trop de marchés de ${JOBS[j].n.toLowerCase()}, ils baissent leurs prix (−${nb1(rivDisc(j)*100)} %).`)}
+function rivReactMonth(){const P=rvP();for(const j in P){P[j]=+(P[j]*.85).toFixed(3);if(P[j]<.02)delete P[j]}}
+function rivWarCard(){const P=rvP(),L=Object.keys(P).filter(j=>JOBS[j]&&rivDisc(j)>=.012).sort((a,b)=>P[b]-P[a]);if(!L.length)return'';
+  return`<div class="card acc" style="--ac:var(--rd)"><b>⚔️ Guerre des prix</b><div class="mut sm" style="margin-top:2px">Tu gagnes beaucoup dans ces métiers : tes concurrents baissent leurs prix pour te reprendre des marchés. Ça se calme quand tu en gagnes moins.</div>${L.map(j=>`<div class="row sm" style="margin-top:6px"><span style="flex:1">${JOBS[j].ic} ${JOBS[j].n}</span><b class="neg">−${nb1(rivDisc(j)*100)} %</b></div>`).join('')}</div>`}
 function decide(t){const J=JOBS[t.j];const me=t.bids.find(b=>b.me);
   if(me){if(me.tot<t.est*.85){const ok=me.tot>=realCost(t)*.98;if(!ok)me.irr='offre anormalement basse non justifiée';else log(`📝 Le SPW a demandé de justifier ton prix bas : justification acceptée.`,false)}
     if(!spwReq(t).every(x=>x.ok)&&!me.irr)me.irr='sélection qualitative non remplie'}
   const reg=t.bids.filter(b=>!b.irr);t.status='done';if(!reg.length)return;
-  const mn=Math.min(...reg.map(b=>b.tot));reg.forEach(b=>b.s=t.crit==='prix'?100*mn/b.tot:80*mn/b.tot+20*b.vt/100);reg.sort((a,b)=>b.s-a.s);
+  const mn=Math.min(...reg.map(b=>b.tot));const wq=t.wq||.2;reg.forEach(b=>b.s=t.crit==='prix'?100*mn/b.tot:(1-wq)*100*mn/b.tot+wq*b.vt);reg.sort((a,b)=>b.s-a.s);
   const w=reg[0];t.win=w.n;
-  if(w.me&&w.tot>=3e6)st.big3=1;if(w.me)ck('won');
+  if(w.me&&w.tot>=3e6)st.big3=1;if(w.me){ck('won');rivPush(t.j)}
   if(!w.me){const r=st.riv.find(x=>x.n===w.n);if(r){r.won++;r.ca+=w.tot;r.load.push(st.day+Math.round(t.N*1.5))}}
   if(!t.my)return;
   const tbl=pvTable(t);
@@ -1467,6 +1479,11 @@ function awardMe(t){const J=JOBS[t.j];const tbl=pvTable(t);st.stats.won++;confet
 function pvTable(t){if(!t.bids)return'';return'<table>'+t.bids.map((b,i)=>`<tr style="${b.irr?'opacity:.5':''}"><td>${t.win===b.n?'🏆 ':''}${b.me?'<b style="color:var(--or2)">'+esc(b.n)+'</b>':esc(b.n)}${b.irr&&t.status==='done'?'<div class="mut sm">'+b.irr+'</div>':''}</td><td>${eur2(b.tot)}</td></tr>`).join('')+'</table>'}
 
 /* ---------- Simulation d'une journée ---------- */
+function weatherFor(d){const m=date(d).getMonth()+1,r=Math.random(),w=m===12||m<=2;
+  if(w&&r<(evOn('hiver')?.32:.12))return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
+// la météo du jour vient des prévisions faites 3 jours plus tôt (qui se trompent 15 % du temps)
+function wxNext(){const Q=st.wxQ||(st.wxQ=[]);while(Q.length<1)Q.push(weatherFor(st.day));let w=Q.shift();if(Math.random()<.15)w=weatherFor(st.day);while(Q.length<3)Q.push(weatherFor(st.day+1+Q.length));return w}
+const wxFc=()=>{const Q=st.wxQ||[];return Q.slice(0,3)};
 function weather(){const m=month(),r=Math.random(),w=m===12||m<=2;
   if(w&&r<(evOn('hiver')?.32:.12))return 4;if(r<.04)return 3;if(r<(w?.42:.28))return 2;if(r<.55)return 1;return 0}
 function invoice(amt,delay,lbl){if(amt<=0)return;if(has('aide'))rsAdd('aide',amt);let late=Math.max(0,delay-30);if(late&&has('recouv')){const d2=Math.round(late*.3);rsAdd('recd',late-d2);delay=30+d2;late=d2}st.inv.push({id:st.nid++,amt:Math.round(amt*100)/100,due:st.day+delay,from:lbl,late})}
@@ -1474,7 +1491,7 @@ let TICKING=0,WBI=null;
 const wById=id=>(WBI||(WBI=new Map(st.workers.map(w=>[w.id,w])))).get(id);
 function tick(){TICKING=1;WBI=null;GESTC=null;SPWC.clear();SPWF=null;HASC=null;try{tick0();if(st.cl)try{clTick()}catch(e){console.error(e)}if(st.shop)try{shTick()}catch(e){console.error(e)}try{hPoolDay()}catch(e){}}finally{TICKING=0;WBI=null}save();renderTick()}
 function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.workers.find(x=>x.leg):null;st.jp=3;if(j){st.workers=st.workers.filter(x=>x!==j);for(const c of st.contracts||[])if(c.crew)c.crew=c.crew.filter(i=>i!==j.id);log('⭐ Jason Pougin est reparti : il faut maintenant le trouver parmi les candidats (rare !).')}}try{if(isWork(st.day+1))mkDay()}catch(e){}try{louDay()}catch(e){}
-  st.day++;st.wx=weather();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
+  st.day++;st.wx=wxNext();const x=date(st.day);const kind=dayKind(st.day),conge=kind==='Congés du bâtiment',work=!kind||conge;const wf=WX[st.wx].f,intemp=work&&wf===0;
   // 1er du mois : frais fixes, salaires du mois écoulé, états d'avancement
   if(x.getDate()===1){const f=fixedM();if(f){mv(-f,'Frais fixes du mois','fix');log(`🧾 Frais fixes de ${MOIS[(x.getMonth()+11)%12]} : -${eur(f)}`,false)}
     if(st.salAcc){mv(-st.salAcc,'Salaires du mois','sal');log(`💸 Salaires de ${MOIS[(x.getMonth()+11)%12]} payés : -${eur(st.salAcc)}`);st.salAcc=0}
@@ -1509,7 +1526,7 @@ function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.work
     crew.forEach(w=>{if(w.r==='etu')w.hy=(w.hy||0)+7.6});
     const boost=(crew.some(w=>w.r==='chef')?1.15:1)*(has('dirt')?1.08:1)*mgF*(has('cond')&&!J.p&&c.wd>c.N*(c.prog/c.q)?1.1:1)*inoWork(J)*(c.vb>st.day?c.vf||1:1)*qualWork(J)*geoSpd(c.town);
     const wfj=J.allw?1:J.dry&&WX[st.wx].k!=='sun'&&WX[st.wx].k!=='cloud'?0:wf;const gb=J.gr&&crew.some(w=>w.r==='grimp')||c.j==='elagage'&&crew.some(w=>w.r==='grimp')?1.1:['p_dechets','dechets','poubelles','aires'].includes(c.j)&&crew.some(w=>w.r==='ramas')?1.15:1;
-    const pw=crew.reduce((a,w)=>a+w.sk*(w.mot??1)*(w.boss?bossF():1),0)*specB(c,crew);const stop=(c.pz>st.day)||(st.strike>st.day&&!J.p);const dp=stop?0:Math.min(c.q-c.prog,J.rate*pw*wfj*boost*gb*awayF());c.prog+=dp;observe(c,crew);
+    const pw=crew.reduce((a,w)=>a+w.sk*(w.mot??1)*(w.boss?bossF():1),0)*specB(c,crew);const stop=(c.pz>st.day)||(st.strike>st.day&&!J.p);let dp=stop?0:saltUse(c,J.rate*pw*wfj*boost*gb*awayF(),c.q-c.prog);c.prog+=dp;observe(c,crew);
     {const val=dp/c.q*c.price;st.mProd=(st.mProd||0)+val;ck('prod',val);crew.forEach(w=>{const s=w.s||(w.s={d:0,rev:0,cost:0});s.d++;s.rev+=pw?val*w.sk*(w.mot??1)/pw:0});if(has('dirt'))rsAdd('dirt',val*.08/1.08)}
     if(c.xc)mv(-c.xc*dp/c.q*(sfx('tri')?.75:1)*(st.mega&&indOn('carr')?.85:1)*(ino('compost')?.6:1),'Mise en décharge','use',1);
     crew.forEach(w=>{w.sk=Math.min(w.leg?2:1.5,+(w.sk+.0025).toFixed(4));if(!w.boss){const chef=crew.some(x=>x.r==='chef'&&x!==w)||crew.some(x=>x.boss);w.mot=clamp(w.mot+(w.base-w.mot)*.03+(chef?.003:0)+R(-.01,.01),.2,1)}});
@@ -1526,7 +1543,7 @@ function tick0(){ck('days');if((st.jp||0)<3){const j=(st.jp&&st.workers)?st.work
   if(!st.jobs.some(o=>!JOBS[o.j].need.length))genJob(month()===12||month()<=2&&Math.random()<.5?'p_neige':'p_dechets');
   if(x.getDay()===1){refreshCand();try{acOffer()}catch(e){}try{orgaTick()}catch(e){console.error(e)}}
   if(over&&work&&Math.random()<.15)log(`📋 Trop de chantiers pour l'encadrement (${nb1(mgmtLoad())}/${mgmtCap()}) : les équipes travaillent moins bien. Engage un gestionnaire de chantier.`);
-  events(work);decTick(work);try{itDaily(work,x)}catch(e){}try{wxUrgent();unionTick();lawTick();achatNeed();if(date(st.day).getDay()===1)achatTick();if(date(st.day).getDate()===10)taxAudit();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
+  events(work);decTick(work);try{airbagTick()}catch(e){}try{snowJobs();if(x.getDay()===1)saltAuto()}catch(e){}try{itDaily(work,x)}catch(e){}try{wxUrgent();unionTick();lawTick();achatNeed();if(date(st.day).getDay()===1)achatTick();if(date(st.day).getDate()===10)taxAudit();if(work)accidentTick();if(has('meca'))for(const k in st.wear||{})st.wear[k]=Math.max(0,st.wear[k]-.5)}catch(e){}goals();{const D=st.dHist||(st.dHist=[]);D.push(Math.round(st.cash));if(D.length>400)D.shift()}
   if(st.cash<-overdraft()&&!st.over)rescue();
   dqTick();
 }
@@ -1872,6 +1889,7 @@ function gsFocus(t){const g=dirs().gs;if(g==='tout')return 0;if(g==='auto')retur
 function dirCard(){const D=dirs(),G=has('offre'),B=has('cond'),T=has('achat');if(!G&&!B&&!T)return'';const btn=(on,js,l)=>`<button class="btn ${on?'':'s'}" style="padding:6px 9px;font-size:12.5px" onclick="${js};clk();save();render()">${l}</button>`;
   let h=`<div class="card acc" style="--ac:var(--bl)"><b>🧭 Directives du patron</b><div class="mut sm" style="margin-top:2px">Tu donnes le cap, tes cadres s’occupent du reste.</div>`;
   if(G){const c=st.offCoef||1.35;h+=`<div class="sm" style="margin-top:10px"><b>📑 Grégory (offres)</b> — prix</div><div class="row" style="margin-top:4px">${[[1.25,'🔥 Agressif'],[1.35,'⚖️ Équilibré'],[1.55,'💰 Marge haute']].map(([k,l])=>btn(Math.abs(c-k)<.001,'st.offCoef='+k,l)).join('')}</div>
+    <div class="sm" style="margin-top:8px">Mémoire technique (marchés notés sur la qualité)</div><div class="row" style="margin-top:4px">${[['all','📘 Toujours'],['big','📘 Gros marchés'],['none','✖ Jamais']].map(([k,l])=>btn((D.mt||'big')===k,`dirs().mt='${k}'`,l)).join('')}</div>
     <div class="sm" style="margin-top:8px">Spécialité</div><div class="row" style="margin-top:4px">${Object.keys(GSPEC).map(k=>btn(D.gs===k,`dirs().gs='${k}'`,GSPEC[k].join(' '))).join('')}</div><div class="mut sm" style="margin-top:4px">${D.gs==='tout'?'Il répond à tout ce qui est rentable.':'Il répond d’abord à sa spécialité, un peu moins cher (−4 %), et aux autres marchés seulement s’il lui reste de la place.'}</div>`}
   if(B)h+=`<div class="sm" style="margin-top:10px"><b>🗺️ Benoît (conducteur de travaux)</b> — priorité</div><div class="row" style="margin-top:4px">${btn(D.bs==='delai',`dirs().bs='delai'`,'⏱️ Tenir les délais')}${btn(D.bs==='renta',`dirs().bs='renta'`,'💶 Rentabilité')}</div><div class="mut sm" style="margin-top:4px">${D.bs==='delai'?'Il déplace des ouvriers dès qu’un marché public prend du retard, même depuis les petits boulots.':'Il ne bouge les équipes qu’en cas de vrai retard (plus de 5 jours) et laisse tourner les petits boulots, plus rentables.'}</div>`;
   if(T)h+=`<div class="sm" style="margin-top:10px"><b>🛒 Thierry (achats)</b> — gamme</div><div class="row" style="margin-top:4px">${[[1,'🔧 Standard'],[2,'⭐ Neuf pro'],[3,'💎 Haut de gamme']].map(([k,l])=>btn(D.ts===k,'dirs().ts='+k,l)).join('')}</div><div class="mut sm" style="margin-top:4px">${D.ts===1?'Le moins cher : il garde ton argent pour le reste.':D.ts===2?`Prix × ${String(TIERS[2].f).replace(".",",")} environ, +${Math.round(TIERS[2].sp*100)} % de travail et moins d’usure.`:`Prix × ${TIERS[3].f} environ, +${Math.round(TIERS[3].sp*100)} % de travail et beaucoup moins d’usure.`}</div>`;
@@ -1879,7 +1897,7 @@ function dirCard(){const D=dirs(),G=has('offre'),B=has('cond'),T=has('achat');if
 // Grégory : remet les offres tout seul (conditions remplies, assez de monde, au coefficient choisi, en suivant la spécialité demandée)
 function autoBid(){const coef=st.offCoef||1.35;let busyN=running().reduce((a,c)=>a+(JOBS[c.j].p?0:c.crew.length),0)+st.contracts.filter(c=>c.st==='wait').reduce((a,c)=>a+JOBS[c.j].minW,0)+st.tenders.filter(x=>x.my&&x.status!=='done').reduce((a,x)=>a+JOBS[x.j].minW,0),nOff=myOffers();const fl=field().length,cap=offerCap();
   const foc=dirs().gs!=='tout',TL=foc?st.tenders.slice().sort((a,b)=>gsFocus(b)-gsFocus(a)):st.tenders;
-  for(const t of TL){if(t.status!=='open'||t.my||nOff>=cap)continue;const f=foc&&gsFocus(t);if(foc&&!f&&nOff>=cap*2/3)continue;if(busyN+JOBS[t.j].minW>fl)continue;if(!spwReq(t).every(x=>x.ok))continue;busyN+=JOBS[t.j].minW;nOff++;const cf=f?coef-.04:coef;const pu=t.postes.map(p=>+(seenCost(t,p)*cf).toFixed(2));t.my={pu,tot:Math.round(bidTotal(pu,t)*100)/100,day:st.day};rsAdd('offre',1);ck('bid');rsAdd('off',myOffers()>2?1:0);log(`📑 Grégory a remis offre : ${JOBS[t.j].n} (${t.road}) pour ${eur(t.my.tot)}.`,false)}}
+  for(const t of TL){if(t.status!=='open'||t.my||nOff>=cap)continue;const f=foc&&gsFocus(t);if(foc&&!f&&nOff>=cap*2/3)continue;if(busyN+JOBS[t.j].minW>fl)continue;if(!spwReq(t).every(x=>x.ok))continue;busyN+=JOBS[t.j].minW;nOff++;const cf=f?coef-.04:coef;const pu=t.postes.map(p=>+(seenCost(t,p)*cf).toFixed(2));t.my={pu,tot:Math.round(bidTotal(pu,t)*100)/100,day:st.day};{const m=dirs().mt||'big';if(t.crit==='pvt'&&(m==='all'||(m==='big'&&t.est>=143000))){mv(-mtCost(t),'Mémoire technique (offre '+t.ref+')','fix');t.my.mt=1}}rsAdd('offre',1);ck('bid');rsAdd('off',myOffers()>2?1:0);log(`📑 Grégory a remis offre : ${JOBS[t.j].n} (${t.road}) pour ${eur(t.my.tot)}.`,false)}}
 function autoStaff(){if(st.autoStaff===0)return;const L=st.contracts.filter(c=>c.st==='wait'||(c.st==='run'&&!c.crew.length)).sort((a,b)=>(JOBS[a.j].p?1:0)-(JOBS[b.j].p?1:0)||a.startBy-b.startBy);
   for(const c of L){const J=JOBS[c.j];const sel=pickFor(c);if(!crewOk(J,sel))continue;const p=eqPlan(c.j,c);if(p.miss.length)continue;
     const was=c.st;c.own=p.own;c.rent=p.rent;c.crew=sel.map(w=>w.id);c.st='run';log(`▶ ${was==='wait'?'Chantier commencé':'Chantier relancé'} automatiquement : ${J.n} (${esc(c.road)}) avec ${sel.map(w=>w.n.split(' ')[0]).join(', ')}.`,false)}
@@ -2047,7 +2065,38 @@ function slimTick(){const r2=x=>Math.round(x*1000)/1000;for(const w of st.worker
     for(const o of[w.s,w.pf,w.pq])if(o){if(o.rev)o.rev=Math.round(o.rev);if(o.cost)o.cost=Math.round(o.cost)}}
   if(st.mk)for(const k in st.mk){const M=st.mk[k];if(M&&M.h){M.p=Math.round(M.p*100)/100;M.h=M.h.map(v=>Math.round(v*100)/100)}}
   if(st.dHist&&st.dHist.length>400)st.dHist=st.dHist.slice(-400)}
-function rolesMonth(){for(const f of[slimTick,echoTick,ipoMonth,costWarnMonth,indexTick,bigEvTick,acMonth,rivMonth,megaMonth,pvMonth4,hMonth,pvMonth5,pvWorthTick])try{f()}catch(e){console.error(e)}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
+// Prime Airbag (Région wallonne, aide au lancement des indépendants) : jusqu'à 12 500 € en 2 tranches (au démarrage, puis après un an d'activité)
+function airbagTick(){const A=st.airbag;if(!A||A.done||st.day<A.d)return;if(st.over){A.done=1;return}
+  const amt=6250;mv(amt,A.n?'Prime Airbag (2e tranche, Région wallonne)':'Prime Airbag (1re tranche, Région wallonne)','aid');A.n++;log(`💶 Prime Airbag de la Région wallonne : +${eur(amt)} (${A.n===1?'1re tranche ; la 2e arrive après un an d’activité':'2e et dernière tranche'}).`);
+  if(A.n>=2)A.done=1;else A.d=st.day+365}
+const SALTJ={p_neige:.00002,p_selpk:.000015};// tonnes de sel par m² (± 15-20 g/m²)
+const saltCap=()=>Math.round(8+12*siteCap());
+const saltPrice=()=>{const m=month();if(st.wx===4||evOn('hiver'))return 150;if(m===9||m===10)return 75;if(m>=11||m<=3)return 105;return 85};
+const saltKey=()=>{const d=date(st.day),y=d.getFullYear();return d.getMonth()>=6?y:y-1};// hiver = juillet → juin
+// cap = ce que l'équipe peut faire aujourd'hui, rem = ce qui reste à faire ; sans sel, la capacité restante tombe à 40 % (pelles)
+function saltUse(c,cap,rem){const r=SALTJ[c.j];if(cap<=0||rem<=0)return 0;if(!r)return Math.min(cap,rem);const want=Math.min(cap,rem),need=want*r,have=st.salt||0,U=st.saltU||(st.saltU={}),k=saltKey();
+  if(have>=need){st.salt=+(have-need).toFixed(3);U[k]=+((U[k]||0)+need).toFixed(3);return want}
+  const full=have/r;st.salt=0;U[k]=+((U[k]||0)+have).toFixed(3);if(st.day-(st.saltW||0)>=5){st.saltW=st.day;log(`🧂 Plus de sel au dépôt : tes équipes déneigent à la pelle (−60 %). Achète du sel dans 🚜 Matériel.`)}
+  return Math.min(rem,full+Math.max(0,(cap-full)*.4))}
+function saltBuy(t,auto){const cap=saltCap(),room=Math.max(0,cap-(st.salt||0));t=Math.min(t,room);if(t<=0){if(!auto)toastMsg(`Ton dépôt est plein (${nb(cap)} t de sel au maximum).`);return 0}
+  const pr=saltPrice(),c=Math.round(t*pr);if(!auto&&st.cash+overdraft()<c)return toastMsg('Pas assez d’argent.');mv(-c,`Sel de déneigement (${nb1(t)} t à ${pr} €/t)`,'use');st.salt=+((st.salt||0)+t).toFixed(3);if(!auto){clk();save();render()}return t}
+const saltNeed=()=>{const U=st.saltU||{},k=saltKey(),last=U[k-1]||U[k]||0;return Math.round(Math.max(3,last*1.2,2+fieldOwn().length/3))};
+// Thierry (achats) ou Bernard (service d'hiver) remplissent le stock en septembre-octobre, au meilleur prix
+function saltAuto(){if(!(has('achat')||has('hiver')))return;const m=month();if(m!==9&&m!==10)return;const need=saltNeed()-(st.salt||0);if(need<1)return;const t=saltBuy(Math.ceil(need),1);if(t>0)log(`🧂 ${has('hiver')?'Bernard':'Thierry'} remplit le stock de sel pour l’hiver : ${nb1(t)} t à ${saltPrice()} €/t.`,false)}
+// jours de neige : les particuliers et les entreprises appellent pour déneiger (petits boulots urgents, mieux payés)
+function snowJobs(){if(st.wx!==4||!st.adm.bce)return;const n=RI(1,2+Math.min(4,Math.floor(field().length/6)));for(let i=0;i<n;i++){const j=Math.random()<.6?'p_neige':'p_selpk';if(!inSeason(JOBS[j],month()))continue;genJob(j);const o=st.jobs[st.jobs.length-1];if(o&&o.j===j){o.price=Math.round(o.price*1.3/5)*5;o.until=st.day+2;o.urg=1}}}
+function saltCard(){const t=st.salt||0,cap=saltCap(),pr=saltPrice(),U=st.saltU||{},k=saltKey(),m=month(),win=m>=10||m<=3;if(!st.adm.bce)return'';
+  if(!win&&!t&&!(U[k-1]||U[k]))return'';
+  return`<div class="card acc" style="--ac:#bfe3ff"><div class="row" style="flex-wrap:nowrap"><span style="font-size:26px">🧂</span><div style="flex:1;min-width:0"><b>Sel de déneigement</b><div class="mut sm">${nb1(t)} t en stock / ${nb(cap)} t · prix du moment ${pr} €/t${m===9||m===10?' · 🟢 le moins cher':st.wx===4||evOn('hiver')?' · 🔴 pénurie':''}</div></div></div>
+  <div class="bar"><i style="width:${Math.min(100,t/cap*100)}%"></i></div><div class="mut sm">Besoin estimé pour l’hiver : ± ${nb(saltNeed())} t${U[k-1]?` (l’hiver passé : ${nb1(U[k-1])} t)`:''}. Le SPW fournit le sel de ses dépôts pour ses marchés ; ton stock sert aux particuliers et aux entreprises (trottoirs, parkings). Sans sel, on déneige à la pelle : −60 %.${has('achat')||has('hiver')?` ${has('hiver')?'Bernard':'Thierry'} remplit le stock en septembre-octobre.`:''}</div>
+  <div class="row" style="margin-top:8px">${[2,10,50].map(n=>`<button class="btn s" style="padding:6px 10px" onclick="saltBuy(${n})">+ ${n} t · ${eur(n*pr)}</button>`).join('')}</div></div>`}
+function wxCard(){const F=wxFc();if(F.length<3||!st.adm.bce)return'';const snow=F.includes(4),storm=F.includes(3),rain=F.some(w=>w===2||w===3),dry=st.contracts.some(c=>(c.st==='run'||c.st==='wait')&&JOBS[c.j].dry);
+  if(!snow&&!storm&&!(rain&&dry))return'';const D=['Demain','Après-demain','Dans 3 jours'];let tip='';
+  if(snow){const t=st.salt||0;tip=`❄️ Neige prévue : les demandes de déneigement vont arriver (payées +30 %). Sel en stock : <b>${nb1(t)} t</b>${t<saltNeed()/3?' — c’est peu !':''}.`}
+  else if(storm)tip='⛈️ Orage prévu : chantiers arrêtés ce jour-là, mais des marchés urgents peuvent tomber (arbres, nettoyage).';
+  else tip='🌧️ Pluie prévue : les marquages routiers ne peuvent pas se faire sous la pluie.';
+  return`<div class="card acc" style="--ac:var(--bl)"><div class="row" style="flex-wrap:nowrap"><b style="flex:1">🌦️ Prévisions</b>${F.map((w,i)=>`<span class="tag" title="${D[i]}">${D[i].split(' ')[0]==='Dans'?'J+3':i?'J+2':'Demain'} ${WX[w].ic}</span>`).join('')}</div><div class="sm" style="margin-top:6px">${tip}</div>${snow?`<div class="row" style="margin-top:8px"><button class="btn s" style="padding:6px 10px" onclick="saltBuy(10)">🧂 Acheter 10 t (${eur(10*saltPrice())})</button></div>`:''}<div class="mut" style="font-size:11.5px;margin-top:4px">Les prévisions se trompent parfois (± 1 fois sur 7).</div></div>`}
+function rolesMonth(){for(const f of[rivReactMonth,slimTick,echoTick,ipoMonth,costWarnMonth,indexTick,bigEvTick,acMonth,rivMonth,megaMonth,pvMonth4,hMonth,pvMonth5,pvWorthTick])try{f()}catch(e){console.error(e)}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
 /* ---------- Indexation, contrats d'entretien, concurrents, grands événements, astuces, notifications ---------- */
 // Indexation automatique des salaires (Belgique) : chaque 1er janvier ; les prix du marché suivent à 90 %
 const pIdx=()=>1+((st.idx||1)-1)*.98;
@@ -2079,8 +2128,8 @@ function acRefuse(id){st.aco=acO().filter(x=>x.id!==id);clk();save();render()}
 const acSat=(id,v)=>{const a=acL().find(x=>x.id===id);if(a)a.sat=clamp(a.sat+v,0,100)};
 function acMonth(){st.aco=acO().filter(o=>o.exp>=st.day);const m=month();
   for(const a of acL()){if(a.done)continue;
-    if(st.day>=a.end){if(Math.random()<a.sat/100){a.end=st.day+365;a.per=Math.round(a.per*1.02/5)*5;a.ren=(a.ren||0)+1;log(`📝 ${a.cl} renouvelle son contrat pour un an (satisfaction ${Math.round(a.sat)} %).`)}else{a.done=1;log(`📝 ${a.cl} ne renouvelle pas son contrat (satisfaction ${Math.round(a.sat)} %).`)}continue}
-    const J=JOBS[a.j];if(!inSeason(J,m))continue;if(J.need.some(t=>!(st.eq[t]>0))){acSat(a.id,-15);log(`📝 Pas de passage chez ${a.cl} ce mois : il te manque le matériel. Le client est mécontent.`);continue}
+    if(st.day>=a.end&&!a.ig){if(Math.random()<a.sat/100){a.end=st.day+365;a.per=Math.round(a.per*1.02/5)*5;a.ren=(a.ren||0)+1;log(`📝 ${a.cl} renouvelle son contrat pour un an (satisfaction ${Math.round(a.sat)} %).`)}else{a.done=1;log(`📝 ${a.cl} ne renouvelle pas son contrat (satisfaction ${Math.round(a.sat)} %).`)}continue}
+    const J=JOBS[a.j];if(!inSeason(J,m))continue;if(J.need.some(t=>!(st.eq[t]>0))){if(a.ig)continue;acSat(a.id,-15);log(`📝 Pas de passage chez ${a.cl} ce mois : il te manque le matériel. Le client est mécontent.`);continue}
     const N=Math.max(2,Math.ceil(a.q/J.rate)+4);st.contracts.push({id:st.nid++,j:a.j,q:a.q,road:a.cl,ct:'pro',town:pick(TOWNS),price:a.per,prog:0,vis:0,N,wd:0,startBy:st.day+5,st:'wait',crew:[],own:{},billed:0,caut:0,seed:RI(1,99999),tap:{},nRef:1,ac:a.id});a.n++}
   st.acn=acL().filter(a=>!a.done||st.day-a.end<60)}
 function acCard(){const O=acO(),L=acL().filter(a=>!a.done);if(!O.length&&!L.length)return st.stats.done>=5&&st.adm.bce?`<div class="card"><b>📝 Contrats d’entretien</b><div class="mut sm" style="margin-top:4px">Des communes, zonings et commerces te proposeront bientôt des contrats d’un à trois ans (il faut au moins 25 de réputation).</div></div>`:'';
@@ -2107,7 +2156,7 @@ function notifs(){const L=[];// lv : 0 = urgent, 1 = décision à prendre, 2 = o
   for(const d of st.dec||[]){const T=DECT.find(x=>x.k===d.k);if(T)L.push({lv:/eu_rescue|mega_alea/.test(d.k)||d.exp-st.day<=7?0:1,ic:T.ic,t:d.t,go:d.f?`euFiche('${d.f}')`:`closeM();tab('ch')`,dec:d.id})}
   for(const x of(st.law||[]).filter(x=>x.st==='open'))L.push({lv:0,ic:'⚖️',t:x.kind==='fisc'?'Contrôle fiscal : réponse attendue':`Procès : ${x.w} t’attaque`,go:`closeM();tab('ch')`});
   for(const c of st.contracts)if(c.st==='wait'&&c.md)L.push({lv:0,ic:'🚨',t:`Mise en demeure : commence ${JOBS[c.j].n} (${c.road}) avant le ${dstr(c.startBy)}`,go:`closeM();tab('ch')`});
-  if(st.cash<0)L.push({lv:0,ic:'🏦',t:`Ton compte est dans le rouge (${eur(st.cash)}) : découvert autorisé ${eur(overdraft())}`,go:`closeM();biTab='arg';tab('bi')`});
+  if(st.cash<-overdraft()*.75)L.push({lv:0,ic:'🏦',t:`Découvert presque épuisé : ${eur(st.cash)} sur ${eur(-overdraft())} autorisés`,go:`closeM();biTab='arg';tab('bi')`});
   const P=st.workers.filter(w=>w.it&&w.it.prop===1);if(P.length)L.push({lv:2,ic:'🎯',t:`Élodie propose ${P.length} CDI à des intérimaires`,go:`closeM();eqTab='it';tab('eq')`,act:`closeM();itHireAll()`,al:'Signer'});
   const S=(st.reports||[]).filter(r=>!r.done&&!r.good&&(r.sig||r.grave));if(S.length)L.push({lv:1,ic:'📋',t:`${S.length} rapport(s) de chantier à traiter (faute grave ou licenciement)`,go:`closeM();eqTab='rap';tab('eq')`});
   for(const k in st.fil||{}){const F=st.fil[k];if(F.tn&&!F.tn.co&&EU[k])L.push({lv:1,ic:EU[k].f,t:`Appel d’offres à ${EU[k].n.split(' (')[0]} : ${F.tn.n}`,go:`euFiche('${k}')`})}
@@ -2115,7 +2164,7 @@ function notifs(){const L=[];// lv : 0 = urgent, 1 = décision à prendre, 2 = o
   if((st.cand||[]).some(w=>w.leg))L.push({lv:2,ic:'⭐',t:'Jason Pougin, l’ouvrier légendaire, est dans tes candidats !',go:`closeM();eqTab='recru';tab('eq')`});
   return L.sort((a,b)=>a.lv-b.lv)}
 const NLV=[['🔴 Urgent','var(--rd)'],['🟠 Décisions à prendre','var(--or)'],['🟢 Opportunités','var(--gr)']];
-function notifUI(){clk();const L=notifs();let h=`<h3>🔔 À traiter (${L.length})</h3>`;if(!L.length)h+='<p class="mut">✅ Rien à traiter pour le moment.</p>';
+function notifUI(){clk();const L=notifs();let h=`<h3>🔔 À traiter (${L.length})</h3>`+hubOther('rn');if(!L.length)h+='<p class="mut">✅ Rien à traiter pour le moment.</p>';
   for(let lv=0;lv<3;lv++){const G=L.filter(x=>x.lv===lv);if(!G.length)continue;h+=`<div class="nlv" style="color:${NLV[lv][1]}">${NLV[lv][0]} · ${G.length}</div>`;
     h+=G.map(x=>{const d=x.dec&&(st.dec||[]).find(y=>y.id===x.dec),T=d&&DECT.find(y=>y.k===d.k);
       return`<div style="padding:9px 0;border-top:1px solid var(--line)"><div class="row" style="flex-wrap:nowrap"><span style="font-size:22px">${x.ic}</span><span class="sm" style="flex:1;min-width:0">${esc(x.t)}</span>${T?'':`<button class="btn s" style="padding:6px 10px" onclick="${x.go}">Voir</button>`}${x.act?`<button class="btn" style="padding:6px 10px" onclick="${x.act}">${x.al}</button>`:''}</div>${T?`<div class="row" style="margin-top:6px">${T.o.map((o,i)=>`<button class="btn ${i===0?'':'s'}" style="padding:6px 9px;font-size:12.5px" onclick="decAct(${d.id},${i});notifUI()">${o[0]}</button>`).join('')}</div>`:''}</div>`}).join('')}
@@ -2301,7 +2350,7 @@ function achCard(){if(!has('achat'))return'';const m=st.achMode||'all',L=st.achL
   <div class="mut sm" style="margin-top:6px">Il garde toujours de quoi payer les salaires déjà dus et un mois de frais fixes.</div>
   ${L.length?`<div style="margin-top:8px">${L.slice(0,5).map(x=>`<div class="sm" style="padding:3px 0;border-top:1px solid #ffffff10"><span class="mut">${dstr(x.d)}</span> ${esc(x.t)}</div>`).join('')}</div>`:'<div class="mut sm" style="margin-top:6px">Pas encore d’achat.</div>'}</div>`}
 function sell(t,ok){if(freeEq(t)<1)return toastMsg('Ce matériel est utilisé sur un chantier.');const q=tq(t),std=(st.eq[t]||0)-q[2]-q[3],tr=std>0?1:q[2]>0?2:3,v=Math.round((tr===1?EQ[t].p:tierPrice(t,tr))*.55);if(!ok)return ask(`Revendre ce matériel ?\nMachine : ${EQ[t].n}\nPrix d’achat : ${eur(EQ[t].p)}\nTu reçois (± 55 %) : ${eur(v)}`,()=>sell(t,1),{ic:EQ[t].ic||'🚜',ok:'Revendre',img:photo('eq_'+t)});st.eq[t]--;if(tr>1)q[tr]--;mv(v,'Revente : '+EQ[t].n,'buy');st.mCapex-=v;log(`💰 Revente : ${EQ[t].n} +${eur(v)}`,false);save();render()}
-function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);mv(-a.p,a.n,'buy');st.adm[k]=1;log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
+function buyAdm(k){const a=ADM[k];if(st.adm[k])return;if(k!=='bce'&&!st.adm.bce)return toastMsg("Inscris d'abord ton entreprise à la BCE.");if(st.cash<a.p)return toastMsg(`Il manque ${eur(a.p-st.cash)}.`);mv(-a.p,a.n,'buy');st.adm[k]=1;if(k==='bce'&&!st.airbag){st.airbag={d:st.day+30,n:0};log('🪂 Tu demandes la prime Airbag de la Région wallonne (aide au lancement d’un indépendant) : réponse dans ± 1 mois.',false)}log(`${a.ic} ${a.n} : c'est fait !`);kaching();goals();save();render()}
 function clsOk(u){return!!(st.adm.vca&&st.adm.rc)&&st.stats.ca>=u.ca&&ownW()>=u.w&&st.rep>=u.r&&st.cash>=u.c&&(!u.dir||u.dir.every(has))}
 function upCls(){const u=CLS[st.cls+1];if(!u||!clsOk(u))return;mv(-u.c,'Dossier d’agréation','buy');st.cls++;log(`🏅 Agréation ${u.n} (catégorie G — routes) : marchés de travaux ${u.max>=1e11?'sans limite de montant':`jusqu'à ${eur(u.max)}`} !`);kaching();goals();save();render()}
 // la banque regarde le chiffre d'affaires récent (année en cours ou année précédente)
@@ -2938,10 +2987,10 @@ function ctSeg(){const nP=st.jobs.filter(o=>!jobMiss(o).length).length,nA=acO().
 function ctGo(k){ctSec=k;tab(k==='ao'?'ao':'pb')}
 
 let shownCash=null;
-function cashFx(){const el=$('#cash');if(shownCash===null){shownCash=st.cash;el.textContent=eur(st.cash);return}
+function cashFx(){const el=$('#cash');if(shownCash===null){shownCash=st.cash;el.textContent=eurH(st.cash);return}
   const d=st.cash-shownCash;if(Math.abs(d)<.5)return;el.classList.remove('up','down');void el.offsetWidth;el.classList.add(d>0?'up':'down');
   const b=el.getBoundingClientRect(),f=document.createElement('div');f.className='fly';f.style.left=(b.left+4)+'px';f.style.top=(b.bottom+2)+'px';f.style.color=d>0?'#7dffa6':'#ff9b96';f.textContent=(d>0?'+':'')+eur(d);document.body.appendChild(f);setTimeout(()=>f.remove(),1400);
-  const from=shownCash,to=st.cash,t0=performance.now();shownCash=to;(function step(n){const k=Math.min(1,(n-t0)/600),v=from+(to-from)*(1-Math.pow(1-k,3));el.textContent=eur(v);if(k<1)requestAnimationFrame(step)})(t0)}
+  const from=shownCash,to=st.cash,t0=performance.now();shownCash=to;(function step(n){const k=Math.min(1,(n-t0)/600),v=from+(to-from)*(1-Math.pow(1-k,3));el.textContent=eurH(v);if(k<1)requestAnimationFrame(step)})(t0)}
 let lastTab=null;
 // pendant le jeu rapide, la liste (surtout l'Équipe avec ses portraits) n'est redessinée que toutes les 0,8 à 1,5 s : plus fluide sur téléphone
 let lastPaneT=0;function renderTick(){if(curTab==='pv'&&pvSec==='casino')return render(true);const now=performance.now(),gap=speed>=3?1500:speed===2?800:0;render(gap&&now-lastPaneT<gap&&!modalOpen)}
@@ -2996,8 +3045,9 @@ function goalGo(k){let to='';for(const d in GOGO)if(GOGO[d].split(' ').includes(
   else if(t==='hub'){hubSec='hold';tab('hub')}
   else tab(t)}
 function jobHead(J,sub,right){return`<div class="hd"><div class="ic" style="--ac2:${J.ac}2e">${J.ic}</div><div style="flex:1;min-width:0"><h3>${J.n}</h3><div class="mut">${sub}</div></div>${right||''}</div>`}
-function rCh(){let h=goalCard()+echoCard()+workCard()+dqCard()+decCard()+lawCard();const cs=st.contracts;
-  if(st.cash<0)h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Ton compte est dans le rouge (${eur(st.cash)})</b><div class="mut sm" style="margin-top:4px">Chaque paiement reçu s'ajoute bien, mais les salaires, la vie privée et les impôts partent le 1er du mois. Regarde le relevé et le bilan dans 📊 Entreprise. Solutions : moins de personnel, plus de chantiers, ou un prêt.</div><button class="btn s" style="margin-top:8px" onclick="tab('bi')">Voir mon relevé de compte</button></div>`;
+function rCh(){let h=goalCard()+echoCard()+wxCard()+workCard()+dqCard()+decCard()+lawCard();const cs=st.contracts;
+  if(st.cash<0&&st.cash>=-overdraft()*.5)h+=`<div class="card acc" style="--ac:var(--or)"><div class="row" style="flex-wrap:nowrap"><span class="sm" style="flex:1">🏦 Tu utilises ton découvert autorisé : <b>${eur(st.cash)}</b> sur ${eur(-overdraft())}. C’est normal quand les clients paient après les salaires (intérêts 9 %/an).</span><button class="btn s" style="padding:6px 9px;font-size:12px" onclick="biTab='arg';tab('bi')">Banque</button></div></div>`;
+  else if(st.cash<0)h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Ton compte est dans le rouge (${eur(st.cash)})</b><div class="mut sm" style="margin-top:4px">Chaque paiement reçu s'ajoute bien, mais les salaires, la vie privée et les impôts partent le 1er du mois. Regarde le relevé et le bilan dans 📊 Entreprise. Solutions : moins de personnel, plus de chantiers, ou un prêt.</div><button class="btn s" style="margin-top:8px" onclick="tab('bi')">Voir mon relevé de compte</button></div>`;
   if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--ye)"><h3>👋 Bienvenue, patron !</h3><p>Tu pars de zéro : ${eur(3000)} d'économies, ta vieille voiture, une pince, des gants et des sacs. Pas d'ouvrier, pas de machine. Attention : chaque mois, il faut aussi payer ta vie privée (loyer, courses…) et les impôts.</p><p class="mut">Première étape : inscrire ton entreprise à la Banque-Carrefour des Entreprises (guichet d'entreprise) pour avoir un numéro de TVA et pouvoir facturer.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire à la BCE (105 €)</button></div>`;
   else if(!cs.length)h+=`<div class="card"><h3>Aucun chantier en cours</h3><p class="mut">Prends un travail dans <b>🧰 Boulots</b>${st.adm.vca?' ou remets offre dans <b>🏛️ Marchés</b>':''}.</p><button class="btn w" onclick="tab('pb')">Voir les petits boulots</button></div>`;
   const dk=dayKind(st.day);if(dk&&running().length)h+=`<div class="card acc" style="--ac:var(--bl)"><b>${dk==='Week-end'?'🛌 C’est le week-end':dk==='Congés du bâtiment'?'🏖️ Congés du bâtiment':'🎉 Jour férié : '+dk}</b><div class="mut sm" style="margin-top:4px">${dk==='Congés du bâtiment'?'Tes ouvriers sont en vacances jusqu’au 1er août (pécule de vacances). Toi, le patron, tu peux continuer à travailler sur tes chantiers.':'Personne ne travaille aujourd’hui : les chantiers reprennent le prochain jour ouvrable.'}</div></div>`;
@@ -3035,7 +3085,7 @@ function rAo(){seenIt('ao');let h=goalCard()+ctSeg()+workCard(1);const mine=st.t
     const ts=st.tenders.filter(t=>t.status==='open'&&!t.my).map(t=>({t,ok:spwReq(t).every(x=>x.ok)})).sort((a,b)=>b.ok-a.ok||a.t.bidEnd-b.t.bidEnd);
     const nAoL=Math.min(ts.length,pgN('ao',20));for(const{t,ok}of ts.slice(0,nAoL)){const J=JOBS[t.j];
       h+=`<div class="card acc" style="--ac:${J.ac}"><div class="mut sm">${t.buyer.replace('SPW Mobilité et Infrastructures','SPW MI')} · Réf. ${t.ref}</div>${jobHead(J,`${t.road} — ${t.town}`,t.urgent?'<span class="tag r">URGENT</span>':'')}
-      <div class="tags">${geoTag(t.town)}<span class="tag ${t.proc==='po'?'b':t.proc==='pn'?'v':''}">${PROC[t.proc].n}</span><span class="tag">${nb(t.q)} ${J.un}</span><span class="tag">⏱ ${t.N} j ouvrables</span>${t.proc==='po'?`<span class="tag b">Estimation ${eur(t.est)}</span>`:''}<span class="tag">${J.nat==='travaux'?'Travaux':'Services'}</span><span class="tag o">Remise des offres : ${dstr(t.bidEnd)}</span></div>
+      <div class="tags">${geoTag(t.town)}<span class="tag ${t.proc==='po'?'b':t.proc==='pn'?'v':''}">${PROC[t.proc].n}</span><span class="tag">${nb(t.q)} ${J.un}</span><span class="tag">⏱ ${t.N} j ouvrables</span>${t.proc==='po'?`<span class="tag b">Estimation ${eur(t.est)}</span>`:''}<span class="tag">${J.nat==='travaux'?'Travaux':'Services'}</span>${t.crit==='pvt'?`<span class="tag v">⭐ ${critTxt(t)}</span>`:''}<span class="tag o">Remise des offres : ${dstr(t.bidEnd)}</span></div>
       ${reqSum(spwReq(t))}
       ${t.wxu?'<div class="tags"><span class="tag r">🚨 Urgence météo : prix +30 %</span></div>':''}${t.am?`<div class="tags"><span class="tag v">🤝 En association avec ${esc(t.am)} (50/50)</span></div>`:''}
       <div style="margin-top:10px">${ok?`<button class="btn w" onclick="bidUI(${t.id})">📝 Préparer mon offre</button>`:!t.am&&t.cls===st.cls+1&&spwReq(t).filter(x=>!x.ok).length===1&&st.cls>=1?`<button class="btn s w" onclick="amGo(${t.id})">🤝 Répondre en association avec un grand groupe (50/50)</button>`:''}</div></div>`}
@@ -3045,7 +3095,7 @@ function rAo(){seenIt('ao');let h=goalCard()+ctSeg()+workCard(1);const mine=st.t
     const mineR=mine.slice().reverse(),nMi=Math.min(mineR.length,pgN('mes',20));for(const t of mineR.slice(0,nMi)){const J=JOBS[t.j];const i=t.bids?t.bids.findIndex(b=>b.me):-1;
       const stt=t.status==='open'?`<span class="tag o">Ouverture des offres le ${dstr(t.bidEnd)}</span>`:t.status==='opened'?`<span class="tag b">Classement provisoire : ${i+1}e / ${t.bids.length} · décision le ${dstr(t.dec)}</span>`:t.win===st.name?'<span class="tag g">🏆 Attribué à toi</span>':`<span class="tag r">Attribué à ${esc(t.win||'personne')}</span>`+(t.rec?'<span class="tag o">⏳ Recours en cours au Conseil d’État</span>':'');
       h+=`<div class="card acc" style="--ac:${J.ac}"><div class="mut sm">Réf. ${t.ref}</div>${jobHead(J,`${t.road} — ${t.town}`,`<b>${eur(t.my.tot)}</b>`)}<div class="tags">${stt}</div>${recEligible(t)?`<button class="btn" style="margin-top:10px" onclick="recUI(${t.id})">⚖️ Introduire un recours avec un avocat</button><div class="mut sm">Possible pendant 15 jours (jusqu’au ${dstr(t.lostD+15)}) : ton offre était très proche ou écartée à tort.</div>`:''}${t.bids?`<h2>PV d'ouverture</h2>${pvTable(t)}`:`<button class="btn s" style="margin-top:10px" onclick="withdraw(${t.id})">Retirer mon offre</button>`}</div>`}h+=pgBtn('mes',20,nMi,mineR.length)}
-  else{h+=`<p class="mut sm" style="margin:0 4px 10px">Les autres entreprises remettent aussi offre. Elles ont leurs spécialités, leur taille et leurs prix.</p>`;
+  else{h+=rivWarCard()+`<p class="mut sm" style="margin:0 4px 10px">Les autres entreprises remettent aussi offre. Elles ont leurs spécialités, leur taille et leurs prix.</p>`;
     const all=[...st.riv.map(r=>({...r,busy:r.load.filter(e=>e>st.day).length})),{n:st.name,me:1,sz:st.cls>=2?2:st.cls?1:0,rep:st.rep,won:st.stats.won,ca:st.stats.ca,busy:running().filter(c=>!JOBS[c.j].p).length,jobs:Object.keys(st.refs)}].sort((a,b)=>b.won-a.won||b.ca-a.ca);
     for(const r of all)h+=`<div class="card ${r.me?'acc':''}"><div class="row"><b style="flex:1;${r.me?'color:var(--or2)':''}">${esc(r.n)}</b><span class="tag">${['Petite','Moyenne','Grande'][r.sz]}</span></div><div class="tags"><span class="tag">${stars(r.rep)}</span><span class="tag g">🏆 ${r.won} marchés</span><span class="tag">${eur(r.ca)}</span><span class="tag o">🦺 ${r.busy} en cours</span></div><div class="mut sm" style="margin-top:6px">${(r.jobs||[]).map(j=>JOBS[j]?JOBS[j].ic:'').join(' ')}</div></div>`}
   return h}
@@ -3249,7 +3299,7 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
     st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd">${avatar(w,52)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${ROLES[w.r].n} · ${eur(monthly(w))}/mois</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div>${ROLES[w.r].d?`<details class="more"><summary>À quoi sert ce métier ?</summary><div class="mut sm">${ROLES[w.r].d}</div></details>`:''}<button class="btn w" style="margin-top:10px" onclick="cvUI('cand',${i})">📄 Voir le CV</button></div>`);
     if(!st.cand.length)h+='<p class="mut">Plus de candidats cette semaine. Nouveaux CV lundi !</p>'}
   return h}
-function rMt(){let h=goalCard()+achCard()+siteCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
+function rMt(){let h=goalCard()+achCard()+siteCard()+saltCard()+`<h2>Matériel — prix HTVA</h2><p class="mut sm" style="margin:0 4px 10px">Prix relevés sur le marché belge (neuf pour le petit matériel, occasion pour les camions). « Usage » = carburant et entretien par jour de chantier.</p>`;
   // regroupés par type : du petit matériel aux véhicules, et du moins cher au plus cher dans chaque groupe
   const EQG=[['🚚 Véhicules',['van','fourgon','benne','benne19','nacelle','hydro','balayeuse']],['🚛 Camions spéciaux (autoroutes)',['tma','laveuse','balaygr','epandeur','tunnel','marqauto']],['🚜 Engins et machines',['tracteur','telesc','tondap','pelle','chargeuse','rouleau','broyeur','traceuse','saleuse','batteuse','hydroseed','desherb']],['🚧 Signalisation et remorques',['fleche','signal','remorque']]];
   const inG=new Set(EQG.flatMap(g=>g[1]));EQG.push(['🧰 Petit matériel',Object.keys(EQ).filter(k=>!inG.has(k))]);EQG.reverse();
@@ -4447,21 +4497,22 @@ let clSec='home',clStaffMore=30;
 function clRender(headOnly){const C=st.cl;clFix(C);const K=C.car;
   $('#tname').textContent='🧽 '+C.name;$('#lt').textContent=C.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'NT';$('#lvl').textContent=K.lv;
   $('#tsub').textContent=`${stars(C.rep)} ${Math.round(C.rep)} · ${CLTIT[Math.min(9,Math.floor(K.lv/5))]} · ${clStaffN()} pers.`;
-  const ca=$('#cash');ca.textContent=eur(C.cash);ca.classList.toggle('neg',C.cash<0);shownCash=null;
+  const ca=$('#cash');ca.textContent=eurH(C.cash);ca.classList.toggle('neg',C.cash<0);shownCash=null;
   const nN=clNotifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0);
   const dx=date(st.day),k=dx.getDay()%6===0?'Week-end':ferie(dx);$('#hudW').textContent=(k?'🏖️ ':WX[st.wx].ic+' ')+dstr(st.day)+' '+dx.getFullYear()+(k?' · '+k:'');
   const run=C.ctr.filter(c=>c.st==='run').length;$('#hudJob').textContent=`🧽 ${run} contrat${run>1?'s':''}${C.ts.n?` · 🏠 ${C.ts.n} familles`:''}`;
   document.querySelectorAll('[data-sp]').forEach(b=>b.classList.toggle('on',+b.dataset.sp===speed));
   $('#tabs').style.display='none';const ct=$('#cltabs');ct.style.display='';const tb=clTabs();if(ct.innerHTML!==tb)ct.innerHTML=tb;
   if(headOnly===true)return;lastPaneT=performance.now();const P=$('#pane'),y=P.scrollTop,key='cl'+clSec;P.classList.toggle('enter',lastTab!==key);lastTab=key;const fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=rCl();P.scrollTop=y}
-function clTabs(){return[['home','🏠','Accueil'],['cli','📨','Clients'],['pub','🏛️','Marchés'],['team','👥','Équipe'],['mat','🧰','Matériel'],['soc','📊','Société']].map(([k,i,l])=>{let b='';const C=st.cl;
-  if(k==='cli'){const n=C.dem.filter(q=>!q.sent).length+(C.ts.wait&&clHas('tsag')?1:0);if(n)b=`<span class="bd">${n}</span>`}if(k==='pub'){const n=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(n)b=`<span class="bd">${n}</span>`}
+function clTabs(){return[['home','🏠','Accueil'],['cli','📨','Clients'],['team','👥','Équipe'],['mat','🧰','Matériel'],['soc','📊','Société']].map(([k,i,l])=>{let b='';const C=st.cl;
+  if(k==='cli'){const n=C.dem.filter(q=>!q.sent).length+(C.ts.wait&&clHas('tsag')?1:0)+C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(n)b=`<span class="bd">${n}</span>`}
   if(k==='mat'){const n=Object.keys(clMiss()).length;if(n)b=`<span class="bd">${n}</span>`}
-  return`<button class="${clSec===k?'on':''}" onclick="clSec='${k}';clk();$('#pane').scrollTop=0;render()"><b>${i}</b>${l}${b}</button>`}).join('')}
+  const on=clSec===k||(k==='cli'&&clSec==='pub');return`<button class="${on?'on':''}" onclick="clSec='${k==='cli'&&clSec==='pub'?'pub':k}';clk();$('#pane').scrollTop=0;render()"><b>${i}</b>${l}${b}</button>`}).join('')}
+function clSubSeg(){const C=st.cl;if(clSec!=='cli'&&clSec!=='pub')return'';const nq=C.dem.filter(q=>!q.sent).length,nt=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;return seg(clSec,[['cli',`📨 Clients${nq?' ('+nq+')':''}`],['pub',`🏛️ Marchés publics${nt?' ('+nt+')':''}`]],'clSec')}
 function clSeg(cur,items,k){return`<div class="seg">${items.map(([v,l])=>`<button class="${Math.abs(cur-v)<1e-6?'on':''}" onclick="st.cl.${k}=${v};clk();save();render()">${l}</button>`).join('')}</div>`}
 function clTile(l,v,cls){return`<div><span>${l}</span><b class="${cls||''}">${v}</b></div>`}
 function clBar(p,col){return`<div style="height:8px;border-radius:5px;background:#ffffff14;overflow:hidden;margin-top:6px"><div style="height:100%;width:${clamp(p,0,100)}%;background:${col||'var(--gr)'}"></div></div>`}
-function rCl(){const C=st.cl;C.coefQ=+C.coefQ||0;C.coef=+C.coef||1;if(!Number.isFinite(C.cash))C.cash=0;if(C.crisis&&C.crisisD!==st.day&&!modalOpen){C.crisisD=st.day;setTimeout(clCrisisUI,50)}return({home:clHome,cli:clCli,pub:clPub,team:clTeam,mat:clMat,soc:clSoc})[clSec]()}
+function rCl(){const C=st.cl;C.coefQ=+C.coefQ||0;C.coef=+C.coef||1;if(!Number.isFinite(C.cash))C.cash=0;if(C.crisis&&C.crisisD!==st.day&&!modalOpen){C.crisisD=st.day;setTimeout(clCrisisUI,50)}return clSubSeg()+({home:clHome,cli:clCli,pub:clPub,team:clTeam,mat:clMat,soc:clSoc})[clSec]()}
 function clGoalCard(){const C=st.cl,g=CLG.find(([k])=>!C.goals[k]),K=C.car;const M=CLMEGA.find(x=>C.mg[x.k]!=='ok');
   return`<div class="goal" onclick="clk();clCareerUI()" style="cursor:pointer"><span class="gi">${g?'🎯':'🎖️'}</span><div><b>${g?'Objectif':'Carrière'}</b><div>${g?g[1]:M?(typeof C.mg[M.k]==='number'?`${M.ic} ${M.n} : fini le ${dstr(C.mg[M.k])}`:`Grand contrat : ${M.n}`):'Tout est fini. Bravo !'}</div><div class="sm" style="opacity:.8;margin-top:2px">🎖️ Niveau ${K.lv} · ${CLTIT[Math.min(9,Math.floor(K.lv/5))]}${K.lv<50?` · ${Math.round(K.xp/clXpN(K.lv)*100)} %`:''}</div></div></div>`}
 function clTodo(){const C=st.cl,T=[];const go=(t,s,b)=>T.push(`<div class="row" style="padding:7px 0;border-top:1px solid var(--line)"><div style="flex:1" class="sm">${t}</div><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clSec='${s}';clk();render()">${b}</button></div>`);
@@ -4475,10 +4526,17 @@ function clTodo(){const C=st.cl,T=[];const go=(t,s,b)=>T.push(`<div class="row" 
   const nt=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(nt)go(`🏛️ ${nt} marché${nt>1?'s':''} public${nt>1?'s':''} où tu peux remettre offre`,'pub','Voir');
   if(clHas('rc')&&!C.adm.tsag)go('🏠 Demande l’agrément titres-services (ménage chez les particuliers)','soc','Demander');
   return T.length?`<h2>À faire maintenant</h2><div class="card" style="padding:4px 12px">${T.join('')}</div>`:''}
+function clSatCard(){const C=st.cl,run=C.ctr.filter(c=>c.st==='run'&&!c.ig);if(run.length<2)return'';const avg=run.reduce((a,c)=>a+c.sat,0)/run.length;if(avg>=62)return'';const low=run.filter(c=>c.sat<60).length;
+  const techs=clField('tech').length+clField('chef').length,field=techs+clField('vit').length,nCh=clField('chef').length,needCh=Math.ceil(Math.max(0,techs-nCh)/15),N=clNeeds(),M=clMiss(),noM=run.filter(c=>c.eqOK===0).length;
+  const chefOK=Math.min(1,nCh*15/Math.max(1,techs-nCh)),qualOK=Math.min(1,clOffN('qual')*200/Math.max(1,field)),kitOK=Math.min(1,(C.eq.henry||0)/Math.max(1,N.henry||0),(C.eq.chariot||0)/Math.max(1,N.chariot||0)),cov=C.cov||1;
+  const L=[[cov>=.97,`Heures faites : ${Math.round(cov*100)} %`,'Il manque des heures : engage du personnel (la qualité baisse très vite).'],[chefOK>=.99,`Cheffes d’équipe : ${nCh} / ${Math.max(nCh,needCh)}`,'1 cheffe pour 15 techniciennes : +15 points.'],[kitOK>=.99,'Matériel de base (aspirateurs, chariots)','Jusqu’à +15 points.'],[qualOK>=.99,`Contrôleuse qualité : ${clOffN('qual')}`,'1 pour 200 personnes sur le terrain : +10 points.'],[!noM,`Machines sur place${noM?` (manquent sur ${noM} contrat${noM>1?'s':''})`:''}`,'Sans la machine demandée : −20 %.']];
+  return`<div class="card acc" style="--ac:var(--rd)"><b>😟 Tes clients ne sont pas assez contents : ${Math.round(avg)} / 100</b><div class="sm" style="margin-top:4px">Sous <b>60</b>, un client <b>ne renouvelle pas</b> son contrat à la fin : ${low} contrat${low>1?'s':''} sur ${run.length} ${low>1?'sont':'est'} dans ce cas.</div>
+  ${L.map(([ok,t,h])=>`<div class="row sm" style="margin-top:6px;flex-wrap:nowrap"><span>${ok?'✅':'❌'}</span><span style="flex:1">${t}${ok?'':`<div class="mut" style="font-size:12px">${h}</div>`}</span></div>`).join('')}
+  <div class="row" style="margin-top:8px">${Object.keys(M).length?'<button class="btn s" style="padding:6px 10px" onclick="clBuyMiss()">🧰 Acheter le matériel manquant</button>':''}<button class="btn s" style="padding:6px 10px" onclick="clSec=\'team\';clk();render()">👥 Équipe</button></div></div>`}
 function clHome(){const C=st.cl,L=C.lastPl,{cap,lost}=clCap(),run=C.ctr.filter(c=>c.st==='run');const avg=run.length?Math.round(run.reduce((a,c)=>a+c.sat,0)/run.length):null;
   let h=`<div class="pvtiles">${clTile('🏦 Compte',eur(C.cash),C.cash<0?'neg':'money')}${clTile('📈 Mois passé',L?(L.res>=0?'+':'')+eur(L.res):'—',L&&L.res<0?'neg':'money')}${clTile('😊 Satisfaction',avg===null?'—':avg+' / 100')}</div>`;
   const BG=C.big&&st.day<C.big.end?CLBIG[C.big.k]:null;
-  h+=clGoalCard()+(BG?`<div class="card acc" style="--ac:var(--vi)"><b>${BG.ic} ${BG.n}</b><div class="mut sm">${BG.d} Jusqu’au ${dstr(C.big.end)}.</div></div>`:'')+clDqCard()+clRenCard()+clDecCard()+clCompCard()+clTodo();
+  h+=clGoalCard()+(BG?`<div class="card acc" style="--ac:var(--vi)"><b>${BG.ic} ${BG.n}</b><div class="mut sm">${BG.d} Jusqu’au ${dstr(C.big.end)}.</div></div>`:'')+clSatCard()+clDqCard()+clRenCard()+clDecCard()+clCompCard()+clTodo();
   const absN=C.staff.filter(w=>w.abs>0).length;
   h+=`<h2>Aujourd’hui</h2><div class="card"><div class="mgrid" style="margin-top:0">${clTile('🧽 Contrats',run.length+(C.ctr.length>run.length?` (+${C.ctr.length-run.length})`:''))}${clTile('🏠 Clients TS',C.ts.n)}${clTile('🏗️ Chantiers',C.job.length)}</div><div class="mgrid">${clTile('👥 Terrain',C.staff.length)}${clTile('🤒 Absents',absN+(C.staff.length>1?` (${Math.round(absN/C.staff.length*100)} %)`:''))}${clTile('⏳ Heures non vendues',Math.round(C.idle||0)+' h/j')}</div>
   <div class="mut sm" style="margin-top:8px">Heures faites : bureaux ${Math.round((C.cov??1)*100)} % · titres-services ${Math.round((C.ts.cov??1)*100)} %. Les heures payées mais non vendues coûtent cher : trouve des clients ou réduis l’équipe.</div></div>
@@ -4504,7 +4562,7 @@ function clCli(){const C=st.cl;let h='';
   if(clOffN('com'))h+=`<div class="card"><label class="row sm" style="gap:6px"><input type="checkbox" ${C.autoQ?'checked':''} onchange="st.cl.autoQ=this.checked?1:0;save()"> Olivier envoie les devis tout seul</label>${clSeg(+C.coefQ||0,[[-.1,'−10 %'],[0,'Marché'],[.1,'+10 %']],'coefQ')}</div>`;
   const run=C.ctr;h+=`<h2>🧽 Contrats (${run.length})</h2>`;
   if(!run.length)h+=`<div class="card"><p class="mut">Aucun contrat pour l’instant.</p></div>`;
-  for(const c of run.slice().sort((a,b)=>a.sat-b.sat).slice(0,40)){const K=CLK[c.k],m=clMach(c);h+=`<div class="card ${c.notice?'acc':''}" style="cursor:pointer;${c.notice?'--ac:var(--rd)':''}" onclick="clCtrUI(${c.id})"><div class="row" style="flex-wrap:nowrap"><span style="font-size:24px">${K.ic}</span><div style="flex:1;min-width:0"><b class="sm">${esc(c.n)}</b>${c.pub?' <span class="tag b">🏛️ public</span>':''}<div class="mut" style="font-size:12px">${K.n} · ${nb(c.m2)} m² · ${c.hpw} h/sem. · ${eur2(c.price)}/h · ${c.st==='wait'?'commence le '+dstr(c.start):'jusqu’au '+dstr(c.end)+' '+date(c.end).getFullYear()}</div></div><b class="sm ${c.sat<50?'neg':'money'}">${Math.round(c.sat)}</b></div><div class="tags" style="margin-top:4px"><span class="tag ${c.price-clHourCost()*(c.sh==='nuit'?1.25:1)<2?'r':'g'}">Marge ± ${eur2(c.price-clHourCost()*(c.sh==='nuit'?1.25:1))}/h</span>${c.ix===0?'<span class="tag o">⚠️ prix non indexé</span>':''}</div>
+  for(const c of run.slice().sort((a,b)=>a.sat-b.sat).slice(0,40)){const K=CLK[c.k],m=clMach(c);h+=`<div class="card ${c.notice?'acc':''}" style="cursor:pointer;${c.notice?'--ac:var(--rd)':''}" onclick="clCtrUI(${c.id})"><div class="row" style="flex-wrap:nowrap"><span style="font-size:24px">${K.ic}</span><div style="flex:1;min-width:0"><b class="sm">${esc(c.n)}</b>${c.pub?' <span class="tag b">🏛️ public</span>':''}<div class="mut" style="font-size:12px">${K.n} · ${nb(c.m2)} m² · ${c.hpw} h/sem. · ${eur2(c.price)}/h · ${c.st==='wait'?'commence le '+dstr(c.start):'jusqu’au '+dstr(c.end)+' '+date(c.end).getFullYear()}</div></div><b class="sm ${c.sat<60?'neg':'money'}" title="${c.sat<60?'Sous 60 : ne sera pas renouvelé':'Renouvelable'}">${c.sat<60&&!c.pub&&!c.ig?'⚠️ ':''}${Math.round(c.sat)}</b></div><div class="tags" style="margin-top:4px"><span class="tag ${c.price-clHourCost()*(c.sh==='nuit'?1.25:1)<2?'r':'g'}">Marge ± ${eur2(c.price-clHourCost()*(c.sh==='nuit'?1.25:1))}/h</span>${c.ix===0?'<span class="tag o">⚠️ prix non indexé</span>':''}</div>
     ${clBar(c.sat,c.sat<50?'var(--rd)':c.sat<70?'var(--or)':'var(--gr)')}${c.eqOK===0?`<div class="sm neg" style="margin-top:4px">⚠️ Machine manquante sur place : ${[m,K.eq].filter(Boolean).map(k=>CLE[k].n).join(', ')}</div>`:''}${c.notice?'<div class="sm neg" style="margin-top:4px">Le client a donné son préavis.</div>':''}<div class="mut" style="font-size:11.5px;margin-top:4px">${c.sh==='nuit'?'🌙 nuit · ':c.sh==='tot'?'🌅 tôt le matin · ':''}${c.boost?'💪 renforcé · ':''}${c.vd!==undefined&&st.day-c.vd<15?'🔍 visité':'Touche pour la fiche, une visite ou renégocier ›'}</div></div>`}
   if(C.job.length)h+=`<h2>🏗️ Chantiers ponctuels (${C.job.length})</h2>`+C.job.slice(0,pgN('clj',30)).map(j=>{const P=CLP[j.k];return`<div class="card"><div class="row"><span style="font-size:22px">${P.ic}</span><div style="flex:1;min-width:0"><b class="sm">${P.n}</b><div class="mut" style="font-size:12px">${esc(j.n)} · ${Math.round(j.done)}/${j.h} h · ${j.st==='wait'?'⏸ en attente ('+(!(C.eq.van>0)?'camionnette':P.eq&&!C.eq[P.eq]?CLE[P.eq].n:'personnel')+')':'en cours'}</div></div></div>${clBar(j.done/j.h*100)}</div>`}).join('')+pgBtn('clj',30,Math.min(C.job.length,pgN('clj',30)),C.job.length);
   return h}
@@ -4557,16 +4615,29 @@ function clSoc(){const C=st.cl,L=C.lastPl;let h=`<div class="card" style="cursor
   return h}
 function hubShopCard(){const V=pv(),H=hH(),S=st.shop;if(!st.shUnlock){const mx=Math.max(V.cash,H?H.cash:0),p=clamp(mx/SH_PRICE*100,0,100);return`<div class="card hubc lock"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🛒</span><div style="flex:1;min-width:0"><b style="font-size:17px">Chaîne de magasins</b><div class="mut sm">Supérettes, supermarchés : stock, fournisseurs, livraisons, prix…</div></div><span class="tag">🔒 ${eur(SH_PRICE)}</span></div>${clBar(p,'linear-gradient(90deg,var(--or),var(--ye))')}<div class="mut sm" style="margin-top:6px">Ton compte privé : ${eur(V.cash)}${H?` · ta holding : ${eur(H.cash)}`:''} (${Math.floor(p)} %).</div>${mx>=SH_PRICE?`<button class="btn w" style="margin-top:10px" onclick="shUnlock()">🔓 Débloquer · ${eur(SH_PRICE)}</button>`:`<button class="btn s w" style="margin-top:10px" disabled>Il manque ${eur(SH_PRICE-mx)}</button>`}</div>`}
   if(!S)return`<div class="card hubc"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🛒</span><div style="flex:1;min-width:0"><b style="font-size:17px">Chaîne de magasins</b><div class="mut sm">Débloquée ✓ · pas encore créée</div></div></div><button class="btn w" style="margin-top:10px" onclick="shCreateUI()">Créer ma chaîne</button></div>`;
-  return`<div class="card hubc" onclick="clk();tab('sh')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🛒</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(S.name)}</b><div class="mut sm">Magasins · ${S.st.length} magasin${S.st.length>1?'s':''}</div></div><span class="tag g">Ouverte</span></div><div class="mgrid">${clTile('Compte',eur(S.cash),S.cash<0?'neg':'money')}${clTile('Personnel',S.staff.length)}${clTile('Valeur',eur(shVal()))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`}
-function rHub(){const V=pv();if(hubSec==='hold'&&V.ph)return rHold2();const rn=`<div class="card hubc" onclick="clk();tab('ch')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🦺</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(st.name)}</b><div class="mut sm">Parcs, jardins et routes · gratuit</div></div><span class="tag g">Ouverte</span></div><div class="mgrid">${clTile('Compte',eur(st.cash),st.cash<0?'neg':'money')}${clTile('Personnel',ownW())}${clTile('Valeur',eur(Math.max(0,grpValue())))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`;
+  return`<div class="card hubc" onclick="clk();tab('sh')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🛒</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(S.name)}</b><div class="mut sm">Magasins · ${S.st.length} magasin${S.st.length>1?'s':''}</div></div>${hubBadge('sh')}</div><div class="mgrid">${clTile('Compte',eurH(S.cash),S.cash<0?'neg':'money')}${(r=>clTile('Mois passé',(r>=0?'+':'')+eurH(r),r<0?'neg':'money'))(HUBK.sh.res())}${clTile('Personnel',nb(S.staff.length))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`}
+// chiffres et alertes de chaque société, pour la page d'accueil et les cloches
+const HUBK={rn:{ic:'🦺',ok:()=>true,n:()=>st.name,res:()=>((st.mHist||[]).slice(-1)[0]||{}).res||0,nf:()=>notifs().length,go:"tab('ch');notifUI()"},
+  cl:{ic:'🧽',ok:()=>!!st.cl,n:()=>st.cl.name,res:()=>st.cl.lastPl?st.cl.lastPl.res:0,nf:()=>clNotifs().length,go:"tab('cl');clNotifUI()"},
+  sh:{ic:'🛒',ok:()=>!!st.shop,n:()=>st.shop.name,res:()=>st.shop.lastPl?st.shop.lastPl.res:0,nf:()=>shNotifs().length,go:"tab('sh');shNotifUI()"}};
+const hubNf=k=>{try{return HUBK[k].ok()?HUBK[k].nf():0}catch(e){return 0}};
+const hubBadge=k=>{const n=hubNf(k);return n?`<span class="tag r">🔔 ${n}</span>`:'<span class="tag g">✓ À jour</span>'};
+function hubGroupCard(){const ks=Object.keys(HUBK).filter(k=>HUBK[k].ok());if(ks.length<2)return'';let tot=0;for(const k of ks)try{tot+=HUBK[k].res()}catch(e){}
+  const L=ks.filter(k=>hubNf(k)>0);
+  return`<div class="card acc" style="--ac:var(--ye)"><div class="row" style="flex-wrap:nowrap"><b style="flex:1">📊 Ton groupe, le mois passé</b><b class="${tot>=0?'money':'neg'}">${tot>=0?'+':''}${eur(tot)}</b></div>
+  ${ks.map(k=>{let r=0;try{r=HUBK[k].res()}catch(e){}return`<div class="row sm" style="margin-top:6px;flex-wrap:nowrap"><span>${HUBK[k].ic}</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(HUBK[k].n())}</span><b class="${r>=0?'money':'neg'}">${r>=0?'+':''}${eur(r)}</b>${hubNf(k)?`<button class="btn s" style="padding:3px 8px;font-size:12px;margin-left:6px" onclick="clk();${HUBK[k].go}">🔔 ${hubNf(k)}</button>`:''}</div>`}).join('')}
+  ${L.length?'':'<div class="mut sm" style="margin-top:6px">✅ Rien à traiter dans tes sociétés.</div>'}</div>`}
+// dans la cloche d'une société : ce qui attend ailleurs dans le groupe
+function hubOther(k){const ks=Object.keys(HUBK).filter(x=>x!==k&&HUBK[x].ok()&&hubNf(x)>0);if(!ks.length)return'';return`<div class="card" style="padding:8px 12px"><div class="mut sm">Ailleurs dans ton groupe :</div><div class="row" style="margin-top:6px">${ks.map(x=>`<button class="btn s" style="padding:5px 9px;font-size:12.5px" onclick="closeM();clk();${HUBK[x].go}">${HUBK[x].ic} ${hubNf(x)}</button>`).join('')}</div></div>`}
+function rHub(){const V=pv();if(hubSec==='hold'&&V.ph)return rHold2();const rn=`<div class="card hubc" onclick="clk();tab('ch')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🦺</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(st.name)}</b><div class="mut sm">Parcs, jardins et routes · gratuit</div></div>${hubBadge('rn')}</div><div class="mgrid">${clTile('Compte',eurH(st.cash),st.cash<0?'neg':'money')}${(r=>clTile('Mois passé',(r>=0?'+':'')+eurH(r),r<0?'neg':'money'))(HUBK.rn.res())}${clTile('Personnel',nb(ownW()))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`;
   let c2;const C=st.cl;
   if(!st.clUnlock){const p=clamp(Math.max(V.cash,hH()?hH().cash:0)/CL_PRICE*100,0,100);c2=`<div class="card hubc lock"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🧽</span><div style="flex:1;min-width:0"><b style="font-size:17px">Société de nettoyage</b><div class="mut sm">Bureaux, titres-services, écoles, hôpitaux, vitres…</div></div><span class="tag">🔒 ${eur(CL_PRICE)}</span></div>${clBar(p,'linear-gradient(90deg,var(--or),var(--ye))')}<div class="mut sm" style="margin-top:6px">Ton compte privé : ${eur(V.cash)} / ${eur(CL_PRICE)} (${Math.floor(p)} %)${hH()?` · ta holding : ${eur(hH().cash)}`:''}. ${hH()?'La holding peut payer.':'Verse-toi des dividendes, ou crée ta holding pour payer avec les bénéfices de Route Nette.'}</div>
     ${V.cash>=CL_PRICE||(hH()&&hH().cash>=CL_PRICE)?`<button class="btn w" style="margin-top:10px" onclick="clUnlock()">🔓 Débloquer · ${eur(CL_PRICE)}</button>`:`<button class="btn s w" style="margin-top:10px" disabled>Il manque ${eur(CL_PRICE-Math.max(V.cash,hH()?hH().cash:0))}</button>`}</div>`}
   else if(!C)c2=`<div class="card hubc"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🧽</span><div style="flex:1;min-width:0"><b style="font-size:17px">Société de nettoyage</b><div class="mut sm">Débloquée ✓ · pas encore créée</div></div></div><button class="btn w" style="margin-top:10px" onclick="clCreateUI()">Créer ma société</button></div>`;
-  else c2=`<div class="card hubc" onclick="clk();tab('cl')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🧽</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(C.name)}</b><div class="mut sm">Nettoyage · ${stars(C.rep)} ${Math.round(C.rep)}</div></div><span class="tag g">Ouverte</span></div><div class="mgrid">${clTile('Compte',eur(C.cash),C.cash<0?'neg':'money')}${clTile('Personnel',clStaffN())}${clTile('Valeur',eur(clVal()))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`;
-  return`<div class="hubt"><div style="font-size:13px;opacity:.75">Bonjour patron 👋</div><h1 style="margin:2px 0 4px;font-size:24px">Mes entreprises</h1><div class="sm" style="opacity:.8">${dstr(st.day)} ${date(st.day).getFullYear()} · le temps passe pour toutes tes sociétés</div></div>${hubHoldCard()}${rn}${c2}
-  <div class="card hubc" onclick="clk();tab('pv')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:34px">🏡</span><div style="flex:1"><b>Ma vie privée</b><div class="mut sm">Compte privé : ${eur(V.cash)}</div></div><span style="font-size:20px">›</span></div></div>
+  else c2=`<div class="card hubc" onclick="clk();tab('cl')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:40px">🧽</span><div style="flex:1;min-width:0"><b style="font-size:17px">${esc(C.name)}</b><div class="mut sm">Nettoyage · ${stars(C.rep)} ${Math.round(C.rep)}</div></div>${hubBadge('cl')}</div><div class="mgrid">${clTile('Compte',eurH(C.cash),C.cash<0?'neg':'money')}${(r=>clTile('Mois passé',(r>=0?'+':'')+eurH(r),r<0?'neg':'money'))(HUBK.cl.res())}${clTile('Personnel',nb(clStaffN()))}</div><button class="btn w" style="margin-top:10px">Entrer ›</button></div>`;
+  return`<div class="hubt"><div style="font-size:13px;opacity:.75">Bonjour patron 👋</div><h1 style="margin:2px 0 4px;font-size:24px">Mes entreprises</h1><div class="sm" style="opacity:.8">${dstr(st.day)} ${date(st.day).getFullYear()} · le temps passe pour toutes tes sociétés</div></div>${hubGroupCard()}${hubHoldCard()}${rn}${c2}
   ${hubShopCard()}
+  <div class="card hubc" onclick="clk();tab('pv')"><div class="row" style="flex-wrap:nowrap"><span style="font-size:34px">🏡</span><div style="flex:1"><b>Ma vie privée</b><div class="mut sm">Compte privé : ${eur(V.cash)}</div></div><span style="font-size:20px">›</span></div></div>
   <div class="card" style="opacity:.6"><div class="row"><span style="font-size:30px">❔</span><div style="flex:1"><b>Prochaine entreprise</b><div class="mut sm">Bientôt…</div></div></div></div>`}
 
 /* ---------- v2 : profondeur (décisions, plaintes, visites, accidents, carrière, locaux, concurrents) ---------- */
@@ -4685,7 +4756,7 @@ function clAccTick(){const C=st.cl;if(!clW(st.day))return;const p=.00010*(clOffN
 // notifications
 function clNotifs(){const C=st.cl,L=[];if(!C)return L;for(const d of C.dec||[]){const D=CLDEC.find(x=>x.k===d.k);L.push([D.ic,D.t,"clSec='home'"])}for(const p of C.comp||[])L.push(['📢','Plainte : '+p.t,"clSec='home'"]);if((C.rpt||[]).length)L.push(['⚠️',C.rpt.length+' rapport(s) sur le personnel',"clSec='team';clTeamTab='ter'"]);
   if(C.crisis)L.push(['🚨','Cessation de paiement',"clSec='soc'"]);for(const r of C.ren||[]){const c=C.ctr.find(x=>x.id===r.c);if(c)L.push(['🔄','Remis en concurrence : '+c.n,"clSec='home'"])}const nt=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(nt&&!clOffN('off'))L.push(['🏛️',nt+' marché(s) public(s) où remettre offre',"clSec='pub'"]);if(C.ts.wait>5&&!clOffN('plan')&&!clOffN('tsr'))L.push(['🏠',C.ts.wait+' familles attendent une aide-ménagère',"clSec='cli'"]);try{clBurNotif(L)}catch(e){}return L}
-function clNotifUI(){const L=clNotifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${L.length?`<div class="card" style="padding:4px 12px">${L.map(([i,t,a])=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:nowrap"><span style="font-size:22px">${i}</span><span class="sm" style="flex:1">${t}</span><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="${a};closeM();render()">Voir</button></div>`).join('')}</div>`:'<p class="mut">Rien à traiter. 👌</p>'}<button class="btn w" onclick="closeM()">Fermer</button>`)}
+function clNotifUI(){const L=clNotifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${hubOther('cl')}${L.length?`<div class="card" style="padding:4px 12px">${L.map(([i,t,a])=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:nowrap"><span style="font-size:22px">${i}</span><span class="sm" style="flex:1">${t}</span><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="${a};closeM();render()">Voir</button></div>`).join('')}</div>`:'<p class="mut">Rien à traiter. 👌</p>'}<button class="btn w" onclick="closeM()">Fermer</button>`)}
 function clFix(C){if(!C.diff)C.diff='n';if(C.payP===undefined)C.payP=0;if(C.lp===undefined)C.lp=6;C.ren=C.ren||[];C.dec=C.dec||[];C.comp=C.comp||[];C.rpt=C.rpt||[];C.car=C.car||{lv:1,xp:0};C.mg=C.mg||{};C.riv=C.riv||clRivGen();if(C.at===undefined)C.at=.022;if(!C.site)C.site=clSiteK();C.rs=C.rs||{};clOffSync(C)}
 /* ---------- décor : même style que Route Nette (ciel, collines, maisons), une rue avec les bâtiments des clients ---------- */
 let clCam=0;
@@ -4844,7 +4915,7 @@ function hPoolDay(){const H=pv().ph;if(!H||!H.pool||H.cash<5000)return;hFix(H);
 // besoin de nettoyage (€/mois au prix d'une société externe) : 220 € par dépôt + 35 € par employé de bureau ; magasins 0,4 % du chiffre d'affaires
 const igNeedRn=()=>st.adm&&st.adm.bce?Math.round(220*(1+xs().length)+35*st.workers.filter(w=>!w.it&&ROLES[w.r]&&ROLES[w.r].cat!=='ouv'&&!w.boss).length):0;
 const igNeedSh=()=>{const S=st.shop;if(!S||S.over)return 0;const r=(S.caM||[]).slice(-1)[0]||(S.lastPl&&S.lastPl.rev)||0;return Math.round(r*.004)};
-const igOk=()=>{const H=hH();return!!(H&&st.cl&&!st.cl.over)};
+const igOk=()=>{const H=hH();return!!(H&&st.cl&&!st.cl.over)};// nettoyage du groupe possible
 function igSync(){const H=hH(),C=st.cl;if(!C)return;C.ctr=C.ctr||[];
   for(const [k,need,n,kk] of [['rn',igNeedRn(),`${st.name} — bureaux et dépôts (contrat du groupe)`,'bur'],['sh',igNeedSh(),`${st.shop?st.shop.name:'Magasins'} — magasins (contrat du groupe)`,'com']]){
     let c=C.ctr.find(x=>x.ig===k);const on=H&&H.ig&&!C.over&&need>0;
@@ -4853,11 +4924,25 @@ function igSync(){const H=hH(),C=st.cl;if(!C)return;C.ctr=C.ctr||[];
     if(!c){c={id:C.nid++,k:kk,n,m2:Math.round(hpw*CLK[kk].prod/5),f:5,hpw,price,sat:75,st:'wait',start:st.day+3,end:st.day+365*60,acc:0,accH:0,low:0,ix:1,ig:k};C.ctr.push(c);clLog(`🤝 Nouveau contrat du groupe : ${n} (${hpw} h/semaine).`,1)}
     else{c.hpw=hpw;c.price=price;c.n=n;c.m2=Math.round(hpw*CLK[kk].prod/5)}
     const save_=Math.round(need*.15);if(c.st==='run'&&save_>0){if(k==='rn')mv(save_,'Nettoyage confié à ta société du groupe (−15 %)','in');else if(st.shop)shMv(save_,'Nettoyage confié à ta société du groupe (−15 %)','in')}}}
-function igToggle(){const H=hH();if(!H)return;H.ig=H.ig?0:1;clk();igSync();save();render()}
+// Route Nette entretient les abords et parkings des magasins (déchets, poubelles ; déneigement en hiver si elle a le matériel)
+function igRnSync(){const H=hH(),S=st.shop,on=!!(H&&H.ig&&S&&!S.over&&st.adm.bce),L=acL();const n=S?S.st.filter(s=>!(s.closed>st.day)).length:0;
+  for(const [j,qf] of [['p_dechets',8],['p_selpk',1500]]){let a=L.find(x=>x.ig==='sh'&&x.j===j&&!x.done);const ok=on&&n>0&&(j==='p_dechets'||JOBS[j].need.every(t=>st.eq[t]>0));
+    if(!ok){if(a)a.done=1;continue}const J=JOBS[j],q=Math.max(J.rate,Math.round(qf*n)),per=Math.round(Math.ceil(q/(J.rate*.5))*J.rate*.5*J.pu*.9*pIdx()/5)*5;
+    if(!a){L.push({id:st.nid++,j,cl:`${S.name} (magasins du groupe)`,q,per,yrs:60,start:st.day,end:st.day+365*60,sat:80,n:0,ig:'sh'});log(`🤝 Contrat du groupe : ${st.name} entretient les abords de tes magasins (${J.n.toLowerCase()}, ${eur(per)} par passage).`,false)}else{a.q=q;a.per=per}
+    if(a&&a.n>0&&inSeason(J,month()))shMv(Math.round(per/.9*.1),'Abords entretenus par ta société du groupe (−10 %)','in')}}
+// carte avantages : tes employés achètent dans tes magasins avec −10 % (plus motivés, et les magasins vendent plus)
+function igCardMonth(){const H=hH(),S=st.shop;if(!H||!H.card||!S||S.over)return;const E=ownW()+(st.cl?clStaffN():0)+S.staff.length,g=Math.round(E*6);
+  shMv(g-150,'Carte avantages du personnel (achats de tes employés − frais)','vente');S.pl.rev+=g;S.pl.cost+=150;
+  const up=w=>{if(!w.boss&&typeof w.mot==='number')w.mot=Math.min(1,w.mot+.01)};st.workers.forEach(up);if(st.cl)st.cl.staff.forEach(up);S.staff.forEach(up)}
+function igToggle(){const H=hH();if(!H)return;H.ig=H.ig?0:1;clk();igSync();igRnSync();save();render()}
 function igCard(){const H=hH();if(!H)return'';const ok=igOk(),a=igNeedRn(),b=igNeedSh();
   return`<div class="card acc" style="--ac:var(--gr)"><b>🤝 Contrats intra-groupe</b><div class="mut sm" style="margin-top:4px">Ta société de nettoyage entretient les bureaux et dépôts de Route Nette${st.shop?' et tes magasins':''}, 15 % moins cher qu’une société externe : tes sociétés économisent et le nettoyage a des contrats stables (jamais remis en concurrence).</div>
-  ${ok?`<div class="sm" style="margin-top:6px">🦺 Route Nette : besoin ± ${eur(a)}/mois → économie ± ${eur(a*.15)}/mois${st.shop?`<br>🛒 Magasins : besoin ± ${eur(b)}/mois → économie ± ${eur(b*.15)}/mois`:''}</div><button class="btn ${H.ig?'s':''}" style="margin-top:8px" onclick="igToggle()">${H.ig?'✅ Activé — arrêter':'Activer les contrats du groupe'}</button>`:`<div class="mut sm" style="margin-top:6px">🔒 Il faut une société de nettoyage (Mes entreprises).</div>`}</div>`}
-function hMonth(){const H=hH();if(!H)return;const V=pv();try{igSync()}catch(e){console.error(e)}
+  ${ok?`<div class="sm" style="margin-top:6px">🦺 Route Nette : besoin ± ${eur(a)}/mois → économie ± ${eur(a*.15)}/mois${st.shop?`<br>🛒 Magasins : besoin ± ${eur(b)}/mois → économie ± ${eur(b*.15)}/mois`:''}</div>`:`<div class="mut sm" style="margin-top:6px">${st.shop?'':'🔒 Il faut une société de nettoyage ou des magasins (Mes entreprises).'}</div>`}
+  ${st.shop?`<div class="sm" style="margin-top:6px">🦺→🛒 ${esc(st.name)} entretient aussi les abords et parkings de tes magasins (déchets, poubelles ; déneigement en hiver si elle a la saleuse) : des passages réguliers pour elle, −10 % pour les magasins.</div>`:''}
+  ${ok||st.shop?`<button class="btn ${H.ig?'s':''}" style="margin-top:8px" onclick="igToggle()">${H.ig?'✅ Activé — arrêter':'Activer les contrats du groupe'}</button>`:''}
+  ${st.shop?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid #ffffff14"><b class="sm">💳 Carte avantages du personnel</b><div class="mut sm" style="margin-top:2px">Tous tes employés achètent dans tes magasins avec −10 % : ils sont plus motivés (moins de départs) et tes magasins vendent plus (± 6 € de marge par employé et par mois, 150 €/mois de frais : rentable dès ± 25 employés).</div><button class="btn ${H.card?'s':''}" style="margin-top:6px" onclick="H0card()">${H.card?'✅ Active — arrêter':'Lancer la carte'}</button></div>`:''}</div>`}
+function H0card(){const H=hH();if(!H)return;H.card=H.card?0:1;clk();save();render()}
+function hMonth(){const H=hH();if(!H)return;const V=pv();try{igSync();igRnSync();igCardMonth()}catch(e){console.error(e)}
   // frais de gestion facturés aux sociétés
   for(const k of HKS){const f=H.mf[k]||0,E=hEnt(k);if(!f||!H.own[k]||!E||E.cash<=f)continue;E.mv(-f,'Frais de gestion facturés par la holding','fix');E.cost(f);H.cash+=f;H.pl.rev+=f}
   // intérêts des prêts intra-groupe (4 %/an)
@@ -5053,7 +5138,11 @@ function shDelDays(f,from,n){const F=SHF[f],L=[];for(let d=from+F.lead;L.length<
 function shAvg(s,p){const h=s.sold[p];if(!h||!h.length)return SHP[p].base*2.6*(SHT[s.k].cli/300)*.9;return h.reduce((a,b)=>a+b,0)/h.length*1.04}
 const shExp=(s,p,from,to)=>{const a=shAvg(s,p)/1.04;let t=0;for(let d=from;d<to;d++)if(shOpenDay(s,d))t+=a*SHWD[date(d).getDay()]*shEvtF(d,SHP[p].r);return t};
 function shIncoming(s,p,until){return (SHPEND||st.shop.ord).filter(o=>o.store===s.id&&o.st!=='done'&&o.st!=='cancel'&&(until===undefined||o.dd<until)).reduce((a,o)=>{const L=o.lines.find(x=>x.p===p);return a+(L?L.packs*SHP[p].pk:0)},0)}
-function shSuggest(s,p,f,dd){const S=st.shop,P=SHP[p],next=shDelDays(f,dd+1,1),gap=next.length?next[0]-dd:3,safe=P.life<=3?0:S.safe*Math.min(1,P.life/7),horizon=Math.min(Math.max(1,Math.floor(P.life*.9)),gap+safe);const have=s.stock[p].sh+s.stock[p].rs+shIncoming(s,p,dd)-shExp(s,p,st.day,dd);const need=shExp(s,p,dd,dd+Math.ceil(horizon))*(horizon/Math.ceil(horizon)||1)-Math.max(0,have);return need>P.pk*.4?Math.ceil(need/P.pk):0}
+// durée de vie réelle d'un lot livré par ce fournisseur (qualité du fournisseur, projet zéro gaspi, marché matinal)
+const shLifeF=(p,f)=>Math.max(1,Math.round(SHP[p].life*SHF[f].q*(st.shop.pj&&st.shop.pj.zero?1.15:1)*(f==='pl'?1.25:1)));
+function shSuggest(s,p,f,dd){const S=st.shop,P=SHP[p],L=shLifeF(p,f),next=shDelDays(f,dd+1,1),gap=next.length?next[0]-dd:3,safe=L<=3?0:S.safe*Math.min(1,L/7),horizon=Math.min(Math.max(1,Math.floor(L*.9)),gap+safe);const have=s.stock[p].sh+s.stock[p].rs+shIncoming(s,p,dd)-shExp(s,p,st.day,dd);const need=shExp(s,p,dd,dd+Math.ceil(horizon))*(horizon/Math.ceil(horizon)||1)-Math.max(0,have);if(need<=P.pk*.4)return 0;let q=Math.ceil(need/P.pk);
+  // produits frais : pas plus que ce qui se vendra avant la date limite (sinon tout part à la poubelle)
+  if(P.life<=14){const sell=shExp(s,p,dd,dd+L)-Math.max(0,have);q=Math.min(q,Math.max(0,Math.floor(sell/P.pk+.35)))}return q}
 // ---- saison et météo
 function shSeason(p){const P=SHP[p],m=month();if(P.sea==='s')return m>=5&&m<=8?1.6:m===4||m===9?1.15:.65;if(P.sea==='w')return m>=11||m<=2?1.4:m===3||m===10?1.1:.75;if(P.sea==='x')return m===12?2.6:m===11?1.4:.85;if(P.sea==='p')return m===3||m===4?2:.8;return 1}
 function shWx(p){const P=SHP[p],w=WX[st.wx].k;if(P.wx==='h')return w==='sun'?(month()>=5&&month()<=8?1.5:1.15):w==='rain'||w==='storm'?.7:1;if(P.wx==='c')return w==='snow'||w==='rain'?1.3:w==='sun'?.85:1;return 1}
@@ -5129,14 +5218,25 @@ function shSellDay(s,d,wd){const S=st.shop,T=SHT[s.k],TW=SHTOWN.find(t=>t[0]===s
 const shWage=w=>w.boss?0:SHRL[w.r].brut*(st.shop.idx||1)*SHRL[w.r].k*(w.it?shItK():1)*(w.it?1:(st.shop.wB||1)*(w.wm||1))*w.hw*52/12;
 const shPayroll=()=>st.shop.staff.reduce((a,w)=>a+shWage(w),0);
 function shPerson(r){const f=Math.random()<.65,P=SHRL[r];return{id:st.shop.nid++,n:pick(f?CLPF:CLPM)+' '+pick(NOMS),r,f:f?1:0,hw:pick(P.hw),sk:+R(.85,1.15).toFixed(2),rel:+R(.6,1.05).toFixed(2),mot:.85,age:r==='etud'?RI(18,24):RI(19,60),town:pick(TOWNS),exp:RI(0,14)}}
-function shCandGen(){const S=st.shop,n=6+Math.min(12,Math.floor(S.staff.length/10));S.cand=Array.from({length:n},()=>shPerson(pick(['caisse','caisse','rayon','rayon','etud','etud','gerant'].concat(S.st.length>=2?['acheteur','rh','qual','boucher']:['boucher']))))}
+function shCandGen(){const S=st.shop,n=6+Math.min(12,Math.floor(S.staff.length/10));S.cand=Array.from({length:n},()=>shPerson(pick(['caisse','caisse','rayon','rayon','etud','etud','gerant'].concat(S.st.length>=2?['acheteur','rh','qual','boucher']:['boucher']))));
+  // il y a toujours au moins une gérante candidate tant qu'un magasin n'en a pas
+  if(S.st.some(s=>!S.staff.some(w=>w.r==='gerant'&&w.store===s.id))&&!S.cand.some(p=>p.r==='gerant'))S.cand[0]=shPerson('gerant')}
+// à l'ouverture, le magasin est rempli (± 5 jours de ventes, comme dans la vraie vie) : payé tout de suite au grossiste
+function shOpenStock(s){const S=st.shop;let cost=0;for(const p in SHP){if(!shHas(s,p))continue;const f=shBest(p)||'wal',P=SHP[p],L=shLifeF(p,f),u=Math.ceil(shExp(s,p,st.day,st.day+Math.min(5,Math.max(1,L-1)))/P.pk)*P.pk;if(u<=0)continue;const px=shBuy(p,f),k=s.stock[p];k.rs+=u;k.ac=px;k.lots.push([u,st.day+L]);cost+=u*px}
+  if(cost>0){const tv=cost*.08;shMv(-Math.round(cost+tv),'Stock d’ouverture (premier remplissage du magasin)','achat');S.pl.tvaD=(S.pl.tvaD||0)+tv;shLog(`📦 Stock d’ouverture livré : ${eur(cost)} HTVA de marchandises. Pense ensuite aux commandes (ou engage une gérante).`)}}
 function shHire(id){const S=st.shop,i=S.cand.findIndex(p=>p.id===id);if(i<0)return;const p=S.cand.splice(i,1)[0];p.store=shCur().id;p.day=st.day;S.staff.push(p);clk();shLog(`👋 ${p.n} est engagé(e) : ${SHRL[p.r].n.toLowerCase()} à ${shCur().town} (${p.hw} h/semaine).`);save();render()}
 function shFire(id,ok){const S=st.shop,w=S.staff.find(x=>x.id===id);if(!w||w.boss)return;if(w.it){S.staff.splice(S.staff.indexOf(w),1);shLog(`🦺 ${w.n} est renvoyé(e) à l’agence d’intérim.`);clk();save();return render()}const ind=Math.round(shWage(w)*.25*(1+Math.min(3,(st.day-w.day)/365)));if(!ok)return ask(`Licencier ${w.n} ?\nFonction : ${SHRL[w.r].n}\nIndemnité de préavis : ${eur(ind)}`,()=>shFire(id,1),{ic:'✋',ok:'Licencier',danger:1});S.staff.splice(S.staff.indexOf(w),1);shMv(-ind,'Indemnité de préavis — '+w.n,'sal');shFix2(S);shFireLaw(w);S.rpt=S.rpt.filter(r=>r.w!==w.id);S.pl.cost+=ind;closeM();save();render()}
 // ---- commandes automatiques (gérant)
 let SHPEND=null,SHBC=null;
 function shAutoOrder(){SHPEND=st.shop.ord.filter(o=>o.st!=='done'&&o.st!=='cancel');SHBC={};try{shAutoOrder0()}finally{SHPEND=null;SHBC=null}}
-function shAutoOrder0(){const S=st.shop;for(const s of S.st){if((s.closed||0)>st.day+2)continue;if(!shMgr(s)&&!S.staff.some(w=>w.r==='acheteur'))continue;for(const f in SHF){const F=SHF[f];const dd0=shDelDays(f,st.day,1)[0];if(SHPEND.some(o=>o.f===f&&o.store===s.id&&o.dd===dd0))continue;if(f==='pl'||(f==='bc'&&S.st.length<2&&!S.useBc))continue;const dd=shDelDays(f,st.day,1)[0];
-  const lines={};let tot=0;for(const p in SHP){if(!F.r.includes(SHP[p].r)||!shHas(s,p))continue;if(shBest(p)!==f)continue;const q=shSuggest(s,p,f,dd);if(q>0){lines[p]=q;tot+=q*SHP[p].pk*shBuy(p,f)}}if(tot>=F.min){{const kp=shDraft,n0=S.ord.length;shDraft={f,store:s.id,dd,lines};shSend(1);shDraft=kp;for(let i=n0;i<S.ord.length;i++)SHPEND.push(S.ord[i]);SHBC={}}shLog(`🧑‍💼 La gérante commande chez ${F.n} pour ${eur(tot)} (livraison le ${dstr(dd)}).`)}}}}
+function shAutoOrder0(){const S=st.shop;for(const s of S.st){if((s.closed||0)>st.day+2)continue;if(!shMgr(s)&&!S.staff.some(w=>w.r==='acheteur'))continue;
+  const ok=f=>f!=='pl'&&!(f==='bc'&&S.st.length<2&&!S.useBc),O={};
+  // 1er passage : chaque produit chez le fournisseur le moins cher
+  for(const f in SHF){if(!ok(f))continue;const dd=shDelDays(f,st.day,1)[0];if(SHPEND.some(o=>o.f===f&&o.store===s.id&&o.dd===dd))continue;O[f]={dd,lines:{},tot:0}}
+  for(const p in SHP){if(!shHas(s,p))continue;const f=shBest(p);if(!O[f]||!SHF[f].r.includes(SHP[p].r))continue;const q=shSuggest(s,p,f,O[f].dd);if(q>0){O[f].lines[p]=q;O[f].tot+=q*SHP[p].pk*shBuy(p,f)}}
+  // 2e passage : une petite commande sous le minimum du fournisseur part chez un autre fournisseur qui livre déjà (le grossiste en dernier recours)
+  for(const f in O){const A=O[f];if(!A.tot||A.tot>=SHF[f].min)continue;for(const p in A.lines){const alt=Object.keys(O).filter(g=>g!==f&&SHF[g].r.includes(SHP[p].r)&&(O[g].tot>=SHF[g].min||g==='wal')).sort((a,b)=>(O[b].tot>=SHF[b].min)-(O[a].tot>=SHF[a].min)||shBuy(p,a)-shBuy(p,b))[0];if(!alt)continue;const q=shSuggest(s,p,alt,O[alt].dd);if(q>0){O[alt].lines[p]=q;O[alt].tot+=q*SHP[p].pk*shBuy(p,alt)}delete A.lines[p]}A.tot=0}
+  for(const f in O){const A=O[f],F=SHF[f];if(A.tot<F.min||!Object.keys(A.lines).length)continue;{const kp=shDraft,n0=S.ord.length;shDraft={f,store:s.id,dd:A.dd,lines:A.lines};shSend(1);shDraft=kp;for(let i=n0;i<S.ord.length;i++)SHPEND.push(S.ord[i]);SHBC={}}shLog(`🧑‍💼 La gérante commande chez ${F.n} pour ${eur(A.tot)} (livraison le ${dstr(A.dd)}).`)}}}
 function shBest(p){if(SHBC)return p in SHBC?SHBC[p]:(SHBC[p]=shBest0(p));return shBest0(p)}
 function shBest0(p){const S=st.shop,L=Object.keys(SHF).filter(f=>SHF[f].r.includes(SHP[p].r)&&f!=='pl'&&(f!=='bc'||S.st.length>1||S.useBc));return L.sort((a,b)=>shBuy(p,a)-shBuy(p,b))[0]}
 // ---- mois
@@ -5179,20 +5279,22 @@ function shCreateUI(){const V=pv(),H=hH(),nm0=($('#shnm')||{}).value;showModal(`
   <p class="mut" style="margin-top:8px">Ville du premier magasin :</p><div class="row" style="flex-wrap:wrap;gap:6px">${SHTOWN.map(t=>`<button class="btn s" style="padding:6px 9px;font-size:12px;${shTownSel===t[0]?'outline:2px solid var(--or)':''}" onclick="shTownSel='${t[0]}';shCreateUI()">${t[0]}</button>`).join('')}</div>
   <p class="mut" style="margin-top:8px">Capital de départ :</p><div class="row" style="flex-wrap:wrap;gap:6px">${[100000,250000,1e6].filter(c=>c<=V.cash).map(c=>`<button class="btn s" onclick="shCreate(${c})">👤 ${eur(c)}</button>`).join('')}${H?[250000,1e6,5e6].filter(c=>c<=H.cash).map(c=>`<button class="btn s" onclick="shCreate(${c},'h')">🏛️ ${eur(c)}</button>`).join(''):''}</div><p class="mut" style="font-size:12px">👤 = ton compte privé · 🏛️ = ta holding (la chaîne lui appartient)</p>`)}
 function shCreate(cap,by){const V=pv(),H=hH();if(by==='h'){if(!H||H.cash<cap)return toastMsg('Pas assez dans la holding.');H.cash-=cap}else{if(V.cash<cap)return toastMsg('Pas assez sur ton compte privé.');V.cash-=cap}const nm=(($('#shnm')||{}).value||'Mon magasin').trim().slice(0,26)||'Mon magasin';
-  st.shop=shNew(nm,cap,shTownSel);shCandGen();if(H){hFix(H);H.own.sh=1;if(by==='h'){H.cap.sh=(H.cap.sh||0)+cap;hLog(`🛒 La holding crée ${nm} avec ${eur(cap)}.`)}}pEv(`🛒 Création de ${nm} (${eur(cap)}).`,0);closeM();curTab='sh';shSec='home';save();render();
+  st.shop=shNew(nm,cap,shTownSel);shCandGen();shOpenStock(st.shop.st[0]);if(H){hFix(H);H.own.sh=1;if(by==='h'){H.cap.sh=(H.cap.sh||0)+cap;hLog(`🛒 La holding crée ${nm} avec ${eur(cap)}.`)}}pEv(`🛒 Création de ${nm} (${eur(cap)}).`,0);closeM();curTab='sh';shSec='home';save();render();
   showModal(`<h3>🛒 Bienvenue chez ${esc(nm)}</h3><div class="card"><div style="margin:4px 0">1️⃣ <b>Commandes</b> : choisis un fournisseur, les quantités et le jour de livraison. Commence par le pain, la crèmerie, les fruits et légumes et l’épicerie.</div><div style="margin:4px 0">2️⃣ <b>Réception</b> : quand le camion arrive, contrôle la livraison (manquants, casse, froid).</div><div style="margin:4px 0">3️⃣ <b>Stock</b> : surveille les ruptures et les dates limites.</div><div style="margin:4px 0">4️⃣ <b>Équipe</b> : engage une caissière et un employé de rayon, puis une gérante (elle commande et contrôle à ta place).</div></div><button class="btn w" onclick="closeM()">C’est parti !</button>`)}
 /* ---------- interface ---------- */
 let shSec='home',shRay='all';
-function shTabs(){const S=st.shop,s=shCur();return[['home','🏠','Accueil'],['stock','📦','Stock'],['cmd','📝','Commandes'],['four','🚚','Fournisseurs'],['mag','🏪','Magasin'],['team','👥','Équipe'],['grp','🚀','Groupe'],['soc','📊','Société']].map(([k,i,l])=>{let b='';if(k==='cmd'){const n=S.ord.filter(o=>o.st==='arr').length;if(n)b=`<span class="bd">${n}</span>`}if(k==='stock'){const n=shRup(s).length;if(n)b=`<span class="bd">${n}</span>`}return`<button class="${shSec===k?'on':''}" onclick="shSec='${k}';clk();$('#pane').scrollTop=0;render()"><b>${i}</b>${l}${b}</button>`}).join('')}
+const SHNAV={stock:['stock','cmd','four'],mag:['mag','grp']};
+function shTabs(){const S=st.shop,s=shCur();return[['home','🏠','Accueil'],['stock','📦','Stock'],['mag','🏪','Magasins'],['team','👥','Équipe'],['soc','📊','Société']].map(([k,i,l])=>{let b='';if(k==='stock'){const n=shRup(s).length+S.ord.filter(o=>o.st==='arr').length;if(n)b=`<span class="bd">${n}</span>`}const on=shSec===k||(SHNAV[k]||[]).includes(shSec);return`<button class="${on?'on':''}" onclick="shSec='${k==='stock'&&SHNAV.stock.includes(shSec)?shSec:k==='mag'&&SHNAV.mag.includes(shSec)?shSec:k}';clk();$('#pane').scrollTop=0;render()"><b>${i}</b>${l}${b}</button>`}).join('')}
+function shSubSeg(){const S=st.shop;if(SHNAV.stock.includes(shSec)){const a=S.ord.filter(o=>o.st==='arr').length;return seg(shSec,[['stock','📦 Stock'],['cmd',`📝 Commandes${a?' ('+a+')':''}`],['four','🚚 Fournisseurs']],'shSec')}if(SHNAV.mag.includes(shSec))return seg(shSec,[['mag','🏪 Ce magasin'],['grp','🚀 Groupe']],'shSec');return''}
 function shRender(headOnly){const S=st.shop,s=shCur();$('#tname').textContent='🛒 '+S.name;$('#lt').textContent=S.name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'MG';$('#lvl').textContent=S.car?S.car.l:1;
-  $('#tsub').textContent=`${stars(s.rep)} ${Math.round(s.rep)} · ${S.st.length} magasin${S.st.length>1?'s':''} · ${S.staff.length} pers.`;const ca=$('#cash');ca.textContent=eur(S.cash);ca.classList.toggle('neg',S.cash<0);shownCash=null;
+  $('#tsub').textContent=`${stars(s.rep)} ${Math.round(s.rep)} · ${S.st.length} magasin${S.st.length>1?'s':''} · ${S.staff.length} pers.`;const ca=$('#cash');ca.textContent=eurH(S.cash);ca.classList.toggle('neg',S.cash<0);shownCash=null;
   const nN=shNotifs().length;$('#bellN').textContent=nN||'';$('#bell').classList.toggle('on',nN>0);
   const dx=date(st.day),k=shOpenDay(s,st.day)?null:(dx.getDay()===0?'Fermé (dimanche)':'Fermé');$('#hudW').textContent=(k?'🔒 ':WX[st.wx].ic+' ')+dstr(st.day)+' '+dx.getFullYear()+(k?' · '+k:'');$('#hudJob').textContent=`🛒 ${s.todayCli||0} clients · ${eur(s.todayCA||0)}`;
   document.querySelectorAll('[data-sp]').forEach(b=>b.classList.toggle('on',+b.dataset.sp===speed));$('#tabs').style.display='none';const ct=$('#cltabs');ct.style.display='';const tb=shTabs();if(ct.innerHTML!==tb)ct.innerHTML=tb;
   if(headOnly===true)return;lastPaneT=performance.now();const P=$('#pane'),y=P.scrollTop,key='sh'+shSec;P.classList.toggle('enter',lastTab!==key);lastTab=key;const fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=rSh();P.scrollTop=y}
-function rSh(){const S=st.shop;if(S.crisis&&S.crisD!==st.day&&!modalOpen){S.crisD=st.day;setTimeout(shCrisisUI,50)}return({home:()=>shHomeTop()+shEvtCard()+shHome(),stock:()=>shStock2()+shStock(),cmd:()=>shCmd()+shCmd2(),four:shFour,mag:()=>shMag()+shProfCard()+shMag2(),team:()=>shTeam()+shTeam2(),grp:shGrp,soc:()=>shSoc()+shSoc2()})[shSec]()}
+function rSh(){const S=st.shop;if(S.crisis&&S.crisD!==st.day&&!modalOpen){S.crisD=st.day;setTimeout(shCrisisUI,50)}return shSubSeg()+({home:()=>shHomeTop()+shEvtCard()+shHome(),stock:()=>shStock2()+shStock(),cmd:()=>shCmd()+shCmd2(),four:shFour,mag:()=>shMag()+shProfCard()+shMag2(),team:()=>shTeam()+shTeam2(),grp:shGrp,soc:()=>shSoc()+shSoc2()})[shSec]()}
 function shNotifs(){const S=st.shop,L=[];if(!S)return L;for(const o of S.ord)if(o.st==='arr')L.push(['🚚','Livraison à contrôler : '+SHF[o.f].n,"shSec='cmd'"]);const s=shCur(),rup=shRup(s).length;if(rup)L.push(['🔴',rup+' produits en rupture',"shSec='stock'"]);if(S.crisis)L.push(['🚨','Cessation de paiement',"shSec='soc'"]);for(const x of S.dec||[])L.push(['🤔','Décision : '+((SHDEC.find(z=>z.k===x.k)||{}).t||''),"shSec='home'"]);for(const x of S.law||[])if(x.st==='open')L.push(['⚖️',x.t,"shSec='home'"]);if((S.rpt||[]).length)L.push(['📋',S.rpt.length+' rapport(s) sur le personnel',"shSec='team'"]);if(S.frOff)L.push(['🤝','Candidat franchisé',"shSec='home'"]);return L}
-function shNotifUI(){const L=shNotifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${L.length?`<div class="card" style="padding:4px 12px">${L.map(([i,t,a])=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:nowrap"><span style="font-size:22px">${i}</span><span class="sm" style="flex:1">${t}</span><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="${a};closeM();render()">Voir</button></div>`).join('')}</div>`:'<p class="mut">Rien à traiter.</p>'}<button class="btn w" onclick="closeM()">Fermer</button>`)}
+function shNotifUI(){const L=shNotifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${hubOther('sh')}${L.length?`<div class="card" style="padding:4px 12px">${L.map(([i,t,a])=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:nowrap"><span style="font-size:22px">${i}</span><span class="sm" style="flex:1">${t}</span><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="${a};closeM();render()">Voir</button></div>`).join('')}</div>`:'<p class="mut">Rien à traiter.</p>'}<button class="btn w" onclick="closeM()">Fermer</button>`)}
 function shCrisisUI(){const S=st.shop,need=Math.round(-S.cash+30000);showModal(`<h3>🚨 Cessation de paiement</h3><p>${esc(S.name)} a ${eur(-S.cash)} de dettes.</p><button class="btn w" ${pv().cash<need?'disabled':''} onclick="pv().cash-=${need};st.shop.cash+=${need};st.shop.crisis=0;st.shop.red=0;closeM();render()">Apporter ${eur(need)} de mon compte privé</button><p></p><button class="btn s w" onclick="closeM()">Plus tard</button><p></p><button class="btn r w" onclick="shBankrupt()">Déclarer la faillite</button>`)}
 function shBankrupt(){try{const H=hH();if(H){H.own.sh=0;H.loan.sh=0}}catch(e){}pEv(`⚖️ Faillite de ${st.shop.name}.`,0,true);st.shop=null;closeM();curTab='hub';save();render()}
 function shStoreSel(){const S=st.shop;if(S.st.length<2)return'';return`<div class="seg">${S.st.map((s,i)=>`<button class="${(S.cur||0)===i?'on':''}" onclick="st.shop.cur=${i};clk();render()">${SHT[s.k].ic} ${s.town}</button>`).join('')}</div>`}
@@ -5444,16 +5546,20 @@ function shRank(){const S=st.shop;if(!S||!S.comp)return 99;const me=shCa12()+(S.
 /* ---- interface ---- */
 let shGrpSec='mag';
 // les 3 alertes du jour, avec un bouton qui mène au bon écran
+function shFidTog(){const S=st.shop;S.fid=S.fid?0:1;shLog(S.fid?'💳 Carte de fidélité lancée : 900 €/mois, environ 4 % de clients en plus.':'💳 Carte de fidélité arrêtée.');clk();save();render()}
 function shAlerts(){const S=st.shop,A=[];
   const rp=S.st.map((s,i)=>({s,i,n:s.closed>st.day?0:shRup(s).length})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
   if(rp.length){const x=rp[0];A.push({w:x.n*3,ic:'📦',t:`${x.n} produit${x.n>1?'s':''} en rupture à ${x.s.town}${rp.length>1?` (+ ${rp.length-1} autre${rp.length>2?'s':''} magasin${rp.length>2?'s':''})`:''}`,b:'Commander',go:`st.shop.cur=${x.i};shSec='cmd';clk();render()`})}
   const an=S.lastAn||{};let wr=null,wl=0;for(const r in an){const x=an[r];if(!x||!SHR[r])continue;const ls=x.ls||0,mg=(x.ca||0)-(x.cg||0)-ls;const bad=Math.max(ls,-mg);if(bad>wl){wl=bad;wr=r}}
   if(wr&&wl>200)A.push({w:wl/100,ic:'🗑️',t:`Rayon ${SHR[wr].n} : ${eur(wl)} de pertes le mois passé`,b:'Voir le stock',go:`shSec='stock';clk();render()`});
+  for(const [i,s] of S.st.entries()){if((s.closed||0)>st.day)continue;const W=S.staff.filter(w=>w.store===s.id&&!w.it||w.it&&w.store===s.id);
+    if(!W.some(w=>w.r==='rayon'||w.r==='etud'))A.push({w:90,ic:'🧺',t:`Personne ne remplit les rayons à ${s.town} : les clients ne trouvent rien. Engage un(e) employé(e) de rayon.`,b:'Engager',go:`st.shop.cur=${i};shSec='team';clk();render()`});
+    if(!shMgr(s)&&!S.staff.some(w=>w.r==='acheteur')&&!(S.recF&&Object.keys(S.recF).length)&&!S.ord.some(o=>o.store===s.id&&st.day-o.d<6))A.push({w:80,ic:'📝',t:`Personne ne commande pour ${s.town} depuis 6 jours : passe commande ou engage une gérante (elle commande toute seule).`,b:'Commander',go:`st.shop.cur=${i};shSec='cmd';clk();render()`})}
   const df=S.st.map((s,i)=>({s,i,r:s.lastPm?s.lastPm.res:0})).filter(x=>x.r<0).sort((a,b)=>a.r-b.r);
   if(df.length){const x=df[0];A.push({w:-x.r/50,ic:'📉',t:`${x.s.town} perd ${eur(-x.r)}/mois${df.length>1?` (${df.length} magasins en déficit)`:''}`,b:'Voir le magasin',go:`st.shop.cur=${x.i};shSec='mag';clk();render()`})}
   return A.sort((a,b)=>b.w-a.w).slice(0,3)}
 function shAlertCard(){const A=shAlerts();if(!A.length)return`<div class="card"><b>✅ Rien d’urgent aujourd’hui</b><div class="mut sm">Pas de rupture, pas de rayon qui perd de l’argent, aucun magasin en déficit.</div></div>`;
-  return`<div class="card acc" style="--ac:var(--rd)"><b>🚨 Top ${A.length} des alertes du jour</b>${A.map(a=>`<div class="row" style="flex-wrap:nowrap;margin-top:8px"><span style="font-size:20px">${a.ic}</span><span class="sm" style="flex:1;min-width:0">${a.t}</span><button class="btn s" style="padding:6px 9px;font-size:12px" onclick="${a.go}">${a.b}</button></div>`).join('')}</div>`}
+  return`<div class="card acc" style="--ac:var(--rd)"><b>🚨 ${A.length>1?'Les '+A.length+' alertes du jour':'L’alerte du jour'}</b>${A.map(a=>`<div class="row" style="flex-wrap:nowrap;margin-top:8px"><span style="font-size:20px">${a.ic}</span><span class="sm" style="flex:1;min-width:0">${a.t}</span><button class="btn s" style="padding:6px 9px;font-size:12px" onclick="${a.go}">${a.b}</button></div>`).join('')}</div>`}
 // profils de magasin appliqués en un clic : positionnement, horaires, dimanche
 const SHPROF={disc:{n:'Discount',ic:'💸',pos:'disc',hr:'std',sun:0,d:'Prix −6 %, horaires normaux, fermé le dimanche : le moins de frais.'},prox:{n:'Proximité',ic:'🏘️',pos:'std',hr:'long',sun:1,d:'Prix normaux, ouvert tard et le dimanche matin : pratique pour les voisins.'},sm:{n:'Supermarché',ic:'🛒',pos:'std',hr:'long',sun:0,d:'Prix normaux, horaires élargis en semaine, fermé le dimanche.'},prem:{n:'Premium',ic:'✨',pos:'prem',hr:'long',sun:1,d:'Prix +7 %, ouvert tard et le dimanche : clientèle aisée.'}};
 function shProfApply(s,k){const P=SHPROF[k];if(!P||!s)return;s.pos=P.pos;s.hr=P.hr;s.sun=P.sun;s.prof=k}
@@ -5476,6 +5582,7 @@ function shGrp(){const S=st.shop;shFix2(S);let h=`<div class="seg">${[['mag','�
     h+=`<h2>🤝 Racheter un concurrent</h2>`+S.comp.slice().sort((a,b)=>a.ca-b.ca).map(c=>{const need=c.ty==='sup'||c.ty==='disc'?9:4,pr=shCompPrice(c),lk=shLv()<need;return`<div class="card"><b class="sm">${esc(c.n)}</b> <span class="tag">${SHCTY[c.ty]}</span><div class="mut" style="font-size:12px">${c.st} magasins · CA ${eur(c.ca)}/an · prix ± ${eur(pr)}</div>${shGBtn(!lk&&cp>=pr,lk?`🔒 Niveau ${need}`:cp<pr?`Il manque ${eur(pr-cp)}`:`Racheter · ${eur(pr)}`,`shCompBuy(${c.id})`,lk||cp<pr?'disabled':'')}</div>`}).join('');
     const pr=S.st.flatMap(s=>(s.tmp||[]).filter(t=>t.n&&t.end>st.day).map(t=>`${esc(s.town)} : ${esc(t.n)} (${t.f>1?'+':''}${Math.round((t.f-1)*100)} %, jusqu’au ${dstr(t.end)})`));if(pr.length)h+=`<h2>Effets en cours</h2><div class="card sm">${pr.join('<br>')}</div>`}
   if(shGrpSec==='dev'){const box=(ic,t,d,body)=>`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:28px">${ic}</span><div style="flex:1"><b>${t}</b><div class="mut" style="font-size:12px">${d}</div></div></div>${body}</div>`;
+    h+=box('💳','Carte de fidélité','Les clients gagnent des points : environ 4 % de clients en plus, pour 900 €/mois (prestataire + avantages).',`<div class="row" style="margin-top:6px"><span class="sm" style="flex:1">${S.fid?'✅ Active':'Pas encore'}</span>${shGBtn(1,S.fid?'Arrêter':'Lancer · 900 €/mois','shFidTog()','')}</div>`);
     h+=box('🏷️','Marque propre','Tes propres produits (épicerie, boissons, hygiène, snacks, crèmerie, surgelés) : marge +7 %, +2 % de clients. Niveau 7.',S.mdd?'<div class="sm money" style="margin-top:6px">✅ En rayon</div>':shGBtn(1,shLv()<7?'🔒 Niveau 7':'Créer · 350 000 €','shMddGo()',shLv()<7||cp<350000?'disabled':''));
     h+=box('🛍️','Commande en ligne et drive','+6 % de clients ; coûte 1 400 €/mois par magasin (préparateurs). Niveau 6.',S.ec.dr?'<div class="sm money" style="margin-top:6px">✅ Lancé</div>':shGBtn(1,shLv()<6?'🔒 Niveau 6':'Lancer · 180 000 €',"shEcGo('dr')",shLv()<6||cp<180000?'disabled':''));
     h+=box('🚐','Livraison à domicile','+4 % de clients ; 2 600 €/mois par magasin. Niveau 8, après le drive.',S.ec.home?'<div class="sm money" style="margin-top:6px">✅ Lancée</div>':shGBtn(1,shLv()<8?'🔒 Niveau 8':'Lancer · 250 000 €',"shEcGo('home')",shLv()<8||!S.ec.dr||cp<250000?'disabled':''));
@@ -5659,11 +5766,11 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-22.3";
+var APPV="2026-11-22.4";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
-(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 2.0 · "+APPV})();
+(function(){var v=document.getElementById("ver");if(v)v.textContent="Version 2.1 · "+APPV})();
 function chkV(man){if(!window.fetch)return;if(SWR)SWR.update().catch(function(){});
  fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
   if(!j||!j.v||j.v===APPV){if(man)say("Le jeu est à jour ✓ (version "+APPV+")");return}
