@@ -330,8 +330,8 @@ const ROLES={
   rh:{n:'Gestionnaire RH',ic:'🤝',cat:'bur',day:238,who:'Sophie Lambert',d:'Deux fois plus de candidats chaque semaine, et de meilleurs profils.'},
   metreur:{n:'Métreur-deviseur',ic:'📐',cat:'bur',day:238,who:'Olivier Gérard',d:'Calcule ton prix de revient exact pour chaque marché. +2 offres en même temps.'},
   gest:{n:'Gestionnaire de chantier',ic:'📋',cat:'enc',day:265,multi:1,d:'Suit 3 chantiers de plus en même temps.'},
-  dirt:{n:'Directeur technique',ic:'🛠️',cat:'dir',day:370,who:'Philippe Renard',need:10,d:'+8 % de travail sur tous les chantiers. Obligatoire pour la classe 2.'},
-  daf:{n:'Directeur administratif et financier',ic:'💼',cat:'dir',day:398,who:'Isabelle Marchal',need:10,d:'La banque prête 2 fois plus. Obligatoire pour la classe 2.'},
+  dirt:{n:'Directeur technique',ic:'🛠️',cat:'dir',day:370,who:'Philippe Renard',need:10,d:'+8 % de travail sur tous les chantiers. Obligatoire pour la classe 6.'},
+  daf:{n:'Directeur administratif et financier',ic:'💼',cat:'dir',day:398,who:'Isabelle Marchal',need:10,d:'La banque prête 2 fois plus. Obligatoire pour la classe 6.'},
   engin:{n:"Conducteur d'engins (cat. III, CP 124)",ic:'🦾',cat:'ouv',day:287,sk:[1,1.25],d:'Obligatoire pour la mini-pelle (curage de fossés, pose de glissières).'},
   grimp:{n:'Élagueur-grimpeur (certificat ETW)',ic:'🧗',cat:'ouv',day:274,sk:[1.05,1.3],d:"Obligatoire pour l'abattage d'arbres dangereux. +10 % en élagage."},
   meca:{n:"Mécanicien d'atelier",ic:'🔧',cat:'enc',day:255,multi:0,who:'Didier Hubert',d:'Répare au dépôt : 60 % de pannes en moins, usure des machines -10 %.'},
@@ -599,7 +599,8 @@ const vehCount=()=>Object.keys(st.eq).reduce((a,k)=>a+(EQ[k].veh?st.eq[k]:0),0);
 const monthly=w=>w.day*WDM;
 const payroll=()=>st.workers.reduce((a,w)=>a+(w.it?0:w.day),0);
 // charge d'encadrement : un chantier public = 1, un petit boulot privé = 1/3 (petit, simple, souvent seul)
-const mgmtLoad=()=>Math.round(running().filter(c=>c.crew.length).reduce((a,c)=>a+(JOBS[c.j].p?1/3:1),0)*10)/10;
+const megaRun=()=>{const C=st.car;if(!C||!C.mega)return 0;let n=0;for(const k in C.mega)if(typeof C.mega[k]==='number')n++;return n};
+const mgmtLoad=()=>Math.round((running().filter(c=>c.crew.length).reduce((a,c)=>a+(JOBS[c.j].p?1/3:1),0)+megaRun())*10)/10;
 const mgmtCap=()=>2+3*cnt('gest')+(has('dirt')?1:0);
 const offerCap=()=>Math.floor(ownW()/20)+2+(has('secr')?3:0)+(has('metreur')?2:0)+(has('dirc')?3:0)+(typeof ino==='function'&&ino('ia')?4:0);
 const running=()=>st.contracts.filter(c=>c.st==='run');
@@ -710,7 +711,7 @@ function euDiv(k){const F=fil()[k],C=EU[k];const a=Math.round(F.cash-EU[k].fix*.
 function euUp(k,ok){const F=fil()[k],C=EU[k];if(F.lv>=3)return;if(F.m<18)return toastMsg(`Attends que la filiale tourne à plein (démarrage 100 %, encore ${18-F.m} mois) avant de l’agrandir.`);const c=Math.round(C.setup*.7*F.lv);if(st.cash<c)return toastMsg(`Il faut ${eur(c)} sur le compte de la société.`);
   if(!ok)return ask(`Agrandir la filiale ${C.n} ?\nInvestissement : ${eur(c)}\nNiveau : ${F.lv} → ${F.lv+1}\nChiffre d’affaires possible : ×${F.lv===1?'1,7':'2,5 (au lieu de 1,7)'}\nNouveaux frais fixes : ${eur(C.fix*(F.lv===1?1.45:2))}/mois\nUn 2e dépôt, plus de machines et une nouvelle équipe dans le pays.`,()=>euUp(k,1),{ic:C.f,ok:'Agrandir'});
   mv(-c,`Agrandissement de la filiale ${C.n}`,'buy');st.mCapex+=c;F.inv+=c;F.lv++;log(`${C.f} La filiale ${C.n} passe au niveau ${F.lv} !`);confetti(150);save();render()}
-function euVal(k){const F=fil()[k],y=F.hist.reduce((a,b)=>a+b,0)*(12/Math.max(1,F.hist.length));return Math.max(Math.round(F.inv*.25),Math.round(y*5))+Math.max(0,F.cash)}
+function euVal(k){const F=fil()[k],y=F.hist.reduce((a,b)=>a+b,0)*(12/Math.max(1,F.hist.length));return Math.max(0,Math.max(Math.round(F.inv*.25),Math.round(y*5))+F.cash-(F.debt||0))}
 function euSell(k,ok){const F=fil()[k],C=EU[k],v=euVal(k);
   if(!ok)return ask(`Vendre la filiale ${C.n} ?\nDéjà investi : ${eur(F.inv)}\nDividendes déjà reçus : ${eur(F.div)}\nPrix de vente : ${eur(v)}\nUn repreneur paie ± 5 ans de bénéfice (ou au moins un quart de ce que tu as investi, s’il perd de l’argent). Plus-value sur actions exonérée en Belgique.`,()=>euSell(k,1),{ic:C.f,ok:'Vendre',danger:1});
   mv(v,'Vente de la filiale '+C.n,'buy');st.mCapex-=v;delete fil()[k];log(`${C.f} Filiale ${C.n} vendue pour ${eur(v)}.`);save();render()}
@@ -869,26 +870,34 @@ function dqTick(){if(!st.adm.bce)return;const D=dqGen(),C=crr();if(!st.fin&&carP
   megaTick()}
 // grands chantiers emblématiques : durée en jours du jeu, il faut assez de personnel
 const MEGA=[
-  {k:'m1',ic:'🏟️',n:'Abords du nouveau stade de Liège',d:30,lv:3,w:10,c:150000,g:260000,x:400,cls:1},
-  {k:'m2',ic:'🌼',n:'Plan wallon de fauchage tardif « Bords de route »',d:60,lv:7,w:15,c:300000,g:520000,x:700,cls:1},
-  {k:'m3',ic:'🅿️',n:'Réhabilitation de toutes les aires de la E42',d:90,lv:12,w:25,c:600000,g:1050000,x:1100,cls:2},
-  {k:'m4',ic:'🛣️',n:'Contrat d’entretien de 100 km de la E411',d:120,lv:18,w:35,c:1200000,g:2100000,x:1600,cls:2},
-  {k:'m5',ic:'🌉',n:'Nettoyage et sécurisation du viaduc de Huccorgne',d:150,lv:25,w:45,c:2000000,g:3500000,x:2300,cls:2},
-  {k:'m6',ic:'🏗️',n:'Plan Infrastructures 2030 — lot espaces verts',d:180,lv:33,w:60,c:3500000,g:6100000,x:3200,cls:3},
-  {k:'m7',ic:'🔄',n:'Entretien complet du ring de Charleroi (R3)',d:210,lv:42,w:75,c:5000000,g:8800000,x:4200,cls:3},
-  {k:'m8',ic:'❄️',n:'Service d’hiver de toute la province de Luxembourg',d:240,lv:51,w:90,c:7000000,g:12300000,x:5400,cls:3},
-  {k:'m9',ic:'🌊',n:'Restauration des berges de la Vesdre après les inondations',d:300,lv:61,w:110,c:10000000,g:17500000,x:7000,cls:4},
-  {k:'m10',ic:'🏛️',n:'Bail d’entretien de toutes les autoroutes wallonnes (SOFICO)',d:365,lv:72,w:140,c:15000000,g:26000000,x:9000,cls:4},
-  {k:'m11',ic:'🇪🇺',n:'Chantier européen : corridor E40 – E25',d:450,lv:84,w:180,c:25000000,g:44000000,x:12000,cls:4},
-  {k:'m12',ic:'👑',n:'Projet légendaire : des routes wallonnes impeccables',d:540,lv:95,w:250,c:40000000,g:72000000,x:16000,cls:4}];
+  {k:'m1',ic:'🏟️',n:'Abords du nouveau stade de Liège',d:30,lv:3,w:10,c:150000,g:200000,x:400,cls:1},
+  {k:'m2',ic:'🌼',n:'Plan wallon de fauchage tardif « Bords de route »',d:60,lv:7,w:15,c:300000,g:400000,x:700,cls:1},
+  {k:'m3',ic:'🅿️',n:'Réhabilitation de toutes les aires de la E42',d:90,lv:12,w:25,c:600000,g:790000,x:1100,cls:2},
+  {k:'m4',ic:'🛣️',n:'Contrat d’entretien de 100 km de la E411',d:120,lv:18,w:35,c:1200000,g:1580000,x:1600,cls:2},
+  {k:'m5',ic:'🌉',n:'Nettoyage et sécurisation du viaduc de Huccorgne',d:150,lv:25,w:45,c:2000000,g:2640000,x:2300,cls:2},
+  {k:'m6',ic:'🏗️',n:'Plan Infrastructures 2030 — lot espaces verts',d:180,lv:33,w:60,c:3500000,g:4620000,x:3200,cls:3},
+  {k:'m7',ic:'🔄',n:'Entretien complet du ring de Charleroi (R3)',d:210,lv:42,w:75,c:5000000,g:6600000,x:4200,cls:3},
+  {k:'m8',ic:'❄️',n:'Service d’hiver de toute la province de Luxembourg',d:240,lv:51,w:90,c:7000000,g:9240000,x:5400,cls:3},
+  {k:'m9',ic:'🌊',n:'Restauration des berges de la Vesdre après les inondations',d:300,lv:61,w:110,c:10000000,g:13200000,x:7000,cls:4},
+  {k:'m10',ic:'🏛️',n:'Bail d’entretien de toutes les autoroutes wallonnes (SOFICO)',d:365,lv:72,w:140,c:15000000,g:19800000,x:9000,cls:4},
+  {k:'m11',ic:'🇪🇺',n:'Chantier européen : corridor E40 – E25',d:450,lv:84,w:180,c:25000000,g:33000000,x:12000,cls:4},
+  {k:'m12',ic:'👑',n:'Projet légendaire : des routes wallonnes impeccables',d:540,lv:95,w:250,c:40000000,g:52800000,x:16000,cls:4}];
 const megaState=k=>crr().mega[k];
 function megaGo(k,ok){const M=MEGA.find(x=>x.k===k),C=crr(),i=MEGA.indexOf(M);if(C.mega[k])return;
   if(i>0&&megaState(MEGA[i-1].k)!=='ok')return toastMsg('Termine d’abord le grand chantier précédent.');
   if(C.lv<M.lv)return toastMsg(`Il faut le niveau de carrière ${M.lv}.`);if(st.cls<M.cls)return toastMsg(`Il faut l’agréation ${CLS[M.cls].n.toLowerCase()}.`);
   if(ownW()<M.w)return toastMsg(`Il faut au moins ${M.w} personnes dans l’entreprise.`);if(st.cash<M.c)return toastMsg(`Il faut ${eur(M.c)} sur le compte pour démarrer.`);
-  if(!ok)return ask(`Lancer le grand chantier ?\nChantier : ${M.n}\nInvestissement de départ : ${eur(M.c)}\nPayé à la fin : ${eur(M.g)}\nDurée : ${M.d} jours\nUne équipe dédiée (avec des sous-traitants) s’en occupe pendant que ton entreprise continue ses autres chantiers.`,()=>megaGo(k,1),{ic:M.ic,ok:'Lancer'});
+  if(!ok)return ask(`Lancer le grand chantier ?\nChantier : ${M.n}\nInvestissement de départ : ${eur(M.c)}\nPayé à la fin : ${eur(M.g)}\nDurée : ${M.d} jours\nMarge prévue : ± ${Math.round((M.g/M.c-1)*100)} % (avant imprévus)\nUne équipe dédiée (avec des sous-traitants) s’en occupe, mais elle occupe 1 place d’encadrement de tes chantiers.\n⚠️ 1 ou 2 imprévus arriveront en cours de route (surcoûts ou retard).`,()=>megaGo(k,1),{ic:M.ic,ok:'Lancer'});
   mv(-M.c,'Grand chantier : '+M.n,'use');C.mega[k]=st.day+M.d;log(`${M.ic} Grand chantier lancé : ${M.n}. Fin le ${dstr(C.mega[k])} ${date(C.mega[k]).getFullYear()}.`);save();closeM();careerUI()}
-function megaTick(){const C=crr();for(const M of MEGA){const v=C.mega[M.k];if(typeof v==='number'&&st.day>=v){C.mega[M.k]='ok';C.trophy.push(M.k);mv(M.g,'Grand chantier terminé : '+M.n,'in');st.stats.ca+=M.g;{const y=date(st.day).getFullYear(),Y=st.caY||(st.caY={});Y[y]=(Y[y]||0)+M.g}st.rep=clamp(st.rep+3,0,100);addXP(M.x);log(`${M.ic} Grand chantier terminé : ${M.n} ! +${eur(M.g)}`);confetti(200)}}}
+const MEGAL=[['🧪','Sol pollué découvert sous une partie du chantier'],['🔥','Conduite de gaz non répertoriée sur les plans'],['📜','Recours d’un riverain contre le permis'],['🌧️','Pluies exceptionnelles : une partie des travaux est à refaire'],['🦇','Espèce protégée trouvée : il faut adapter le chantier'],['🏺','Vestiges archéologiques : fouilles obligatoires']];
+const MEGAD={k:'mega_alea',ic:'🏗️',ok:()=>false,mk:()=>({t:''}),def:1,o:[
+  ['Payer les surcoûts',d=>{mv(-d.cost,'Imprévu sur grand chantier','use')}],
+  ['Accepter le retard',d=>{const C=crr(),M=MEGA.find(x=>x.k===d.mk);if(M&&typeof C.mega[d.mk]==='number'){C.mega[d.mk]+=d.days;C.megaP=C.megaP||{};C.megaP[d.mk]=(C.megaP[d.mk]||0)+.03;log(`${M.ic} ${M.n} : retard de ${d.days} jours, amende de retard (−3 % du paiement final).`,false)}}]]};
+function megaAlea(C,M){const A=C.megaA||(C.megaA={});if((A[M.k]||0)>=2||Math.random()>1.6/M.d)return;const D=st.dec||(st.dec=[]);if(D.some(d=>d.k==='mega_alea'))return;
+  A[M.k]=(A[M.k]||0)+1;const L=pick(MEGAL),cost=Math.round(M.c*R(.04,.08)/1000)*1000,days=Math.max(3,Math.round(M.d*R(.08,.15)));
+  D.push({id:st.nid++,k:'mega_alea',exp:st.day+20,mk:M.k,cost,days,t:`${M.ic} ${M.n} — ${L[0]} ${L[1]}. Payer ${eur(cost)} de surcoûts pour tenir le délai, ou accepter ${days} jours de retard (amende −3 % du paiement final) ?`});
+  log(`🏗️ Imprévu sur le grand chantier ${M.n} : décision à prendre (🦺 Chantiers).`)}
+function megaTick(){const C=crr();for(const M of MEGA){const v=C.mega[M.k];if(typeof v==='number'&&st.day<v)megaAlea(C,M);if(typeof v==='number'&&st.day>=v){C.mega[M.k]='ok';C.trophy.push(M.k);const pen=(C.megaP&&C.megaP[M.k])||0,G=Math.round(M.g*(1-Math.min(.05,pen)));mv(G,'Grand chantier terminé : '+M.n,'in');st.stats.ca+=G;{const y=date(st.day).getFullYear(),Y=st.caY||(st.caY={});Y[y]=(Y[y]||0)+G}st.rep=clamp(st.rep+3,0,100);addXP(M.x);log(`${M.ic} Grand chantier terminé : ${M.n} ! +${eur(G)}`);confetti(200)}}}
 const left=t=>{const n=Math.max(0,t-st.day);return n+' jour(s)'};
 function carPct(){const C=crr();const lv=(C.lv-1+Math.min(1,C.xp/xpNeed(C.lv)))/99,mg=MEGA.filter(M=>megaState(M.k)==='ok').length/MEGA.length,gl=Object.keys(st.goals).filter(k=>GOALS.some(g=>g.k===k)).length/GOALS.length;return Math.min(100,Math.round((lv*.5+mg*.25+gl*.25)*100))}
 function finUI(){confT=0;confetti(160);showModal(`<div style="text-align:center"><div style="font-size:64px;line-height:1.1">🏆👑🎉</div><h2 style="font-size:26px;color:var(--or2);margin:10px 0 4px;text-transform:none;letter-spacing:0">Félicitations, tu as fini le jeu !</h2>
@@ -962,7 +971,7 @@ const DECT=[
   {k:'commune',ic:'🏛️',ok:()=>st.stats.done>5,mk:()=>({t:'Le bourgmestre te demande de nettoyer gratuitement la place du village pour la kermesse.'}),
     o:[['Accepter (1 journée offerte)',d=>{mv(-Math.round(R(400,900)),'Journée offerte à la commune','other');st.rep=clamp(st.rep+3,0,100);if(Math.random()<.6){genJob('p_dechets');log('🏛️ La commune te remercie avec un nouveau petit boulot.')}}],['Refuser poliment',d=>{st.rep=clamp(st.rep-1,0,100)}]],def:1}];
 function decTick(work){const D=st.dec||(st.dec=[]);
-  for(const d of [...D])if(st.day>d.exp){const T=DECT.find(x=>x.k===d.k);D.splice(D.indexOf(d),1);if(T){const i=has('assist')?(d.k==='syndic'?1:0):T.def;try{T.o[i][1](d)}catch(e){}if(has('assist'))rsAdd('assist',1);log(has('assist')?`🗂️ Julie, ton assistante, a répondu pour toi : « ${T.o[i][0]} ».`:`📬 Tu n’as pas répondu à temps : « ${T.o[i][0]} » a été choisi.`,false)}}
+  for(const d of [...D])if(st.day>d.exp){const T=DECT.find(x=>x.k===d.k);D.splice(D.indexOf(d),1);if(T){const i=has('assist')?(d.k==='syndic'?1:d.k==='eu_rescue'?2:0):T.def;try{T.o[i][1](d)}catch(e){}if(has('assist'))rsAdd('assist',1);log(has('assist')?`🗂️ Julie, ton assistante, a répondu pour toi : « ${T.o[i][0]} ».`:`📬 Tu n’as pas répondu à temps : « ${T.o[i][0]} » a été choisi.`,false)}}
   if(st.fuelD&&st.day>=st.fuelD){st.fuelD=0;mv(1600,'Économie sur le gasoil payé d’avance','use')}
   if(!work||!st.adm.bce||D.length>=3||Math.random()>.035)return;const T=pick(DECT.filter(x=>x.ok()&&!D.some(d=>d.k===x.k)));if(!T)return;
   const d={id:st.nid++,k:T.k,exp:st.day+45,...T.mk()};D.push(d);log(`📬 ${T.ic} Nouvelle décision à prendre (🦺 Chantiers) : ${d.t}`)}
@@ -1015,9 +1024,22 @@ function euMonth(){euHoldAuto();const H=st.hold;for(const k in fil()){const F=fi
     // appel d'offres : ouverture des offres, puis nouvel appel
     euTenderTick(k,F);
     const DD=st.dec||(st.dec=[]);if(F.m>2&&!DD.some(d=>d.f===k)&&Math.random()<.2){const T=pick(EUDEC.filter(x=>x.c===k||x.c==='*'));if(T){DD.push({id:st.nid++,k:T.k,exp:st.day+45,f:k,t:`${C.f} ${C.n} — ${T.t}`});log(`📬 ${C.f} Décision à prendre pour ta filiale ${C.n} (🏆 Entreprise → Empire).`)}}
-    if(F.cash<0){const inj=-F.cash+Math.round(fix*.5);mv(-inj,'Apport en capital : filiale '+C.n,'buy');st.mCapex+=inj;F.inv+=inj;F.cash+=inj;log(`${C.f} La filiale ${C.n} manque d’argent : la société belge lui verse ${eur(inj)}.`,false)}
-    else if(H){const a=Math.round(F.cash-fix);if(a>=5000){F.cash-=a;F.div+=a;H.tot=(H.tot||0)+a;mv(a,'Dividende via la holding : '+C.n,'in');st.mCapex-=a}}}
+    if(F.debt>0){const it=Math.round(F.debt*.07/12);F.cash-=it;F.dIt=(F.dIt||0)+it;if(F.cash>0){const r=Math.min(F.cash,F.debt);F.cash-=r;F.debt-=r}}
+    if(F.cash<0&&F.bk&&(F.debt||0)-F.cash<=euDebtCap(k)){F.debt=(F.debt||0)-F.cash;F.cash=0;log(`${C.f} La filiale ${C.n} emprunte à la banque (7 %/an) : dette ${eur(F.debt)}.`,false)}
+    if(F.cash<0){const inj=-F.cash+Math.round(fix*.5);if(st.cash-inj>=0){mv(-inj,'Apport en capital : filiale '+C.n,'buy');st.mCapex+=inj;F.inv+=inj;F.cash+=inj;log(`${C.f} La filiale ${C.n} manque d’argent : la société belge lui verse ${eur(inj)}.`,false)}else euRescueAsk(k,F,inj)}
+    else if(H&&!(F.debt>0)){const a=Math.round(F.cash-fix);if(a>=5000){F.cash-=a;F.div+=a;H.tot=(H.tot||0)+a;mv(a,'Dividende via la holding : '+C.n,'in');st.mCapex-=a}}}
   if(H&&!H.auto)mv(-6000,'Frais de la holding européenne','fix')}
+// filiale à court d'argent alors que la société belge n'a plus de quoi la renflouer : décision urgente au lieu de vider le compte
+const euDebtCap=k=>Math.round(EU[k].setup*2);
+function euRescueAsk(k,F,inj){const DD=st.dec||(st.dec=[]),C=EU[k];if(DD.some(d=>d.k==='eu_rescue'&&d.f===k))return;
+  if(F.bk&&(F.debt||0)-F.cash>euDebtCap(k))F.bk=0;
+  DD.push({id:st.nid++,k:'eu_rescue',exp:st.day+10,f:k,inj,t:`${C.f} ${C.n} — URGENT : la filiale n’a plus d’argent (${eur(-F.cash)} de dettes) et ton compte belge ne peut pas la renflouer (il faudrait ${eur(inj)}).`});
+  log(`🚨 ${C.f} Filiale ${C.n} à court d’argent : décision urgente à prendre (🦺 Chantiers).`)}
+const EURESC={k:'eu_rescue',ic:'🚨',ok:()=>false,mk:()=>({t:''}),def:2,o:[
+  ['Renflouer quand même',d=>{const F=euF(d),C=EU[d.f];if(!F||F.cash>=0)return;const inj=-F.cash+Math.round(C.fix*.5);mv(-inj,'Apport en capital : filiale '+C.n,'buy');st.mCapex+=inj;F.inv+=inj;F.cash+=inj}],
+  ['La mettre en vente',d=>{if(fil()[d.f])euSell(d.f,1)}],
+  ['Laisser la filiale emprunter à 7 %',d=>{const F=euF(d),C=EU[d.f];if(!F)return;if((F.debt||0)-Math.min(0,F.cash)>euDebtCap(d.f)){log(`🏦 ${C.f} La banque refuse un nouveau prêt à la filiale ${C.n} (dette trop lourde) : elle est vendue.`);euSell(d.f,1);return}
+    F.bk=1;if(F.cash<0){F.debt=(F.debt||0)-F.cash;F.cash=0}log(`🏦 ${C.f} La filiale ${C.n} emprunte seule à 7 %/an (max ${eur(euDebtCap(d.f))}) ; elle rembourse avant de verser des dividendes.`)}]]};
 // appels d'offres à l'étranger
 const EUTN={fr:['Entretien des accotements de la RN2 (Aisne)','Fauchage des routes départementales du Nord','Viabilité hivernale du Pas-de-Calais'],lu:['Entretien des routes de la commune de Luxembourg-Ville','Déneigement de l’A1 (Ponts et Chaussées)','Espaces verts du Kirchberg'],
   nl:['Entretien des digues de Zélande (Rijkswaterstaat)','Fauchage des bords de l’A2','Propreté des aires de l’A12'],de:['Entretien de l’A3 près de Cologne (Autobahn GmbH)','Service d’hiver de la Ruhr','Fauchage des routes fédérales B1 et B51'],
@@ -1070,7 +1092,7 @@ const EUDEC=[
   {k:'eu_mkt',c:'*',ic:'📣',t:'Ton directeur demande un budget publicité et salons professionnels.',o:[['Accepter (25 000 €)',d=>{const F=euF(d);if(F){F.cash-=25000;euRlAdd(F,8);euMod(F,1.08,1,6,'Publicité : +8 %')}}],['Refuser',d=>{}]],def:1},
   {k:'eu_rach',c:'*',ic:'🤝',t:'Un petit concurrent local est à vendre.',o:[['Le racheter (prix ± 1 an de frais fixes)',d=>{const F=euF(d);if(F){const c=Math.round(EU[d.f].fix*12);F.cash-=c;F.inv+=c;F.fixP=(F.fixP||1)*1.05;euMod(F,1.2,1,24,'Concurrent racheté : +20 %');euRlAdd(F,4)}}],['Pas intéressé',d=>{}]],def:1},
   {k:'eu_acc',c:'*',ic:'🚑',t:'Accident grave sur un chantier de ta filiale : la presse locale en parle.',o:[['Communiquer et indemniser (30 000 €)',d=>{const F=euF(d);if(F){F.cash-=30000;euRlAdd(F,2)}}],['Laisser l’assurance gérer',d=>{const F=euF(d);if(F)euRlAdd(F,-10)}]],def:1}];
-DECT.push(...EUDEC.map(x=>({k:x.k,ic:x.ic,ok:()=>false,mk:()=>({t:''}),o:x.o,def:x.def})));
+DECT.push(...EUDEC.map(x=>({k:x.k,ic:x.ic,ok:()=>false,mk:()=>({t:''}),o:x.o,def:x.def})),EURESC,MEGAD);
 const euShare=(k,F)=>Math.min(99,(F.rvh||[]).reduce((a,b)=>a+b,0)*(12/Math.max(1,(F.rvh||[]).length))/EUMKT[k]*100);
 function euMap(){const F=fil();let s=`<svg viewBox="0 0 340 230" width="100%" style="display:block;margin-top:8px"><rect x="4" y="4" width="332" height="222" rx="18" fill="#12241b" stroke="#2c4d37"/>
   <path d="M40 214 Q28 150 78 130 Q88 92 118 74 Q150 34 200 30 Q262 24 322 44 Q332 120 302 160 Q280 215 230 218 Q180 206 120 196 Q90 218 40 214Z" fill="#1f3b29" opacity=".7"/><path d="M70 20 Q110 12 118 40 Q112 66 80 64 Q60 50 70 20Z" fill="#1f3b29" opacity=".7"/>`;
@@ -1084,7 +1106,7 @@ function euFiche(k){const F=fil()[k],C=EU[k];if(!F)return;const D=euD(F),L=F.las
   const decs=(st.dec||[]).filter(d=>d.f===k);
   let h=`<div class="hd"><div style="font-size:44px;line-height:1;margin-right:10px">${C.f}</div><div style="flex:1;min-width:0"><h3>${C.n}</h3><div class="mut sm">Niveau ${F.lv} · ${F.m} mois · démarrage ${ramp} %</div></div></div>`+euScene(k);
   for(const d of decs){const T=DECT.find(x=>x.k===d.k);if(!T)continue;h+=`<div class="card acc" style="--ac:var(--or);margin-top:10px"><b class="sm">📬 ${esc(d.t.replace(/^.*? — /,''))}</b><div class="mut sm" style="margin-top:3px">Réponds avant le ${dstr(d.exp)}, sinon : « ${T.o[T.def][0]} »</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${T.o.map((o,i)=>`<button class="btn ${i===0?'':'s'}" style="padding:8px 10px" onclick="euDecAct(${d.id},${i},'${k}')">${o[0]}</button>`).join('')}</div></div>`}
-  h+=`<div class="kpi" style="margin-top:10px"><div><span>CA du mois</span><b>${L?eur(L.rv):'—'}</b></div><div><span>Résultat du mois</span><b class="${L&&L.net<0?'neg':'money'}">${L?(L.net>=0?'+':'')+eur(L.net):'—'}</b></div><div><span>Caisse de la filiale</span><b>${eur(F.cash)}</b></div><div><span>Part de marché</span><b>${sh<.1?'< 0,1':nb1(sh)} %</b></div></div>
+  h+=`<div class="kpi" style="margin-top:10px"><div><span>CA du mois</span><b>${L?eur(L.rv):'—'}</b></div><div><span>Résultat du mois</span><b class="${L&&L.net<0?'neg':'money'}">${L?(L.net>=0?'+':'')+eur(L.net):'—'}</b></div><div><span>Caisse de la filiale</span><b class="${F.cash<0?'neg':''}">${eur(F.cash)}</b></div>${F.debt>0?`<div><span>Dette bancaire (7 %)</span><b class="neg">${eur(F.debt)}</b></div>`:''}<div><span>Part de marché</span><b>${sh<.1?'< 0,1':nb1(sh)} %</b></div></div>
   <div class="card" style="margin-top:10px"><div class="row"><span style="flex:1">⭐ Réputation locale</span><b>${rl} / 100</b></div><div style="height:10px;border-radius:6px;background:var(--card2);overflow:hidden;margin-top:6px"><div style="height:100%;width:${rl}%;background:linear-gradient(90deg,var(--or),var(--ye))"></div></div>
   <div class="mut sm" style="margin-top:6px">Une bonne réputation fait gagner plus de contrats (jusqu’à +10 % de chiffre d’affaires).</div></div>
   <div class="card"><div class="mut sm">Résultat des 12 derniers mois</div>${F.hist.length>1?spark(F.hist,300,70):'<div class="mut sm">La courbe apparaîtra après 2 mois.</div>'}
@@ -1276,7 +1298,7 @@ function acceptJob(id,FW){const o=st.jobs.find(x=>x.id===id);if(!o||jobMiss(o).l
 const COEF=1.6;
 function clsFor(v,nat){if(nat!=='travaux'||v<=CLS[0].max)return 0;for(let i=1;i<CLS.length;i++)if(v<=CLS[i].max)return i;return CLS.length-1}
 function trueUnit(j){// prix de revient réel d'une unité principale (équipe type + machines)
-  const J=JOBS[j];const crew=J.minW;const sal=crew*235;let m=0;J.need.forEach(k=>m+=EQ[k].u);return(sal+m+40)/(J.rate*crew*.9)}
+  const J=JOBS[j];const crew=J.minW;const sal=crew*235*(st.idx||1)/pIdx();let m=0;J.need.forEach(k=>m+=EQ[k].u);return(sal+m+40)/(J.rate*crew*.9)}
 function genTender(forceJob,urgent){
   const m=month(),ok=SPWJ.filter(k=>inSeason(JOBS[k],m));const j=forceJob||pick(ok),J=JOBS[j];
   const big=st.cls>=1||st.stats.ca>150000,r=Math.random();
@@ -1311,7 +1333,7 @@ function spwReq0(t){const J=JOBS[t.j];const r=[];const F=spwF();
   r.push({ok:!!st.adm.bce,tx:'🧾 BCE'});r.push({ok:!!st.adm.rc,tx:'🛡️ RC pro'});r.push({ok:!!st.adm.vca,tx:'🦺 VCA'});
   r.push({ok:st.cash>=0,tx:'📄 ONSS et impôts en ordre'});
   if(t.cls>0)r.push({ok:st.cls>=t.cls||(!!t.am&&st.cls>=t.cls-1),tx:`🏅 Agréation ${CLS[t.cls].n.toLowerCase()}`});
-  if(t.proc==='po'){r.push({ok:(st.refs[t.j]||0)>=2,tx:`📁 2 références similaires (${st.refs[t.j]||0})`});r.push({ok:st.stats.ca>=t.est*.5,tx:`💶 CA ≥ ${eur(t.est*.5)}`})}
+  if(t.proc==='po'){r.push({ok:(st.refs[t.j]||0)>=2,tx:`📁 2 références similaires (${st.refs[t.j]||0})`});r.push({ok:caRecent()>=t.est*.5,tx:`💶 CA annuel ≥ ${eur(t.est*.5)}`})}
   else if(t.proc==='pn'&&t.est>60000)r.push({ok:(st.refs[t.j]||0)>=1,tx:`📁 1 référence similaire (${st.refs[t.j]||0})`});
   r.push({ok:F.n>=J.minW,tx:`👷 ${J.minW} personnes sur chantier`});
   if(J.pc)r.push({ok:F.pc,tx:'🪪 Permis C'});if(J.op)r.push({ok:F.R.has(J.op),tx:"🦾 Conducteur d'engins"});if(J.gr)r.push({ok:F.R.has('grimp'),tx:'🧗 Élagueur-grimpeur'});
@@ -1812,7 +1834,7 @@ function startGo(id){const c=st.contracts.find(x=>x.id===id);const p=eqPlan(c.j,
 /* ---------- Intérim (agence Wallintérim), chargée de recrutement, chef du personnel ---------- */
 // Intérimaires = ouvriers avec w.it = {d: arrivée, end: fin (0 = jusqu'à nouvel ordre), idle: jours sans chantier, prop: CDI proposé}
 // Même salaire qu'un ouvrier maison (égalité de traitement), facturé par l'agence × 1,2 du coût employeur (≈ brut × 2) ; ta propre agence = prix coûtant (× 0,85)
-const ITR=['man','qual','chauf','engin'],ITK=1.2,ITOWN=.85,ITNAME='Wallintérim';
+const ITR=['man','qual','chauf','engin'],ITK=1.2,ITOWN=1.03,ITNAME='Wallintérim';
 const AGN=[{k:'nam',n:'Wallintérim Namur (siège et 6 bureaux)',p:150e6,pl:2500},{k:'lie',n:'Bureaux de Liège',p:45e6,pl:1050},{k:'cha',n:'Bureaux de Charleroi',p:40e6,pl:950},{k:'lux',n:'Luxembourg belge (Arlon, Marche)',p:30e6,pl:700},{k:'bxl',n:'Bruxelles',p:80e6,pl:1850},{k:'fla',n:'Flandre (Gand, Anvers)',p:70e6,pl:1650}];
 const itOwn=()=>!!(st.itAg&&(st.itAg.ks||[]).length);
 const itList=()=>st.workers.filter(w=>w.it);
@@ -1857,7 +1879,7 @@ function itBusySet(){const s=new Set();running().forEach(c=>c.crew.forEach(i=>s.
 function itNeed(){const onC=itBusySet(),own=fieldOwn().filter(w=>!w.boss&&!w.det&&!(w.off>st.day)),idle=own.filter(w=>!onC.has(w.id)).length,itB=itList().filter(w=>onC.has(w.id)).length,lim=Math.max(2,Math.round(own.length*.1));return{ok:idle<=lim&&itB>=2,idle,itB,lim}}
 function itHireAll(ok){const P=itList().filter(w=>w.it.prop===1);if(!P.length)return;let n=0,fee=0,d0=0,d1=0;
   for(const w of P){const f=!itOwn()&&st.day-w.it.d<90?Math.round(w.day*20):0;fee+=f;d0+=w.day;d1+=Math.round(ROLES[w.r].day*(st.idx||1))}
-  const N=itNeed();if(!ok)return ask(`Signer ${P.length} CDI d’un coup ?\n${N.ok?'':`⚠️ ${N.idle} de tes ouvriers n’ont pas de chantier : tu n’as peut-être pas besoin de plus de CDI.\n`}Coût par jour aujourd’hui (intérim) : ${eur(d0)}\nCoût par jour en CDI : ± ${eur(d1)}${fee?`\nIndemnités de reprise à l’agence : ${eur(fee)}`:''}\nEn CDI, ils sont plus motivés et restent chez toi${itOwn()?'. ⚠️ Avec ta propre agence, l’intérim te coûte un peu moins cher par jour : le CDI apporte surtout de la stabilité.':', et ils coûtent moins cher que l’intérim.'}`,()=>itHireAll(1),{ic:'✍️',ok:'Tout signer'});
+  const N=itNeed();if(!ok)return ask(`Signer ${P.length} CDI d’un coup ?\n${N.ok?'':`⚠️ ${N.idle} de tes ouvriers n’ont pas de chantier : tu n’as peut-être pas besoin de plus de CDI.\n`}Coût par jour aujourd’hui (intérim) : ${eur(d0)}\nCoût par jour en CDI : ± ${eur(d1)}${fee?`\nIndemnités de reprise à l’agence : ${eur(fee)}`:''}\nEn CDI, ils sont plus motivés et restent chez toi${itOwn()?'. Avec ta propre agence, l’intérim ne coûte qu’un peu plus cher qu’un CDI (+3 %) : le CDI apporte surtout de la stabilité.':', et ils coûtent moins cher que l’intérim.'}`,()=>itHireAll(1),{ic:'✍️',ok:'Tout signer'});
   for(const w of P){if(canPay()<w.day*WDM)break;itHire(w.id,1,'toi');n++}log(`✍️ ${n} intérimaire(s) passent en CDI.`);if(n<P.length)toastMsg(`${n} CDI signés : ta société doit garder 3 mois de charges pour les autres.`);kaching();goals();save();render()}
 function itLater(id){const w=st.workers.find(x=>x.id===id&&x.it);if(w)w.it.prop=-1;clk();save();render()}
 // chaque jour : intérimaires sans chantier rendus, fin de mission, chargée de recrutement, chef du personnel, facture du lundi
@@ -1905,7 +1927,7 @@ function itAgYear(){if(!itOwn())return 0;let pl=0;for(const k of st.itAg.ks)pl+=
 function itBuy(k,ok){const A=AGN.find(x=>x.k===k);if(!A)return;const own=itOwn();if(k==='nam'&&own)return;if(k!=='nam'&&(!own||st.itAg.ks.includes(k)))return;
   if(k==='nam'&&ownW()<200)return toastMsg(`Il faut au moins 200 employés (tu en as ${ownW()}). Les intérimaires ne comptent pas.`);
   if(canPay()<A.p)return toastMsg(`Il faut ${eur(A.p)} disponibles (trésorerie moins 3 mois de frais fixes et de salaires).`);
-  if(!ok)return ask(k==='nam'?`Racheter l’agence ${ITNAME} ?\nPrix : ${eur(A.p)}\nIntérimaires placés chez d’autres clients : ± ${nb(A.pl)}\nBénéfice prévu : ± ${eur(A.pl*300*WDM*12*.04)}/an\nTes intérimaires au prix coûtant : ± ${eur(Math.round(ROLES.man.day*ITOWN))}/jour au lieu de ${eur(Math.round(ROLES.man.day*ITK))}\nArrivées 2 fois plus rapides, plus de limite à 300, pas d’indemnité de reprise.`:`Ouvrir : ${A.n} ?\nPrix : ${eur(A.p)}\nIntérimaires placés en plus : ± ${nb(A.pl)}\nBénéfice en plus : ± ${eur(A.pl*300*WDM*12*.04)}/an\n+400 intérimaires disponibles pour toi.`,()=>itBuy(k,1),{ic:'🏢',ok:k==='nam'?'Racheter l’agence':'Ouvrir'});
+  if(!ok)return ask(k==='nam'?`Racheter l’agence ${ITNAME} ?\nPrix : ${eur(A.p)}\nIntérimaires placés chez d’autres clients : ± ${nb(A.pl)}\nBénéfice prévu : ± ${eur(A.pl*300*WDM*12*.04)}/an\nTes intérimaires presque au prix coûtant : ± ${eur(Math.round(ROLES.man.day*ITOWN))}/jour au lieu de ${eur(Math.round(ROLES.man.day*ITK))}\nArrivées 2 fois plus rapides, plus de limite à 300, pas d’indemnité de reprise.`:`Ouvrir : ${A.n} ?\nPrix : ${eur(A.p)}\nIntérimaires placés en plus : ± ${nb(A.pl)}\nBénéfice en plus : ± ${eur(A.pl*300*WDM*12*.04)}/an\n+400 intérimaires disponibles pour toi.`,()=>itBuy(k,1),{ic:'🏢',ok:k==='nam'?'Racheter l’agence':'Ouvrir'});
   mv(-A.p,k==='nam'?'Rachat de l’agence d’intérim '+ITNAME:'Nouvelle agence d’intérim : '+A.n,'buy');st.mCapex+=A.p;
   if(k==='nam')st.itAg={d:st.day,ks:['nam'],tot:0};else st.itAg.ks.push(k);for(const w of itList())w.day=itRate(w.r);
   log(k==='nam'?`🏢 Tu as racheté l’agence d’intérim ${ITNAME} pour ${eur(A.p)} ! Tes intérimaires te coûtent maintenant le prix coûtant.`:`🏢 Nouvelle agence d’intérim ouverte : ${A.n} (${eur(A.p)}).`);confetti(160);kaching();goals();save();render()}
@@ -1913,7 +1935,7 @@ let itN=5,itR='man',itD=0;
 function rIt(){const L=itList(),busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew.forEach(i=>busy.set(i,c)));const own=itOwn(),Q=itQ(),pend=itPend();
   const day=L.reduce((a,w)=>a+w.day,0);let h=`<div class="card acc" style="--ac:var(--or)"><div class="row"><b style="flex:1">🦺 ${own?'Ta propre agence d’intérim':'Agence '+ITNAME}</b><span class="tag ${own?'g':''}">${own?'à toi':'agence externe'}</span></div>
     <div class="kpi" style="margin-top:8px"><div><span>En mission</span><b>${nb(L.length)}</b></div><div><span>En route</span><b>${nb(pend)}</b></div><div><span>Coût / jour</span><b>${eur(day)}</b></div><div><span>Maximum</span><b>${nb(itCap())}</b></div></div>
-    <div class="mut sm" style="margin-top:6px">Même salaire que tes ouvriers (loi belge), mais facturé par l’agence ${own?'au prix coûtant (× 0,85)':'avec sa marge (≈ salaire brut × 2)'}. Pas de préavis : tu les rends quand tu veux. L’assurance accidents est payée par l’agence. Au début, ils sont 15 % moins efficaces ; ils s’améliorent en travaillant.</div></div>`;
+    <div class="mut sm" style="margin-top:6px">Même salaire que tes ouvriers (loi belge), mais facturé par l’agence ${own?'presque au prix coûtant (× 1,03 : frais de ton agence)':'avec sa marge (≈ salaire brut × 2)'}. Pas de préavis : tu les rends quand tu veux. L’assurance accidents est payée par l’agence. Au début, ils sont 15 % moins efficaces ; ils s’améliorent en travaillant.</div></div>`;
   // commande
   const chip=(v,cur,lbl,fn)=>`<span class="chip ${v===cur?'on':''}" onclick="${fn}">${lbl}</span>`;
   h+=`<h2>Commander des intérimaires</h2><div class="card"><div class="mut sm">Combien ?</div><div>${[1,2,5,10,20,50,100,200,300].map(n=>chip(n,itN,n,`itN=${n};clk();render()`)).join('')}</div>
@@ -1939,7 +1961,7 @@ function rIt(){const L=itList(),busy=new Map();st.contracts.forEach(c=>c.st==='r
   // rachat de l'agence
   h+=`<h2>🏢 Racheter l’agence d’intérim</h2>`;
   if(!own){const A=AGN[0],lock=ownW()<200;h+=`<div class="card" style="${lock?'opacity:.7':''}"><h3>${A.n}</h3><div class="tags"><span class="tag o">${eur(A.p)}</span><span class="tag">± ${nb(A.pl)} intérimaires placés</span><span class="tag g">± ${eur(A.pl*300*WDM*12*.04)}/an de bénéfice</span></div>
-    <ul class="sm" style="margin:8px 0 0 18px;line-height:1.5"><li>💶 Tes intérimaires au prix coûtant (± ${eur(Math.round(ROLES.man.day*ITOWN))}/jour au lieu de ${eur(Math.round(ROLES.man.day*ITK))})</li><li>📈 Un bénéfice chaque mois (plus fort en hiver)</li><li>⚡ Arrivées 2 fois plus rapides, plus de limite à 300</li><li>⭐ Pas d’indemnité de reprise quand tu engages un intérimaire</li><li>😈 Tu peux refuser de servir tes concurrents</li></ul>
+    <ul class="sm" style="margin:8px 0 0 18px;line-height:1.5"><li>💶 Tes intérimaires presque au prix coûtant (± ${eur(Math.round(ROLES.man.day*ITOWN))}/jour au lieu de ${eur(Math.round(ROLES.man.day*ITK))})</li><li>📈 Un bénéfice chaque mois (plus fort en hiver)</li><li>⚡ Arrivées 2 fois plus rapides, plus de limite à 300</li><li>⭐ Pas d’indemnité de reprise quand tu engages un intérimaire</li><li>😈 Tu peux refuser de servir tes concurrents</li></ul>
     <button class="btn w" style="margin-top:10px" ${lock?'disabled':''} onclick="itBuy('nam')">${lock?`🔒 À partir de 200 employés (tu en as ${ownW()})`:'🏢 Racheter pour '+eur(A.p)}</button></div>`}
   else{const T=st.itAg;h+=`<div class="card acc" style="--ac:var(--gr)"><div class="kpi"><div><span>Agences</span><b>${T.ks.length}</b></div><div><span>Bénéfice prévu / an</span><b>${eur(itAgYear())}</b></div><div><span>Déjà gagné</span><b>${eur(T.tot||0)}</b></div><div><span>Valeur</span><b>${eur(itAgVal())}</b></div></div>
       <div class="mut sm" style="margin-top:6px">${T.ks.map(k=>AGN.find(x=>x.k===k).n).join(' · ')}</div></div>
@@ -1953,7 +1975,7 @@ function specB(c,crew){let f=1;const hasR=r=>crew.some(w=>w.r===r);if(PAVJ.inclu
 function rolesMonth(){for(const f of[costWarnMonth,indexTick,bigEvTick,acMonth,rivMonth,megaMonth,pvMonth4,hMonth,pvMonth5,pvWorthTick])try{f()}catch(e){console.error(e)}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
 /* ---------- Indexation, contrats d'entretien, concurrents, grands événements, astuces, notifications ---------- */
 // Indexation automatique des salaires (Belgique) : chaque 1er janvier ; les prix du marché suivent à 90 %
-const pIdx=()=>1+((st.idx||1)-1)*.9;
+const pIdx=()=>1+((st.idx||1)-1)*.98;
 function indexTick(){const y=date(st.day).getFullYear();if(month()!==1||st.idxY===y||st.day<200){if(!st.idxY)st.idxY=y;return}st.idxY=y;
   const r=+(R(.018,.032)+(evOn('infl')?.035:0)).toFixed(3);st.idx=(st.idx||1)*(1+r);
   st.workers.forEach(w=>{if(!w.boss)w.day=Math.round(w.day*(1+r))});(st.cand||[]).forEach(w=>w.day=Math.round(w.day*(1+r)));
@@ -2029,11 +2051,11 @@ function euScene(k){const C=EU[k];const sky={uk:'#8fa3b5',nl:'#9cc8ef',es:'#ffd5
   return`<svg viewBox="0 0 300 90" width="100%" style="display:block;border-radius:12px;margin:10px 0"><rect width="300" height="90" fill="${sky}"/>${el}<rect y="70" width="300" height="20" fill="#4a4f56"/><rect y="79" width="300" height="2" fill="#e9e9e9" stroke-dasharray="12 10" stroke="#e9e9e9"/><g transform="translate(120,58)"><rect width="34" height="14" rx="3" fill="#ff9a1f"/><rect x="24" y="-6" width="12" height="10" rx="2" fill="#ff9a1f"/><circle cx="8" cy="15" r="4" fill="#222"/><circle cx="28" cy="15" r="4" fill="#222"/></g><text x="10" y="22" font-size="20">${C.f}</text></svg>`}
 /* ---------- Conglomérat (fin de partie milliardaire) : concessions, géants européens, industrie, philanthropie, classement des fortunes ---------- */
 // Concessions (partenariats public-privé) : tu paies au départ, l'État te verse une redevance chaque mois pendant toute la durée
-const CONC={e411:{n:'Concession de l’autoroute E411 Namur–Arlon',ic:'🛣️',p:650e6,yrs:30,y:.075,d:'Tu rénoves et entretiens 120 km d’autoroute ; la Région te paie une redevance de disponibilité.'},
-  tram:{n:'Maintenance des voies du tram de Liège',ic:'🚋',p:300e6,yrs:20,y:.08,d:'Entretien des voies, des quais et des abords pendant 20 ans.'},
-  tun:{n:'Nouveau tunnel sous la Meuse à Namur (péage)',ic:'🚇',p:900e6,yrs:35,y:.074,v:.25,d:'Tu le construis et tu touches le péage : ça dépend du trafic (± 25 % selon les mois).'},
-  ring:{n:'Rénovation et entretien du Ring de Bruxelles',ic:'🔄',p:1.4e9,yrs:25,y:.07,d:'Le plus gros chantier routier du pays, payé par la Région pendant 25 ans.'},
-  port:{n:'Accès routiers du port d’Anvers',ic:'⚓',p:2.2e9,yrs:30,y:.068,d:'Ponts, échangeurs et routes du 2e port d’Europe.'}};
+const CONC={e411:{n:'Concession de l’autoroute E411 Namur–Arlon',ic:'🛣️',p:650e6,yrs:30,y:.11,d:'Tu rénoves et entretiens 120 km d’autoroute ; la Région te paie une redevance de disponibilité.'},
+  tram:{n:'Maintenance des voies du tram de Liège',ic:'🚋',p:300e6,yrs:20,y:.12,d:'Entretien des voies, des quais et des abords pendant 20 ans.'},
+  tun:{n:'Nouveau tunnel sous la Meuse à Namur (péage)',ic:'🚇',p:900e6,yrs:35,y:.105,v:.25,d:'Tu le construis et tu touches le péage : ça dépend du trafic (± 25 % selon les mois).'},
+  ring:{n:'Rénovation et entretien du Ring de Bruxelles',ic:'🔄',p:1.4e9,yrs:25,y:.105,d:'Le plus gros chantier routier du pays, payé par la Région pendant 25 ans.'},
+  port:{n:'Accès routiers du port d’Anvers',ic:'⚓',p:2.2e9,yrs:30,y:.10,d:'Ponts, échangeurs et routes du 2e port d’Europe.'}};
 // Grands groupes européens à racheter (noms inventés)
 const GIANT={alp:{n:'Alpenstrasse Bau AG (Autriche)',ic:'🇦🇹',p:800e6,y:.09},ibe:{n:'Grupo Vial Ibérico SA (Espagne)',ic:'🇪🇸',p:1.2e9,y:.085},
   nord:{n:'NordWeg Infrastructuur NV (Pays-Bas)',ic:'🇳🇱',p:2.5e9,y:.08},ita:{n:'Strade Sicure Manutenzione SpA (Italie)',ic:'🇮🇹',p:3.5e9,y:.078},uk:{n:'TransEuropa Roads plc (Royaume-Uni)',ic:'🇬🇧',p:6e9,y:.075}};
@@ -2051,7 +2073,7 @@ const megaOpen=()=>grpValue()>=1e8||st.cash>=1e8;
 const megaVal=()=>{const M=st.mega;if(!M)return 0;let v=0;for(const c of M.c){const C=CONC[c.k],left=Math.max(0,c.end-st.day)/365;v+=C.p*C.y*left*.75}for(const g of M.g)v+=GIANT[g.k].p*1.05;for(const i of M.i)v+=INDUS[i.k].p*.95;return Math.round(v)};
 function megaBuy(t,k,ok){const M=mg(),D=t==='c'?CONC[k]:t==='g'?GIANT[k]:INDUS[k];if(!D)return;const L=t==='c'?M.c:t==='g'?M.g:M.i;if(L.some(x=>x.k===k))return;
   if(st.cash<D.p)return toastMsg(`Il faut ${eur(D.p)} sur le compte de la société.`);
-  if(!ok)return ask(`${D.n}\nPrix : ${eur(D.p)}\n${t==='c'?`Redevance : ± ${eur(D.p*D.y/12)}/mois pendant ${D.yrs} ans`:t==='g'?`Bénéfice : ± ${eur(D.p*D.y/12)}/mois`:`Ventes aux autres : ± ${eur(D.inc)}/mois\n${D.e}`}`,()=>megaBuy(t,k,1),{ic:D.ic,ok:'Acheter'});
+  if(!ok)return ask(`${D.n}\nPrix : ${eur(D.p)}\n${t==='c'?`Redevance : ± ${eur(D.p*D.y/12)}/mois pendant ${D.yrs} ans\nBonus : +0,5 de réputation/mois et 4 appels d’offres publics de plus en même temps\nÀ la fin, l’ouvrage est rendu à l’État.`:t==='g'?`Bénéfice : ± ${eur(D.p*D.y/12)}/mois`:`Ventes aux autres : ± ${eur(D.inc)}/mois\n${D.e}`}`,()=>megaBuy(t,k,1),{ic:D.ic,ok:'Acheter'});
   mv(-D.p,(t==='c'?'Concession : ':t==='g'?'Rachat : ':'Industrie : ')+D.n,'buy');st.mCapex+=D.p;L.push({k,d:st.day,end:t==='c'?st.day+D.yrs*365:0,tot:0});
   log(`${D.ic} ${t==='c'?'Tu remportes la concession':t==='g'?'Tu rachètes':'Tu achètes'} : ${D.n} (${eur(D.p)}) !`);confetti(200);kaching();goals();save();render()}
 function megaSell(t,k,ok){const M=mg(),L=t==='g'?M.g:M.i,x=L.find(y=>y.k===k);if(!x)return;const D=t==='g'?GIANT[k]:INDUS[k],v=Math.round(D.p*(t==='g'?1:.95));
@@ -2061,6 +2083,7 @@ function megaMonth(){const M=st.mega;if(!M)return;let tot=0;
   for(const c of [...M.c]){const C=CONC[c.k];if(st.day>=c.end){M.c.splice(M.c.indexOf(c),1);log(`${C.ic} Fin de la concession : ${C.n}. L’ouvrage est rendu à l’État.`);continue}const r=Math.round(C.p*C.y/12*(C.v?1+(Math.random()*2-1)*C.v:1));c.tot+=r;tot+=r}
   for(const g of M.g){const G=GIANT[g.k],r=Math.round(G.p*G.y/12*R(.85,1.15));g.tot+=r;tot+=r}
   for(const i of M.i){const I=INDUS[i.k],r=Math.round(I.inc*R(.9,1.1));i.tot+=r;tot+=r}
+  if(M.c.length)st.rep=clamp(st.rep+.5*M.c.length,0,100);
   if(tot)mv(tot,'Conglomérat : concessions, groupes rachetés et industrie','in');M.last=tot}
 function megaGift(k,ok){const G=GIFTS.find(x=>x.k===k),V=pv(),M=mg();if(!G||(M.gk||[]).includes(k))return;if(V.cash<G.c)return toastMsg(`Il faut ${eur(G.c)} sur ton compte privé.`);
   if(!ok)return ask(`${G.n}\nDon : ${eur(G.c)} (de ton compte privé)\nRéputation personnelle +${G.r} et image de ton entreprise\nRéduction d’impôt plafonnée : surtout pour l’histoire.`,()=>megaGift(k,1),{ic:G.ic,ok:'Faire ce don'});
@@ -2099,7 +2122,8 @@ function rMega(){if(!megaOpen())return`<div class="card"><h3>🌐 Géant</h3><p 
   const ks=Object.keys(T).sort((a,b)=>(L.some(x=>x.k===b)?1:0)-(L.some(x=>x.k===a)?1:0)||T[a].p-T[b].p);
   return h+ks.map(k=>mCard(megaSec,k)).join('')}
 // Combien de marchés publics peuvent être ouverts en même temps : grandit avec la classe et la taille de l'entreprise
-const tenderCap=()=>Math.min(80,10+3*(st.cls||0)+Math.floor(ownW()/15));
+const concN=()=>(st.mega&&st.mega.c||[]).length;
+const tenderCap=()=>Math.min(80+4*concN(),10+3*(st.cls||0)+Math.floor(ownW()/15)+4*concN());
 // Charge de travail : occupation des ouvriers, chantiers, marchés ouverts, offres en préparation
 function workCard(ao){const onC=new Set();running().forEach(c=>c.crew.forEach(i=>onC.add(i)));const F=field().filter(w=>!w.boss&&!w.det&&!(w.off>st.day));if(F.length<3)return'';
   const busy=F.filter(w=>onC.has(w.id)).length,occ=Math.round(busy/F.length*100),run=running(),pub=run.filter(c=>!JOBS[c.j].p).length,wait=st.contracts.filter(c=>c.st==='wait').length;
@@ -2241,7 +2265,7 @@ const PRIV={
   harley:{c:'moto',n:'Harley-Davidson Fat Boy (neuve)',ic:'🏍️',p:26500,m:120,tmc:62,dep:.08},
   campingcar:{c:'moto',n:'Camping-car (neuf)',ic:'🚐',p:78000,m:380,tmc:2500,dep:.1},
   quad:{c:'moto',n:'Quad (neuf)',ic:'🏁',p:11000,m:60,tmc:62,dep:.12},
-  velo:{c:'moto',n:'Vélo électrique haut de gamme',ic:'🚲',p:5500,m:15,dep:.15},
+  velec:{c:'moto',n:'Vélo électrique haut de gamme',ic:'🚲',p:5500,m:15,dep:.15},
   // Collections : la valeur monte et descend chaque mois (vol = variations, dr = tendance)
   coll_2cv:{c:'coll',n:'Citroën 2CV restaurée (1970)',ic:'🚙',p:18000,m:25,dep:0,vol:.08,dr:.02},
   coll_bd:{c:'coll',n:'BD rares (Tintin et Spirou en éditions originales)',ic:'📚',p:15000,m:5,dep:0,vol:.1,dr:.03},
@@ -2410,7 +2434,7 @@ function louMonth(o){louFix(o);const V=pv(),P=PRIV[o.k],z=o.lz,nm=pShort(P.n);if
     if(louAcc){louAcc.n++;louAcc.a+=g-fee}else pEv(`🏖️ ${nm} : réservations ${/^[aeiouéo]/.test(MOIS[pm])?'d’':'de '}${MOIS[pm]} : ${eur(g)} − commission et ménage ${eur(fee)}`,g-fee,false);
     if(Math.random()<.06){const c=Math.round(R(100,600)*sc);V.cash-=c;pEv(`🧹 ${nm} : ${pick(['vaisselle cassée par des vacanciers','matelas taché à remplacer','lave-linge en panne','télé tombée'])} : −${eur(c)}`,-c,false)}return}
   const t=z.t;if(!t)return;
-  if(st.day>=t.a){const i=evOn('inflation')?.035:.02;t.r=Math.round(t.r*(1+i));t.a+=365;pEv(`📈 ${nm} : loyer indexé à la date anniversaire du bail (+${i>.03?'3,5':'2'} %, indice santé) : ${eur(t.r)}/mois.`,0,false)}
+  if(st.day>=t.a){const i=evOn('infl')?.035:.02;t.r=Math.round(t.r*(1+i));t.a+=365;pEv(`📈 ${nm} : loyer indexé à la date anniversaire du bail (+${i>.03?'3,5':'2'} %, indice santé) : ${eur(t.r)}/mois.`,0,false)}
   const part=clamp((st.day-t.d)/30,0,1);if(part<=0)return;const due=Math.round(t.r*part);V.rtxA=(V.rtxA||0)+Math.round(P.hr*LOU_TAX*part);
   if(t.jp){t.un++;t.ua+=due}
   else{const payP=t.un?Math.min(.9,(.25+.4*t.q)*(t.md?1.6:1)):1-.06*(1-t.q);
@@ -2637,7 +2661,7 @@ function roulSpin(){if(casBusy)return;const bet=casBet;if(!casPay(bet))return;ca
       casWin(bet*mult);casMsg(mult?`🎉 Le ${res} ! Tu gagnes <b class="money">${eur(bet*mult)}</b>`:`Le ${res}. Perdu ${eur(bet)}.`);if(mult)kaching();casBusy=0;casEnd()}},70)}
 // --- Machines à sous (3 machines, ± 100 % chacune ; la machine à jackpot met 6 % de chaque mise dans la cagnotte)
 const MACH={
-  fruits:{n:'Fruits classique',sym:[['🍒',.35],['🍋',.25],['🔔',.18],['⭐',.12],['7️⃣',.07],['💎',.03]],pay:{'🍒':7,'🍋':10,'🔔':20,'⭐':50,'7️⃣':150,'💎':2000},two:1,d:'Gains fréquents mais petits.'},
+  fruits:{n:'Fruits classique',sym:[['🍒',.35],['🍋',.25],['🔔',.18],['⭐',.12],['7️⃣',.07],['💎',.03]],pay:{'🍒':7,'🍋':10,'🔔':20,'⭐':50,'7️⃣':150,'💎':1800},two:1,d:'Gains fréquents mais petits.'},
   diamant:{n:'Diamants (gros gains rares)',sym:[['🍒',.35],['🍋',.25],['🔔',.18],['⭐',.12],['7️⃣',.07],['💎',.03]],pay:{'🍒':3,'🍋':6,'🔔':15,'⭐':60,'7️⃣':500,'💎':6500},two:1,d:'Moins souvent, mais beaucoup plus gros.'},
   jackpot:{n:'Méga Jackpot progressif',sym:[['🍒',.36],['🍋',.25],['🔔',.18],['⭐',.12],['7️⃣',.07],['👑',.02]],pay:{'🍒':6,'🍋':10,'🔔':20,'⭐':50,'7️⃣':150},two:1,jack:1,d:'👑👑👑 = la cagnotte entière (si tu mises au moins 1 000 €).'}};
 const jackPool=()=>st.jack||(st.jack=50000);
@@ -2652,7 +2676,7 @@ function slotSpin(){if(casBusy)return;const bet=casBet,M=MACH[casM];if(!casPay(b
 const deck=()=>{const D=[];for(const c of ['♠','♥','♦','♣'])for(const v of ['A','2','3','4','5','6','7','8','9','10','V','D','R'])D.push({v,c});for(let i=D.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[D[i],D[j]]=[D[j],D[i]]}return D};
 const card=()=>({v:pick(['A','2','3','4','5','6','7','8','9','10','V','D','R']),c:pick(['♠','♥','♦','♣'])});
 const cardH=(x,on)=>`<span style="display:inline-block;background:#fff;color:${'♥♦'.includes(x.c)?'#c62828':'#111'};border-radius:8px;padding:6px 7px;margin:2px;font-weight:900;font-size:17px;min-width:36px;text-align:center;${on?'outline:3px solid #ffd76b':''}">${x.v}${x.c}</span>`;
-// --- Blackjack équilibré (égalité = mise + 50 %)
+// --- Blackjack équilibré (égalité = mise + 20 % : ± 99,7 % rendu en jouant bien, ± 97 % en tirant jusqu’à 17)
 const bjVal=h=>{let t=0,a=0;for(const x of h){if(x.v==='A'){t+=11;a++}else t+=['V','D','R','10'].includes(x.v)?10:+x.v}while(t>21&&a){t-=10;a--}return t};
 function bjStart(){if(bj&&!bj.done)return;const bet=casBet;if(!casPay(bet))return;clk();bj={bet,p:[card(),card()],d:[card()],done:0};if(bjVal(bj.p)===21)return bjStop(1);bjDraw()}
 function bjHit(){if(!bj||bj.done)return;clk();bj.p.push(card());if(bjVal(bj.p)>21)return bjStop();bjDraw()}
@@ -2661,7 +2685,7 @@ function bjStop(nat){if(!bj||bj.done)return;bj.done=1;const pv_=bjVal(bj.p);let 
   else{while(bjVal(bj.d)<17)bj.d.push(card());const dv=bjVal(bj.d);
     if(nat&&!(dv===21&&bj.d.length===2)){win=bj.bet*2.5;msg=`🃏 Blackjack ! Tu gagnes <b class="money">${eur(win)}</b> (3 contre 2).`}
     else if(dv>21||pv_>dv){win=bj.bet*2;msg=`🎉 ${pv_} contre ${dv} : tu gagnes <b class="money">${eur(win)}</b>.`}
-    else if(pv_===dv){win=Math.round(bj.bet*1.5);msg=`Égalité (${pv_}) : tu récupères ta mise <b class="money">+ la moitié</b> (${eur(win)}).`}
+    else if(pv_===dv){win=Math.round(bj.bet*1.2);msg=`Égalité (${pv_}) : tu récupères ta mise <b class="money">+ 20 %</b> (${eur(win)}).`}
     else msg=`${pv_} contre ${dv} pour la banque. Perdu ${eur(bj.bet)}.`}
   casWin(win);if(win>bj.bet)kaching();bjDraw(msg);casEnd()}
 function bjDraw(msg){const e=$('#bjzone');if(!e||!bj)return;e.innerHTML=`<div class="mut sm">Banque ${bj.done?'('+bjVal(bj.d)+')':''}</div><div>${bj.d.map(x=>cardH(x)).join('')}${bj.done?'':'<span style="display:inline-block;background:#3d2c66;border-radius:8px;padding:6px 8px;margin:2px;min-width:36px;text-align:center">🂠</span>'}</div>
@@ -2720,7 +2744,7 @@ function rCasino(){const V=pv(),C=casV(),r=C.gain-C.mise,K=casInfo(),wealth=pvWo
   else if(casG==='slot'){const M=MACH[casM];h+=`<div class="chips">${Object.entries(MACH).map(([k,m])=>`<button class="${casM===k?'on':''}" onclick="if(!casBusy){casM='${k}';clk();render()}">${m.n}</button>`).join('')}</div>
     <div class="card" style="text-align:center">${M.jack?`<div style="font-size:13px;color:#ffd76b;font-weight:900">👑 CAGNOTTE : <span id="jackv">${eur(jackPool())}</span></div>`:''}<div style="display:flex;justify-content:center;gap:8px;margin:6px 0 12px">${[0,1,2].map(i=>`<div id="sl${i}" style="width:74px;height:84px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:44px;border:4px solid #c9a227">${M.sym[0][0]}</div>`).join('')}</div>
     <button class="btn w" onclick="slotSpin()">🎰 Jouer (${eur(casBet)})</button><div class="mut sm" style="margin-top:8px">${M.d} 3 identiques : ${Object.entries(M.pay).map(([e,x])=>e+' ×'+nb(x)).join(' · ')}${M.jack?' · 👑 cagnotte':''}. Deux 🍒 : mise rendue. Rend ± 100 % en moyenne.</div></div>`}
-  else if(casG==='bj')h+=`<div class="card"><div id="bjzone">${bj?'':`<p class="sm">Approche-toi le plus possible de 21 sans dépasser. La banque tire jusqu’à 17. Blackjack ×2,5. Égalité : ta mise + la moitié.</p><button class="btn w" onclick="bjStart()">🃏 Distribuer (${eur(casBet)})</button>`}</div></div>`;
+  else if(casG==='bj')h+=`<div class="card"><div id="bjzone">${bj?'':`<p class="sm">Approche-toi le plus possible de 21 sans dépasser. La banque tire jusqu’à 17. Blackjack ×2,5. Égalité : ta mise + 20 %.</p><button class="btn w" onclick="bjStart()">🃏 Distribuer (${eur(casBet)})</button>`}</div></div>`;
   else if(casG==='bac')h+=`<div class="card"><div class="row" style="justify-content:center">${[['joueur','Joueur ×2,03'],['banque','Banque ×1,97'],['egal','Égalité ×10,5']].map(([k,l])=>`<button class="btn ${bac===k?'':'s'}" style="padding:6px 9px" onclick="bac='${k}';clk();render()">${l}</button>`).join('')}</div><div id="baczone" style="margin-top:8px"></div><button class="btn w" style="margin-top:10px" onclick="bacPlay()">🎴 Distribuer (${eur(casBet)})</button><div class="mut sm" style="margin-top:6px">Le plus proche de 9 gagne. Vraies règles du tirage de la 3e carte ; gains calculés pour que ce soit équitable.</div></div>`;
   else if(casG==='vp')h+=`<div class="card"><div id="vpzone">${vp?'':`<button class="btn w" onclick="vpDeal()">♠️ Distribuer 5 cartes (${eur(casBet)})</button>`}</div><div class="mut sm" style="margin-top:8px">Touche les cartes à garder, puis change les autres. ${VPPAY.map(x=>x[0]+' ×'+x[1]).join(' · ')}.</div></div>`;
   else if(casG==='dice')h+=`<div class="card" style="text-align:center"><div id="dice" style="font-size:56px;line-height:1.2">⚀ ⚀ ⚀</div><div class="row" style="justify-content:center;margin-top:6px">${[['petit','Petit 3-10 ×2'],['grand','Grand 11-18 ×2'],['triple','Triple ×36']].map(([k,l])=>`<button class="btn ${dice===k?'':'s'}" style="padding:6px 9px" onclick="if(!casBusy){dice='${k}';clk();render()}">${l}</button>`).join('')}</div><button class="btn w" style="margin-top:10px" onclick="diceRoll()">🎲 Lancer les dés (${eur(casBet)})</button></div>`;
