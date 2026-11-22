@@ -78,7 +78,7 @@ button{font-family:inherit}
 #cash{transition:transform .2s}
 .mgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}.mgrid>div{background:var(--card2);border-radius:12px;padding:7px 8px}.mgrid span{display:block;font-size:11px;color:var(--mut);font-weight:800}.mgrid b{display:block;font-size:13.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pvtiles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}.pvtiles>div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 8px;text-align:center}.pvtiles span{display:block;font-size:11.5px;color:var(--mut);font-weight:800}.pvtiles b{display:block;font-size:16px;font-weight:900;margin-top:2px;white-space:nowrap}details.card>summary{list-style:none}details.card>summary::-webkit-details-marker{display:none}
-#bell{position:relative;font-size:20px;padding:6px 8px;margin-right:6px;border-radius:12px;background:#ffffff10;cursor:pointer;opacity:.55}#bell.on{opacity:1;background:#ff9a1f33}#bellN{position:absolute;top:-4px;right:-4px;background:#ff5d57;color:#fff;font-size:11px;border-radius:9px;padding:0 5px;line-height:17px}#bellN:empty{display:none}
+#bell{position:relative;font-size:18px;padding:5px 6px;margin-right:4px;border-radius:12px;background:#ffffff10;cursor:pointer;opacity:.55}#bell.on{opacity:1;background:#ff9a1f33}#bellN{position:absolute;top:-4px;right:-4px;background:#ff5d57;color:#fff;font-size:11px;border-radius:9px;padding:0 5px;line-height:17px}#bellN:empty{display:none}
 #cash.up{animation:cup .6s}#cash.down{animation:cdown .6s}
 @keyframes cup{30%{transform:scale(1.12);box-shadow:0 0 18px rgba(79,220,122,.8)}}
 @keyframes cdown{30%{transform:scale(.94);box-shadow:0 0 18px rgba(255,93,87,.7)}}
@@ -119,7 +119,12 @@ nav .bd{position:absolute;top:1px;right:calc(50% - 22px);background:var(--rd);co
 #hub{position:fixed;top:0;bottom:0;left:0;right:0;max-width:760px;margin:auto;z-index:28;display:none;flex-direction:column;background:linear-gradient(180deg,#0d1a14,#0a140f)}
 #hub.on{display:flex;animation:pvin .25s ease-out}
 #hubpane{flex:1;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 16px) 12px 24px;-webkit-overflow-scrolling:touch}.hubt{padding:4px 4px 12px}.hubc{cursor:pointer}.hubc.lock{border-style:dashed}
-#hubb{position:relative;font-size:19px;padding:6px 8px;margin-right:4px;border-radius:12px;background:#ffffff10;cursor:pointer}
+#hubb,#pvb{position:relative;font-size:17px;padding:5px 6px;margin-right:3px;border-radius:12px;background:#ffffff10;cursor:pointer}
+.nw{display:inline-block;background:var(--gr);color:#06210f;border-radius:8px;font-size:9.5px;font-weight:900;padding:0 5px;margin-left:4px;vertical-align:middle}
+.bd.nwd{background:var(--gr);color:#06210f}
+.seg button.lk{opacity:.45}
+details.more{margin-top:8px}details.more>summary{cursor:pointer;color:var(--mut);font-size:12.5px;font-weight:800;padding:4px 0}details.more>summary::before{content:'ℹ️ '}details.more[open]>summary{color:var(--tx)}
+.nlv{font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;margin:12px 0 2px}
 /* --- Vie privée : une page à part, son propre monde --- */
 #priv{position:fixed;top:0;bottom:0;left:0;right:0;max-width:760px;margin:auto;z-index:30;display:none;flex-direction:column;background:linear-gradient(180deg,#1d1631,#120d20)}
 #priv.on{display:flex;animation:pvin .28s ease-out}@keyframes pvin{from{opacity:0;transform:translateY(16px)}}
@@ -191,6 +196,7 @@ body.introon #ins,body.introon #upd{visibility:hidden}
 <header id="top">
   <div id="logo" onclick="if(st&&curTab==='cl'&&st.cl){clk();clCareerUI()}else if(st&&st.adm.bce){clk();careerUI()}" style="cursor:pointer"><span id="lt">RN</span><span id="lvl">1</span></div>
   <div id="tinfo"><div id="tname"></div><div id="tsub"></div></div>
+  <div id="pvb" onclick="if(st){clk();tab('pv')}" title="Ma vie privée">🏡</div>
   <div id="hubb" onclick="if(st){clk();hubSec='main';tab('hub')}" title="Mes entreprises">🏢</div>
   <div id="bell" onclick="if(st)(curTab==='cl'&&st.cl?clNotifUI():curTab==='sh'&&st.shop?shNotifUI():notifUI())">🔔<b id="bellN"></b></div>
   <div id="cash"></div>
@@ -205,12 +211,10 @@ body.introon #ins,body.introon #upd{visibility:hidden}
 <nav id="cltabs" style="display:none"></nav>
 <nav id="tabs">
   <button data-t="ch"><b>🦺</b>Chantiers</button>
-  <button data-t="pb"><b>🧰</b>Boulots</button>
-  <button data-t="ao"><b>🏛️</b>Marchés</button>
+  <button data-t="ct"><b>📋</b>Contrats</button>
   <button data-t="eq"><b>👷</b>Équipe</button>
   <button data-t="mt"><b>🚜</b>Matériel</button>
   <button data-t="bi"><b>📊</b>Entreprise</button>
-  <button data-t="pv"><b>🏡</b>Privé</button>
 </nav>
 <div id="hub"><main id="hubpane"></main></div>
 <div id="priv"><header id="phead"></header><div id="pscene"></div><main id="ppane"></main><nav id="ptabs"></nav></div>
@@ -474,6 +478,7 @@ function defaults(){return{schema:SCHEMA,name:'Ma petite entreprise',cash:3000,r
   workers:[{id:1,n:'Toi',r:'boss',boss:1,sk:1,day:0,pc:0,skin:0,base:1,mot:1,hd:0,warn:0}],eq:{},tenders:[],jobs:[],contracts:[],inv:[],cand:[],log:[],
   stats:{won:0,lost:0,done:0,ca:0,spw:0,earned:0},refs:{},riv:null,priv:{cash:0,own:[],tr:0},salAcc:0,reports:[],mStart:3000,mCapex:0,mLoan:0,lastTax:null,srl:0,mon:{},mv:[],lastMon:null,goals:{},sel:null,wx:0,started:false,snd:1,over:false,itq:[],itAcc:0}}
 function migrate(s){const d=defaults();if(s.mStart===undefined)s.mStart=s.cash;
+  if(s.seen===undefined&&(s.day||0)>30)s.seen={ao:1,ac:1,it:1,emp:1};// vieilles parties : pas de badges « Nouveau » partout
   for(const k in d)if(s[k]===undefined)s[k]=d[k];
   for(const k in d.stats)if(s.stats[k]===undefined)s.stats[k]=d.stats[k];
   if(!s.riv)s.riv=newRivals();
@@ -1339,6 +1344,7 @@ function spwReq0(t){const J=JOBS[t.j];const r=[];const F=spwF();
   if(J.pc)r.push({ok:F.pc,tx:'🪪 Permis C'});if(J.op)r.push({ok:F.R.has(J.op),tx:"🦾 Conducteur d'engins"});if(J.gr)r.push({ok:F.R.has('grimp'),tx:'🧗 Élagueur-grimpeur'});
   for(const k of J.need)r.push({ok:(st.eq[k]||0)>0,tx:EQ[k].ic+' '+EQ[k].n});
   return r}
+const reqSum=r=>{const m=r.filter(x=>!x.ok);return`<details class="more"${m.length&&m.length<=2?' open':''}><summary style="color:${m.length?'#ffaaa4':'#9df0b7'}">${m.length?`Il manque ${m.length} condition${m.length>1?'s':''} sur ${r.length}`:`✅ Les ${r.length} conditions sont remplies`}</summary>${reqHtml(r)}</details>`};
 const reqHtml=r=>'<div class="req">'+r.map(x=>`<span style="color:${x.ok?'#9df0b7':'#ffaaa4'}">${x.ok?'✅':'❌'} ${x.tx}</span>`).join('')+'</div>';
 function freeEq(t,ex){let u=0;for(const c of st.contracts)if(c.st==='run'&&c!==ex)u+=(c.own[t]||0);return(st.eq[t]||0)-u}
 function freeW(ex){const busy=new Set();for(const c of st.contracts)if(c.st==='run'&&c!==ex)c.crew.forEach(i=>busy.add(i));return field().filter(w=>!busy.has(w.id)&&!(w.off>st.day)&&!w.det)}
@@ -2028,17 +2034,23 @@ function rankCard(){(st.riv||[]).forEach(rivP);const me={n:st.name,ca:Math.round
   return`<div class="card acc" style="--ac:var(--ye)"><h3>🏆 Classement des entreprises wallonnes</h3><div class="mut sm">Tu es <b>${pos}${pos===1?'er':'e'}</b> sur ${L.length} (chiffre d’affaires sur un an, estimé pour les concurrents).</div>
   ${L.slice(0,Math.max(8,pos)).map((x,i)=>`<div class="row sm" style="padding:6px 0;border-top:1px solid var(--line);${x.me?'background:#ff9a1f22;border-radius:8px;padding-left:6px':''}"><b style="width:26px">${i+1}.</b><span style="flex:1;min-width:0">${x.me?'⭐ <b>'+esc(x.n)+'</b> (toi)':`${RSTY[x.r.sty][0]} ${esc(x.n)}<div class="mut" style="font-size:11px">${esc(x.r.boss)} · ${RSTY[x.r.sty][1]}</div>`}</span><b>${eur(x.ca)}</b></div>`).join('')}</div>`}
 // Centre de notifications : tout ce qui attend une réponse
-function notifs(){const L=[];
-  for(const d of st.dec||[]){const T=DECT.find(x=>x.k===d.k);if(T)L.push({ic:T.ic,t:d.t,go:d.f?`euFiche('${d.f}')`:`closeM();tab('ch')`})}
-  for(const x of(st.law||[]).filter(x=>x.st==='open'))L.push({ic:'⚖️',t:x.kind==='fisc'?'Contrôle fiscal : réponse attendue':`Procès : ${x.w} t’attaque`,go:`closeM();tab('ch')`});
-  for(const c of st.contracts)if(c.st==='wait'&&c.md)L.push({ic:'🚨',t:`Mise en demeure : commence ${JOBS[c.j].n} (${c.road}) avant le ${dstr(c.startBy)}`,go:`closeM();tab('ch')`});
-  const P=st.workers.filter(w=>w.it&&w.it.prop===1);if(P.length)L.push({ic:'🎯',t:`Élodie propose ${P.length} CDI à des intérimaires`,go:`closeM();eqTab='it';tab('eq')`});
-  const S=(st.reports||[]).filter(r=>!r.done&&!r.good&&(r.sig||r.grave));if(S.length)L.push({ic:'📋',t:`${S.length} rapport(s) de chantier à traiter (faute grave ou licenciement)`,go:`closeM();eqTab='rap';tab('eq')`});
-  for(const k in st.fil||{}){const F=st.fil[k];if(F.tn&&!F.tn.co&&EU[k])L.push({ic:EU[k].f,t:`Appel d’offres à ${EU[k].n.split(' (')[0]} : ${F.tn.n}`,go:`euFiche('${k}')`})}
-  if(acO().length)L.push({ic:'📝',t:`${acO().length} offre(s) de contrat d’entretien`,go:`closeM();tab('pb')`});
-  if((st.cand||[]).some(w=>w.leg))L.push({ic:'⭐',t:'Jason Pougin, l’ouvrier légendaire, est dans tes candidats !',go:`closeM();eqTab='recru';tab('eq')`});
-  return L}
-function notifUI(){clk();const L=notifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${L.length?L.map(x=>`<div class="row" style="padding:9px 0;border-top:1px solid var(--line)"><span style="font-size:22px">${x.ic}</span><span class="sm" style="flex:1;min-width:0">${esc(x.t)}</span><button class="btn s" style="padding:6px 10px" onclick="${x.go}">Voir</button></div>`).join(''):'<p class="mut">✅ Rien à traiter pour le moment.</p>'}<button class="btn s w" style="margin-top:12px" onclick="closeM()">Fermer</button>`)}
+function notifs(){const L=[];// lv : 0 = urgent, 1 = décision à prendre, 2 = opportunité
+  for(const d of st.dec||[]){const T=DECT.find(x=>x.k===d.k);if(T)L.push({lv:/eu_rescue|mega_alea/.test(d.k)||d.exp-st.day<=7?0:1,ic:T.ic,t:d.t,go:d.f?`euFiche('${d.f}')`:`closeM();tab('ch')`,dec:d.id})}
+  for(const x of(st.law||[]).filter(x=>x.st==='open'))L.push({lv:0,ic:'⚖️',t:x.kind==='fisc'?'Contrôle fiscal : réponse attendue':`Procès : ${x.w} t’attaque`,go:`closeM();tab('ch')`});
+  for(const c of st.contracts)if(c.st==='wait'&&c.md)L.push({lv:0,ic:'🚨',t:`Mise en demeure : commence ${JOBS[c.j].n} (${c.road}) avant le ${dstr(c.startBy)}`,go:`closeM();tab('ch')`});
+  if(st.cash<0)L.push({lv:0,ic:'🏦',t:`Ton compte est dans le rouge (${eur(st.cash)}) : découvert autorisé ${eur(overdraft())}`,go:`closeM();biTab='arg';tab('bi')`});
+  const P=st.workers.filter(w=>w.it&&w.it.prop===1);if(P.length)L.push({lv:2,ic:'🎯',t:`Élodie propose ${P.length} CDI à des intérimaires`,go:`closeM();eqTab='it';tab('eq')`,act:`closeM();itHireAll()`,al:'Signer'});
+  const S=(st.reports||[]).filter(r=>!r.done&&!r.good&&(r.sig||r.grave));if(S.length)L.push({lv:1,ic:'📋',t:`${S.length} rapport(s) de chantier à traiter (faute grave ou licenciement)`,go:`closeM();eqTab='rap';tab('eq')`});
+  for(const k in st.fil||{}){const F=st.fil[k];if(F.tn&&!F.tn.co&&EU[k])L.push({lv:1,ic:EU[k].f,t:`Appel d’offres à ${EU[k].n.split(' (')[0]} : ${F.tn.n}`,go:`euFiche('${k}')`})}
+  if(acO().length)L.push({lv:2,ic:'📝',t:`${acO().length} offre(s) de contrat d’entretien`,go:`closeM();ctGo('ac')`});
+  if((st.cand||[]).some(w=>w.leg))L.push({lv:2,ic:'⭐',t:'Jason Pougin, l’ouvrier légendaire, est dans tes candidats !',go:`closeM();eqTab='recru';tab('eq')`});
+  return L.sort((a,b)=>a.lv-b.lv)}
+const NLV=[['🔴 Urgent','var(--rd)'],['🟠 Décisions à prendre','var(--or)'],['🟢 Opportunités','var(--gr)']];
+function notifUI(){clk();const L=notifs();let h=`<h3>🔔 À traiter (${L.length})</h3>`;if(!L.length)h+='<p class="mut">✅ Rien à traiter pour le moment.</p>';
+  for(let lv=0;lv<3;lv++){const G=L.filter(x=>x.lv===lv);if(!G.length)continue;h+=`<div class="nlv" style="color:${NLV[lv][1]}">${NLV[lv][0]} · ${G.length}</div>`;
+    h+=G.map(x=>{const d=x.dec&&(st.dec||[]).find(y=>y.id===x.dec),T=d&&DECT.find(y=>y.k===d.k);
+      return`<div style="padding:9px 0;border-top:1px solid var(--line)"><div class="row" style="flex-wrap:nowrap"><span style="font-size:22px">${x.ic}</span><span class="sm" style="flex:1;min-width:0">${esc(x.t)}</span>${T?'':`<button class="btn s" style="padding:6px 10px" onclick="${x.go}">Voir</button>`}${x.act?`<button class="btn" style="padding:6px 10px" onclick="${x.act}">${x.al}</button>`:''}</div>${T?`<div class="row" style="margin-top:6px">${T.o.map((o,i)=>`<button class="btn ${i===0?'':'s'}" style="padding:6px 9px;font-size:12.5px" onclick="decAct(${d.id},${i});notifUI()">${o[0]}</button>`).join('')}</div>`:''}</div>`}).join('')}
+  showModal(h+`<button class="btn s w" style="margin-top:12px" onclick="closeM()">Fermer</button>`)}
 // Décor de chaque pays dans la fiche d'une filiale
 function euScene(k){const C=EU[k];const sky={uk:'#8fa3b5',nl:'#9cc8ef',es:'#ffd59a',it:'#ffd9a8'}[k]||'#a9d8ff';let el='';
   if(k==='ch'||k==='at')el+='<path d="M0 70 L50 22 L80 50 L120 10 L170 60 L210 25 L260 55 L300 30 L300 90 L0 90Z" fill="#7d8fa1"/><path d="M42 30 L50 22 L58 30Z M112 18 L120 10 L128 18Z M202 33 L210 25 L218 33Z" fill="#fff"/>';
@@ -2803,7 +2815,7 @@ if(!st){st=defaults();st.riv=newRivals();for(let i=0;i<14;i++)genTender();genJob
 /* =====================================================================
    INTERFACE
    ===================================================================== */
-let curTab='ch',aoTab='pub',eqTab='terrain',speed=1,modalOpen=false,playing=false;
+let ctSec='pb';let curTab='ch',aoTab='pub',eqTab='terrain',speed=1,modalOpen=false,playing=false;
 function showModal(h){$('#mbox').innerHTML=h;$('#modal').classList.add('on');modalOpen=true}
 let askCb=null;
 // fenêtre de confirmation du jeu (remplace la fenêtre grise du navigateur) : 1re ligne = titre, « libellé : valeur » = ligne de tableau, ⚠️ = avertissement
@@ -2815,7 +2827,8 @@ function askYes(){const f=askCb;askCb=null;closeM();if(f)f()}
 function closeM(){$('#modal').classList.remove('on');modalOpen=false}
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!st.over)closeM()});
 let prevTab='ch',lastScene='';
-function tab(t){if(t==='pv'&&curTab!=='pv'){prevTab=curTab;$('#ppane').scrollTop=0}curTab=t;$('#pane').scrollTop=0;render()}
+function tab(t){if(t==='ct')t=ctSec==='ao'?'ao':'pb';else if(t==='pb'){if(ctSec==='ao')ctSec='pb'}else if(t==='ao')ctSec='ao';
+  if(t==='pv'&&curTab!=='pv'){prevTab=curTab;$('#ppane').scrollTop=0}curTab=t;$('#pane').scrollTop=0;render()}
 function privClose(){clk();curTab=prevTab&&prevTab!=='pv'?prevTab:'ch';render()}
 function pvGo(k){pvSec=k;$('#ppane').scrollTop=0;clk();render()}
 // décor de la vie privée : saison, ta maison, ta famille, tes voitures, bateaux et avions
@@ -2837,7 +2850,21 @@ $$('[data-sp]').forEach(b=>b.onclick=()=>{speed=+b.dataset.sp;clk();render()});
 const stars=r=>'★'.repeat(Math.max(1,Math.round(r/20)))+'☆'.repeat(5-Math.max(1,Math.round(r/20)));
 const dots=s=>'●'.repeat(Math.round(s*3))+'○'.repeat(Math.max(0,5-Math.round(s*3)));
 const toRecv=()=>st.inv.reduce((a,v)=>a+v.amt,0);
-const seg=(cur,items,fn)=>`<div class="seg">${items.map(([k,l])=>`<button class="${cur===k?'on':''}" onclick="${fn}='${k}';clk();render()">${l}</button>`).join('')}</div>`;
+const seg=(cur,items,fn)=>`<div class="seg">${items.map(([k,l,lk,nw])=>lk?`<button class="lk" onclick="clk();toastMsg('🔒 ${String(lk).replace(/'/g,'’')}')">🔒 ${l}</button>`:`<button class="${cur===k?'on':''}" onclick="${fn}='${k}';clk();render()">${l}${nw?'<span class="nw">Nouveau</span>':''}</button>`).join('')}</div>`;
+// déblocage progressif (sans tutoriel) : chaque partie du jeu apparaît quand elle devient utile, avec un badge « Nouveau »
+const UNL={ao:{t:'ct',ok:()=>!!st.adm.bce&&(st.stats.done>=1||st.tenders.some(x=>x.my)||st.cls>0),why:'Marchés publics : inscris-toi à la BCE et termine ton premier petit boulot.'},
+  ac:{t:'ct',ok:()=>acO().length>0||acL().length>0,why:'Contrats annuels : des clients te proposeront des contrats quand tu auras fini 5 chantiers et 25 de réputation.'},
+  it:{t:'eq',ok:()=>ownW()>=3||st.workers.some(w=>w.it)||(st.itq||[]).length>0,why:'Intérim : disponible à partir de 3 personnes dans ton entreprise.'},
+  emp:{t:'bi',ok:()=>caRecent()>=500000||ownW()>=15||st.cls>=2||!!st.srl&&caRecent()>=250000||(st.grp||[]).length>0||Object.keys(st.fil||{}).length>0||Object.keys(st.ino||{}).length>0||!!st.ipo||(st.friends||[]).length>0,why:'Empire : à partir de 15 personnes ou 500 000 € de chiffre d’affaires sur un an.'}};
+const unl=k=>{try{return UNL[k].ok()}catch(e){return true}};
+const isNew=k=>unl(k)&&!(st.seen||{})[k];
+const seenIt=k=>{if(unl(k)&&!(st.seen||(st.seen={}))[k])st.seen[k]=1};
+const newIn=t=>Object.keys(UNL).some(k=>UNL[k].t===t&&isNew(k));
+const lockW=k=>unl(k)?'':UNL[k].why;
+function ctSeg(){const nP=st.jobs.filter(o=>!jobMiss(o).length).length,nA=acO().length,nT=st.tenders.filter(t=>t.status==='open'&&!t.my&&spwReq(t).every(x=>x.ok)).length;const cur=curTab==='ao'?'ao':ctSec==='ac'?'ac':'pb';
+  return seg(cur,[['pb',`🧰 Petits boulots${nP?' ('+nP+')':''}`],['ac',`📝 Annuels${nA?' ('+nA+')':''}`,lockW('ac'),isNew('ac')],['ao',`🏛️ Marchés${nT?' ('+nT+')':''}`,lockW('ao'),isNew('ao')]],'ctSec').replace(/ctSec='(\w+)';clk\(\);render\(\)/g,"clk();ctGo('$1')")}
+function ctGo(k){ctSec=k;tab(k==='ao'?'ao':'pb')}
+
 let shownCash=null;
 function cashFx(){const el=$('#cash');if(shownCash===null){shownCash=st.cash;el.textContent=eur(st.cash);return}
   const d=st.cash-shownCash;if(Math.abs(d)<.5)return;el.classList.remove('up','down');void el.offsetWidth;el.classList.add(d>0?'up':'down');
@@ -2854,12 +2881,12 @@ function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();SPWF=null;HASC
   $('#tsub').textContent=`${stars(st.rep)} ${Math.round(st.rep)} · ${st.cls?CLS[st.cls].n:st.adm.bce?'Entreprise inscrite':'Pas encore inscrit'} · ${ownW()} pers.`;
   const k=dayKind(st.day);$('#hudW').textContent=(k?'🏖️ ':WX[st.wx].ic+' ')+dstr(st.day)+' '+date(st.day).getFullYear()+(k?' · '+k:'');
   $$('[data-sp]').forEach(b=>b.classList.toggle('on',+b.dataset.sp===speed));
-  $$('#tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===curTab);b.querySelector('.bd')?.remove()});
+  $$('#tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===curTab||(b.dataset.t==='ct'&&(curTab==='pb'||curTab==='ao')));b.querySelector('.bd')?.remove()});
   const nAo=st.tenders.filter(t=>t.status==='open'&&!t.my&&spwReq(t).every(x=>x.ok)).length,nWait=st.contracts.filter(c=>c.st==='wait').length+(st.dec||[]).length+(st.law||[]).filter(x=>x.st==='open').length,nJob=st.jobs.filter(o=>!jobMiss(o).length).length;
-  if(nAo)$('[data-t=ao]').insertAdjacentHTML('beforeend',`<span class="bd">${nAo}</span>`);
+  {const nCt=nAo+(nJob&&!st.contracts.length?nJob:0)+acO().length;if(nCt)$('[data-t=ct]').insertAdjacentHTML('beforeend',`<span class="bd">${nCt}</span>`);else if(newIn('ct'))$('[data-t=ct]').insertAdjacentHTML('beforeend','<span class="bd nwd">•</span>')}
+  if(newIn('eq'))$('[data-t=eq]').insertAdjacentHTML('beforeend','<span class="bd nwd">•</span>');if(newIn('bi'))$('[data-t=bi]').insertAdjacentHTML('beforeend','<span class="bd nwd">•</span>');
   cleanReports();const nR=st.reports.filter(r=>!r.done).length;if(nR)$('[data-t=eq]').insertAdjacentHTML('beforeend',`<span class="bd">${nR}</span>`);
   if(nWait)$('[data-t=ch]').insertAdjacentHTML('beforeend',`<span class="bd">${nWait}</span>`);
-  if(nJob&&!st.contracts.length)$('[data-t=pb]').insertAdjacentHTML('beforeend',`<span class="bd">${nJob}</span>`);
   const hubOn=curTab==='hub'||(curTab==='cl'&&!st.cl)||(curTab==='sh'&&!st.shop);$('#hub').classList.toggle('on',hubOn);
   if(hubOn){$('#priv').classList.remove('on');document.body.classList.remove('pvmode');if(headOnly===true)return;lastPaneT=performance.now();const P=$('#hubpane'),y=P.scrollTop;P.innerHTML=rHub();P.scrollTop=y;return}
   const tb0=$('#tabs');if(tb0.style.display==='none'){tb0.style.display='';$('#cltabs').style.display='none';shownCash=null;cashFx()}
@@ -2869,7 +2896,17 @@ function render(headOnly){if(TICKING)return;WBI=null;SPWC.clear();SPWF=null;HASC
   if(headOnly===true)return;lastPaneT=performance.now();
   const P=pvOn?$('#ppane'):$('#pane'),y=P.scrollTop,key=curTab+aoTab+eqTab+(pvOn?pvSec:'');P.classList.toggle('enter',lastTab!==key);lastTab=key;const fe=document.activeElement;if(modalOpen&&fe&&fe.tagName==='INPUT')return;P.innerHTML=({ch:rCh,pb:rPb,ao:rAo,eq:rEq,mt:rMt,bi:rBi,pv:rPv})[curTab]();P.scrollTop=y;
 }
-function goalCard(){const g=curGoal();if(!g&&st.adm.bce){const C=crr(),M=MEGA.find(x=>crr().mega[x.k]!=='ok');return`<div class="goal" onclick="clk();careerUI()" style="cursor:pointer"><span class="gi">🎖️</span><div><b>Objectif de carrière</b><div>${M?(typeof C.mega[M.k]==='number'?`${M.ic} ${M.n} : fini dans ${left(C.mega[M.k])}`:C.lv<M.lv?`Atteins le niveau ${M.lv} (tu es niveau ${C.lv}) pour le grand chantier « ${M.n} »`:`Lance le grand chantier « ${M.n} »`):C.lv<100?`Atteins le niveau 100 (tu es niveau ${C.lv})`:'🏆 Tu as tout fini. Respect, patron !'}</div></div></div>`}return g?`<div class="goal"><span class="gi">🎯</span><div><b>Objectif</b><div>${g.t}</div></div></div>`:''}
+function goalCard(){const g=curGoal();if(!g&&st.adm.bce){const C=crr(),M=MEGA.find(x=>crr().mega[x.k]!=='ok');return`<div class="goal" onclick="clk();careerUI()" style="cursor:pointer"><span class="gi">🎖️</span><div><b>Objectif de carrière</b><div>${M?(typeof C.mega[M.k]==='number'?`${M.ic} ${M.n} : fini dans ${left(C.mega[M.k])}`:C.lv<M.lv?`Atteins le niveau ${M.lv} (tu es niveau ${C.lv}) pour le grand chantier « ${M.n} »`:`Lance le grand chantier « ${M.n} »`):C.lv<100?`Atteins le niveau 100 (tu es niveau ${C.lv})`:'🏆 Tu as tout fini. Respect, patron !'}</div></div></div>`}return g?`<div class="goal" onclick="clk();goalGo('${g.k}')" style="cursor:pointer"><span class="gi">🎯</span><div style="flex:1"><b>Objectif</b><div>${g.t}</div></div><span style="font-size:18px;opacity:.7">›</span></div>`:''}
+// un clic sur l'objectif ouvre l'écran où on peut le faire
+const GOGO={bi_soc:'g0 g5',ct_pb:'g1 g14 h2 h17 h33',mt:'g2 g4 g10 g16 h5 h6 h16 h19 h28 h41',eq_recru:'g3 g12 h4 h14 h23 h32',ao:'g6 g7 g21 h1 h13 h25 h37',eq_bureau:'g8 g9 g13',bi_res:'g11 g15 g19 g22 h8 h15 h24 h34 h39',bi_emp:'g17 g18 g20 g23 g24 g25 g26 g27 g29 h10 h18 h26 h27 h49 h50 h51 h52 h53 h54 h56',bi_plus:'g28 h35',eq_it:'h45 h46 h47 h48 h9 h29',ct_ac:'h55',hub:'h57 h58 h59 h60',pv:'h36 h61 h62 h66 h67',bi_mega:'h63 h64 h65',ch:'h42 h43 h44'};
+function goalGo(k){let to='';for(const d in GOGO)if(GOGO[d].split(' ').includes(k))to=d;
+  if(!to)return careerUI();const [t,sub]=to.split('_');
+  if(t==='bi'){biTab=sub==='mega'&&!megaOpen()?'emp':sub||'res';if(biTab==='emp'&&!unl('emp'))biTab='res';tab('bi')}
+  else if(t==='eq'){eqTab=sub==='it'&&!unl('it')?'recru':sub;tab('eq')}
+  else if(t==='ct'){ctGo(sub==='ac'&&!unl('ac')?'pb':sub)}
+  else if(t==='ao'){ctGo(unl('ao')?'ao':'pb')}
+  else if(t==='hub'){hubSec='hold';tab('hub')}
+  else tab(t)}
 function jobHead(J,sub,right){return`<div class="hd"><div class="ic" style="--ac2:${J.ac}2e">${J.ic}</div><div style="flex:1;min-width:0"><h3>${J.n}</h3><div class="mut">${sub}</div></div>${right||''}</div>`}
 function rCh(){let h=goalCard()+workCard()+dqCard()+decCard()+lawCard();const cs=st.contracts;
   if(st.cash<0)h+=`<div class="card acc" style="--ac:var(--rd)"><b>⚠️ Ton compte est dans le rouge (${eur(st.cash)})</b><div class="mut sm" style="margin-top:4px">Chaque paiement reçu s'ajoute bien, mais les salaires, la vie privée et les impôts partent le 1er du mois. Regarde le relevé et le bilan dans 📊 Entreprise. Solutions : moins de personnel, plus de chantiers, ou un prêt.</div><button class="btn s" style="margin-top:8px" onclick="tab('bi')">Voir mon relevé de compte</button></div>`;
@@ -2891,7 +2928,7 @@ function rCh(){let h=goalCard()+workCard()+dqCard()+decCard()+lawCard();const cs
   h+=pgBtn('ch',25,nCh,csO.length);
   if(st.inv.length)h+=`<h2>Factures en attente · ${eur(toRecv())}</h2><div class="card">${st.inv.slice().sort((a,b)=>a.due-b.due).slice(0,12).map(v=>`<div class="row sm" style="padding:4px 0"><span style="flex:1;min-width:0">${esc(v.from)}</span><span class="money">${eur(v.amt)}</span><span class="tag">${dstr(v.due)}</span></div>`).join('')}</div>`;
   return h}
-function rPb(){let h=goalCard()+acCard()+`<h2>Petits boulots — particuliers, commerces, communes</h2><p class="mut sm" style="margin:-2px 4px 10px">Le client a accepté ton devis : tu acceptes et tu y vas.</p>`;
+function rPb(){if(ctSec==='ac'&&unl('ac')){seenIt('ac');return goalCard()+ctSeg()+acCard()}let h=goalCard()+ctSeg()+`<h2>Petits boulots — particuliers, commerces, communes</h2><p class="mut sm" style="margin:-2px 4px 10px">Le client a accepté ton devis : tu acceptes et tu y vas.</p>`;
   if(!st.adm.bce)h+=`<div class="card acc" style="--ac:var(--rd)"><b>🔒 Inscris d'abord ton entreprise à la BCE</b><p class="mut">Sans numéro d'entreprise, pas de facture.</p><button class="btn w" onclick="buyAdm('bce')">🧾 M'inscrire (105 €)</button></div>`;
   const L=st.jobs.slice().sort((a,b)=>jobMiss(a).length-jobMiss(b).length);
   const nPb=Math.min(L.length,pgN('pb',20));for(const o of L.slice(0,nPb)){const J=JOBS[o.j],miss=jobMiss(o);const ctl={part:'Particulier',pro:'Entreprise',com:'Commune'}[o.ct];
@@ -2900,7 +2937,7 @@ function rPb(){let h=goalCard()+acCard()+`<h2>Petits boulots — particuliers, c
     <div style="margin-top:10px">${miss.length?`<div class="mut sm">Il te manque : ${miss.join(', ')}</div>`:freeCount()<JOBS[o.j].minW?`<button class="btn w s" disabled>⏳ ${field().length>1?'Plus assez de monde de libre ('+Math.max(0,freeCount())+' / '+JOBS[o.j].minW+')':'Occupé : termine d’abord ton chantier en cours'}</button>`:`<button class="btn w" onclick="acceptJob(${o.id})">Accepter le travail</button>`}</div></div>`}
   h+=pgBtn('pb',20,nPb,L.length);
   return h+(L.length?'':'<p class="mut">Pas de demande aujourd’hui. Reviens demain !</p>')+(st.adm.bce?adCard():'')}
-function rAo(){let h=goalCard()+workCard(1);const mine=st.tenders.filter(t=>t.my);
+function rAo(){seenIt('ao');let h=goalCard()+ctSeg()+workCard(1);const mine=st.tenders.filter(t=>t.my);
   h+=seg(aoTab,[['pub','📢 Publiés'],['mes',`📨 Mes offres (${mine.length})`],['riv','⚔️ Concurrents']],'aoTab');
   const acc=st.adm.bce&&st.adm.rc&&st.adm.vca;
   if(has('offre'))h+=`<div class="card acc" style="--ac:var(--bl)"><b>📑 Grégory remet les offres pour toi</b><div class="mut sm" style="margin-top:4px">Prix = ton prix de revient × le coefficient choisi. Plus il est bas, plus tu gagnes de marchés mais moins tu gagnes d'argent.</div><div class="row" style="margin-top:8px">${[1.25,1.3,1.35,1.45,1.55].map(k=>`<button class="btn ${(st.offCoef||1.35)===k?'':'s'}" style="padding:6px 9px" onclick="st.offCoef=${k};save();render()">× ${String(k).replace('.',',')}</button>`).join('')}</div></div>`;
@@ -2911,7 +2948,7 @@ function rAo(){let h=goalCard()+workCard(1);const mine=st.tenders.filter(t=>t.my
     const nAoL=Math.min(ts.length,pgN('ao',20));for(const{t,ok}of ts.slice(0,nAoL)){const J=JOBS[t.j];
       h+=`<div class="card acc" style="--ac:${J.ac}"><div class="mut sm">${t.buyer.replace('SPW Mobilité et Infrastructures','SPW MI')} · Réf. ${t.ref}</div>${jobHead(J,`${t.road} — ${t.town}`,t.urgent?'<span class="tag r">URGENT</span>':'')}
       <div class="tags"><span class="tag ${t.proc==='po'?'b':t.proc==='pn'?'v':''}">${PROC[t.proc].n}</span><span class="tag">${nb(t.q)} ${J.un}</span><span class="tag">⏱ ${t.N} j ouvrables</span>${t.proc==='po'?`<span class="tag b">Estimation ${eur(t.est)}</span>`:''}<span class="tag">${J.nat==='travaux'?'Travaux':'Services'}</span><span class="tag o">Remise des offres : ${dstr(t.bidEnd)}</span></div>
-      ${reqHtml(spwReq(t))}
+      ${reqSum(spwReq(t))}
       ${t.wxu?'<div class="tags"><span class="tag r">🚨 Urgence météo : prix +30 %</span></div>':''}${t.am?`<div class="tags"><span class="tag v">🤝 En association avec ${esc(t.am)} (50/50)</span></div>`:''}
       <div style="margin-top:10px">${ok?`<button class="btn w" onclick="bidUI(${t.id})">📝 Préparer mon offre</button>`:!t.am&&t.cls===st.cls+1&&spwReq(t).filter(x=>!x.ok).length===1&&st.cls>=1?`<button class="btn s w" onclick="amGo(${t.id})">🤝 Répondre en association avec un grand groupe (50/50)</button>`:''}</div></div>`}
     h+=pgBtn('ao',20,nAoL,ts.length);if(!ts.length)h+='<p class="mut">Aucun marché publié pour le moment.</p>'}
@@ -3088,7 +3125,7 @@ function rEq(){const busy=new Map();st.contracts.forEach(c=>c.st==='run'&&c.crew
   let h=goalCard()+`<div class="kpi" style="margin-bottom:12px"><div><span>Personnel</span><b>${ownW()}</b></div><div><span>Masse salariale / mois</span><b>${eur(payroll()*WDM)}</b></div><div><span>Encadrement (charge)</span><b>${nb1(mgmtLoad())} / ${mgmtCap()}</b></div><div><span>Offres en parallèle</span><b>${myOffers()} / ${offerCap()}</b></div></div>`;
   h+=`<div class="card"><div class="row"><b style="flex:1">🤖 Équipes automatiques</b><button class="btn ${st.autoStaff!==0?'g':'s'}" style="padding:6px 10px" onclick="st.autoStaff=st.autoStaff===0?1:0;save();render()">${st.autoStaff!==0?'Activé':'Désactivé'}</button></div><div class="mut sm" style="margin-top:4px">Ton chef d'équipe envoie lui-même les ouvriers libres sur les chantiers en attente ou en pause (marchés publics en premier), et loue le matériel s'il manque.</div></div>`;
 h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporaire pour manque de travail</b><button class="btn ${st.chomEco!==0?'g':'s'}" style="padding:6px 10px" onclick="st.chomEco=st.chomEco===0?1:0;save();render()">${st.chomEco!==0?'Activé':'Désactivé'}</button></div><div class="mut sm" style="margin-top:4px">Règle belge pour les ouvriers : quand il n'y a pas de chantier pour eux, ils sont au chômage temporaire (payés par l'ONEM). Tu ne paies qu'un petit supplément (12 €/jour). Maximum 4 semaines de suite, ensuite au moins une semaine de travail. Déjà économisé : <b>${eur((st.rs||{}).ce||0)}</b>.</div></div>`;
-  const nR=st.reports.filter(r=>!r.done).length;const nI=st.workers.reduce((a,w)=>a+(w.it?1:0),0),nP=st.workers.some(w=>w.it&&w.it.prop===1);h+=seg(eqTab,[['terrain','👷 Terrain'],['it',`🦺 Intérim${nI?' ('+nI+')':''}${nP?' 🎯':''}`],['rap',`📋 Rapports${nR?' ('+nR+')':''}`],['bureau','🏢 Bureau'],['recru','🙋 Engager']],'eqTab');
+  const nR=st.reports.filter(r=>!r.done).length;const nI=st.workers.reduce((a,w)=>a+(w.it?1:0),0),nP=st.workers.some(w=>w.it&&w.it.prop===1);h+=(eqTab==='it'&&seenIt('it'),'')+seg(eqTab,[['terrain','👷 Terrain'],['it',`🦺 Intérim${nI?' ('+nI+')':''}${nP?' 🎯':''}`,lockW('it'),isNew('it')],['rap',`📋 Rapports${nR?' ('+nR+')':''}`],['bureau','🏢 Bureau'],['recru','🙋 Engager']],'eqTab');
   const card=w=>{const R0=ROLES[w.r],c=busy.get(w.id),stx=staffStat(w);return`<div class="card"><div class="hd">${avatar(w,48)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${R0.n}${w.day?' · '+eur(monthly(w))+'/mois (coût employeur)':''}</div></div></div>
     <div class="tags">${R0.cat==='ouv'?`<span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>`:''}${w.pc?'<span class="tag v">🪪 Permis C</span>':''}${w.r==='etu'?`<span class="tag ${(w.hy||0)>=650?'r':''}">⏱ ${Math.round(w.hy||0)} / 650 h cette année</span>`:''}${behav(w)?`<span class="tag ${behav(w)[1]}">${behav(w)[0]}</span>`:''}${w.warn?`<span class="tag r">⚠️ ${w.warn} avertissement${w.warn>1?'s':''}</span>`:''}${R0.cat==='ouv'?`<span class="tag ${c?'o':''}">${c?'🦺 '+JOBS[c.j].n.split(' ').slice(0,3).join(' '):(w.ce||0)>0?'🏠 Chômage temporaire ('+w.ce+' j)':'💤 Libre'}</span>`:''}${w.det&&EU[w.det]?`<span class="tag v">✈️ Détaché : ${EU[w.det].f} ${EU[w.det].n.split(' (')[0]}</span>`:''}</div>${R0.d&&R0.cat!=='ouv'?`<div class="mut sm" style="margin-top:6px">${R0.d}</div>`:''}${stx}
     <div class="row" style="margin-top:8px">${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="cvUI('w',${w.id})">📄 CV</button>`}${R0.cat==='ouv'&&!w.pc?`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="trainPC(${w.id})">🪪 Permis C (2 900 €)</button>`:''}${w.boss?'':`<button class="btn s" style="padding:7px 10px;font-size:13px" onclick="fire(${w.id})">Licencier</button>`}</div></div>`};
@@ -3116,9 +3153,9 @@ h+=`<div class="card"><div class="row"><b style="flex:1">🏠 Chômage temporair
     h+=`<h2>Postes à pourvoir</h2>`;
     {const F=bureauMoney(),P=bureauPrio(),any=P.some(x=>x[2]&&!(!st.adm.bce||(ROLES[x[0]].need&&ownW()<ROLES[x[0]].need)));
      h+=`<div class="card acc" style="--ac:${any?'var(--gr)':'var(--or)'}"><b>💶 Ton argent</b><div class="sm" style="margin-top:4px">${F.n?`Ton entreprise ${F.avg>=0?'gagne':'perd'} en moyenne <b class="${F.avg>=0?'money':'neg'}">${eur(Math.abs(F.avg))}/mois</b> (${F.n} dernier${F.n>1?'s':''} mois${st.workers.some(w=>!w.boss&&!w.it&&st.day-(w.hd||0)<62)?', salaires des dernières embauches compris':''}).`:'Pas encore de bilan : attends la fin de ton premier mois.'} Argent en plus de tes 3 mois de charges : <b>${eur(F.room)}</b>.</div>
-     <div class="mut sm" style="margin-top:4px">Les postes sont classés selon ce dont tu as besoin maintenant. Tu peux engager qui tu veux : sur chaque poste, tu vois si ton entreprise gagnerait ou perdrait de l’argent après l’embauche.${any?'':' ⚠️ Pour l’instant, chaque employé de bureau te ferait perdre de l’argent chaque mois.'}</div></div>`;
+     ${any?'':'<div class="sm" style="margin-top:4px">⚠️ Pour l’instant, chaque employé de bureau te ferait perdre de l’argent chaque mois.</div>'}<details class="more"><summary>Comment sont classés les postes ?</summary><div class="mut sm">Selon ce dont tu as besoin maintenant. Tu peux engager qui tu veux : sur chaque poste, tu vois si ton entreprise gagnerait ou perdrait de l’argent après l’embauche.</div></details></div>`;
     for(const [r,why,can,use] of P){const R0=ROLES[r];const lock=!st.adm.bce||(R0.need&&ownW()<R0.need),c=roleCost(r),after=F.avg+roleGain(r,F)-c;
-      h+=`<div class="card ${why&&!lock?'acc':''}" style="${why&&!lock?'--ac:var(--or);':''}${lock?'opacity:.6':''}">${why&&!lock?`<div class="tag o" style="margin-bottom:6px">⭐ Besoin maintenant : ${why}</div>`:''}<div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(c)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${R0.d}</div>${!lock&&F.n?`<div class="sm" style="margin-top:6px">${after>=0&&st.cash>=c*2?'✅':'⚠️'} Après l’embauche, ton entreprise ${after>=0?'gagnerait':'perdrait'} ± <b class="${after>=0?'money':'neg'}">${eur(Math.abs(after))}/mois</b>${roleGain(r,F)?` (il/elle rapporte ± ${eur(roleGain(r,F))}/mois)`:''}.</div>`:''}
+      h+=`<div class="card ${why&&!lock?'acc':''}" style="${why&&!lock?'--ac:var(--or);':''}${lock?'opacity:.6':''}">${why&&!lock?`<div class="tag o" style="margin-bottom:6px">⭐ Besoin maintenant : ${why}</div>`:''}<div class="hd">${avatar({n:nextName(r),r,skin:strHash(nextName(r))%SKIN.length},52)}<div style="flex:1;min-width:0"><h3>${R0.n}</h3><div class="mut sm">${esc(nextName(r))} · ${eur(c)}/mois</div></div></div><details class="more"><summary>À quoi sert ce poste ?</summary><div class="mut sm">${R0.d}</div></details>${!lock&&F.n?`<div class="sm" style="margin-top:6px">${after>=0&&st.cash>=c*2?'✅':'⚠️'} Après l’embauche, ton entreprise ${after>=0?'gagnerait':'perdrait'} ± <b class="${after>=0?'money':'neg'}">${eur(Math.abs(after))}/mois</b>${roleGain(r,F)?` (il/elle rapporte ± ${eur(roleGain(r,F))}/mois)`:''}.</div>`:''}
       <button class="btn w" style="margin-top:10px" ${lock?'disabled':''} onclick="cvUI('role','${r}')">${R0.need&&ownW()<R0.need?`🔒 À partir de ${R0.need} personnes`:R0.multi&&has(r)?'📄 CV d’un gestionnaire de plus':'📄 Voir le CV'}</button></div>`}}}
   else{h+=terCard()+`<h2>Candidats (nouveaux chaque lundi${has('rh')?', trouvés par Sophie':''})</h2><p class="mut sm" style="margin:0 4px 10px">Coût employeur : salaire brut (barèmes 2026 de la commission paritaire 145.04 — parcs et jardins, 16,00 à 18,87 €/h brut) + ONSS + pécules de vacances. Pour engager, il faut de quoi payer un mois.</p>`;
     st.cand.forEach((w,i)=>h+=`<div class="card"><div class="hd">${avatar(w,52)}<div style="flex:1;min-width:0"><h3>${esc(w.n)}</h3><div class="mut sm">${ROLES[w.r].n} · ${eur(monthly(w))}/mois</div></div></div><div class="tags"><span class="tag">Efficacité ${dots(w.sk)} ${Math.round(w.sk*100)} %</span>${w.pc?'<span class="tag v">🪪 Permis C</span>':''}</div>${ROLES[w.r].d?`<div class="mut sm" style="margin-top:6px">${ROLES[w.r].d}</div>`:''}<button class="btn w" style="margin-top:10px" onclick="cvUI('cand',${i})">📄 Voir le CV</button></div>`);
@@ -3131,11 +3168,10 @@ function rMt(){let h=goalCard()+achCard()+siteCard()+`<h2>Matériel — prix HTV
   for(const [gn,keys] of EQG){const ks=keys.filter(k=>EQ[k]).sort((a,b)=>EQ[a].p-EQ[b].p);if(!ks.length)continue;h+=`<h2>${gn}</h2>`;
   for(const t of ks){const e=EQ[t],n=st.eq[t]||0,f=freeEq(t);const jobs=Object.values(JOBS).filter(J=>J.need.includes(t));
     h+=`<div class="card ${n?'acc':''}" style="--ac:var(--gr)">${photo('eq_'+t)}<div class="hd"><div class="ic" style="--ac2:${n?'#1d5232':'#24402e'}">${e.ic}</div><div style="flex:1;min-width:0"><h3>${e.n}</h3><div class="mut sm">${eur(e.p)} HTVA · usage ${eur(e.u)}/jour${e.veh?' · assurance + taxe '+(e.veh==='h'?'310':e.veh==='a'?'70':'160')+' €/mois':''}</div></div>${n?`<span class="tag g">×${n}</span>`:''}</div>
-    <div class="tags">${jobs.slice(0,6).map(J=>`<span class="tag ${J.p?'':'b'}">${J.ic} ${J.n.split(' ').slice(0,3).join(' ')}</span>`).join('')}${jobs.length>6?`<span class="tag">+ ${jobs.length-6} autres métiers</span>`:''}</div>
     ${n&&(tq(t)[2]||tq(t)[3])?`<div class="tags"><span class="tag">Standard ×${n-tq(t)[2]-tq(t)[3]}</span>${tq(t)[2]?`<span class="tag o">⭐ ${tierName(t,2)} ×${tq(t)[2]}</span>`:''}${tq(t)[3]?`<span class="tag v">💎 ${tierName(t,3)} ×${tq(t)[3]}</span>`:''}<span class="tag g">+${Math.round(tierShare(t,'sp')*100)} % de travail</span></div>`:''}
     <div class="row" style="margin-top:10px"><button class="btn" ${st.cash<e.p?'disabled':''} onclick="buy('${t}')">Acheter</button>${n?`<button class="btn s" onclick="sell('${t}')">Revendre</button><span class="mut sm">${f} libre(s)</span>`:''}</div>
     ${n?`<div class="row" style="margin-top:8px;flex-wrap:nowrap"><div style="flex:1"><div class="mut sm">Usure ${Math.round(wear(t))} %${wear(t)>70?' · ⚠️ risque de panne':''}</div><div class="pvbar" style="margin:4px 0 0;height:6px"><i style="width:${Math.round(wear(t))}%;background:${wear(t)>70?'var(--rd)':wear(t)>40?'var(--or)':'var(--gr)'}"></i></div></div>${wear(t)>=5?`<button class="btn s" style="padding:6px 9px" onclick="revise('${t}')">🔧 Réviser</button>`:''}</div>`:''}
-    <div style="margin-top:10px;border-top:1px solid #ffffff14;padding-top:8px"><div class="mut sm" style="margin-bottom:6px">Meilleure qualité : plus cher, mais tes équipes travaillent plus vite et la machine s’use moins.</div>${[2,3].map(tr=>`<div class="row" style="flex-wrap:nowrap;margin-top:6px"><div style="flex:1;min-width:0"><b class="sm">${TIERS[tr].ic} ${tierName(t,tr)}</b><div class="mut sm">${eur(tierPrice(t,tr))} HTVA · +${Math.round(TIERS[tr].sp*100)} % de travail · usure -${Math.round(TIERS[tr].us*100)} %</div></div><button class="btn s" style="padding:7px 10px" ${st.cash<tierPrice(t,tr)?'disabled':''} onclick="buyTier('${t}',${tr})">Acheter</button></div>`).join('')}</div></div>`}
+    <details class="more"><summary>Sert à ${jobs.length} métier${jobs.length>1?'s':''} · gammes de qualité</summary><div class="tags">${jobs.map(J=>`<span class="tag ${J.p?'':'b'}">${J.ic} ${J.n.split(' ').slice(0,3).join(' ')}</span>`).join('')}</div><div style="margin-top:10px;border-top:1px solid #ffffff14;padding-top:8px"><div class="mut sm" style="margin-bottom:6px">Meilleure qualité : plus cher, mais tes équipes travaillent plus vite et la machine s’use moins.</div>${[2,3].map(tr=>`<div class="row" style="flex-wrap:nowrap;margin-top:6px"><div style="flex:1;min-width:0"><b class="sm">${TIERS[tr].ic} ${tierName(t,tr)}</b><div class="mut sm">${eur(tierPrice(t,tr))} HTVA · +${Math.round(TIERS[tr].sp*100)} % de travail · usure -${Math.round(TIERS[tr].us*100)} %</div></div><button class="btn s" style="padding:7px 10px" ${st.cash<tierPrice(t,tr)?'disabled':''} onclick="buyTier('${t}',${tr})">Acheter</button></div>`).join('')}</div></details></div>`}
   }
   return h}
 function bilanCard(){const B=st.lastMon;if(!B)return'';const rows=Object.keys(CATN).filter(k=>B.M[k]).map(k=>`<tr><td>${CATN[k]}</td><td class="${B.M[k]>=0?'money':'neg'}">${B.M[k]>=0?'+':''}${eur(B.M[k])}</td></tr>`).join('');
@@ -3443,7 +3479,7 @@ function bizSum(){const M=st.mon||{},lr=liveRes(),H=st.mHist||[],last=H[H.length
   h+=`<div class="kpi" style="margin-top:12px"><div><span>⭐ Réputation</span><b>${stars(st.rep)}</b></div><div><span>✅ Chantiers terminés</span><b>${nb(st.stats.done)}</b></div><div><span>🏛️ Marchés gagnés</span><b>${st.stats.won} / ${st.stats.won+st.stats.lost}</b></div><div><span>👷 Personnel</span><b>${ownW()}</b></div></div>`;
   return h}
 function rBi(){const u=CLS[st.cls+1];const fl=fixedList();
-  let h=goalCard()+seg(biTab,[['res','🏠 Résumé'],['arg','💶 Argent'],['soc','🏛️ Société'],['emp','🏆 Empire'],...(megaOpen()?[['mega','🌐 Géant']]:[]),['plus','⚙️ Plus']],'biTab');
+  let h=goalCard()+(biTab==='emp'&&seenIt('emp'),'')+seg(biTab,[['res','🏠 Résumé'],['arg','💶 Argent'],['soc','🏛️ Société'],['emp','🏆 Empire',lockW('emp'),isNew('emp')],...(megaOpen()?[['mega','🌐 Géant']]:[]),['plus','⚙️ Plus']],'biTab');
   if(biTab==='arg')h+=dashCard()+`${monNow()}${bilanCard()}
   <h2>Frais fixes (prélevés le 1er du mois)</h2><div class="card"><table>${fl.map(x=>`<tr><td>${x[0]}</td><td>${eur(x[1])}</td></tr>`).join('')||'<tr><td class="mut">Rien pour le moment</td><td></td></tr>'}<tr><td>Salaires (coût employeur)</td><td>${eur(payroll()*WDM)}</td></tr>${aidList().map(x=>`<tr><td>🤝 ${x[0]}</td><td class="money">-${eur(x[1])}</td></tr>`).join('')}<tr><td><b>Total par mois</b></td><td class="neg">${eur(fixedM()+payroll()*WDM-aidList().reduce((a,x)=>a+x[1],0))}</td></tr></table><p class="mut sm">Les ouvriers sont payés uniquement les jours ouvrables (pas les week-ends, jours fériés, congés du bâtiment). Les jours d'intempéries : chômage temporaire payé par l'ONEM.</p></div>
   ${st.lastTax?`<h2>Impôts et cotisations (${st.lastTax.mn})</h2><div class="card"><table><tr><td>Bénéfice du mois (après amortissement des machines sur 5 ans)</td><td>${eur(st.lastTax.profit)}</td></tr><tr><td>${st.srl?'Cotisations sociales du dirigeant':'Cotisations sociales d’indépendant (20,5 %, minimum 290 €)'}</td><td>${eur(st.lastTax.cot)}</td></tr><tr><td>${st.srl?'Impôt des sociétés (20 à 25 %)':'Impôt sur le revenu (versement anticipé)'}</td><td>${eur(st.lastTax.imp)}</td></tr></table></div>`:''}
