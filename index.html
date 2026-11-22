@@ -549,6 +549,7 @@ function restorePrev(ok){let s=null;try{s=JSON.parse(rdS(PREV))}catch(e){}if(!s|
   try{st=migrate(s);save();closeM();render();toastMsg('Copie restaurée ✓')}catch(e){toastMsg('Impossible de restaurer cette copie.')}}
 let lastSave=0,savePend=0,NOSAVE=0;
 function save(force){if(NOSAVE||!st)return;if(TICKING&&!force)return;const now=Date.now();if(!force&&now-lastSave<1500){savePend=1;return}let j;try{j=JSON.stringify(st)}catch(e){return}
+  idbMirror(j);
   if(j.length<LZMIN){lastSave=now;savePend=0;try{localStorage.setItem(SAVE,j);if(st.day%5===0)localStorage.setItem(BAK,j);saveErr=0;lzWr=++lzSeq}catch(e){
     // mémoire pleine : on libère la place prise par le cache des photos et la copie bak, puis on réessaie
     saveFull(()=>{localStorage.setItem(SAVE,j);lzWr=++lzSeq})}return}
@@ -557,10 +558,27 @@ function save(force){if(NOSAVE||!st)return;if(TICKING&&!force)return;const now=D
   if(soft&&lzSend({k:SAVE,j,b,q}))return;
   let z;try{z=LZ.z(j)}catch(e){return}try{lzPut(SAVE,z);if(b)lzPut(BAK,z);lzWr=q;saveErr=0}catch(e){saveFull(()=>{lzPut(SAVE,z);lzWr=q})}}
 let saveErr=0;
+/* ---------- Copie de secours dans IndexedDB (pas de limite de 5 Mo) ----------
+   localStorage reste la sauvegarde principale (clés inchangées). IndexedDB garde en plus la dernière partie complète,
+   écrite en arrière-plan au plus toutes les 15 s et en quittant. Elle n'est proposée que si localStorage est vide ou illisible. */
+const IDBN='routenette-db';let idbT=0,idbQ=null,idbReady=0;
+function idbOpen(){return new Promise((ok,ko)=>{try{const r=indexedDB.open(IDBN,1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)}catch(e){ko(e)}})}
+function idbPut(j){idbOpen().then(db=>{const tx=db.transaction('s','readwrite');tx.objectStore('s').put({j,t:Date.now(),day:st?st.day:0,n:st?st.name:''},'save');tx.oncomplete=()=>db.close()}).catch(()=>{})}
+function idbGet(){return idbOpen().then(db=>new Promise(ok=>{const r=db.transaction('s').objectStore('s').get('save');r.onsuccess=()=>{ok(r.result||null);db.close()};r.onerror=()=>{ok(null);db.close()}})).catch(()=>null)}
+function idbDel(){try{indexedDB.deleteDatabase(IDBN)}catch(e){}}
+function idbMirror(j,now){if(typeof indexedDB==='undefined'||NOSAVE)return;idbQ=j;if(!idbReady)return;if(!now&&Date.now()-idbT<15000)return;idbT=Date.now();const x=idbQ;idbQ=null;idbPut(x)}
+setInterval(()=>{if(idbQ&&!NOSAVE&&idbReady)idbMirror(idbQ,1)},15000);
+function idbRestore(ok){idbGet().then(rec=>{if(!rec||!rec.j)return toastMsg('Pas de copie de secours.');
+  if(!ok)return ask(`Restaurer la copie de secours ?\nPartie : ${rec.n||'?'}\nJour : ${rec.day}\nCopiée le : ${new Date(rec.t).toLocaleString('fr-BE')}\nTa partie actuelle est d’abord mise de côté (copie de sécurité).`,()=>idbRestore(1),{ic:'🗄️',ok:'Restaurer'});
+  NOSAVE=1;try{const old=localStorage.getItem(SAVE);if(old)localStorage.setItem('routenette-rescue-'+Date.now(),old)}catch(e){}
+  try{localStorage.setItem(SAVE,rec.j)}catch(e){try{lzPut(SAVE,LZ.z(rec.j))}catch(e2){NOSAVE=0;return toastMsg('⚠️ Mémoire pleine : impossible de restaurer ici.')}}location.reload()})}
+// au démarrage : si la sauvegarde principale est vide ou illisible mais qu'une copie de secours plus avancée existe, on la propose (sans rien écraser)
+function idbCheck(){if(typeof indexedDB==='undefined')return;idbGet().then(rec=>{idbReady=1;if(!rec||!rec.j||!(rec.day>0))return;
+  if((!bootHad||loadFail)&&(!st||!st.started||rec.day>st.day)){idbReady=0;idbRestore();setTimeout(()=>{idbReady=1},60000)}})}
 setInterval(()=>{if(savePend)save(2)},2000); // rattrapage : en arrière-plan pour les grosses parties (avant : compression sur l'écran principal toutes les 2 s)
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 // en quittant l'appli : une seule sauvegarde légère (la compression des grosses parties se fait en arrière-plan), pas de redessin
-let quitT=0;function saveQuit(){if(!st||NOSAVE)return;const now=Date.now();if(now-quitT<5000)return;quitT=now;let j;try{j=JSON.stringify(st)}catch(e){return}
+let quitT=0;function saveQuit(){if(!st||NOSAVE)return;const now=Date.now();if(now-quitT<5000)return;quitT=now;let j;try{j=JSON.stringify(st)}catch(e){return}idbMirror(j,1);
   if(j.length<LZMIN){try{localStorage.setItem(SAVE,j);lzWr=++lzSeq;lastSave=now;savePend=0}catch(e){save(1)}return}
   const q=++lzSeq;lastSave=now;savePend=0;if(!lzSend({k:SAVE,j,b:false,q}))save(1)}
 addEventListener('visibilitychange',()=>{if(document.hidden&&st){if(typeof speed!=='undefined'&&speed){speed=0;pausedAway=1}saveQuit()}else if(typeof pausedAway!=='undefined'&&pausedAway){pausedAway=0;try{render()}catch(e){}setTimeout(()=>toastMsg('⏸ Jeu en pause pendant ton absence. Appuie sur ▶ pour reprendre.'),300)}});
@@ -2025,7 +2043,11 @@ function rIt(){const L=itList(),busy=new Map();st.contracts.forEach(c=>c.st==='r
 // nouveaux métiers : bonus des ouvriers spécialisés et effets mensuels des employés
 const PAVJ=['trottoirs','pmr','pontage','p_allee'],MARQJ=['marquage','marq_auto'],AUTJ=['autoroute','marq_auto','deneig_auto','balay_auto','epareuse_auto','cloture'],HIVJ=['deneig','deneig_auto','depots_sel','p_neige','p_selpk'];
 function specB(c,crew){let f=1;const hasR=r=>crew.some(w=>w.r===r);if(PAVJ.includes(c.j)&&hasR('paveur'))f*=1.15;if(MARQJ.includes(c.j)&&hasR('peintre'))f*=1.2;if(AUTJ.includes(c.j)&&hasR('signal'))f*=1.1;if(HIVJ.includes(c.j)&&has('hiver')){f*=1.15;rsAdd('hiv',1)}if(st.mega){if(['panneaux','glis_pose','cloture'].includes(c.j)&&indOn('pann'))f*=1.1;if(HIVJ.includes(c.j)&&indOn('sel'))f*=1.1}return f}
-function rolesMonth(){for(const f of[echoTick,ipoMonth,costWarnMonth,indexTick,bigEvTick,acMonth,rivMonth,megaMonth,pvMonth4,hMonth,pvMonth5,pvWorthTick])try{f()}catch(e){console.error(e)}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
+function slimTick(){const r2=x=>Math.round(x*1000)/1000;for(const w of st.workers){if(typeof w.mot==='number')w.mot=r2(w.mot);if(typeof w.seen==='number')w.seen=r2(w.seen);if(typeof w.sk==='number')w.sk=Math.round(w.sk*1e4)/1e4;
+    for(const o of[w.s,w.pf,w.pq])if(o){if(o.rev)o.rev=Math.round(o.rev);if(o.cost)o.cost=Math.round(o.cost)}}
+  if(st.mk)for(const k in st.mk){const M=st.mk[k];if(M&&M.h){M.p=Math.round(M.p*100)/100;M.h=M.h.map(v=>Math.round(v*100)/100)}}
+  if(st.dHist&&st.dHist.length>400)st.dHist=st.dHist.slice(-400)}
+function rolesMonth(){for(const f of[slimTick,echoTick,ipoMonth,costWarnMonth,indexTick,bigEvTick,acMonth,rivMonth,megaMonth,pvMonth4,hMonth,pvMonth5,pvWorthTick])try{f()}catch(e){console.error(e)}if(has('comm')&&st.rep<95){st.rep=clamp(st.rep+1,0,100);rsAdd('comm',1)}if(has('rsoc'))fieldOwn().forEach(w=>{if(!w.boss)w.mot=Math.min(1,(w.mot||0)+.03)})}
 /* ---------- Indexation, contrats d'entretien, concurrents, grands événements, astuces, notifications ---------- */
 // Indexation automatique des salaires (Belgique) : chaque 1er janvier ; les prix du marché suivent à 90 %
 const pIdx=()=>1+((st.idx||1)-1)*.98;
@@ -2846,7 +2868,7 @@ const loanMax=()=>st.adm.bce?Math.round((20000+caRecent()*.3)*(has('compta')?1.5
 function loan(k){if(k>0){if(st.loan+5000>loanMax())return toastMsg(st.adm.bce?"La banque refuse : montant maximum atteint. Fais plus de chiffre d'affaires.":"La banque ne prête qu'aux entreprises inscrites à la BCE.");st.loan+=5000;mv(5000,'Prêt bancaire','loan');st.mLoan+=5000;kaching()}else{if(st.loan<=0||st.cash<5000)return;st.loan-=5000;mv(-5000,'Remboursement du prêt','loan');st.mLoan-=5000}save();render()}
 function rename(){showModal(`<h3>Nom de ta société</h3><input type="text" id="nm" value="${esc(st.name)}" maxlength="28"><p></p><button class="btn w" onclick="setName()">Enregistrer</button>`)}
 function setName(){const v=$('#nm').value.trim().replace(/[<>&"]/g,'');if(v)st.name=v;closeM();save();render();if(pendFr){const o=pendFr;pendFr=null;setTimeout(()=>addFriend(o,1),400)}}
-function restart(force){if(!force)return ask('Tout effacer ?\n⚠️ Ton entreprise, ta vie privée et toute ta progression seront supprimées pour recommencer à zéro.',()=>restart(1),{ic:'🗑️',ok:'Tout effacer',danger:1});NOSAVE=1;try{const old=localStorage.getItem(SAVE)||localStorage.getItem(PREV);if(old)localStorage.setItem('routenette-trash',old);/* copie hors du chargement, au cas où */localStorage.removeItem(SAVE);localStorage.removeItem(BAK);localStorage.removeItem(PREV)}catch(e){}location.reload()}
+function restart(force){if(!force)return ask('Tout effacer ?\n⚠️ Ton entreprise, ta vie privée et toute ta progression seront supprimées pour recommencer à zéro.',()=>restart(1),{ic:'🗑️',ok:'Tout effacer',danger:1});NOSAVE=1;try{const old=localStorage.getItem(SAVE)||localStorage.getItem(PREV);if(old)localStorage.setItem('routenette-trash',old);/* copie hors du chargement, au cas où */localStorage.removeItem(SAVE);localStorage.removeItem(BAK);localStorage.removeItem(PREV)}catch(e){}idbDel();setTimeout(()=>location.reload(),150)}
 function exportSave(){save(1);const code='RNZ1'+LZ.zb(JSON.stringify(st));showModal(`<h3>💾 Code de sauvegarde</h3><p class="mut">Garde ce code (dans tes notes ou par message) pour retrouver ta partie sur un autre GSM.</p><textarea id="sv" rows="5" readonly>${code}</textarea><p></p><div class="row"><button class="btn" onclick="copySave()">Copier</button><button class="btn s" onclick="closeM()">Fermer</button></div>`)}
 function copySave(){const t=$('#sv');t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(()=>toastMsg('Code copié ✓')).catch(()=>{try{document.execCommand('copy');toastMsg('Code copié ✓')}catch(e){}})}
 function importUI(){showModal(`<h3>📥 Charger une sauvegarde</h3><p class="mut">Colle ici ton code de sauvegarde. Ta partie actuelle sera remplacée.</p><textarea id="sv" rows="5"></textarea><p></p><div class="row"><button class="btn" onclick="importGo()">Charger</button><button class="btn s" onclick="closeM()">Annuler</button></div>`)}
@@ -2855,7 +2877,9 @@ function importGo(){try{const v=$('#sv').value.trim(),s=JSON.parse(v.startsWith(
 /* ---------- Chargement ---------- */
 
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+const bootHad=(()=>{try{return!!localStorage.getItem(SAVE)}catch(e){return false}})();
 st=load();
+setTimeout(idbCheck,1200);
 if(st&&st.over){if((st.prj||0)<2){st.over=false;setTimeout(()=>{rescue();render()},900)}else setTimeout(failUI,900)}
 if(!st&&loadFail)setTimeout(()=>showModal(`<h3>🛟 Ta partie est gardée en sécurité</h3><p class="mut">Le jeu n’a pas réussi à lire ta sauvegarde. Elle n’est pas effacée : une copie de secours est gardée sur ton téléphone. Envoie une capture de ce message pour qu’on la récupère.</p><button class="btn w" onclick="closeM()">OK</button>`),1200);
 if(!st){st=defaults();st.riv=newRivals();for(let i=0;i<14;i++)genTender();genJob('p_dechets');genJob('p_dechets');genJob();genJob();refreshCand();save()}
@@ -3917,7 +3941,7 @@ function optUI(){let off='';try{off=localStorage.getItem('rn-intro-off')||''}cat
   <button class="btn s" onclick="introTog()">${off?'🎬 Intro : désactivée':'🎬 Intro : activée'}</button>
   <button class="btn s" onclick="closeM();introRun(1)">▶️ Revoir l'intro</button>
   <button class="btn s" onclick="st.echoOff=st.echoOff?0:1;save();optUI()">${st.echoOff?'📰 L’Écho : désactivé':'📰 L’Écho : activé'}</button></div></div>
-  <div class="card"><b class="sm">💾 Ma partie</b><div class="row" style="margin-top:8px"><button class="btn s" onclick="exportSave()">💾 Sauvegarde</button><button class="btn s" onclick="importUI()">📥 Charger</button><button class="btn s" onclick="restorePrev()">🛟 Copie d’avant</button></div></div>
+  <div class="card"><b class="sm">💾 Ma partie</b><div class="row" style="margin-top:8px"><button class="btn s" onclick="exportSave()">💾 Sauvegarde</button><button class="btn s" onclick="importUI()">📥 Charger</button><button class="btn s" onclick="restorePrev()">🛟 Copie d’avant</button><button class="btn s" onclick="idbRestore()">🗄️ Copie de secours</button></div></div>
   <div class="card"><div class="row"><button class="btn s" onclick="closeM();chkV(1)">🔄 Vérifier les mises à jour</button></div><div class="mut sm" style="margin-top:6px">${esc($('#ver')?$('#ver').textContent:'')}</div></div>
   <button class="btn w" onclick="closeM()">Fermer</button>`)}
 function introTog(){try{if(localStorage.getItem('rn-intro-off'))localStorage.removeItem('rn-intro-off');else localStorage.setItem('rn-intro-off','1')}catch(e){}optUI()}
