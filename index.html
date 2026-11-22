@@ -3808,16 +3808,26 @@ const CLR={
   tech:{n:'Technicienne de surface',ic:'🧽',brut:17.02,k:1.42,cp:'CP 121 cat. 1A',pool:'of',hw:[15,20,25,30,38]},
   vit:{n:'Laveur de vitres',ic:'🪟',brut:19.60,k:1.45,cp:'CP 121 cat. 6',pool:'vi',hw:[38]},
   chef:{n:'Cheffe d’équipe',ic:'🧑‍🔧',brut:19.40,k:1.45,cp:'CP 121 cat. 7',pool:'of',hw:[38],work:.5}};
-const CLO={// personnel de bureau : coût employeur mensuel
-  plan:{n:'Planificatrice',nm:'Fatima El Amrani',ic:'📅',m:4300,d:'Remplace les absentes (−40 % d’heures perdues) et accepte toute seule les nouveaux clients titres-services quand il y a de la place.'},
+const CLO={// personnel de bureau : coût employeur mensuel ; one = un seul poste ; f = femme
+  plan:{n:'Planificatrice',nm:'Fatima El Amrani',f:1,ic:'📅',m:4300,d:'Remplace les absentes (−40 % d’heures perdues) et accepte toute seule les nouveaux clients titres-services quand il y a de la place. Au-delà de 12 personnes sur le terrain, sans elle, tout le monde perd 6 % d’efficacité.'},
   com:{n:'Commercial(e)',nm:'Olivier Mathieu',ic:'🤝',m:5200,d:'+50 % de demandes de clients. Envoie lui-même les devis au prix du marché (réglable).'},
-  rh:{n:'Gestionnaire RH',nm:'Caroline Dethier',ic:'🗂️',m:4400,d:'Recrute toute seule chaque lundi quand il manque des heures (Forem, Actiris, agences). Départs −30 %.'},
-  qual:{n:'Contrôleuse qualité',nm:'Sandrine Pirard',ic:'🔍',m:4200,d:'Contrôles sur place : qualité +10 sur tous les contrats (1 pour 200 personnes sur le terrain).'},
-  tsr:{n:'Responsable d’agence titres-services',nm:'Nathalie Gilson',ic:'🏠',m:4500,d:'+40 % de demandes titres-services, clients plus fidèles (1 agence pour ± 120 aides-ménagères).'},
-  off:{n:'Responsable des appels d’offres',nm:'Pierre Lemaire',ic:'📑',m:5600,d:'Remet lui-même les offres aux marchés publics quand tu remplis les conditions (+5 points de qualité dans les offres).'},
+  rh:{n:'Gestionnaire RH',nm:'Caroline Dethier',f:1,ic:'🗂️',m:4400,d:'Recrute toute seule chaque lundi quand il manque des heures (Forem, Actiris, agences) et peut se séparer du personnel en trop ou pas sérieux. Départs −30 %.'},
+  qual:{n:'Contrôleuse qualité',nm:'Sandrine Pirard',f:1,ic:'🔍',m:4200,d:'Contrôles sur place : qualité +10 sur tous les contrats (1 pour 200 personnes sur le terrain). Traite les plaintes des clients.'},
+  tsr:{n:'Responsable d’agence titres-services',nm:'Nathalie Gilson',f:1,ic:'🏠',m:4500,d:'+40 % de demandes titres-services, clients plus fidèles (1 agence pour ± 120 aides-ménagères).'},
+  off:{n:'Responsable des appels d’offres',nm:'Pierre Lemaire',ic:'📑',m:5600,one:1,d:'Remet lui-même les offres aux marchés publics quand tu remplis les conditions (+5 points de qualité dans les offres).'},
   compta:{n:'Comptable',nm:'Marc Wauthier',ic:'🧮',m:4900,d:'Relance les clients : paiements 10 jours plus tôt en moyenne.'},
-  prev:{n:'Conseiller en prévention',nm:'Julien Dethier',ic:'🦺',m:4600,d:'Accidents du travail −40 %, prime d’assurance accidents du travail −0,5 point.'},
-  dir:{n:'Directrice d’exploitation',nm:'Valérie Hanquet',ic:'👩‍💼',m:8500,d:'Indispensable au-delà de 150 personnes : sans elle, l’organisation perd 10 % d’efficacité. Achète aussi le matériel manquant.'}};
+  aide:{n:'Aide-comptable (facturation)',nm:'Mélanie Hardy',f:1,ic:'🧾',m:4000,d:'Encode et envoie les factures le jour même : paiements 5 jours plus tôt. Indispensable dès ± 30 personnes (1 pour ± 300).'},
+  secr:{n:'Secrétaire d’accueil',nm:'Nadia Bouzid',f:1,ic:'☎️',m:3700,d:'Répond au téléphone : 3 demandes de clients en plus peuvent attendre une réponse, et elles restent 5 jours de plus.'},
+  cs:{n:'Responsable service clients',nm:'Aurélie Fransen',f:1,ic:'💬',m:4600,d:'Suit les clients : plaintes −30 %, qualité ressentie +2, +15 % de chances de garder un contrat remis en concurrence (1 pour ± 60 contrats).'},
+  prev:{n:'Conseiller en prévention',nm:'Julien Dethier',ic:'🦺',m:4600,one:1,d:'Accidents du travail −40 %, prime d’assurance accidents du travail −0,5 point.'},
+  chefp:{n:'Chef du personnel',nm:'Didier Leroy',ic:'👔',m:4800,one:1,d:'Traite tout seul les rapports sur le personnel : entretien, puis avertissement écrit. Les licenciements, c’est toi (ou Caroline) qui décides.'},
+  form:{n:'Formatrice interne',nm:'Catherine Jadot',f:1,ic:'🎓',m:4100,d:'Forme gratuitement une personne de terrain par semaine : efficacité +5 %, motivation en hausse (1 pour ± 250 personnes).'},
+  achat:{n:'Acheteur',nm:'Thomas Wéry',ic:'🛒',m:4700,one:1,d:'Négocie avec les fournisseurs : produits et consommables −8 %. Achète chaque semaine le matériel qui manque sur tes contrats quand il y a l’argent.'},
+  recouv:{n:'Gestionnaire du recouvrement',nm:'Laurence Thiry',f:1,ic:'📬',m:4300,one:1,d:'Relance les pouvoirs publics : leurs retards de paiement sont divisés par 3.'},
+  comm:{n:'Chargée de communication',nm:'Emma Lecomte',f:1,ic:'📣',m:4200,one:1,d:'Site, réseaux sociaux, presse locale : +1 de réputation par mois (jusqu’à 90) et +20 % de demandes de clients.'},
+  dir:{n:'Directrice d’exploitation',nm:'Valérie Hanquet',f:1,ic:'👩‍💼',m:8500,one:1,d:'Indispensable au-delà de 150 personnes : sans elle, l’organisation perd 10 % d’efficacité. Achète aussi le matériel manquant.'},
+  daf:{n:'Directeur administratif et financier',nm:'Laurent Collignon',ic:'🏦',m:9500,one:1,d:'Négocie avec la banque : découvert autorisé +50 %, prêt à 4,5 % au lieu de 5,5 %.'},
+  orga:{n:'Responsable de l’organisation du bureau',nm:'Hélène Dumoulin',f:1,ic:'🧭',m:4900,one:1,d:'Chaque lundi, elle engage le personnel de bureau qui manque et se sépare de ceux qui ne servent plus, selon les besoins et l’argent de la société.'}};
 const CLE={
   henry:{n:'Aspirateur Numatic Henry',ic:'🧹',p:230,d:'Matériel de base : 1 pour 3 techniciennes.'},
   chariot:{n:'Chariot de ménage complet',ic:'🛒',p:450,d:'Matériel de base : 1 pour 2 techniciennes.'},
@@ -3894,7 +3904,7 @@ const clCa12=()=>(st.cl.caM||[]).slice(-12).reduce((a,b)=>a+b,0)+(st.cl.pl.rev||
 const clEqVal=()=>Object.keys(st.cl.eq).reduce((a,k)=>a+CLE[k].p*st.cl.eq[k],0);
 const clRecv=()=>st.cl.inv.reduce((a,v)=>a+v.a,0);
 const clVal=()=>{const C=st.cl;if(!C||C.over)return 0;return Math.max(0,Math.round(C.cash-C.loan+clRecv()+clEqVal()*.6+clCa12()*.55))};
-const clOver=()=>25000+Math.min(2e6,clCa12()*.1);
+const clOver=()=>(25000+Math.min(2e6,clCa12()*.1))*(st.cl&&st.cl.off&&st.cl.off.daf?1.5:1);
 const clReserve=()=>Math.round(3*(clPayroll()+clFixedM()));
 const clCanPay=()=>Math.max(0,Math.round(st.cl.cash-clReserve()));
 function clFixedL(){const C=st.cl,n=C.staff.length+Object.values(C.off).reduce((a,b)=>a+b,0),pay=clPayroll(),L=[];
@@ -3907,7 +3917,7 @@ function clFixedL(){const C=st.cl,n=C.staff.length+Object.values(C.off).reduce((
   const ev=clEqVal();if(ev)L.push(['Entretien du matériel (1 %/mois)',ev*.01]);
   const am=clField('am').length;if(am)L.push(['Formation obligatoire des aides-ménagères',12*am]);
   if(C.ten.some(t=>t.my&&t.won)||C.ctr.some(c=>c.pub&&c.st==='run'))L.push(['Cautionnements (garantie bancaire 1,5 %/an)',C.ctr.filter(c=>c.pub&&c.st==='run').reduce((a,c)=>a+c.hpw*52*c.price*.05*.015/12,0)]);
-  if(C.loan)L.push(['Intérêts du prêt (5,5 %/an)',C.loan*.055/12]);
+  if(C.loan)L.push([clOffN('daf')?'Intérêts du prêt (4,5 %/an, négocié par le DAF)':'Intérêts du prêt (5,5 %/an)',C.loan*(clOffN('daf')?.045:.055)/12]);
   return L}
 const clFixedM=()=>clFixedL().reduce((a,x)=>a+x[1],0);
 
@@ -3924,7 +3934,174 @@ function clHireAuto(r){const C=st.cl;const p=clPerson(r);p.id=C.nid++;p.day=st.d
 function clFire(id,ok){const C=st.cl,w=C.staff.find(x=>x.id===id);if(!w||w.boss)return;const ind=Math.round(clWage(w)*.25*(1+Math.min(3,(st.day-w.day)/365)));
   if(!ok)return ask(`Licencier ${w.n} ?\nFonction : ${CLR[w.r].n}\nIndemnité de préavis (statut unique) : ${eur(ind)}`,()=>clFire(id,1),{ic:'✋',ok:'Licencier',danger:1});
   C.staff.splice(C.staff.indexOf(w),1);clMv(-ind,'Indemnité de préavis — '+w.n,'sal');C.pl.cost+=ind;clLog(`✋ ${w.n} quitte la société (indemnité ${eur(ind)}).`);save();render()}
-function clOffHire(k,d){const C=st.cl;if(!clHas('onss'))return toastMsg('Il faut d’abord l’immatriculation employeur à l’ONSS.');C.off[k]=Math.max(0,clOffN(k)+d);if(!C.off[k])delete C.off[k];clk();clLog(d>0?`👩‍💼 ${CLO[k].n} engagé(e).`:`👋 Un poste de ${CLO[k].n.toLowerCase()} en moins.`);save();render()}
+function clOffHire(k,d){const C=st.cl;if(!clHas('onss'))return toastMsg('Il faut d’abord l’immatriculation employeur à l’ONSS.');C.off[k]=Math.max(0,clOffN(k)+d);if(!C.off[k])delete C.off[k];
+  if(d>0){const p=clOffPers(k);clLog(`👩‍💼 ${p.n} est engagé(e) : ${CLO[k].n.toLowerCase()}.`)}else{clOffSync(C);clLog(`👋 Un poste de ${CLO[k].n.toLowerCase()} en moins.`)}clk();save();render()}
+
+/* ---------- BUREAU DU NETTOYAGE (comme Route Nette) ----------
+   C.off[k] = nombre de postes (toutes les règles du jeu l'utilisent) ; C.offP = les vraies personnes {id,k,n,f,hd,age,town}.
+   clBurPrio() classe les postes selon le besoin ; Hélène (orga) engage/licencie le lundi ; Caroline (rh) gère le terrain. */
+let clTeamTab='ter';
+const clRs=(k,v)=>{const C=st.cl;C.rs=C.rs||{};C.rs[k]=(C.rs[k]||0)+(v===undefined?1:v)};
+const clRsG=k=>Math.round(((st.cl.rs||{})[k])||0);
+function clOffName(k){const C=st.cl,O=CLO[k];C.offNx=C.offNx||{};if(C.offNx[k])return C.offNx[k];const used=new Set((C.offP||[]).map(p=>p.n));
+  let x;if(!used.has(O.nm)&&!(C.offF||[]).includes(O.nm))x={n:O.nm,f:O.f?1:0};else{const f=Math.random()<.65;x={n:pick(f?CLPF:CLPM)+' '+pick(NOMS),f:f?1:0}}x.age=RI(26,58);x.town=pick(TOWNS);C.offNx[k]=x;return x}
+function clOffPers(k,hd){const C=st.cl,x=clOffName(k);delete C.offNx[k];const p={id:C.nid++,k,n:x.n,f:x.f,age:x.age,town:x.town,hd:hd===undefined?st.day:hd,off:1};C.offP.push(p);return p}
+function clOffSync(C){C.offP=C.offP||[];C.offP=C.offP.filter(p=>CLO[p.k]);for(const k in CLO){const L=C.offP.filter(p=>p.k===k),n=C.off[k]||0;
+  if(L.length<n){const keep=st.cl;st.cl=C;for(let i=L.length;i<n;i++)clOffPers(k,C.found||0);st.cl=keep}else if(L.length>n){const drop=new Set(L.sort((a,b)=>b.hd-a.hd).slice(0,L.length-n).map(p=>p.id));C.offP=C.offP.filter(p=>!drop.has(p.id))}}}
+const clOffCostK=k=>Math.round(CLO[k].m*(st.cl.idx||1));
+const clOffCost=()=>Object.keys(st.cl.off).reduce((a,k)=>a+clOffCostK(k)*clOffN(k),0);
+const clOffPre=p=>Math.round(clOffCostK(p.k)*(.5+Math.min(2.5,(st.day-(p.hd||0))/365*.25)));
+function clOffFire(id,ok,why){const C=st.cl,p=(C.offP||[]).find(x=>x.id===id);if(!p)return;const pre=clOffPre(p);
+  if(!ok)return ask(`Licencier ${p.n} ?\nFonction : ${CLO[p.k].n}\nChez toi depuis : ${dstr(p.hd)} ${date(p.hd).getFullYear()}\nIndemnité de préavis (statut unique) : ${eur(pre)}`,()=>clOffFire(id,1),{ic:'✋',ok:'Licencier',danger:1});
+  C.offP.splice(C.offP.indexOf(p),1);C.off[p.k]=Math.max(0,clOffN(p.k)-1);if(!C.off[p.k])delete C.off[p.k];C.offF=C.offF||[];C.offF.push(p.n);if(C.offF.length>40)C.offF.shift();
+  clMv(-pre,'Indemnité de préavis — '+p.n,'sal');C.pl.cost+=pre;if(why)return pre;clk();clLog(`✋ ${p.n} (${CLO[p.k].n.toLowerCase()}) quitte la société (indemnité ${eur(pre)}).`);save();render()}
+// ce qu'il faut pour chaque poste : [nombre conseillé, note du besoin quand il en manque, raison]
+function clBurNeeds(){const C=st.cl,n=C.staff.length,N=clStaffN(),run=C.ctr.filter(c=>c.st==='run'),{cap}=clCap();
+  const miss=Math.max(0,clDemOf()-cap.of)+(clHas('tsag')?Math.max(0,C.ts.h/5-cap.ts):0),am=clField('am').length,fo=clField('tech').length+clField('chef').length+clField('vit').length;
+  const avgQ=run.length?run.reduce((a,c)=>a+(c.q||70),0)/run.length:80,nc=(C.comp||[]).length,nr=(C.ren||[]).length,nrp=(C.rpt||[]).filter(r=>!r.sig).length;
+  const nt=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length,idle=Math.round(C.idle||0),freeQ=C.dem.filter(q=>!q.sent).length,capQ=6+2*clOffN('com')+3*Math.min(2,clOffN('secr'))+Math.floor(n/25);
+  const consM=run.reduce((a,c)=>a+c.hpw/5,0)*.55*21.7,missEq=Object.entries(clMiss()).reduce((a,[k,m])=>a+CLE[k].p*m,0),pubN=run.filter(c=>c.pub).length,recv=clRecv(),pay=clPayroll();
+  const U={};const u=(k,want,sc,why,base)=>U[k]={want,sc,why,base:base||25};
+  u('plan',n>12?Math.max(1,Math.ceil(n/150)):0,90,!clOffN('plan')?'au-delà de 12 personnes sur le terrain, sans planificatrice tout le monde perd 6 % d’efficacité':`1 planificatrice pour ± 150 personnes : tu en as ${clOffN('plan')} pour ${n}`,40);
+  u('dir',N>=130?1:0,97,'obligatoire au-delà de 150 personnes (sinon −10 % d’efficacité)');
+  u('rh',miss>3||n>=10?Math.max(1,Math.ceil(n/300)):0,miss>3?88:60,miss>3?`il manque ± ${Math.round(miss)} heures de travail par jour`:'recrute et remplace les départs chaque lundi',35);
+  u('com',idle>15&&clHas('rc')?Math.min(3,clOffN('com')+1):run.length>=3||idle>8?Math.max(1,Math.min(3,clOffN('com'))):0,idle>15?80:50,idle>15?`${idle} heures par jour payées sans travail : il faut plus de clients`:'trouve de nouveaux clients et envoie les devis',35);
+  if(clHas('tsag'))u('tsr',am>=10||C.ts.wait>10?Math.max(1,Math.ceil(am/120)):0,C.ts.wait>10?78:66,C.ts.wait>10?`${C.ts.wait} familles attendent une aide-ménagère`:`1 agence pour ± 120 aides-ménagères (tu en as ${am})`,20);
+  {const qOk=(C.cov??1)>=.9;u('qual',run.length>=4&&(nc>=2||fo>=30||(qOk&&avgQ<75))?Math.max(1,Math.ceil(fo/200)):0,nc>=2||(qOk&&avgQ<75)?78:58,nc>=2?`${nc} plaintes de clients`:qOk&&avgQ<75?`qualité moyenne ${Math.round(avgQ)}/100 sur tes contrats`:`${fo} personnes à contrôler sur les contrats`,30)}
+  u('off',nt?1:0,76,`${nt} marché${nt>1?'s':''} public${nt>1?'s':''} où tu peux remettre offre`,25);
+  u('compta',N>=20?Math.max(1,Math.ceil(N/400)):0,recv>pay*2?80:66,recv>pay*2?`${eur(recv)} de factures pas encore payées`:'beaucoup de factures : paiements 10 jours plus tôt',30);
+  u('aide',N>=30?Math.max(1,Math.ceil(N/300)):0,70,'beaucoup de factures et de paperasse (dès ± 30 personnes)',22);
+  u('secr',freeQ>=capQ-1||N>=60?Math.max(1,Math.ceil(N/400)):0,62,freeQ>=capQ-1?'des demandes de clients se perdent : la file est pleine':'beaucoup d’appels de clients et de candidats',18);
+  u('cs',run.length>=15?Math.max(1,Math.ceil(run.length/60)):nc>=2||nr?1:0,nr||nc>=2?72:62,nr?`${nr} contrat${nr>1?'s':''} remis en concurrence`:nc>=2?`${nc} plaintes à gérer`:`${run.length} contrats à suivre`,20);
+  u('prev',N>=50?1:0,84,'conseillé dès 50 personnes : moins d’accidents du travail et assurance moins chère',20);
+  u('chefp',nrp>=3||n>=80?1:0,nrp>=3?77:56,nrp>=3?`${nrp} rapports sur le personnel à traiter`:`${n} personnes sur le terrain à suivre`,18);
+  u('form',n>=40?Math.max(1,Math.ceil(n/250)):0,52,'forme une personne par semaine : plus d’efficacité, plus de motivation',16);
+  u('achat',consM>15000||missEq>3000?1:0,missEq>3000?70:64,missEq>3000?`${eur(missEq)} de matériel manque sur tes contrats`:`± ${eur(consM)} de produits par mois (−8 %)`,16);
+  u('recouv',pubN>=4?1:0,60,`${pubN} clients publics, souvent en retard de paiement`,14);
+  u('comm',N>=40&&C.rep<85?1:0,50,`réputation ${Math.round(C.rep)}/100 : plus de demandes de clients`,15);
+  u('daf',clCa12()>=8e6||(C.cash<0&&clCa12()>=3e6)?1:0,C.cash<0?70:60,C.cash<0?'ton compte est dans le rouge : il faut négocier avec la banque':'grosse société : meilleures conditions bancaires',18);
+  u('orga',(C.offP||[]).length>=6?1:0,55,`${(C.offP||[]).length} personnes au bureau à organiser`,15);
+  return U}
+const CLACT={plan:['plan','planT'],com:['com'],rh:['rh','rhf'],qual:['qual'],off:['off'],compta:['compta'],aide:['aide'],secr:['secr'],cs:['cs','csq'],chefp:['chefp'],form:['form'],achat:['achat','acheq'],recouv:['recouv'],comm:['comm'],dir:['dir'],daf:['daf'],orga:['orgh','orgf']};
+const clOffAct=k=>CLACT[k]?CLACT[k].reduce((a,x)=>a+clRsG(x),0):null;
+const clOrgReq=k=>{const C=st.cl,n=C.staff.length;return k==='orga'||(k==='dir'&&clStaffN()>=130)||(k==='prev'&&clStaffN()>=50)||(k==='plan'&&n>12&&clOffN('plan')<=Math.max(1,Math.ceil(n/150)))};
+// argent : résultat moyen des 3 derniers mois (moins le bureau engagé récemment, pas encore dans les bilans)
+function clBurMoney(){const C=st.cl,H=(C.mH||[]).slice(-3);let avg=H.length?H.reduce((a,x)=>a+(x.res||0),0)/H.length:0;const ca=H.length?H.reduce((a,x)=>a+(x.ca||0),0)/H.length:0;
+  for(const p of C.offP||[])if(st.day-p.hd<62&&p.hd>(C.found||0))avg-=clOffCostK(p.k)*(st.day-p.hd<31?1:.5);return{avg,ca,room:clCanPay(),n:H.length}}
+function clRoleGain(k,F){const C=st.cl,n=C.staff.length;
+  if(k==='plan'&&!clOffN('plan')&&n>12)return F.ca*.06;if(k==='dir'&&!clOffN('dir')&&clStaffN()>150)return F.ca*.1;
+  if(k==='com'&&(C.idle||0)>15)return Math.min(C.idle,30)*21.7*clHourCost()*.4;
+  if(k==='achat'&&!clOffN('achat'))return C.ctr.filter(c=>c.st==='run').reduce((a,c)=>a+c.hpw/5,0)*.55*21.7*.08;
+  if(k==='rh'){const {cap}=clCap(),m=Math.max(0,clDemOf()-cap.of);if(m>3)return Math.min(m,40)*21.7*clHourCost()*.3}return 0}
+const clOfficeOk=(k,F)=>clOrgReq(k)&&k!=='orga'||!F.ca||clOffCost()+clOffCostK(k)<=F.ca*.18;
+function clAfford(k,F){const C=st.cl;F=F||clBurMoney();const c=clOffCostK(k);if(C.cash<=0||F.n<1)return false;return(F.avg+clRoleGain(k,F)-c>=0&&C.cash-(C.salAcc||0)>=c*2&&clOfficeOk(k,F))||(F.room>=c*12&&(F.avg>=0||clOrgReq(k)||clRoleGain(k,F)>=c)&&clOfficeOk(k,F))}
+const clCanAdd=k=>!CLO[k].one||!clOffN(k);
+function clBurPrio(){const U=clBurNeeds(),F=clBurMoney();const sc=k=>{const x=U[k];if(!x)return 10;return clOffN(k)<x.want?x.sc:x.base*(clOffN(k)?.6:1)};
+  const L=Object.keys(CLO).filter(clCanAdd).sort((a,b)=>sc(b)-sc(a));let t=0;
+  return L.map(k=>{const x=U[k],top=x&&clOffN(k)<x.want&&x.sc>=55&&t<3;if(top)t++;return{k,why:top?x.why:'',need:x&&clOffN(k)<x.want?x.why:'',sc:sc(k),ok:clAfford(k,F)}})}
+function clOffAsk(k,ok){const C=st.cl,O=CLO[k];if(!clHas('onss'))return toastMsg('Il faut d’abord l’immatriculation employeur à l’ONSS (📊 Société).');if(!clCanAdd(k))return toastMsg('Ce poste est déjà pourvu.');
+  const x=clOffName(k),F=clBurMoney(),c=clOffCostK(k),after=F.avg+clRoleGain(k,F)-c;
+  if(!ok)return ask(`Engager ${x.n} ?\nFonction : ${O.n}\nÂge : ${x.age} ans · ${x.town}\nCoût employeur : ${eur(c)}/mois${F.n?`\nAprès l’embauche : ${after>=0?'+':'−'}${eur(Math.abs(after))}/mois`:''}${F.n&&after<0?`\n⚠️ Ta société perdrait ± ${eur(-after)} par mois avec ce poste.`:''}${C.cash<c*2?'\n⚠️ Il y a moins de 2 mois de salaire sur le compte.':''}`,()=>clOffAsk(k,1),{ic:O.ic,ok:'Engager'});
+  clOffHire(k,1)}
+function clOffStat(k){const g=clRsG,C=st.cl;switch(k){
+  case'plan':return`${nb(g('plan'))} heures d’absence remplacées · ${nb(g('planT'))} familles acceptées`;
+  case'com':return`${nb(g('com'))} devis envoyés tout seul`;case'rh':return`${nb(g('rh'))} recrutements · ${nb(g('rhf'))} départs décidés`;
+  case'qual':return`${nb(g('qual'))} plaintes traitées`;case'tsr':return`${nb(C.ts.n)} familles clientes en ce moment`;
+  case'off':return`${nb(g('off'))} offres remises toute seule`;case'compta':return`${nb(g('compta'))} factures payées 10 jours plus tôt`;
+  case'aide':return`${nb(g('aide'))} factures envoyées le jour même`;case'secr':return`${nb(g('secr'))} demandes de clients reçues`;
+  case'cs':return`${nb(g('cs'))} contrats gardés après remise en concurrence · ${nb(g('csq'))} plaintes évitées`;
+  case'prev':return`Assurance accidents du travail : ${(Math.max(.012,(C.at||.022)-.005)*100).toFixed(1).replace('.',',')} %`;
+  case'chefp':return`${nb(g('chefp'))} rapports traités`;case'form':return`${nb(g('form'))} formations données`;
+  case'achat':return`${eur(g('achat'))} économisés sur les produits · ${eur(g('acheq'))} de matériel acheté`;
+  case'recouv':return`${nb(g('recouv'))} jours de retard de paiement évités`;case'comm':return`+${nb1(g('comm')/10)} de réputation apportée`;
+  case'dir':return`${eur(g('dir'))} de matériel acheté`;case'daf':return`${eur(g('daf'))} d’intérêts économisés`;
+  case'orga':return`${nb(g('orgh'))} embauches · ${nb(g('orgf'))} départs au bureau`}return''}
+// échéance d'une facture selon le bureau (comptable, aide-comptable, recouvrement)
+function clDue(base,pub){const C=st.cl;let d=base;if(clOffN('compta')){d-=10;clRs('compta')}if(clOffN('aide')){d-=5;clRs('aide')}if(pub){let x=RI(0,15);if(clOffN('recouv')){clRs('recouv',x-Math.round(x/3));x=Math.round(x/3)}d+=x}return st.day+Math.max(10,d)}
+function clOrgLog(t){const C=st.cl;C.orgL=C.orgL||[];C.orgL.unshift({d:st.day,t});if(C.orgL.length>12)C.orgL.length=12;clLog('🧭 '+t)}
+function clOrgaTick(){const C=st.cl;if(!clOffN('orga'))return;const mode=C.orgMode||'all';if(mode==='off')return;const U=clBurNeeds(),F=clBurMoney(),FD=C.orgF||(C.orgF={}),X=C.orgX||(C.orgX={});
+  for(const k in CLO){const w=U[k]?U[k].want:0;X[k]=clOffN(k)>w?(X[k]||0)+1:0}
+  // activité réelle de chaque poste (compteurs) : un poste dont le compteur ne bouge plus depuis 4 mois ne sert plus
+  const S=C.orgS||(C.orgS={});for(const k in C.off){const v=clOffAct(k);if(v!==null&&(!S[k]||S[k].v!==v))S[k]={v,d:st.day}}
+  const idleK=k=>{const v=clOffAct(k);return v===null?(k==='tsr'?!C.ts.n:true):st.day-((S[k]||{}).d??st.day)>=120};
+  // 1) embaucher : un poste qui manque vraiment, payable, pas renvoyé il y a moins de 4 mois
+  const want=Object.keys(U).filter(k=>k!=='orga'&&clCanAdd(k)&&clOffN(k)<U[k].want&&U[k].sc>=55&&clAfford(k,F)&&!(st.day-(FD[k]??-1e9)<120)).sort((a,b)=>U[b].sc-U[a].sc)[0];
+  if(want){const p=clOffPers(want);C.off[want]=clOffN(want)+1;clRs('orgh');clOrgLog(`Hélène a engagé ${p.n} (${CLO[want].n}) : ${U[want].why}.`);return}
+  if(mode!=='all')return;
+  // 2) un poste en trop depuis 8 semaines
+  let tgt=null,txt='';const pp=k=>(C.offP||[]).filter(p=>p.k===k&&p.k!=='orga').sort((a,b)=>b.hd-a.hd)[0];
+  for(const k in X)if(X[k]>=8&&!clOrgReq(k)&&pp(k)&&((U[k]&&U[k].want>=1)||idleK(k))){tgt=pp(k);txt=(U[k]&&U[k].want)?`il y a ${clOffN(k)} ${CLO[k].n.toLowerCase()} pour ${U[k].want} nécessaire${U[k].want>1?'s':''}`:'ce poste ne sert plus depuis 2 mois';break}
+  // 3) la société perd de l'argent et le bureau coûte trop cher
+  if(!tgt&&F.n>=2&&F.avg<0&&F.ca&&clOffCost()>F.ca*.2&&F.room<clOffCost()*6){const c=(C.offP||[]).filter(p=>!clOrgReq(p.k)&&st.day-p.hd>=90&&!(U[p.k]&&U[p.k].want>=clOffN(p.k)&&U[p.k].sc>=55)).sort((a,b)=>((U[a.k]&&clOffN(a.k)<=U[a.k].want)?U[a.k].sc:10)-((U[b.k]&&clOffN(b.k)<=U[b.k].want)?U[b.k].sc:10))[0];if(c){tgt=c;txt='la société perd de l’argent et le bureau coûte trop cher par rapport au chiffre d’affaires'}}
+  if(!tgt)return;if(C.cash<clOffPre(tgt))return;const pre=clOffFire(tgt.id,1,1);FD[tgt.k]=st.day;X[tgt.k]=0;clRs('orgf');clOrgLog(`Hélène s’est séparée de ${tgt.n} (${CLO[tgt.k].n}) : ${txt}. Préavis payé : ${eur(pre)}.`)}
+function clOrgStatus(){const C=st.cl,U=clBurNeeds(),F=clBurMoney(),FD=C.orgF||{};
+  const need=Object.keys(U).filter(k=>k!=='orga'&&clCanAdd(k)&&clOffN(k)<U[k].want&&U[k].sc>=55).sort((a,b)=>U[b].sc-U[a].sc);
+  if(!need.length){const ex=Object.keys(C.orgX||{}).filter(k=>(C.orgX[k]||0)>=3&&!clOrgReq(k));return ex.length&&(C.orgMode||'all')==='all'?`✅ Il ne manque personne. Elle surveille un poste en trop : ${CLO[ex[0]].n.toLowerCase()} (départ après 8 semaines sans utilité).`:'✅ Il ne manque personne au bureau en ce moment.'}
+  const k=need[0],c=clOffCostK(k),nm=CLO[k].n.toLowerCase();
+  if(st.day-(FD[k]??-1e9)<120)return`⏸ Elle attend avant de réengager un(e) ${nm} : elle s’en est séparée il y a moins de 4 mois.`;
+  if(clAfford(k,F))return`👉 Lundi, elle engagera : ${CLO[k].n} (${U[k].why}).`;
+  if(!F.n)return`⏸ Elle attend le premier bilan du mois pour savoir ce que la société peut payer (besoin : ${nm}).`;
+  if(C.cash<=0)return`⏸ Elle voudrait engager un(e) ${nm}, mais le compte est dans le rouge.`;
+  if(F.avg+clRoleGain(k,F)-c<0)return`⏸ Elle voudrait engager un(e) ${nm}, mais la société perdrait ± ${eur(c-F.avg-clRoleGain(k,F))}/mois.`;
+  if(!clOfficeOk(k,F))return`⏸ Elle voudrait engager un(e) ${nm}, mais le bureau coûterait plus de 18 % du chiffre d’affaires (${eur(clOffCost()+c)} pour ${eur(F.ca)}/mois) : il faut d’abord plus de clients.`;
+  return`⏸ Elle voudrait engager un(e) ${nm}, mais il faut au moins ${eur(c*2)} sur le compte (2 mois de salaire).`}
+const clLogL=L=>L&&L.length?`<div style="margin-top:8px">${L.slice(0,5).map(x=>`<div class="sm" style="padding:3px 0;border-top:1px solid #ffffff10"><span class="mut">${dstr(x.d)}</span> ${esc(x.t)}</div>`).join('')}</div>`:'<div class="mut sm" style="margin-top:6px">Pas encore de changement.</div>';
+const clModeChips=(cur,key)=>`<div style="margin-top:6px">${[['all','Engager et licencier'],['hire','Seulement engager'],['off','Rien (pause)']].map(([k,l])=>`<span class="chip ${cur===k?'on':''}" onclick="st.cl.${key}='${k}';${key==='rhMode'?`st.cl.autoH=${k==='off'?0:1};`:''}clk();save();render()">${l}</span>`).join('')}</div>`;
+function clOrgaCard(){const C=st.cl;if(!clOffN('orga'))return'';const m=C.orgMode||'all',p=(C.offP||[]).find(x=>x.k==='orga');
+  return`<div class="card acc" style="--ac:var(--bl)"><b>🧭 ${esc(p?p.n.split(' ')[0]:'Hélène')} organise le bureau</b><div class="mut sm" style="margin-top:4px">Chaque lundi, elle regarde ce dont la société a besoin. Ce qu’elle a le droit de faire :</div>${clModeChips(m,'orgMode')}
+  <div class="sm" style="margin-top:8px;padding:8px 10px;background:#0f1f15;border-radius:10px">${m==='off'?'⏸ En pause : elle ne fait rien.':esc(clOrgStatus())}</div>
+  <div class="mut sm" style="margin-top:6px">Elle n’engage que si la société peut payer le salaire et ne touche jamais aux postes obligatoires (directrice d’exploitation dès ± 150 personnes, conseiller en prévention dès 50, planificatrice au-delà de 12 personnes sur le terrain).</div>${clLogL(C.orgL)}</div>`}
+// Caroline (RH) : engage chaque lundi et, si tu l'autorises, se sépare du personnel en trop ou pas sérieux
+const clRhM=()=>{const C=st.cl;return C.rhMode||(C.autoH?'all':'off')};
+function clRhLog(t){const C=st.cl;C.rhL=C.rhL||[];C.rhL.unshift({d:st.day,t});if(C.rhL.length>12)C.rhL.length=12}
+function clRhM_(){const C=st.cl,k=gmKey();if(!C.rhMo||C.rhMo.k!==k)C.rhMo={k,h:0,f:0};return C.rhMo}
+function clRhFire(){const C=st.cl,{cap}=clCap(),EX=C.rhEx||(C.rhEx={of:0,ts:0}),pre=w=>Math.round(clWage(w)*.25*(1+Math.min(3,(st.day-w.day)/365)));let out=[];
+  const fireW=(w,why)=>{const ind=pre(w);if(C.cash<ind)return false;C.staff.splice(C.staff.indexOf(w),1);clMv(-ind,'Indemnité de préavis — '+w.n,'sal');C.pl.cost+=ind;clRs('rhf');clRhM_().f++;out.push(w.n.split(' ')[0]);clRhLog(`${w.n} (${CLR[w.r].n.toLowerCase()}) : ${why}. Préavis ${eur(ind)}.`);return true};
+  const old=w=>!w.boss&&st.day-(w.day||0)>=90&&!w.rp;
+  // personnel pas sérieux : 2 avertissements, ou peu sérieux avec des absences à répétition
+  const lazy=C.staff.filter(w=>!w.boss&&st.day-(w.day||0)>=90&&((w.warn||0)>=2||(w.rel<.62&&(w.nab||0)>=3)));for(const w of lazy.slice(0,Math.max(1,Math.ceil(C.staff.length/100))))fireW(w,(w.warn||0)>=2?'2 avertissements écrits sans amélioration':'absences à répétition et peu sérieuse');
+  // trop de personnel pour les heures vendues pendant 4 semaines (on garde une réserve de 12 % + 8 h)
+  const sold=clDemOf()+clJobsLive('of').reduce((a,j)=>a+Math.min(6,j.h-j.done)*.5,0)+C.dem.filter(q=>q.sent&&q.t==='ctr').reduce((a,q)=>a+q.hpw/5*.55,0);
+  EX.of=cap.of>sold*1.12+8&&!C.dem.some(q=>!q.sent&&q.t==='ctr')?EX.of+1:0;const viS=clJobsLive('vi').reduce((a,j)=>a+Math.min(7,j.h-j.done)*.6,0);EX.vi=cap.vi>viS+14?(EX.vi||0)+1:0;const tsS=C.ts.h/5+((clOffN('plan')||clOffN('tsr'))&&C.autoT?C.ts.wh/5:0);EX.ts=clHas('tsag')&&cap.ts>tsS*1.1+6?EX.ts+1:0;
+  const cut=(pool,rs,extra)=>{let h=extra;const L=C.staff.filter(w=>old(w)&&rs.includes(w.r)).sort((a,b)=>a.sk*a.rel*(a.mot||.8)-b.sk*b.rel*(b.mot||.8));let n=0;const mx=Math.max(1,Math.round(L.length*.03));for(const w of L){const hw=w.hw/5*(w.sk||1);if(h<hw||n>=mx)break;if(fireW(w,`trop de personnel pour les heures vendues depuis 4 semaines (${Math.round(extra)} h/jour en trop)`)){h-=hw;n++}}};
+  if(EX.of>=4){cut('of',['tech'],cap.of-sold*1.12-8);EX.of=2}if(EX.ts>=4){cut('ts',['am'],cap.ts-tsS*1.1-6);EX.ts=2}if(EX.vi>=4){cut('vi',['vit'],cap.vi-viS-14);EX.vi=2}
+  if(out.length)clLog(`🗂️ Caroline s’est séparée de ${out.length} personne${out.length>1?'s':''} (${out.slice(0,3).join(', ')}${out.length>3?'…':''}).`)}
+function clRhStatus(){const C=st.cl,{cap}=clCap(),m=clRhM();if(m==='off')return'⏸ En pause : elle ne fait rien.';const miss=Math.max(0,clDemOf()-cap.of),tsM=clHas('tsag')?Math.max(0,C.ts.h/5-cap.ts):0;
+  if(miss>3||tsM>3)return`👉 Lundi, elle recrutera : il manque ± ${Math.round(miss+tsM)} heures par jour${(C.lp??0)<=0?' (mais plus de candidats sur le marché cette semaine : annonce ou meilleurs salaires)':''}.`;
+  const EX=C.rhEx||{};if(m==='all'&&(EX.of||EX.ts))return`👀 Il y a trop de personnel pour les heures vendues depuis ${Math.max(EX.of||0,EX.ts||0)} semaine(s) : après 4 semaines, elle se sépare des moins efficaces (sauf si le commercial trouve des clients).`;
+  return'✅ Les heures vendues sont couvertes. Elle remplace les départs chaque lundi.'}
+function clRhCard(){const C=st.cl;if(!clOffN('rh'))return'';const m=clRhM(),M=clRhM_(),{cap}=clCap(),p=(C.offP||[]).find(x=>x.k==='rh'),nm=p?p.n.split(' ')[0]:'Caroline';
+  const abs=C.staff.filter(w=>w.abs>0).length;
+  return`<div class="card acc" style="--ac:var(--or)"><b>🗂️ ${esc(nm)} gère le personnel de terrain</b><div class="mut sm" style="margin-top:4px">Chaque lundi, elle recrute ce qui manque pour couvrir les heures vendues et peut se séparer du personnel en trop ou pas sérieux. Ce qu’elle a le droit de faire :</div>${clModeChips(m,'rhMode')}
+  <div class="mgrid">${clTile('Sur le terrain',nb(C.staff.length))}${clTile('Absentes aujourd’hui',nb(abs),abs>C.staff.length*.12?'neg':'')}${clTile('Heures dispo / vendues',`${Math.round(cap.of+cap.ts)} / ${Math.round(clDemOf()+(clHas('tsag')?C.ts.h/5:0))}`)}</div>
+  <div class="mgrid">${clTile('Engagées ce mois',nb(M.h),'money')}${clTile('Départs décidés ce mois',nb(M.f))}${clTile('Depuis le début',`${nb(clRsG('rh'))} / ${nb(clRsG('rhf'))}`)}</div>
+  <div class="sm" style="margin-top:8px;padding:8px 10px;background:#0f1f15;border-radius:10px">${esc(clRhStatus())}</div>
+  <div class="mut sm" style="margin-top:6px">Elle ne licencie jamais toi-même, une personne engagée il y a moins de 3 mois, ni quelqu’un dont le rapport est encore en cours, et garde toujours 12 % d’heures de réserve.</div>${clLogL(C.rhL)}</div>`}
+// Didier (chef du personnel) : rapports traités chaque vendredi
+function clChefpTick(){const C=st.cl;if(!clOffN('chefp'))return;for(const r of (C.rpt||[]).slice()){if(r.sig)continue;const w=C.staff.find(x=>x.id===r.w);if(!w){C.rpt.splice(C.rpt.indexOf(r),1);continue}
+  if((w.warn||0)>=2){r.sig=1;continue}C.rpt.splice(C.rpt.indexOf(r),1);w.rp=0;w.nab=0;clRs('chefp');
+  if(!w.talk){w.talk=1;if(Math.random()<.6){w.mot=Math.min(1.2,(w.mot||.8)+.2);w.rel=Math.min(1.05,w.rel+.05)}}else{w.warn=(w.warn||0)+1;w.rel=Math.min(1.05,w.rel+.08);w.mot=Math.max(.3,(w.mot||.8)-.05)}}}
+// Catherine (formatrice) : une formation gratuite par semaine et par formatrice
+function clFormTick(){const C=st.cl,n=clOffN('form');if(!n)return;const L=C.staff.filter(w=>!w.boss&&(w.cert||0)<4&&!(w.abs>0)).sort((a,b)=>(a.cert||0)-(b.cert||0)||a.sk-b.sk);
+  for(const w of L.slice(0,n)){w.sk=Math.min(1.35,+(w.sk+.05).toFixed(2));w.cert=(w.cert||0)+1;w.mot=Math.min(1.2,(w.mot||.8)+.05);clRs('form')}}
+// Thomas (acheteur) : matériel manquant chaque mercredi
+function clAchatTick(){const C=st.cl;if(!clOffN('achat'))return;const M=clMiss();let p=0;for(const k in M)p+=CLE[k].p*M[k];if(!p)return;
+  if(C.cash-(C.salAcc||0)-clFixedM()+clOver()*.3<p*1.1)return;for(const k in M){C.eq[k]=(C.eq[k]||0)+M[k];clMv(-CLE[k].p*M[k],`Achat : ${M[k]} × ${CLE[k].n}`,'buy')}clRs('acheq',p);clLog(`🛒 Thomas a acheté le matériel qui manquait (${eur(p)}).`)}
+function clBurNotif(L){const C=st.cl;if(clOffN('orga')||!clHas('onss'))return;const P=clBurPrio().filter(x=>x.why&&x.sc>=84);if(P.length)L.push([CLO[P[0].k].ic,'Bureau : '+P[0].why,"clSec='team';clTeamTab='bur'"])}
+function clBureau(){const C=st.cl,F=clBurMoney(),P=clBurPrio(),off=(C.offP||[]).slice().sort((a,b)=>Object.keys(CLO).indexOf(a.k)-Object.keys(CLO).indexOf(b.k)||a.hd-b.hd);
+  let h=clOrgaCard()+`<div class="kpi" style="margin-bottom:12px"><div><span>Au bureau</span><b>${off.length}</b></div><div><span>Coût du bureau / mois</span><b>${eur(clOffCost())}</b></div><div><span>Part du chiffre d’affaires</span><b class="${F.ca&&clOffCost()>F.ca*.18?'neg':''}">${F.ca?Math.round(clOffCost()/F.ca*100)+' %':'—'}</b></div><div><span>Sur le terrain</span><b>${C.staff.length}</b></div></div>`;
+  h+=`<h2>Ton bureau (${off.length})</h2>`;if(!off.length)h+='<p class="mut sm" style="margin:0 4px 10px">Pour l’instant, c’est toi qui fais tout : devis, planning, factures, recrutement. Au début, c’est normal ; quand la société grandit, il faut du monde au bureau.</p>';
+  const nO=Math.min(off.length,pgN('clo',20));for(const p of off.slice(0,nO)){const O=CLO[p.k];h+=`<div class="card"><div class="row" style="flex-wrap:nowrap;gap:10px">${clAva(p,48)}<div style="flex:1;min-width:0"><b>${esc(p.n)}</b><div class="mut sm">${O.ic} ${O.n} · ${eur(clOffCostK(p.k))}/mois</div><div class="mut" style="font-size:11.5px">${p.age?p.age+' ans · '+esc(p.town)+' · ':''}chez toi depuis ${dstr(p.hd)} ${date(p.hd).getFullYear()}</div></div></div>
+    <div class="mut sm" style="margin-top:6px">${O.d}</div><div class="sm" style="margin-top:6px;padding:6px 9px;background:#0f1f15;border-radius:9px">📊 ${clOffN(p.k)>1?`Le service (${clOffN(p.k)} personnes) : `:''}${clOffStat(p.k)}</div>${clOrgReq(p.k)&&p.k!=='orga'?'<div class="tag o" style="margin-top:6px">Poste obligatoire pour ta taille</div>':''}
+    <div class="row" style="margin-top:8px"><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clOffFire(${p.id})">Licencier (préavis ${eur(clOffPre(p))})</button></div></div>`}h+=pgBtn('clo',20,nO,off.length);
+  const any=P.some(x=>x.ok);h+=`<h2>Postes à pourvoir</h2><div class="card acc" style="--ac:${any?'var(--gr)':'var(--or)'}"><b>💶 Ton argent</b><div class="sm" style="margin-top:4px">${F.n?`Ta société ${F.avg>=0?'gagne':'perd'} en moyenne <b class="${F.avg>=0?'money':'neg'}">${eur(Math.abs(F.avg))}/mois</b> (${F.n} dernier${F.n>1?'s':''} mois${(C.offP||[]).some(p=>st.day-p.hd<62&&p.hd>(C.found||0))?', salaires des dernières embauches compris':''}) pour ± ${eur(F.ca)} facturés.`:'Pas encore de bilan : attends la fin de ton premier mois.'} Argent en plus de tes 3 mois de charges : <b>${eur(F.room)}</b>.</div>
+    <div class="mut sm" style="margin-top:4px">Les postes sont classés selon ce dont tu as besoin maintenant. Tu peux engager qui tu veux : sur chaque poste, tu vois si ta société gagnerait ou perdrait de l’argent après l’embauche. Dans le nettoyage, le bureau coûte en général 10 à 15 % du chiffre d’affaires.${any||!F.n?'':' ⚠️ Pour l’instant, chaque poste de bureau te ferait perdre de l’argent chaque mois.'}</div></div>`;
+  if(!clHas('onss'))h+=`<div class="card"><p class="mut">Immatricule-toi d’abord comme employeur à l’ONSS (📊 Société).</p></div>`;
+  for(const x of P){const O=CLO[x.k],nm=clOffName(x.k),c=clOffCostK(x.k),after=F.avg+clRoleGain(x.k,F)-c,n=clOffN(x.k);
+    h+=`<div class="card ${x.why?'acc':''}" style="${x.why?'--ac:var(--or)':''}">${x.why?`<div class="tag o" style="margin-bottom:6px">⭐ Besoin maintenant : ${esc(x.why)}</div>`:x.need?`<div class="tag" style="margin-bottom:6px">👍 Utile : ${esc(x.need)}</div>`:''}<div class="row" style="flex-wrap:nowrap;gap:10px">${clAva({n:nm.n,f:nm.f,off:1},52)}<div style="flex:1;min-width:0"><b>${O.ic} ${O.n}${n?` <span class="tag">déjà ${n}</span>`:''}</b><div class="mut sm">${esc(nm.n)} · ${nm.age} ans · ${eur(c)}/mois</div></div></div><div class="mut sm" style="margin-top:6px">${O.d}</div>
+    ${F.n?`<div class="sm" style="margin-top:6px">${after>=0&&C.cash>=c*2?'✅':'⚠️'} Après l’embauche, ta société ${after>=0?'gagnerait':'perdrait'} ± <b class="${after>=0?'money':'neg'}">${eur(Math.abs(after))}/mois</b>${clRoleGain(x.k,F)?` (il/elle rapporte ± ${eur(clRoleGain(x.k,F))}/mois)`:''}.</div>`:''}
+    <button class="btn w" style="margin-top:10px" ${clHas('onss')?'':'disabled'} onclick="clOffAsk('${x.k}')">${n?'➕ Engager une personne de plus':'✍️ Engager '+esc(nm.n.split(' ')[0])}</button></div>`}
+  return h}
 
 /* ---------- démarches, matériel ---------- */
 function clAdm(k){const C=st.cl,A=CLA[k];if(C.adm[k])return;const miss=(A.req||[]).filter(x=>C.adm[x]!==1);if(miss.length)return toastMsg('Il faut d’abord : '+miss.map(x=>CLA[x].n).join(', '));
@@ -3936,10 +4113,10 @@ function clSell(k){const C=st.cl;if(!C.eq[k])return;C.eq[k]--;if(!C.eq[k])delete
 
 /* ---------- clients privés : demandes, devis ---------- */
 function clDemGen(){const C=st.cl,ks=['bur','bur','com','med','eco','cop','cop','ind'],k=pick(ks),K=CLK[k],mo=date(st.day).getMonth();
-  if(mo===7&&Math.random()<.4){const h=RI(30,140);return{id:C.nid++,t:'job',k:'fin',n:`Grand nettoyage d’été — ${pick(['École communale','Athénée','Institut','Crèche'])} de ${pick(TOWNS)}`,h,mkt:+(40*(C.idx||1)).toFixed(2),d:st.day,exp:st.day+10}}
-  if(Math.random()<(mo===3||mo===4?.55:.35)+(clBigOn('pand')||clBigOn('boom')?.25:0)){const pk=clBigOn('pand')&&Math.random()<.6?'des':clBigOn('boom')&&Math.random()<.6?'fin':pick(Object.keys(CLP)),P=CLP[pk];const h=RI(P.h[0],P.h[1]);return{id:C.nid++,t:'job',k:pk,n:`${pick(['Particulier','Promoteur','Gérant','Syndic','Entreprise'])} — ${pick(TOWNS)}`,h,mkt:+(P.p*(C.idx||1)*clDf().px).toFixed(2),d:st.day,exp:st.day+10}}
+  if(mo===7&&Math.random()<.4){const h=RI(30,140);return{id:C.nid++,t:'job',k:'fin',n:`Grand nettoyage d’été — ${pick(['École communale','Athénée','Institut','Crèche'])} de ${pick(TOWNS)}`,h,mkt:+(40*(C.idx||1)).toFixed(2),d:st.day,exp:st.day+(clOffN('secr')?15:10)}}
+  if(Math.random()<(mo===3||mo===4?.55:.35)+(clBigOn('pand')||clBigOn('boom')?.25:0)){const pk=clBigOn('pand')&&Math.random()<.6?'des':clBigOn('boom')&&Math.random()<.6?'fin':pick(Object.keys(CLP)),P=CLP[pk];const h=RI(P.h[0],P.h[1]);return{id:C.nid++,t:'job',k:pk,n:`${pick(['Particulier','Promoteur','Gérant','Syndic','Entreprise'])} — ${pick(TOWNS)}`,h,mkt:+(P.p*(C.idx||1)*clDf().px).toFixed(2),d:st.day,exp:st.day+(clOffN('secr')?15:10)}}
   const m2=Math.round(R(K.m2[0],Math.min(K.m2[1],K.m2[0]+(K.m2[1]-K.m2[0])*(.25+C.rep/130)))/10)*10,f=RI(K.f[0],K.f[1]);
-  return{id:C.nid++,t:'ctr',k,n:`${pick(CLCLI[k])} — ${pick(TOWNS)}`,m2,f,hpw:+(m2*f/K.prod).toFixed(1),mkt:+(K.mkt*(C.idx||1)*clDf().px).toFixed(2),yrs:pick([1,2,3]),d:st.day,exp:st.day+10}}
+  return{id:C.nid++,t:'ctr',k,n:`${pick(CLCLI[k])} — ${pick(TOWNS)}`,m2,f,hpw:+(m2*f/K.prod).toFixed(1),mkt:+(K.mkt*(C.idx||1)*clDf().px).toFixed(2),yrs:pick([1,2,3]),d:st.day,exp:st.day+(clOffN('secr')?15:10)}}
 function clQuote(id,lv,silent){const C=st.cl,q=C.dem.find(x=>x.id===id);if(!q||q.sent)return;if(!clHas('bce'))return toastMsg('Inscris d’abord ta société à la BCE.');if(q.t==='ctr'&&!clHas('rc'))return toastMsg('Les entreprises demandent une RC exploitation (📊 Société).');
   q.sent=1;q.lv=lv;q.price=+(q.mkt*(1+(+lv||0))).toFixed(2);q.ans=st.day+RI(3,8);if(!silent){clk();save();render()}}
 function clAnswer(q){const C=st.cl;const base=q.lv<0?.78:q.lv>0?.3:.55,p=Math.min(.95,base*(.55+C.rep/90));const yes=Math.random()<p;C.dem.splice(C.dem.indexOf(q),1);
@@ -3990,17 +4167,17 @@ function clTick(){const C=st.cl;if(!C||C.over)return;clFix(C);const d=st.day,x=d
       else clLog(c.notice?`👋 Fin du contrat avec ${c.n} (préavis donné).`:`🏁 Fin du contrat : ${c.n}.`)}}
   C.ctr=C.ctr.filter(c=>c.st!=='end');C.ren=(C.ren||[]).filter(r=>C.ctr.some(c=>c.id===r.c));
   // nouvelles demandes, titres-services, marchés
-  if(clHas('bce')){const rate=(.12+C.rep/600)*(1+Math.min(1.5,clOffN('com')*.5))*(1+Math.min(.5,C.staff.length/800));const cap=6+2*clOffN('com')+Math.floor(C.staff.length/25);
-    if(C.dem.filter(q=>!q.sent).length<cap&&Math.random()<Math.min(.95,rate))C.dem.push(clDemGen());
+  if(clHas('bce')){const rate=(.12+C.rep/600)*(1+Math.min(1.5,clOffN('com')*.5))*(1+Math.min(.5,C.staff.length/800))*(clOffN('comm')?1.2:1);const cap=6+2*clOffN('com')+3*Math.min(2,clOffN('secr'))+Math.floor(C.staff.length/25);
+    if(C.dem.filter(q=>!q.sent).length<cap&&Math.random()<Math.min(.95,rate)){C.dem.push(clDemGen());if(clOffN('secr'))clRs('secr')}
     for(const q of C.dem.slice()){if(q.sent&&d>=q.ans)clAnswer(q);else if(!q.sent&&d>=q.exp)C.dem.splice(C.dem.indexOf(q),1)}
-    if(clOffN('com')&&C.autoQ){const cp=clCap().cap.of;let fr=cp-clDemOf()-C.dem.filter(q=>q.sent&&q.t==='ctr').reduce((a,q)=>a+q.hpw/5*.55,0)+(clOffN('rh')&&C.autoH?Math.max(4,cp*.08):0);for(const q of C.dem)if(!q.sent&&(q.t==='job'||clHas('rc'))&&(q.t==='job'||fr>q.hpw/5)){clQuote(q.id,C.coefQ||0,1);if(q.t==='ctr')fr-=q.hpw/5*.55}}}
+    if(clOffN('com')&&C.autoQ){const cp=clCap().cap.of;let fr=cp-clDemOf()-C.dem.filter(q=>q.sent&&q.t==='ctr').reduce((a,q)=>a+q.hpw/5*.55,0)+(clOffN('rh')&&C.autoH?Math.max(4,cp*.08):0);for(const q of C.dem)if(!q.sent&&(q.t==='job'||clHas('rc'))&&(q.t==='job'||fr>q.hpw/5)){clQuote(q.id,C.coefQ||0,1);clRs('com');if(q.t==='ctr')fr-=q.hpw/5*.55}}}
   if(clHas('tsag')){const T=C.ts,r=(.4+C.rep/70)*(1+.25*Math.min(8,clOffN('tsr')))*Math.max(.08,1-T.n/25000);const nn=Math.random()<r%1?Math.ceil(r):Math.floor(r);for(let i=0;i<nn;i++){if(T.wait>40+T.n*.15)break;T.wait++;T.wh+=RI(3,5)}
     if((clOffN('plan')||clOffN('tsr'))&&C.autoT)clTsAccept(1)}
   if(clHas('bce')&&C.ten.length<4+Math.floor(C.staff.length/60)&&Math.random()<.04+Math.min(.06,C.staff.length/3000))C.ten.push(clTenGen());
   for(const t of C.ten.slice())if(d>=t.open)clOpen(t);
-  if(clOffN('off')&&C.autoB)for(const t of C.ten)if(!t.my&&clTenReq(t).every(r=>r.ok))clBid(t.id,C.coef||1,1);
+  if(clOffN('off')&&C.autoB)for(const t of C.ten)if(!t.my&&clTenReq(t).every(r=>r.ok)){clBid(t.id,C.coef||1,1);clRs('off')}
   // travail du jour
-  if(clW(d)){const {cap,lost}=clCap();
+  if(clW(d)){const {cap,lost}=clCap();if(clOffN('plan'))clRs('plan',(lost.of+lost.ts+lost.vi)/.6*.4);
     // titres-services
     const tsd=C.ts.h/5,tsdel=Math.min(tsd,cap.ts);C.ts.acc+=tsdel;C.st8.tsh+=tsdel;C.an=C.an||{};C.an.tsR=(C.an.tsR||0)+tsdel*clTSV();C.accF.km+=tsdel*.9;const covT=tsd?tsdel/tsd:1;C.ts.cov=covT;
     C.ts.sat+=((100*covT*covT*(.8+(clOffN('tsr')?.15:0)))-C.ts.sat)*.03;
@@ -4011,31 +4188,34 @@ function clTick(){const C=st.cl;if(!C||C.over)return;clFix(C);const d=st.day,x=d
     const used={};
     for(const c of run){const h=c.hpw/5*cov*(clBigOn('tele')&&(c.k==='bur'||c.k==='com')?.85:1);c.accH+=h;c.acc+=h*c.price;C.an=C.an||{};C.an.ofR=(C.an.ofR||0)+h*c.price;c.cvs=(c.cvs||0)+cov;c.cvn=(c.cvn||0)+1;C.accF.cons+=h*.55*(clHas('eco')?1.1:1)*(C.prodX||1);if(c.sh==='nuit')C.accF.prime=(C.accF.prime||0)+h*CLR.tech.brut*(C.idx||1)*CLR.tech.k*.25;if(c.boost)C.accF.prime=(C.accF.prime||0)+h*.1*CLR.tech.brut*(C.idx||1)*CLR.tech.k;
       let eqOK=1;for(const k of [clMach(c),CLK[c.k].eq])if(k){used[k]=(used[k]||0)+1;if(used[k]>(C.eq[k]||0))eqOK=0}c.eqOK=eqOK;
-      const q=Math.min(100,100*Math.pow(cov,1.5)*(.5+.15*chefOK+.1*qualOK+.15*kitOK)*(eqOK?1:.8)+(clHas('iso')?3:0)+(c.boost?6:0)+(c.vq>d?2*(c.vqb||0):0));c.q=Math.round(q);c.sat=clamp(c.sat+(q-c.sat)*.03,0,100);
+      const q=Math.min(100,100*Math.pow(cov,1.5)*(.5+.15*chefOK+.1*qualOK+.15*kitOK)*(eqOK?1:.8)+(clHas('iso')?3:0)+(clOffN('cs')?2:0)+(c.boost?6:0)+(c.vq>d?2*(c.vqb||0):0));c.q=Math.round(q);c.sat=clamp(c.sat+(q-c.sat)*.03,0,100);
       if(c.sat<35){c.low++;if(c.low>=10&&!c.notice){c.notice=1;c.end=Math.min(c.end,d+30);C.rep=clamp(C.rep-1,0,100);clLog(`⚠️ ${c.n} n’est pas satisfait (${Math.round(c.sat)}/100) et résilie le contrat (fin dans 30 jours).`,1)}}else c.low=0}
     // chantiers ponctuels
     let left={of:Math.max(0,cap.of-D),vi:cap.vi};
     for(const j of C.job){const P=CLP[j.k];if(j.st==='wait'){const vans=(C.eq.van||0)-C.job.filter(z=>z.st==='run').length,eqF=!P.eq||(C.eq[P.eq]||0)>C.job.filter(z=>z.st==='run'&&CLP[z.k].eq===P.eq).length;if(vans>0&&eqF&&left[P.r]>2)j.st='run';else continue}
       if(j.st!=='run')continue;const h=Math.min(left[P.r],j.h-j.done,24);left[P.r]-=h;j.done+=h;C.accF.cons+=h*.6;
-      if(j.done>=j.h-.01){j.st='done';const a=j.h*j.price;C.inv.push({a,due:d+30-(clOffN('compta')?10:0),l:'Facture : '+P.n+' — '+j.n});C.pl.rev+=a;C.st8.done++;C.st8.ca+=a;C.rep=clamp(C.rep+.4,0,100);clXP(3);clMq('jobs');C.an=C.an||{};C.an.jbR=(C.an.jbR||0)+a;clLog(`✅ Chantier terminé : ${P.n} — ${j.n} (${eur(a)} facturés).`)}}
+      if(j.done>=j.h-.01){j.st='done';const a=j.h*j.price;C.inv.push({a,due:clDue(30),l:'Facture : '+P.n+' — '+j.n});C.pl.rev+=a;C.st8.done++;C.st8.ca+=a;C.rep=clamp(C.rep+.4,0,100);clXP(3);clMq('jobs');C.an=C.an||{};C.an.jbR=(C.an.jbR||0)+a;clLog(`✅ Chantier terminé : ${P.n} — ${j.n} (${eur(a)} facturés).`)}}
     clAnDay(cap,lost,D,tsd);C.job=C.job.filter(j=>j.st!=='done');C.idle=Math.max(0,left.of)+Math.max(0,left.vi)+Math.max(0,cap.ts-tsd);
     // réputation suit la satisfaction
     const sats=run.map(c=>c.sat);if(C.ts.n)sats.push(C.ts.sat);if(sats.length){const avg=sats.reduce((a,b)=>a+b,0)/sats.length;C.rep=clamp(C.rep+(avg-C.rep)*.004,0,100)}
     for(const w of C.staff){const pl=CLR[w.r].pool;w.mot=clamp((w.mot||.8)+((pl==='of'&&cov<.9)||(pl==='ts'&&covT<.9)?-.004:.001)+(chefOK>.9?.0005:0)+(clPay().mot*.004)-(w.mot>.8+clPay().mot?.002:0),.3,1.2)}}
   // lundi : candidats, recrutement automatique
-  if(wd===1){clPoolWeek();if(!C.cand.length||Math.random()<.6)clCandGen();if(clOffN('rh')&&C.autoH)clAutoHire()}
-  if(clOffN('dir')&&wd===2){const M=clMiss();let p=0;for(const k in M)p+=CLE[k].p*M[k];if(p&&clCanPay()>p*2)for(const k in M){C.eq[k]=(C.eq[k]||0)+M[k];clMv(-CLE[k].p*M[k],`Achat : ${M[k]} × ${CLE[k].n}`,'buy')}}
+  if(wd===1){clPoolWeek();if(!C.cand.length||Math.random()<.6)clCandGen();if(clOffN('rh')&&clRhM()!=='off'){clAutoHire();if(clRhM()==='all')clRhFire()}clOrgaTick();clFormTick()}
+  if(wd===3)clAchatTick();if(wd===5)clChefpTick();
+  if(clOffN('dir')&&wd===2){const M=clMiss();let p=0;for(const k in M)p+=CLE[k].p*M[k];if(p&&clCanPay()>p*2){for(const k in M){C.eq[k]=(C.eq[k]||0)+M[k];clMv(-CLE[k].p*M[k],`Achat : ${M[k]} × ${CLE[k].n}`,'buy')}clRs('dir',p)}}
   if(dom%5===0)clGoals()}
 function clTsAccept(silent){const C=st.cl,T=C.ts;if(!T.wait)return;const free=clCap().cap.ts*5*1.03-T.h;if(free<=0){if(!silent)toastMsg('Plus de place : engage des aides-ménagères.');return}
-  const per=T.wh/T.wait,n=Math.min(T.wait,Math.floor(free/per));if(n<1){if(!silent)toastMsg('Plus de place : engage des aides-ménagères.');return}T.n+=n;T.h+=n*per;T.wait-=n;T.wh-=n*per;clMq('ts',n);if(!silent){clk();clLog(`🏠 ${n} nouveaux clients titres-services (${Math.round(n*per)} h/semaine).`);save();render()}}
+  const per=T.wh/T.wait,n=Math.min(T.wait,Math.floor(free/per));if(n<1){if(!silent)toastMsg('Plus de place : engage des aides-ménagères.');return}T.n+=n;T.h+=n*per;T.wait-=n;T.wh-=n*per;clMq('ts',n);if(silent)clRs('planT',n);if(!silent){clk();clLog(`🏠 ${n} nouveaux clients titres-services (${Math.round(n*per)} h/semaine).`);save();render()}}
+// chantiers ponctuels qui peuvent vraiment avancer : ceux en cours + ceux qui attendent, dans la limite des camionnettes libres
+function clJobsLive(pool){const C=st.cl;let free=(C.eq.van||0)-C.job.filter(j=>j.st==='run').length;return C.job.filter(j=>{if(j.st==='run')return CLP[j.k].r===pool;const P=CLP[j.k];if(free<=0||(P.eq&&!C.eq[P.eq]))return false;free--;return P.r===pool})}
 function clAutoHire(){const C=st.cl,{cap}=clCap(),mx=Math.max(6,Math.round(C.staff.length*.15));let n=0;const ok=!C.crisis&&C.cash+clOver()>clPayroll()/Math.max(1,C.staff.length)*2,room=()=>(C.lp??99)>0;const clHA=r=>{C.lp=(C.lp??99)-1;return clHireAuto(r)};
   // les heures déjà vendues sont toujours couvertes ; la croissance (familles en attente) seulement s’il y a de l’argent
-  const tsNeed=C.ts.h/5+(ok?C.ts.wh/5*.5:0)-cap.ts;let k=0;while(clHas('tsag')&&k*5.2<tsNeed&&n<mx&&room()){clHA('am');n++;k++}
-  const ofNeed=clDemOf()+C.job.filter(j=>CLP[j.k].r==='of').reduce((a,j)=>a+Math.min(6,j.h-j.done)*.5,0)-cap.of;k=0;while(ofNeed>k*5&&n<mx&&room()){clHA('tech');n++;k++}
-  const viNeed=C.job.filter(j=>CLP[j.k].r==='vi').reduce((a,j)=>a+Math.min(7,j.h-j.done)*.6,0)-cap.vi;k=0;while(viNeed>12+k*7&&n<mx&&room()){clHA('vit');n++;k++}
+  const tsAuto=(clOffN('plan')||clOffN('tsr'))&&C.autoT,tsNeed=C.ts.h/5+(ok&&tsAuto?C.ts.wh/5*.5:0)-cap.ts;let k=0;while(clHas('tsag')&&k*5.2<tsNeed&&n<mx&&room()){clHA('am');n++;k++}
+  const ofNeed=clDemOf()+clJobsLive('of').reduce((a,j)=>a+Math.min(6,j.h-j.done)*.5,0)-cap.of;k=0;while(ofNeed>k*5&&n<mx&&room()){clHA('tech');n++;k++}
+  const viNeed=clJobsLive('vi').reduce((a,j)=>a+Math.min(7,j.h-j.done)*.6,0)-cap.vi;k=0;while(viNeed>12+k*7&&n<mx&&room()){clHA('vit');n++;k++}
   const techs=clField('tech').length;while(clField('chef').length*15<techs-15&&n<mx&&room()){clHA('chef');n++}
-  if(!(C.lp>0)&&n<mx)clLog('🗂️ Caroline ne trouve plus de candidats cette semaine (marché du travail). Publie une annonce ou augmente les salaires.');if(n)clLog(`🗂️ Caroline a recruté ${n} personne${n>1?'s':''} cette semaine.`)}
-function clInvC(c){const C=st.cl;if(c.acc<1)return;const a=Math.round(c.acc);C.inv.push({a,due:st.day+(c.pub?30+RI(0,15):35)-(clOffN('compta')?10:0),l:`Facture : ${c.n} (${Math.round(c.accH)} h)`});C.pl.rev+=a;C.st8.ca+=a;c.acc=0;c.accH=0}
+  if(!(C.lp>0)&&n<mx)clLog('🗂️ Caroline ne trouve plus de candidats cette semaine (marché du travail). Publie une annonce ou augmente les salaires.');if(n){clRs('rh',n);clRhM_().h+=n;clRhLog(`${n} personne${n>1?'s':''} recrutée${n>1?'s':''} pour couvrir les heures vendues.`);clLog(`🗂️ Caroline a recruté ${n} personne${n>1?'s':''} cette semaine.`)}}
+function clInvC(c){const C=st.cl;if(c.acc<1)return;const a=Math.round(c.acc);C.inv.push({a,due:c.pub?clDue(30,1):clDue(35),l:`Facture : ${c.n} (${Math.round(c.accH)} h)`});C.pl.rev+=a;C.st8.ca+=a;c.acc=0;c.accH=0}
 function clMonth(){const C=st.cl;
   // pénalités des marchés publics quand les heures ne sont pas faites (cahier des charges)
   for(const c of C.ctr){if(c.pub&&c.cvn){const a=c.cvs/c.cvn;if(a<.95&&c.acc>0){const pen=Math.round(c.acc*Math.min(.15,(.95-a)*.5));clCost(pen,'Pénalités de non-exécution — '+c.n);c.sat-=5;clLog(`⚖️ ${c.n} applique ${eur(pen)} de pénalités : seulement ${Math.round(a*100)} % des heures faites.`,1)}}c.cvs=0;c.cvn=0}
@@ -4045,7 +4225,7 @@ function clMonth(){const C=st.cl;
   // salaires et frais
   if(C.salAcc>0){clMv(-C.salAcc,'Salaires du mois (coût employeur)','sal');C.pl.cost+=C.salAcc;C.salAcc=0}
   for(const [l,a] of clFixedL())if(a>0){clMv(-a,l,'fix');C.pl.cost+=a}
-  if(C.accF.cons>0){clMv(-C.accF.cons,'Produits et consommables','fix');C.pl.cost+=C.accF.cons}if(C.accF.km>0){clMv(-C.accF.km,'Indemnités de déplacement des aides-ménagères','fix');C.pl.cost+=C.accF.km}if(C.accF.prime>0){clMv(-C.accF.prime,'Primes de nuit et heures de renfort','sal');C.pl.cost+=C.accF.prime}C.accF={cons:0,km:0,prime:0};if(C.lastPl&&C.lastPl.res>0)clXP(10);
+  if(C.accF.cons>0){if(clOffN('achat')){clRs('achat',C.accF.cons*.08);C.accF.cons*=.92}clMv(-C.accF.cons,'Produits et consommables','fix');C.pl.cost+=C.accF.cons}if(clOffN('comm')&&C.rep<90){C.rep=Math.min(90,C.rep+1);clRs('comm',10)}if(clOffN('daf')&&C.loan>0)clRs('daf',C.loan*.01/12);if(C.accF.km>0){clMv(-C.accF.km,'Indemnités de déplacement des aides-ménagères','fix');C.pl.cost+=C.accF.km}if(C.accF.prime>0){clMv(-C.accF.prime,'Primes de nuit et heures de renfort','sal');C.pl.cost+=C.accF.prime}C.accF={cons:0,km:0,prime:0};if(C.lastPl&&C.lastPl.res>0)clXP(10);
   if(C.cash<0){const i=-C.cash*.09/12;clMv(-i,'Intérêts du découvert (9 %/an)','fix');C.pl.cost+=i}
   if(C.loan>0){const r=Math.min(C.loan,Math.max(500,C.loan*.02));C.loan-=r;clMv(-r,'Remboursement du prêt (capital)','loan')}
   // impôt des sociétés (25 %), amortissement du matériel sur 5 ans, pertes reportées
@@ -4140,8 +4320,9 @@ function clTodo(){const C=st.cl,T=[];const go=(t,s,b)=>T.push(`<div class="row" 
   const nq=C.dem.filter(q=>!q.sent).length;if(nq&&clHas('bce'))go(`📨 ${nq} demande${nq>1?'s':''} de clients attend${nq>1?'ent':''} ton devis`,'cli','Voir');
   if(C.ts.wait&&clHas('tsag'))go(`🏠 ${C.ts.wait} familles veulent une aide-ménagère`,'cli','Voir');
   const M=clMiss(),nm=Object.values(M).reduce((a,b)=>a+b,0);if(nm)go(`🧰 Il manque ${nm} machine${nm>1?'s':''} ou outil${nm>1?'s':''}`,'mat','Acheter');
-  if((C.cov??1)<.95&&C.ctr.some(c=>c.st==='run'))go(`👥 Pas assez de techniciennes : ${Math.round((C.cov??1)*100)} % des heures faites, les clients râlent`,'team','Engager');
-  if((C.ts.cov??1)<.95&&C.ts.n)go(`👥 Pas assez d’aides-ménagères : ${Math.round((C.ts.cov??1)*100)} % des heures faites`,'team','Engager');
+  if((C.cov??1)<.95&&C.ctr.some(c=>c.st==='run'))go(`👥 Pas assez de techniciennes : ${Math.round((C.cov??1)*100)} % des heures faites, les clients râlent`,"team';clTeamTab='cand",'Engager');
+  if((C.ts.cov??1)<.95&&C.ts.n)go(`👥 Pas assez d’aides-ménagères : ${Math.round((C.ts.cov??1)*100)} % des heures faites`,"team';clTeamTab='cand",'Engager');
+  if(clHas('onss')&&!clOffN('orga')){const B=clBurPrio().find(x=>x.why&&x.sc>=80);if(B)go(`${CLO[B.k].ic} Bureau : ${B.why} → ${CLO[B.k].n.toLowerCase()}`,"team';clTeamTab='bur",'Voir')}
   const nt=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(nt)go(`🏛️ ${nt} marché${nt>1?'s':''} public${nt>1?'s':''} où tu peux remettre offre`,'pub','Voir');
   if(clHas('rc')&&!C.adm.tsag)go('🏠 Demande l’agrément titres-services (ménage chez les particuliers)','soc','Demander');
   return T.length?`<h2>À faire maintenant</h2><div class="card" style="padding:4px 12px">${T.join('')}</div>`:''}
@@ -4186,21 +4367,24 @@ function clPub(){const C=st.cl;let h=`<div class="card"><p class="mut sm">École
     <div style="margin-top:6px">${R0.map(r=>`<div class="sm">${r.ok?'✅':'❌'} ${r.l}</div>`).join('')}</div>
     ${t.my?`<div class="tag g" style="margin-top:8px">📨 Offre remise : ${eur2(t.my.price)}/h</div>`:ok?`<div class="row" style="margin-top:8px;gap:6px">${[.92,.96,1,1.04].map(k=>`<button class="btn s" style="flex:1;padding:7px 3px;font-size:12px" onclick="clBid(${t.id},${k})">${eur2(t.mkt*k)}</button>`).join('')}</div>`:''}</div>`}
   return h}
-function clAva(w,sz){const g=rng(strHash(w.n));const sk=['#f1c9a5','#e0ac80','#c68642','#8d5524','#f6d7c3'][Math.floor(g()*5)],hc=['#2b1b10','#4a2c17','#a8743f','#1c1c1c','#d9b26a','#8a8a8a'][Math.floor(g()*6)],tun=w.boss?'#2c3e50':CLR[w.r]&&CLR[w.r].pool==='ts'?'#e05a8a':w.r==='vit'?'#2f8a6a':w.r==='chef'?'#3d4f9e':'#3d8bd6';
+function clAva(w,sz){const g=rng(strHash(w.n));const sk=['#f1c9a5','#e0ac80','#c68642','#8d5524','#f6d7c3'][Math.floor(g()*5)],hc=['#2b1b10','#4a2c17','#a8743f','#1c1c1c','#d9b26a','#8a8a8a'][Math.floor(g()*6)],tun=w.boss?'#2c3e50':w.off?'#6b4fa0':CLR[w.r]&&CLR[w.r].pool==='ts'?'#e05a8a':w.r==='vit'?'#2f8a6a':w.r==='chef'?'#3d4f9e':'#3d8bd6';
   return`<svg width="${sz}" height="${sz}" viewBox="0 0 100 100" style="border-radius:50%;background:#dfe9f5;flex:none"><path d="M10 100 Q14 72 50 68 Q86 72 90 100Z" fill="${tun}"/>${w.f?`<path d="M26 46 Q25 16 50 15 Q75 16 74 46 L77 76 Q50 66 23 76Z" fill="${hc}"/>`:''}<circle cx="50" cy="45" r="21" fill="${sk}"/><path d="M29 40 Q30 19 50 19 Q70 19 71 40 Q62 28 50 29 Q38 28 29 40Z" fill="${hc}"/><circle cx="42" cy="47" r="2.4" fill="#222"/><circle cx="58" cy="47" r="2.4" fill="#222"/><path d="M43 56 Q50 61 57 56" stroke="#a0524a" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>`}
-function clTeam(){const C=st.cl,{cap,lost}=clCap();const tsD=C.ts.h/5,ofD=clDemOf();let h='';
+function clTeam(){const C=st.cl,nR=(C.rpt||[]).length,nO=(C.offP||[]).length;let h=seg(clTeamTab,[['ter',`👷 Terrain${nR?' ⚠️'+nR:''}`],['bur',`🏢 Bureau${nO?' ('+nO+')':''}`],['cand',`🙋 Engager`]],'clTeamTab');
+  if(clTeamTab==='bur')return h+clBureau();if(clTeamTab==='cand')return h+clRhCard()+clTeamCand();return h+clRhCard()+clTeamTer()}
+function clTeamTer(){const C=st.cl,{cap,lost}=clCap();const tsD=C.ts.h/5,ofD=clDemOf();let h='';
   const pool=(l,c,dm,col)=>`<div style="margin-top:8px"><div class="row sm"><span style="flex:1">${l}</span><b>${Math.round(c)} h dispo / ${Math.round(dm)} h vendues par jour</b></div>${clBar(dm?Math.min(100,c/dm*100):c?100:0,c>=dm?'var(--gr)':'var(--rd)')}</div>`;
   h+=`<h2>Heures par jour</h2><div class="card">${pool('🧽 Bureaux et contrats',cap.of,ofD)}${clHas('tsag')?pool('🏠 Titres-services',cap.ts,tsD):''}${pool('🪟 Vitres',cap.vi,C.job.filter(j=>CLP[j.k].r==='vi').length*6)}<div class="mut sm" style="margin-top:8px">Absences aujourd’hui : ${Math.round(lost.of+lost.ts+lost.vi)} h perdues${clOffN('plan')?' (Fatima en remplace une partie)':''}. Dans le nettoyage, ± 8-10 % d’absences, c’est normal.</div></div>`;
+  h+=clRptCard();
+  const S=C.staff.slice().sort((a,b)=>(b.boss?1:0)-(a.boss?1:0)||(b.abs>0)-(a.abs>0));
+  h+=`<h2>Ton équipe (${C.staff.length})</h2><div class="card" style="padding:4px 12px">${S.slice(0,clStaffMore).map(w=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);flex-wrap:nowrap;gap:8px;cursor:pointer" onclick="clCV(${w.id})">${clAva(w,34)}<div style="flex:1;min-width:0"><b class="sm">${esc(w.n)}</b><div class="mut" style="font-size:11.5px">${CLR[w.r].ic} ${w.boss?'Patron(ne) sur le terrain':CLR[w.r].n} · ${w.hw} h/sem.${w.abs>0?` · <span class="neg">🤒 absente ${w.abs} j</span>`:''}</div></div><span class="mut">›</span></div>`).join('')}</div>${S.length>clStaffMore?`<button class="btn s w" onclick="clStaffMore+=50;render()">Voir ${Math.min(50,S.length-clStaffMore)} de plus</button>`:''}`;
+  return h}
+function clTeamCand(){const C=st.cl;let h='';
   const P0=clPay();h+=`<h2>💶 Salaires et recrutement</h2><div class="card"><div class="mut sm">Politique salariale (personnel de terrain) :</div><div class="seg" style="margin-top:6px">${CLPAY.map((x,i)=>`<button class="${(C.payP||0)===i?'on':''}" onclick="clSetPay(${i})">${i?'+'+(i*5)+' %':'Barème'}</button>`).join('')}</div><div class="mut" style="font-size:12px;margin-top:6px">${P0.n} : départs ×${P0.turn}, absences ×${P0.abs}, candidats ×${P0.pool}. Coût d’une heure de technicienne ± ${eur2(clHourCost())} (absences comprises).</div>
   <div class="row" style="margin-top:10px"><b class="sm" style="flex:1">🧑‍🤝‍🧑 Candidats sur le marché cette semaine</b><b>${Math.max(0,C.lp??0)}</b></div><div class="mut" style="font-size:12px">${clBigOn('pen')?'⚠️ Pénurie de main-d’œuvre en ce moment. ':''}Il y a plus de candidats avec une bonne réputation, de meilleurs salaires et des annonces.</div>
   <div style="display:grid;gap:6px;margin-top:8px">${Object.entries(CLADS).map(([k,A])=>{const on=(C.adq||[]).find(a=>a.k===k);return`<button class="btn s w" ${on?'disabled':''} onclick="clAd('${k}')">${A.ic} ${A.n} · ${A.c?eur(A.c):'gratuit'} · ± ${A.k} candidats en ${A.d} j${on?' (en cours)':''}</button>`}).join('')}</div></div>`;
-  h+=clRptCard();h+=`<h2>Bureau et encadrement</h2>`;for(const k in CLO){const O=CLO[k],n=clOffN(k);h+=`<div class="card"><div class="row" style="flex-wrap:nowrap"><span style="font-size:24px">${O.ic}</span><div style="flex:1;min-width:0"><b class="sm">${O.n}${n?` · ${n}`:''}</b><div class="mut" style="font-size:12px">${n?esc(O.nm)+(n>1?' et '+(n-1)+' autre'+(n>2?'s':''):'')+' · ':''}${eur(O.m*(C.idx||1))}/mois · ${O.d}</div></div></div><div class="row" style="margin-top:6px;gap:6px"><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clOffHire('${k}',1)">${n?'+1':'Engager'}</button>${n?`<button class="btn s" style="padding:6px 10px;font-size:12px" onclick="clOffHire('${k}',-1)">−1</button>`:''}</div></div>`}
-  if(clOffN('rh'))h+=`<div class="card"><label class="row sm" style="gap:6px"><input type="checkbox" ${C.autoH?'checked':''} onchange="st.cl.autoH=this.checked?1:0;save()"> Caroline recrute toute seule chaque lundi</label></div>`;
   h+=`<h2>Candidats (${C.cand.length})</h2>`;if(!clHas('onss'))h+=`<div class="card"><p class="mut">Immatricule-toi d’abord comme employeur à l’ONSS (📊 Société).</p></div>`;
   for(const p of C.cand.slice(0,12)){const R0=CLR[p.r];p.feel=p.feel||clFeel(p);h+=`<div class="card"><div class="row" style="flex-wrap:nowrap;gap:10px">${clAva(p,44)}<div style="flex:1;min-width:0"><b class="sm">${esc(p.n)}</b><div class="mut" style="font-size:12px">${R0.ic} ${R0.n} · ${p.age} ans · ${p.town} · ${p.exp} an${p.exp>1?'s':''} d’expérience</div><div style="font-size:12px">${p.feel}</div></div></div>
     <div class="row" style="margin-top:6px"><span class="mut" style="flex:1;font-size:12px">${p.hw} h/semaine · ${eur2(R0.brut*(C.idx||1))}/h brut (${R0.cp}) · ${eur(clWage(p))}/mois</span><button class="btn s" style="padding:6px 10px;font-size:12px" ${clHas('onss')&&(p.r!=='am'||clHas('tsag'))?'':'disabled'} onclick="clHire(${p.id})">Engager</button></div></div>`}
-  const S=C.staff.slice().sort((a,b)=>(b.boss?1:0)-(a.boss?1:0)||(b.abs>0)-(a.abs>0));
-  h+=`<h2>Ton équipe (${C.staff.length})</h2><div class="card" style="padding:4px 12px">${S.slice(0,clStaffMore).map(w=>`<div class="row" style="padding:6px 0;border-top:1px solid var(--line);flex-wrap:nowrap;gap:8px;cursor:pointer" onclick="clCV(${w.id})">${clAva(w,34)}<div style="flex:1;min-width:0"><b class="sm">${esc(w.n)}</b><div class="mut" style="font-size:11.5px">${CLR[w.r].ic} ${w.boss?'Patron(ne) sur le terrain':CLR[w.r].n} · ${w.hw} h/sem.${w.abs>0?` · <span class="neg">🤒 absente ${w.abs} j</span>`:''}</div></div><span class="mut">›</span></div>`).join('')}</div>${S.length>clStaffMore?`<button class="btn s w" onclick="clStaffMore+=50;render()">Voir ${Math.min(50,S.length-clStaffMore)} de plus</button>`:''}`;
   return h}
 function clMat(){const C=st.cl,N=clNeeds(),M=clMiss();let mp=0;for(const k in M)mp+=CLE[k].p*M[k];
   let h=`<div class="card"><div class="row"><div style="flex:1"><b>Matériel manquant</b><div class="mut sm">${mp?Object.keys(M).map(k=>`${M[k]} × ${CLE[k].n}`).join(', '):'Rien, tout est en ordre ✓'}</div></div>${mp?`<button class="btn s" onclick="clBuyMiss()">Tout acheter · ${eur(mp)}</button>`:''}</div></div><p class="mut sm" style="margin:2px 4px 8px">Prix HTVA estimés d’annonces 2026. Les autolaveuses et monobrosses restent sur le site du client. Amorties sur 5 ans.</p>`;
@@ -4303,8 +4487,8 @@ function clDecCard(){const C=st.cl;if(!(C.dec||[]).length)return'';return`<h2>�
 // plaintes des clients
 const CLCOMP=['Les poubelles n’ont pas été vidées','Traces sur les vitres de l’accueil','Les toilettes étaient sales lundi matin','Poussière sur les bureaux','Le sol est resté collant','Une porte est restée ouverte après le passage','Le savon n’a pas été remis'];
 function clCompTick(){const C=st.cl;C.comp=C.comp||[];for(const p of C.comp.slice())if(st.day>=p.exp)clCompAct(p.id,2,1);
-  if(clOffN('qual'))for(const p of C.comp.slice())if(st.day-p.d>=2)clCompAct(p.id,0,1);
-  for(const c of C.ctr){if(c.st!=='run'||C.comp.length>=8)continue;if(Math.random()<Math.max(0,(90-(c.q||70)))/100*.012)C.comp.push({id:C.nid++,c:c.id,t:pick(CLCOMP),d:st.day,exp:st.day+7})}}
+  if(clOffN('qual'))for(const p of C.comp.slice())if(st.day-p.d>=2){clCompAct(p.id,0,1);clRs('qual')}
+  for(const c of C.ctr){if(c.st!=='run'||C.comp.length>=8)continue;const pc=Math.max(0,(90-(c.q||70)))/100*.012,rr=Math.random();if(clOffN('cs')&&rr>=pc*.7&&rr<pc)clRs('csq');if(rr<pc*(clOffN('cs')?.7:1))C.comp.push({id:C.nid++,c:c.id,t:pick(CLCOMP),d:st.day,exp:st.day+7})}}
 function clCompAct(id,i,auto){const C=st.cl,p=(C.comp||[]).find(x=>x.id===id);if(!p)return;const c=C.ctr.find(x=>x.id===p.c);C.comp.splice(C.comp.indexOf(p),1);if(!c)return;
   if(i===0){clCost(Math.round(4*CLR.tech.brut*(C.idx||1)*CLR.tech.k),'Passage gratuit chez '+c.n);c.sat=Math.min(100,c.sat+6)}else if(i===1){const g=Math.round(c.hpw*52/12*c.price*.05);clCost(g,'Geste commercial (−5 %) — '+c.n);c.sat=Math.min(100,c.sat+4)}else{c.sat-=10;C.rep=clamp(C.rep-.5,0,100);clMq('ign')}
   if(!auto){clk();save();render()}}
@@ -4315,7 +4499,7 @@ function clRptAct(id,a){const C=st.cl,r=(C.rpt||[]).find(x=>x.id===id);if(!r)ret
   if(a==='talk'){if(Math.random()<.6){w.mot=Math.min(1.2,(w.mot||.8)+.2);w.rel=Math.min(1.05,w.rel+.05);toastMsg('Entretien positif : elle se reprend.')}else toastMsg('L’entretien n’a rien changé.')}
   else if(a==='warn'){w.warn=(w.warn||0)+1;w.rel=Math.min(1.05,w.rel+.08);w.mot=Math.max(.3,(w.mot||.8)-.05);toastMsg('Avertissement écrit envoyé.')}
   else if(a==='fire'){clFire(w.id,1);return}save();render()}
-function clRptCard(){const C=st.cl;if(!(C.rpt||[]).length)return'';return`<h2>⚠️ Rapports sur le personnel (${C.rpt.length})</h2>`+C.rpt.map(r=>{const w=C.staff.find(x=>x.id===r.w);return w?`<div class="card"><div class="row" style="flex-wrap:nowrap;gap:8px">${clAva(w,38)}<div style="flex:1;min-width:0"><b class="sm">${esc(w.n)}</b><div class="mut" style="font-size:12px">${CLR[w.r].n} · ${r.why}${w.warn?` · ${w.warn} avertissement${w.warn>1?'s':''}`:''}</div></div></div><div class="row" style="margin-top:8px;gap:6px"><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'talk')">Entretien</button><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'warn')">Avertissement</button><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'fire')">Licencier</button></div></div>`:''}).join('')}
+function clRptCard(){const C=st.cl;if(!(C.rpt||[]).length)return'';return`<h2>⚠️ Rapports sur le personnel (${C.rpt.length})</h2>`+C.rpt.map(r=>{const w=C.staff.find(x=>x.id===r.w);return w?`<div class="card"><div class="row" style="flex-wrap:nowrap;gap:8px">${clAva(w,38)}<div style="flex:1;min-width:0"><b class="sm">${esc(w.n)}</b><div class="mut" style="font-size:12px">${CLR[w.r].n} · ${r.why}${w.warn?` · ${w.warn} avertissement${w.warn>1?'s':''}`:''}</div>${r.sig?'<div class="tag r" style="margin-top:4px">👔 Le chef du personnel conseille le licenciement</div>':''}</div></div><div class="row" style="margin-top:8px;gap:6px"><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'talk')">Entretien</button><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'warn')">Avertissement</button><button class="btn s" style="flex:1;font-size:12px;padding:7px 3px" onclick="clRptAct(${r.id},'fire')">Licencier</button></div></div>`:''}).join('')}
 // fiche d'une personne
 function clCV(id){const C=st.cl,w=C.staff.find(x=>x.id===id);if(!w)return;const R0=CLR[w.r],seen=st.day-(w.day||0)>=30;const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
   showModal(`<div class="row" style="flex-wrap:nowrap;gap:12px">${clAva(w,72)}<div style="flex:1;min-width:0"><h3 style="margin:0">${esc(w.n)}</h3><div class="mut sm">${w.boss?'Patron(ne) sur le terrain':R0.ic+' '+R0.n}${w.age?` · ${w.age} ans · ${w.town}`:''}</div>${w.boss?'':`<div class="sm">${R0.cp} · ${eur2(R0.brut*(C.idx||1))}/h brut</div>`}</div></div>
@@ -4350,10 +4534,10 @@ function clVisEnd(){if(!cvis)return;clearInterval(cvis.timer);const v=cvis;cvis=
 // accidents du travail
 function clAccTick(){const C=st.cl;if(!clW(st.day))return;const p=.00010*(clOffN('prev')?.6:1);for(const w of C.staff){if(w.boss||w.abs>0)continue;if(Math.random()<p){w.abs=RI(10,40);C.at=Math.min(.05,(C.at||.022)+.002);C.lastAcc=st.day;ck('clacc');clLog(`🚑 Accident du travail : ${w.n} (${pick(['chute sur un sol mouillé','mal de dos en portant un seau','projection de produit dans les yeux','chute d’un escabeau','coupure avec un sac poubelle'])}). Absente ${w.abs} jours.`,1)}}}
 // notifications
-function clNotifs(){const C=st.cl,L=[];if(!C)return L;for(const d of C.dec||[]){const D=CLDEC.find(x=>x.k===d.k);L.push([D.ic,D.t,"clSec='home'"])}for(const p of C.comp||[])L.push(['📢','Plainte : '+p.t,"clSec='home'"]);if((C.rpt||[]).length)L.push(['⚠️',C.rpt.length+' rapport(s) sur le personnel',"clSec='team'"]);
-  if(C.crisis)L.push(['🚨','Cessation de paiement',"clSec='soc'"]);for(const r of C.ren||[]){const c=C.ctr.find(x=>x.id===r.c);if(c)L.push(['🔄','Remis en concurrence : '+c.n,"clSec='home'"])}const nt=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(nt&&!clOffN('off'))L.push(['🏛️',nt+' marché(s) public(s) où remettre offre',"clSec='pub'"]);if(C.ts.wait>5&&!clOffN('plan')&&!clOffN('tsr'))L.push(['🏠',C.ts.wait+' familles attendent une aide-ménagère',"clSec='cli'"]);return L}
+function clNotifs(){const C=st.cl,L=[];if(!C)return L;for(const d of C.dec||[]){const D=CLDEC.find(x=>x.k===d.k);L.push([D.ic,D.t,"clSec='home'"])}for(const p of C.comp||[])L.push(['📢','Plainte : '+p.t,"clSec='home'"]);if((C.rpt||[]).length)L.push(['⚠️',C.rpt.length+' rapport(s) sur le personnel',"clSec='team';clTeamTab='ter'"]);
+  if(C.crisis)L.push(['🚨','Cessation de paiement',"clSec='soc'"]);for(const r of C.ren||[]){const c=C.ctr.find(x=>x.id===r.c);if(c)L.push(['🔄','Remis en concurrence : '+c.n,"clSec='home'"])}const nt=C.ten.filter(t=>!t.my&&clTenReq(t).every(r=>r.ok)).length;if(nt&&!clOffN('off'))L.push(['🏛️',nt+' marché(s) public(s) où remettre offre',"clSec='pub'"]);if(C.ts.wait>5&&!clOffN('plan')&&!clOffN('tsr'))L.push(['🏠',C.ts.wait+' familles attendent une aide-ménagère',"clSec='cli'"]);try{clBurNotif(L)}catch(e){}return L}
 function clNotifUI(){const L=clNotifs();showModal(`<h3>🔔 À traiter (${L.length})</h3>${L.length?`<div class="card" style="padding:4px 12px">${L.map(([i,t,a])=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);flex-wrap:nowrap"><span style="font-size:22px">${i}</span><span class="sm" style="flex:1">${t}</span><button class="btn s" style="padding:6px 10px;font-size:12px" onclick="${a};closeM();render()">Voir</button></div>`).join('')}</div>`:'<p class="mut">Rien à traiter. 👌</p>'}<button class="btn w" onclick="closeM()">Fermer</button>`)}
-function clFix(C){if(!C.diff)C.diff='n';if(C.payP===undefined)C.payP=0;if(C.lp===undefined)C.lp=6;C.ren=C.ren||[];C.dec=C.dec||[];C.comp=C.comp||[];C.rpt=C.rpt||[];C.car=C.car||{lv:1,xp:0};C.mg=C.mg||{};C.riv=C.riv||clRivGen();if(C.at===undefined)C.at=.022;if(!C.site)C.site=clSiteK()}
+function clFix(C){if(!C.diff)C.diff='n';if(C.payP===undefined)C.payP=0;if(C.lp===undefined)C.lp=6;C.ren=C.ren||[];C.dec=C.dec||[];C.comp=C.comp||[];C.rpt=C.rpt||[];C.car=C.car||{lv:1,xp:0};C.mg=C.mg||{};C.riv=C.riv||clRivGen();if(C.at===undefined)C.at=.022;if(!C.site)C.site=clSiteK();C.rs=C.rs||{};clOffSync(C)}
 /* ---------- décor : même style que Route Nette (ciel, collines, maisons), une rue avec les bâtiments des clients ---------- */
 let clCam=0;
 function clBuilding(x,y,w,h,col,roof,lit,sign){rect(x,y-h,w,h,col);rect(x,y-h-4,w,4,roof);const cols=Math.max(2,Math.floor(w/14)),rows=Math.max(2,Math.floor(h/16));for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const on=hh(x*7+r*13+c*31)<lit;rect(x+5+c*(w-8)/cols,y-h+6+r*(h-14)/rows,(w-8)/cols-5,(h-14)/rows-6,on?'#ffe9a8':'#7fa6c4')}rect(x+w/2-6,y-12,12,12,'#4d5a66');if(sign){g.fillStyle='#fff';g.font='800 8px Nunito,sans-serif';g.fillText(sign,x+3,y-h-7)}}
@@ -4404,10 +4588,10 @@ function clBigMonth(){const C=st.cl;if(C.big&&st.day>=C.big.end){clLog(`${CLBIG[
 // renouvellements disputés
 function clRenew(c){const C=st.cl;const rv=pick(clRivs());const p=+(c.price*R(.9,.97)*(clDf().ren>1?.98:1)).toFixed(2);C.ren=C.ren||[];C.ren.push({id:C.nid++,c:c.id,rv:rv.n,p,exp:st.day+10});c.end=st.day+15;clLog(`🔄 ${c.n} remet son contrat en concurrence : ${rv.n} propose ${eur2(p)}/h.`,1)}
 function clRenAct(id,a,auto){const C=st.cl,r=(C.ren||[]).find(x=>x.id===id);if(!r)return;C.ren.splice(C.ren.indexOf(r),1);const c=C.ctr.find(x=>x.id===r.c);if(!c)return;
-  let ok=false,msg='';if(a==='align'){c.price=r.p;ok=true;msg='Tu t’alignes : contrat gardé'}else if(a==='keep'){const ch=clamp((c.sat-50)/45,.15,.92)/clDf().ren;ok=Math.random()<ch;if(ok&&c.ix!==0)c.price=+(c.price*1.02).toFixed(2);msg=ok?'Le client te fait confiance et reste':'Le client part chez '+r.rv}else msg='Tu laisses partir le client';
+  let ok=false,msg='';if(a==='align'){c.price=r.p;ok=true;msg='Tu t’alignes : contrat gardé'}else if(a==='keep'){const ch=Math.min(.97,clamp((c.sat-50)/45,.15,.92)/clDf().ren+(clOffN('cs')?.15:0));ok=Math.random()<ch;if(ok&&clOffN('cs'))clRs('cs');if(ok&&c.ix!==0)c.price=+(c.price*1.02).toFixed(2);msg=ok?'Le client te fait confiance et reste':'Le client part chez '+r.rv}else msg='Tu laisses partir le client';
   if(ok){c.end=st.day+365*RI(1,3);c.notice=0;clXP(5)}else{c.end=st.day+1;c.notice=1}clLog(`🔄 ${c.n} : ${auto?'sans réponse — ':''}${msg}.`,!auto);if(!auto){clk();save();render()}}
 function clRenTick(){const C=st.cl;for(const r of (C.ren||[]).slice())if(st.day>=r.exp)clRenAct(r.id,'keep',1)}
-function clRenCard(){const C=st.cl;if(!(C.ren||[]).length)return'';const hc=clHourCost();return`<h2>🔄 Contrats remis en concurrence (${C.ren.length})</h2>`+C.ren.map(r=>{const c=C.ctr.find(x=>x.id===r.c);if(!c)return'';const ch=Math.round(clamp((c.sat-50)/45,.15,.92)/clDf().ren*100);return`<div class="card acc" style="--ac:var(--or)"><b class="sm">${CLK[c.k].ic} ${esc(c.n)}</b><div class="sm" style="margin-top:2px">Ton prix : <b>${eur2(c.price)}/h</b> · ${esc(r.rv)} propose <b>${eur2(r.p)}/h</b> · ton coût ± ${eur2(hc)}/h</div><div class="mut" style="font-size:12px">Satisfaction ${Math.round(c.sat)} → ± ${ch} % de chances de garder ton prix.</div>
+function clRenCard(){const C=st.cl;if(!(C.ren||[]).length)return'';const hc=clHourCost();return`<h2>🔄 Contrats remis en concurrence (${C.ren.length})</h2>`+C.ren.map(r=>{const c=C.ctr.find(x=>x.id===r.c);if(!c)return'';const ch=Math.round(Math.min(.97,clamp((c.sat-50)/45,.15,.92)/clDf().ren+(clOffN('cs')?.15:0))*100);return`<div class="card acc" style="--ac:var(--or)"><b class="sm">${CLK[c.k].ic} ${esc(c.n)}</b><div class="sm" style="margin-top:2px">Ton prix : <b>${eur2(c.price)}/h</b> · ${esc(r.rv)} propose <b>${eur2(r.p)}/h</b> · ton coût ± ${eur2(hc)}/h</div><div class="mut" style="font-size:12px">Satisfaction ${Math.round(c.sat)} → ± ${ch} % de chances de garder ton prix.</div>
   <div class="row" style="margin-top:8px;gap:6px"><button class="btn s" style="flex:1;padding:7px 3px;font-size:12px" onclick="clRenAct(${r.id},'align')">S’aligner (${eur2(r.p)})</button><button class="btn s" style="flex:1;padding:7px 3px;font-size:12px" onclick="clRenAct(${r.id},'keep')">Garder mon prix</button><button class="btn s" style="flex:1;padding:7px 3px;font-size:12px" onclick="clRenAct(${r.id},'drop')">Laisser partir</button></div><div class="mut" style="font-size:11.5px;margin-top:4px">Sans réponse avant le ${dstr(r.exp)} : tu gardes ton prix.</div></div>`}).join('')}
 // défis du mois
 const CLDQ=[
@@ -5293,7 +5477,7 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Version du jeu : à changer à chaque mise à jour, avec la même valeur dans version.json.
-var APPV="2026-11-21.13";
+var APPV="2026-11-22.1";
 var SWR=null,BIP=null;
 var say=function(t){try{toastMsg(t)}catch(x){}};
 if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v='+APPV).then(function(r){SWR=r}).catch(function(){})});
